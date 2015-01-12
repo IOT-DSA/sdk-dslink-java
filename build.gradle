@@ -1,0 +1,20 @@
+subprojects {
+    apply plugin: 'java'
+
+    sourceCompatibility = 1.7
+    targetCompatibility = 1.7
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        compile 'io.vertx:vertx-core:2.1.5'
+    }
+}
+
+configure([project(':sdk/requester'), project(':sdk/responder')]) {
+    dependencies {
+        compile project(':sdk/core')
+    }
+}
