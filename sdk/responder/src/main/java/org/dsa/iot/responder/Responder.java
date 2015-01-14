@@ -50,6 +50,7 @@ public class Responder {
 
     public synchronized void disconnect() {
         connector.disconnect();
+        connected = false;
     }
 
     /**
