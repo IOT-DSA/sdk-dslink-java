@@ -24,12 +24,10 @@ class WebSocketConnector extends Connector {
 
     @Override
     public void connect(final Handler<JsonObject> parser) throws IOException {
-        URLInfo info = getURL();
-
         client = Utils.VERTX.createHttpClient();
-        client.setHost(info.host).setPort(info.port);
+        client.setHost(url.host).setPort(url.port);
 
-        client.connectWebsocket(info.path, new Handler<WebSocket>() {
+        client.connectWebsocket(url.path, new Handler<WebSocket>() {
             @Override
             public void handle(WebSocket ws) {
                 socket = ws;
