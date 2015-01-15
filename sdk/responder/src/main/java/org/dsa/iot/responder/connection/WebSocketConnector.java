@@ -1,7 +1,6 @@
 package org.dsa.iot.responder.connection;
 
 import org.dsa.iot.core.Utils;
-import org.dsa.iot.responder.Responder;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.http.HttpClient;
@@ -9,7 +8,6 @@ import org.vertx.java.core.http.WebSocket;
 import org.vertx.java.core.json.JsonObject;
 
 import java.io.IOException;
-import java.net.URL;
 
 /**
  * @author Samuel Grenier
@@ -17,29 +15,25 @@ import java.net.URL;
 class WebSocketConnector extends Connector {
 
     private HttpClient client;
+    private WebSocket socket;
 
     public WebSocketConnector(String url, boolean secure,
                               Handler<Void> dcHandler) {
         super(url, secure, dcHandler);
     }
 
+    @Override
     public void connect(final Handler<JsonObject> parser) throws IOException {
-        URL url = new URL(this.url);
-
-        String host = url.getHost();
-        int port = url.getPort();
-        if (port == -1)
-            port = Utils.getDefaultPort(url.getProtocol());
-
-        String path = url.getPath();
-        if (path == null || path.isEmpty())
-            path = "/";
+        URLInfo info = getURL();
 
         client = Utils.VERTX.createHttpClient();
-        client.setHost(host).setPort(port);
-        client.connectWebsocket(path, new Handler<WebSocket>() {
+        client.setHost(info.host).setPort(info.port);
+
+        client.connectWebsocket(info.path, new Handler<WebSocket>() {
             @Override
             public void handle(WebSocket ws) {
+                socket = ws;
+
                 ws.closeHandler(new Handler<Void>() {
                     @Override
                     public void handle(Void event) {
@@ -50,11 +44,23 @@ class WebSocketConnector extends Connector {
                 ws.dataHandler(new Handler<Buffer>() {
                     @Override
                     public void handle(Buffer event) {
-                        parser.handle(new JsonObject(event.toString()));
+                        JsonObject obj = new JsonObject(event.toString());
+                        if (isAuthenticated()) {
+                            parser.handle(obj);
+                        } else {
+                            finalizeHandshake(obj);
+                        }
                     }
                 });
+
+                connected();
             }
         });
+    }
+
+    @Override
+    public void write(String data) {
+        socket.writeTextFrame(data);
     }
 
     @Override
