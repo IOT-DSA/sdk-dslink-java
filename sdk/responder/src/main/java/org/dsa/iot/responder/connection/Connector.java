@@ -2,6 +2,7 @@ package org.dsa.iot.responder.connection;
 
 import org.bouncycastle.jcajce.provider.digest.SHA256;
 import org.dsa.iot.core.URLInfo;
+import org.dsa.iot.responder.connection.connector.WebSocketConnector;
 import org.dsa.iot.responder.connection.handshake.HandshakeServer;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
