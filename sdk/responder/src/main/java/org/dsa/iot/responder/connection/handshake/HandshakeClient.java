@@ -1,7 +1,8 @@
-package org.dsa.iot.responder.connection;
+package org.dsa.iot.responder.connection.handshake;
 
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
+import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.generators.RSAKeyPairGenerator;
 import org.bouncycastle.crypto.params.RSAKeyGenerationParameters;
 import org.bouncycastle.crypto.params.RSAKeyParameters;
@@ -10,17 +11,22 @@ import org.bouncycastle.jcajce.provider.digest.SHA384;
 import org.bouncycastle.util.encoders.Base64;
 import org.vertx.java.core.json.JsonObject;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 
 /**
+ * Handshake information for the client.
  * @author Samuel Grenier
  */
-public class Handshake {
+public class HandshakeClient {
 
     public static final BigInteger PUBLIC_EXPONENT = BigInteger.valueOf(65537);
     public static final int KEY_STRENGTH = 2048;
     public static final int KEY_CERTAINTY = 32;
+
+    public final CipherParameters privKeyInfo;
+    public final SubjectPublicKeyInfo pubKeyInfo;
 
     public final String dsId;
     public final String publicKey;
@@ -28,13 +34,24 @@ public class Handshake {
     public final boolean isRequester;
     public final boolean isResponder;
 
-    private Handshake(String dsId, String publicKey, String zone,
-                     boolean isRequester, boolean isResponder) {
-        this.dsId = dsId;
-        this.publicKey = publicKey;
+    private HandshakeClient(String dsIdPrefix,
+                            AsymmetricCipherKeyPair key, String zone,
+                            boolean isRequester, boolean isResponder)
+                                                    throws IOException {
         this.zone = zone;
         this.isRequester = isRequester;
         this.isResponder = isResponder;
+
+        RSAKeyParameters pubParams = (RSAKeyParameters) key.getPublic();
+        this.pubKeyInfo = SubjectPublicKeyInfoFactory.createSubjectPublicKeyInfo(pubParams);
+        this.privKeyInfo = key.getPrivate();
+
+        SHA384.Digest sha = new SHA384.Digest();
+        byte[] hash = sha.digest(pubKeyInfo.getEncoded());
+
+        this.publicKey = Base64.toBase64String(pubParams.getModulus().toByteArray());
+        this.dsId = dsIdPrefix + "-" + Base64.toBase64String(hash);
+
     }
 
     public JsonObject toJson() {
@@ -47,33 +64,22 @@ public class Handshake {
     }
 
     @SuppressWarnings("ConstantConditions")
-    public static Handshake generate() {
-        // TODO: ability for dslink implementer to provide a preset public key
-        String publicKey;
-        String dsId = "dslink-test-"; // TODO: ability to provide custom id prefix
+    public static HandshakeClient generate() {
         try {
             RSAKeyPairGenerator gen = new RSAKeyPairGenerator();
-            gen.init(new RSAKeyGenerationParameters(Handshake.PUBLIC_EXPONENT,
+            gen.init(new RSAKeyGenerationParameters(HandshakeClient.PUBLIC_EXPONENT,
                     new SecureRandom(),
-                    Handshake.KEY_STRENGTH,
-                    Handshake.KEY_CERTAINTY));
+                    HandshakeClient.KEY_STRENGTH,
+                    HandshakeClient.KEY_CERTAINTY));
             AsymmetricCipherKeyPair key = gen.generateKeyPair();
 
-            RSAKeyParameters pubParams = (RSAKeyParameters) key.getPublic();
-            publicKey = Base64.toBase64String(pubParams.getModulus().toByteArray());
+            String zone = "default";
 
-            SubjectPublicKeyInfo info = SubjectPublicKeyInfoFactory.createSubjectPublicKeyInfo(key.getPublic());
-            SHA384.Digest sha = new SHA384.Digest();
-            byte[] hash = sha.digest(info.getEncoded());
-            dsId += Base64.toBase64String(hash);
+            boolean isRequester = false;
+            boolean isResponder = true;
+            return new HandshakeClient("dslink-test", key, zone, isRequester, isResponder);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-
-        String zone = "default";
-
-        boolean isRequester = false;
-        boolean isResponder = true;
-        return new Handshake(dsId, publicKey, zone, isRequester, isResponder);
     }
 }

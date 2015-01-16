@@ -1,120 +1,92 @@
 package org.dsa.iot.responder.connection;
 
+import org.bouncycastle.jcajce.provider.digest.SHA256;
 import org.dsa.iot.core.URLInfo;
+import org.dsa.iot.responder.connection.handshake.HandshakeServer;
 import org.vertx.java.core.Handler;
+import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.json.JsonObject;
-import java.io.IOException;
+import org.vertx.java.core.json.impl.Base64;
+
+import java.io.UnsupportedEncodingException;
 
 /**
- * A common connection class to handle multiple transport protocols.
  * @author Samuel Grenier
  */
 public abstract class Connector {
 
-    private final Handler<Void> dcHandler;
+    public final URLInfo dataEndpoint;
+    public final HandshakeServer hs;
 
-    public final URLInfo url;
-    public final boolean secure;
-
-    protected final Handshake handshake;
-    private boolean authenticated = false;
-
-    /**
-     * @param url URL to connect to
-     * @param secure Whether or not to use SSL
-     * @param dcHandler Disconnection handler, can only be called when the
-     *                  remote host closes the connection or there is a network
-     *                  error.
-     */
-    public Connector(String url, boolean secure,
-                     Handler<Void> dcHandler) {
-        this.url = URLInfo.parse(url);
-        this.secure = secure;
-        this.dcHandler = dcHandler;
-        this.handshake = Handshake.generate();
+    public Connector(URLInfo dataEndpoint, HandshakeServer hs) {
+        this.dataEndpoint = dataEndpoint;
+        this.hs = hs;
     }
 
     /**
-     * @return Whether the connection completed the initial authentication
-     *         handshake.
+     * Connects to the server based on the implementation.
+     * @param data Handles incoming JSON parsed data
+     * @param dcHandler Disconnection handler. If {@link #disconnect} is called,
+     *                  this handler will not be called.
+     * @param sslVerify Whether to validate the server SSL certificate if
+     *                  attempting to connect over secure communications
      */
-    public boolean isAuthenticated() {
-        return authenticated;
-    }
+    public abstract void connect(final Handler<JsonObject> data,
+                                 final Handler<Void> dcHandler,
+                                 final boolean sslVerify);
 
     /**
-     * Writes data to the server
-     * @param data Writes a response to the server
-     */
-    public abstract void write(String data);
-
-    /**
-     * Connects to the server.
-     * @param parser parses the incoming data from the server
-     * @throws IOException
-     */
-    public abstract void connect(Handler<JsonObject> parser) throws IOException;
-
-    /**
-     * Closes the connection to the server.
+     * Forcefully disconnects the client from the server.
      */
     public abstract void disconnect();
 
     /**
-     * It is the implementation's responsibility to call this.
+     * @return A full path with an attached query string
      */
-    protected final void connected() {
-        authenticated = false;
-        write(handshake.toJson().encode());
-    }
+    protected String getPath() {
+        StringBuilder query = new StringBuilder(dataEndpoint.path);
+        try { // Auth parameter
+            query.append("?auth=");
 
-    /**
-     * It is the implementation's responsibility to call this. This will
-     * finalize authentication. The implementation must check if the connection
-     * is authenticated and call this if not.
-     * @param obj Returned authentication data from server.
-     */
-    protected final void finalizeHandshake(JsonObject obj) {
-        String dsId = obj.getString("dsId");
-        String publicKey = obj.getString("publicKey");
-        String wsUri = obj.getString("wsUri");
-        String httpUri = obj.getString("httpUri");
-        String encryptedNonce = obj.getString("encryptedNonce");
-        int updateInterval = obj.getInteger("updateInterval");
+            byte[] salt = getSalt().getBytes("UTF-8");
+            byte[] nonce = hs.nonce;
 
-        // TODO: store this data into a server information object
+            Buffer buffer = new Buffer(salt.length + nonce.length);
+            buffer.appendBytes(salt);
+            buffer.appendBytes(nonce);
 
-        authenticated = true;
-    }
-
-    /**
-     * Called when a client is disconnected due to network error or the remote
-     * host closed the connection.
-     */
-    protected final void disconnected() {
-        if (dcHandler != null) {
-            dcHandler.handle(null);
+            SHA256.Digest digest = new SHA256.Digest();
+            byte[] output = digest.digest(buffer.getBytes());
+            query.append(Base64.encodeBytes(output, Base64.URL_SAFE));
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
         }
+        return query.toString();
+    }
+
+    protected String getSalt() {
+        return hs.salt;
     }
 
     /**
-     * Factory method used to create a default connector implementation based
-     * on the URL protocol.
+     *
+     * @param url URL to connect to.
+     * @param hs Retrieved information about the handshake from the server.
+     * @param type If type is {@link ConnectionType#HTTP}
+     *             or {@link ConnectionType#WS} then the URL must be a handshake
+     *             connection initiation endpoint, not the actual data URL.
      * @return A connector instance
-     * @see #Connector
      */
-    public static Connector create(String url, Handler<Void> dcHandler) {
-        final String protocol = URLInfo.parse(url).protocol;
-        switch (protocol) {
-            case "http":
-            case "https":
-                throw new UnsupportedOperationException("Not yet implemented");
-            case "ws":
-                return new WebSocketConnector(url, false, dcHandler);
-            case "wss":
-                return new WebSocketConnector(url, true, dcHandler);
+    public static Connector create(String url, HandshakeServer hs, ConnectionType type) {
+        switch (type) {
+            case SOCKET:
+                throw new UnsupportedOperationException("Sockets not implemented yet");
+            case HTTP:
+                throw new UnsupportedOperationException("HTTP not implemented yet");
+            case WS:
+                return new WebSocketConnector(URLInfo.parse(url), hs);
             default:
-                throw new RuntimeException("Unhandled protocol: " + protocol);
+                throw new RuntimeException("Unknown type: " + type);
         }
     }
 }

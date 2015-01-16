@@ -1,68 +1,63 @@
 package org.dsa.iot.responder.connection;
 
+import org.dsa.iot.core.URLInfo;
 import org.dsa.iot.core.Utils;
+import org.dsa.iot.responder.connection.handshake.HandshakeServer;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.http.HttpClient;
 import org.vertx.java.core.http.WebSocket;
 import org.vertx.java.core.json.JsonObject;
 
-import java.io.IOException;
-
 /**
  * @author Samuel Grenier
  */
-class WebSocketConnector extends Connector {
+public class WebSocketConnector extends Connector {
 
-    private HttpClient client;
-    private WebSocket socket;
+    protected HttpClient client;
 
-    public WebSocketConnector(String url, boolean secure,
-                              Handler<Void> dcHandler) {
-        super(url, secure, dcHandler);
+    public WebSocketConnector(URLInfo info, HandshakeServer hs) {
+        super(info, hs);
     }
 
     @Override
-    public void connect(final Handler<JsonObject> parser) throws IOException {
+    public synchronized void connect(final Handler<JsonObject> data,
+                                        final Handler<Void> dcHandler,
+                                        final boolean sslVerify) {
         client = Utils.VERTX.createHttpClient();
-        client.setHost(url.host).setPort(url.port);
+        client.setHost(dataEndpoint.host).setPort(dataEndpoint.port);
+        if (dataEndpoint.secure) {
+            client.setSSL(true);
+            client.setVerifyHost(sslVerify);
+        }
 
-        client.connectWebsocket(url.path, new Handler<WebSocket>() {
+        client.connectWebsocket(getPath(), new Handler<WebSocket>() {
             @Override
-            public void handle(WebSocket ws) {
-                socket = ws;
-
-                ws.closeHandler(new Handler<Void>() {
+            public void handle(WebSocket event) {
+                event.dataHandler(new Handler<Buffer>() {
                     @Override
-                    public void handle(Void event) {
-                        disconnected();
+                    public void handle(Buffer event) {
+                        data.handle(new JsonObject(event.toString()));
                     }
                 });
 
-                ws.dataHandler(new Handler<Buffer>() {
+                event.closeHandler(new Handler<Void>() {
                     @Override
-                    public void handle(Buffer event) {
-                        JsonObject obj = new JsonObject(event.toString());
-                        if (isAuthenticated()) {
-                            parser.handle(obj);
-                        } else {
-                            finalizeHandshake(obj);
+                    public void handle(Void event) {
+                        if (dcHandler != null) {
+                            dcHandler.handle(event);
                         }
                     }
                 });
-
-                connected();
             }
         });
     }
 
     @Override
-    public void write(String data) {
-        socket.writeTextFrame(data);
+    public synchronized void disconnect() {
+        if (client != null) {
+            client.close();
+        }
     }
 
-    @Override
-    public void disconnect() {
-        client.close();
-    }
 }

@@ -13,18 +13,11 @@ import java.util.Iterator;
  */
 public class Responder {
 
-    public final String url;
-
     private Connector connector;
     private boolean connected;
 
-    public Responder(String url) {
-        this.url = url;
-    }
-
     /**
-     * Used to set the connector implementation. If one is not set, then a
-     * default connector instance will be provided based on the url.
+     * Used to set the connector implementation.
      * @param connector Connector instance to use
      */
     public void setConnector(Connector connector) {
@@ -32,11 +25,17 @@ public class Responder {
         this.connector = connector;
     }
 
+    public void connect() throws IOException {
+        connect(true);
+    }
+
     /**
      * Performs the connection
+     * @param sslVerify Whether to verify ssl if attempting to connect over
+     *                  secure communications.
      * @throws IOException
      */
-    public synchronized void connect() throws IOException {
+    public synchronized void connect(boolean sslVerify) throws IOException {
         checkConnected();
         checkConnector();
         connector.connect(new Handler<JsonObject>() {
@@ -44,7 +43,14 @@ public class Responder {
             public void handle(JsonObject event) {
                 parse(event);
             }
-        });
+        }, new Handler<Void>() {
+            @Override
+            public void handle(Void event) {
+                synchronized (Responder.this) {
+                    connected = false;
+                }
+            }
+        }, sslVerify);
         connected = true;
     }
 
@@ -65,6 +71,7 @@ public class Responder {
 
         for (JsonObject o = null; it.hasNext();) {
             o = it.next();
+
             // TODO: handle each request
         }
     }
@@ -77,14 +84,7 @@ public class Responder {
 
     private void checkConnector() {
         if (connector == null) {
-             setConnector(Connector.create(url, new Handler<Void>() {
-                @Override
-                public void handle(Void event) {
-                    synchronized (Responder.this) {
-                        connected = false;
-                    }
-                }
-            }));
+             throw new IllegalStateException("Connector not set");
         }
     }
 }
