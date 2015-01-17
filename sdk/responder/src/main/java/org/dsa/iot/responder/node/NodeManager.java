@@ -14,11 +14,12 @@ public class NodeManager {
 
     private final Map<String, Node> rootNodes = new HashMap<>();
 
-    public void addRootNode(Node node) {
+    public Node addRootNode(Node node) {
         if (rootNodes.containsKey(node.name)) {
             throw new DuplicateException(node.name);
         }
         rootNodes.put(node.name, node);
+        return node;
     }
 
     public Map<String, Node> getChildren(String path) {
@@ -29,6 +30,10 @@ public class NodeManager {
     }
 
     public Node getNode(String path) {
+        if (path == null || path.isEmpty())
+            throw new IllegalArgumentException("path");
+        else if (path.startsWith("/"))
+            path = path.substring(1);
         String[] parts = path.split("/");
         Node current = rootNodes.get(parts[0]);
         for (int i = 1; i < parts.length; i++) {

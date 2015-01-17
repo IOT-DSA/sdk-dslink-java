@@ -11,6 +11,8 @@ subprojects {
     dependencies {
         compile 'io.vertx:vertx-core:2.1.5'
         compile 'org.bouncycastle:bcprov-jdk15on:1.51'
+
+        testCompile 'junit:junit:4.+'
     }
 }
 

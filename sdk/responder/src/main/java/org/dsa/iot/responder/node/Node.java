@@ -18,7 +18,7 @@ public class Node {
     public final String name;
 
     public Node(String name) {
-        if (name == null || name.isEmpty())
+        if (name == null || name.isEmpty() || name.contains("/"))
             throw new IllegalArgumentException("name");
         this.name = name;
     }
@@ -49,31 +49,35 @@ public class Node {
         configurations.put(name, value);
     }
 
-    public void addChild(Node node) {
+    public Node addChild(Node node) {
         if (children == null)
             children = new HashMap<>();
         else if (children.containsKey(node.name))
             throw new DuplicateException(node.name + "(parent: " + name + ")");
         children.put(node.name, node);
+        return node;
     }
 
-    public void removeChild(Node node) {
-        removeChild(node.name);
+    public Node removeChild(Node node) {
+        return removeChild(node.name);
     }
 
-    public void removeChild(String name) {
+    public Node removeChild(String name) {
         if (children != null)
-            children.remove(name);
+            return children.remove(name);
+        return null;
     }
 
-    public void removeAttribute(String name) {
+    public Value removeAttribute(String name) {
         if (attributes != null)
-            attributes.remove(name);
+            return attributes.remove(name);
+        return null;
     }
 
-    public void removeConfiguration(String name) {
+    public Value removeConfiguration(String name) {
         if (configurations != null)
-            configurations.remove(name);
+            return configurations.remove(name);
+        return null;
     }
 
     public Node getChild(String name) {
