@@ -63,8 +63,16 @@ public class HandshakeClient {
         return obj;
     }
 
+    /**
+     * @param dsId ID prefix of the client appended by a dash and a hash
+     * @return The generated client
+     */
     @SuppressWarnings("ConstantConditions")
-    public static HandshakeClient generate() {
+    public static HandshakeClient generate(String dsId, String zone) {
+        if (dsId == null || dsId.isEmpty())
+            throw new IllegalArgumentException("dsId");
+        else if (zone == null || zone.isEmpty())
+            throw new IllegalArgumentException("zone");
         try {
             RSAKeyPairGenerator gen = new RSAKeyPairGenerator();
             gen.init(new RSAKeyGenerationParameters(HandshakeClient.PUBLIC_EXPONENT,
@@ -73,11 +81,9 @@ public class HandshakeClient {
                     HandshakeClient.KEY_CERTAINTY));
             AsymmetricCipherKeyPair key = gen.generateKeyPair();
 
-            String zone = "default";
-
             boolean isRequester = false;
             boolean isResponder = true;
-            return new HandshakeClient("dslink-test", key, zone, isRequester, isResponder);
+            return new HandshakeClient(dsId, key, zone, isRequester, isResponder);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
