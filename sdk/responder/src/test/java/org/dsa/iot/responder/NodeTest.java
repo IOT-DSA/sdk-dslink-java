@@ -3,7 +3,7 @@ package org.dsa.iot.responder;
 import org.dsa.iot.responder.node.Node;
 import org.dsa.iot.responder.node.NodeManager;
 import org.dsa.iot.responder.node.exceptions.DuplicateException;
-import org.dsa.iot.responder.node.exceptions.NoSuchPath;
+import org.dsa.iot.responder.node.exceptions.NoSuchPathException;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -15,9 +15,7 @@ public class NodeTest {
     @Test
     public void nodeAdditions() {
         NodeManager manager = new NodeManager();
-
-        Node nodeA = new Node("A");
-        manager.addRootNode(nodeA);
+        Node nodeA = manager.createRootNode("A");
 
         Assert.assertNotNull(manager.getNode("A"));
         Assert.assertNotNull(manager.getNode("/A"));
@@ -25,8 +23,7 @@ public class NodeTest {
         Assert.assertNotNull(manager.getNode("/A//"));
 
         Assert.assertNull(manager.getNode("/B"));
-        Node nodeB = new Node("B");
-        manager.addRootNode(nodeB);
+        manager.createRootNode("B");
 
         Assert.assertNotNull(manager.getNode("B"));
         Assert.assertNotNull(manager.getNode("/B"));
@@ -37,7 +34,7 @@ public class NodeTest {
         Assert.assertNull(manager.getNode("/B/A"));
 
         Assert.assertNull(nodeA.getChildren());
-        nodeA.addChild(new Node("A"));
+        nodeA.createChild("A");
         Assert.assertNotNull(nodeA.getChildren());
 
         Assert.assertNotNull(manager.getNode("A/A"));
@@ -50,12 +47,13 @@ public class NodeTest {
     @Test
     public void nodeRemovals() {
         NodeManager manager = new NodeManager();
-        Node a = manager.addRootNode(new Node("A"));
-        a.addChild(new Node("A_A"));
-        a.addChild(new Node("A_B"));
+        Node a = manager.createRootNode("A");
+
+        a.createChild("A_A");
+        a.createChild("A_B");
 
         a.removeChild("A_A");
-        a.removeChild(new Node("A_B"));
+        a.removeChild(new Node(null, "A_B"));
 
         Assert.assertNotNull(manager.getNode("/A"));
         Assert.assertNull(manager.getNode("/A/A_A"));
@@ -69,9 +67,9 @@ public class NodeTest {
     @Test
     public void children() {
         NodeManager manager = new NodeManager();
-        Node a = manager.addRootNode(new Node("A"));
-        a.addChild(new Node("A_A"));
-        a.addChild(new Node("A_B"));
+        Node a = manager.createRootNode("A");
+        a.createChild("A_A");
+        a.createChild("A_B");
 
         Assert.assertNotNull(manager.getChildren("A"));
         Assert.assertNotNull(manager.getChildren("/A"));
@@ -79,14 +77,20 @@ public class NodeTest {
 
         Assert.assertEquals(2, manager.getChildren("A").size());
         Assert.assertEquals(2, a.getChildren().size());
+    }
 
+    @Test
+    public void pathBuilding() {
+        Node node = new Node(null, "A");
+        node = node.createChild("A_B").createChild("B_A");
+        Assert.assertEquals("/A/A_B/B_A", node.getPath());
     }
 
     @Test(expected = DuplicateException.class)
     public void duplicateRootNodes() {
         NodeManager manager = new NodeManager();
-        manager.addRootNode(new Node("A"));
-        manager.addRootNode(new Node("A"));
+        manager.createRootNode("A");
+        manager.createRootNode("A");
     }
 
     @Test
@@ -112,7 +116,7 @@ public class NodeTest {
         Assert.assertTrue(nullPath);
     }
 
-    @Test(expected = NoSuchPath.class)
+    @Test(expected = NoSuchPathException.class)
     public void noSuchPath() {
         new NodeManager().getChildren("nothing");
     }

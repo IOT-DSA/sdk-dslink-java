@@ -12,6 +12,8 @@ import org.vertx.java.core.json.JsonObject;
 import java.io.IOException;
 import java.util.Iterator;
 
+import static org.dsa.iot.responder.methods.Method.StreamState;
+
 /**
  * @author Samuel Grenier
  */
@@ -21,6 +23,11 @@ public class Responder {
 
     private Connector connector;
     private boolean connected;
+
+    public void createRoot(String name) {
+        checkConnected();
+        manager.createRootNode(name);
+    }
 
     public void addRoot(Node node) {
         checkConnected();
@@ -80,22 +87,26 @@ public class Responder {
      * Parse the object for requests
      * @param object Object to parse
      */
-    protected void parse(JsonObject object) {
+    protected synchronized void parse(JsonObject object) {
         JsonArray array = object.getObject("requests").asArray();
 
         @SuppressWarnings("unchecked")
         Iterator<JsonObject> it = (Iterator) array.iterator();
 
+        JsonArray responses = new JsonArray();
+
         for (JsonObject o; it.hasNext();) {
             o = it.next();
-            int rid = o.getInteger("rid");
+
+            Number rid = o.getNumber("rid");
             String sMethod = o.getString("method");
             String path = o.getString("path");
 
             Method method;
             switch (sMethod) {
                 case "list":
-                    method = new ListMethod();
+                    Node node = manager.getNode(path);
+                    method = new ListMethod(node);
                     break;
                 case "set":
                     //break; // TODO
@@ -114,6 +125,24 @@ public class Responder {
             }
 
             JsonObject updates = method.invoke();
+            StreamState state = method.getState();
+
+            if (state == null) {
+                throw new IllegalStateException("state");
+            }
+
+            JsonObject resp = new JsonObject();
+            resp.putNumber("rid", rid);
+            if (state != StreamState.INITIALIZED) {
+                // This is a first response, default value is initialized if omitted
+                resp.putString("stream", state.jsonName);
+            }
+
+            if (updates != null) {
+                resp.putElement("update", updates);
+            }
+
+            responses.addElement(resp);
         }
     }
 

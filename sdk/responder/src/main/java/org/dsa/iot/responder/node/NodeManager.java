@@ -1,7 +1,7 @@
 package org.dsa.iot.responder.node;
 
 import org.dsa.iot.responder.node.exceptions.DuplicateException;
-import org.dsa.iot.responder.node.exceptions.NoSuchPath;
+import org.dsa.iot.responder.node.exceptions.NoSuchPathException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,6 +14,10 @@ public class NodeManager {
 
     private final Map<String, Node> rootNodes = new HashMap<>();
 
+    public Node createRootNode(String name) {
+        return addRootNode(new Node(null, name));
+    }
+
     public Node addRootNode(Node node) {
         if (rootNodes.containsKey(node.name)) {
             throw new DuplicateException(node.name);
@@ -25,7 +29,7 @@ public class NodeManager {
     public Map<String, Node> getChildren(String path) {
         Node child = getNode(path);
         if (child == null)
-            throw new NoSuchPath(path);
+            throw new NoSuchPathException(path);
         return child.getChildren();
     }
 
