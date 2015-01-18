@@ -8,8 +8,8 @@ import org.bouncycastle.crypto.params.RSAKeyGenerationParameters;
 import org.bouncycastle.crypto.params.RSAKeyParameters;
 import org.bouncycastle.crypto.util.SubjectPublicKeyInfoFactory;
 import org.bouncycastle.jcajce.provider.digest.SHA384;
-import org.bouncycastle.util.encoders.Base64;
 import org.vertx.java.core.json.JsonObject;
+import org.vertx.java.core.json.impl.Base64;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -46,11 +46,12 @@ public class HandshakeClient {
         this.pubKeyInfo = SubjectPublicKeyInfoFactory.createSubjectPublicKeyInfo(pubParams);
         this.privKeyInfo = key.getPrivate();
 
+        BigInteger modulus = pubParams.getModulus();
+        this.publicKey = Base64.encodeBytes(modulus.toByteArray(), Base64.URL_SAFE);
+
         SHA384.Digest sha = new SHA384.Digest();
         byte[] hash = sha.digest(pubKeyInfo.getEncoded());
-
-        this.publicKey = Base64.toBase64String(pubParams.getModulus().toByteArray());
-        this.dsId = dsIdPrefix + "-" + Base64.toBase64String(hash);
+        this.dsId = dsIdPrefix + "-" + Base64.encodeBytes(hash, Base64.URL_SAFE);
 
     }
 
@@ -61,6 +62,15 @@ public class HandshakeClient {
         obj.putBoolean("isRequester", isRequester);
         obj.putBoolean("isResponder", isResponder);
         return obj;
+    }
+
+    /**
+     * The zone used will be the default zone.
+     * @param dsId ID prefix of the client appended by a dash and a hash
+     * @return The generated client
+     */
+    public static HandshakeClient generate(String dsId) {
+        return generate(dsId, "default");
     }
 
     /**
