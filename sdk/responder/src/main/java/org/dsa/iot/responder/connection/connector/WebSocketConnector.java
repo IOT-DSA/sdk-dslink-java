@@ -16,6 +16,7 @@ import org.vertx.java.core.json.JsonObject;
 public class WebSocketConnector extends Connector {
 
     protected HttpClient client;
+    protected WebSocket socket;
 
     public WebSocketConnector(URLInfo info, HandshakeServer hs) {
         super(info, hs);
@@ -61,4 +62,10 @@ public class WebSocketConnector extends Connector {
         }
     }
 
+    @Override
+    public synchronized void write(JsonObject obj) {
+        if (socket != null) {
+            socket.writeTextFrame(obj.encode());
+        }
+    }
 }

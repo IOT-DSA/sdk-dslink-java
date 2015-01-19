@@ -1,8 +1,7 @@
 package org.dsa.iot.responder;
 
 import org.dsa.iot.responder.connection.Connector;
-import org.dsa.iot.responder.methods.ListMethod;
-import org.dsa.iot.responder.methods.Method;
+import org.dsa.iot.responder.methods.*;
 import org.dsa.iot.responder.node.Node;
 import org.dsa.iot.responder.node.NodeManager;
 import org.vertx.java.core.Handler;
@@ -10,6 +9,8 @@ import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Iterator;
 
 import static org.dsa.iot.responder.methods.Method.StreamState;
@@ -90,11 +91,11 @@ public class Responder {
     protected synchronized void parse(JsonObject object) {
         JsonArray array = object.getObject("requests").asArray();
 
+        JsonObject top = new JsonObject();
+
         @SuppressWarnings("unchecked")
         Iterator<JsonObject> it = (Iterator) array.iterator();
-
         JsonArray responses = new JsonArray();
-
         for (JsonObject o; it.hasNext();) {
             o = it.next();
 
@@ -109,41 +110,61 @@ public class Responder {
                     method = new ListMethod(node);
                     break;
                 case "set":
-                    //break; // TODO
+                    method = new SetMethod();
+                    break;
                 case "remove":
-                    //break; // TODO
+                    method = new RemoveMethod();
+                    break;
                 case "invoke":
-                    //break; // TODO
+                    method = new InvokeMethod();
+                    break;
                 case "subscribe":
-                    //break; // TODO
+                    method = new SubscribeMethod();
+                    break;
                 case "unsubscribe":
-                    //break; // TODO
+                    method = new UnsubscribeMethod();
+                    break;
                 case "close":
-                    //break; // TODO
+                    method = new CloseMethod();
+                    break;
                 default:
                     throw new RuntimeException("Unknown method");
             }
 
-            JsonObject updates = method.invoke();
-            StreamState state = method.getState();
-
-            if (state == null) {
-                throw new IllegalStateException("state");
-            }
-
             JsonObject resp = new JsonObject();
-            resp.putNumber("rid", rid);
-            if (state != StreamState.INITIALIZED) {
-                // This is a first response, default value is initialized if omitted
-                resp.putString("stream", state.jsonName);
-            }
+            try {
+                resp.putNumber("rid", rid);
 
-            if (updates != null) {
-                resp.putElement("update", updates);
-            }
+                JsonObject updates = method.invoke();
+                StreamState state = method.getState();
 
-            responses.addElement(resp);
+                if (state == null) {
+                    throw new IllegalStateException("state");
+                }
+                if (state != StreamState.INITIALIZED) {
+                    // This is a first response, default value is initialized if omitted
+                    resp.putString("stream", state.jsonName);
+                }
+
+                if (updates != null) {
+                    resp.putElement("update", updates);
+                }
+            } catch (Exception e) {
+                resp.putString("stream", StreamState.CLOSED.jsonName);
+
+                JsonObject error = new JsonObject();
+                error.putString("msg", e.getMessage());
+
+                StringWriter writer = new StringWriter();
+                e.printStackTrace(new PrintWriter(writer));
+                error.putString("detail", writer.toString());
+            } finally {
+                responses.addElement(resp);
+            }
         }
+
+        top.putElement("responses", responses);
+        connector.write(top);
     }
 
     private synchronized void checkConnected() {

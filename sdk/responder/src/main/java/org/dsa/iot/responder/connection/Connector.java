@@ -41,6 +41,8 @@ public abstract class Connector {
      */
     public abstract void disconnect();
 
+    public abstract void write(JsonObject obj);
+
     /**
      * @return A full path with an attached query string
      */
