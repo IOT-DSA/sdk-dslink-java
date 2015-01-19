@@ -158,6 +158,8 @@ public class Responder {
                 StringWriter writer = new StringWriter();
                 e.printStackTrace(new PrintWriter(writer));
                 error.putString("detail", writer.toString());
+
+                resp.putElement("error", error);
             } finally {
                 responses.addElement(resp);
             }
