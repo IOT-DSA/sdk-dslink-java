@@ -11,6 +11,8 @@ import org.vertx.java.core.http.HttpClientResponse;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.json.impl.Base64;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * Holds handshake information about a server.
  * @author Samuel Grenier
@@ -65,7 +67,9 @@ public class HandshakeServer {
         req.write(encoded);
         req.end();
 
-        HttpClientResponse resp = reqHandler.get();
+        HttpClientResponse resp = reqHandler.get(2, TimeUnit.SECONDS);
+        if (resp == null)
+            throw new NullPointerException("resp");
         SyncHandler<Buffer> bufHandler = new SyncHandler<>();
         resp.bodyHandler(bufHandler);
 
