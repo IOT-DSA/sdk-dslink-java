@@ -60,7 +60,9 @@ public class HandshakeServer {
         SyncHandler<HttpClientResponse> reqHandler = new SyncHandler<>();
         HttpClientRequest req = client.post(url.path, reqHandler);
 
-        req.write(hc.toJson().encode());
+        String encoded = hc.toJson().encode();
+        req.putHeader("Content-Length", String.valueOf(encoded.length()));
+        req.write(encoded);
         req.end();
 
         HttpClientResponse resp = reqHandler.get();
