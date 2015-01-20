@@ -29,14 +29,9 @@ public class Responder {
     private Connector connector;
     private boolean connected;
 
-    public void createRoot(String name) {
+    public Node createRoot(String name) {
         checkConnected();
-        nodeManager.createRootNode(name);
-    }
-
-    public void addRoot(Node node) {
-        checkConnected();
-        nodeManager.addRootNode(node);
+        return nodeManager.createRootNode(name);
     }
 
     /**
