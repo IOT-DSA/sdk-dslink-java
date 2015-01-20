@@ -1,5 +1,6 @@
 package org.dsa.iot.responder.connection;
 
+import lombok.AllArgsConstructor;
 import org.bouncycastle.jcajce.provider.digest.SHA256;
 import org.dsa.iot.core.URLInfo;
 import org.dsa.iot.responder.connection.connector.WebSocketConnector;
@@ -14,15 +15,11 @@ import java.io.UnsupportedEncodingException;
 /**
  * @author Samuel Grenier
  */
+@AllArgsConstructor
 public abstract class Connector {
 
     public final URLInfo dataEndpoint;
     public final HandshakeServer hs;
-
-    public Connector(URLInfo dataEndpoint, HandshakeServer hs) {
-        this.dataEndpoint = dataEndpoint;
-        this.hs = hs;
-    }
 
     /**
      * Connects to the server based on the implementation.
