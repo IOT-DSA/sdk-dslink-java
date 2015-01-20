@@ -1,5 +1,6 @@
 package org.dsa.iot.responder.node;
 
+import lombok.AllArgsConstructor;
 import org.dsa.iot.responder.node.exceptions.DuplicateException;
 import org.dsa.iot.responder.node.exceptions.NoSuchPathException;
 
@@ -10,19 +11,22 @@ import java.util.Map;
  * Handles nodes based on paths.
  * @author Samuel Grenier
  */
+@AllArgsConstructor
 public class NodeManager {
+
+    private final SubscriptionManager subManager;
 
     private final Map<String, Node> rootNodes = new HashMap<>();
 
     public Node createRootNode(String name) {
-        return addRootNode(new Node(null, name));
+        return addRootNode(new Node(subManager, null, name));
     }
 
     public Node addRootNode(Node node) {
-        if (rootNodes.containsKey(node.name)) {
-            throw new DuplicateException(node.name);
+        if (rootNodes.containsKey(node.getName())) {
+            throw new DuplicateException(node.getName());
         }
-        rootNodes.put(node.name, node);
+        rootNodes.put(node.getName(), node);
         return node;
     }
 

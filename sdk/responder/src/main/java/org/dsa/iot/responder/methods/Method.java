@@ -1,5 +1,8 @@
 package org.dsa.iot.responder.methods;
 
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
 import org.vertx.java.core.json.JsonObject;
 
 /**
@@ -7,16 +10,15 @@ import org.vertx.java.core.json.JsonObject;
  */
 public abstract class Method {
 
+    @Getter
+    @Setter(AccessLevel.PROTECTED)
     private StreamState state;
 
     /**
+     * @param request Original request body
      * @return An array of invocations
      */
-    public abstract JsonObject invoke();
-
-    public StreamState getState() {
-        return state;
-    }
+    public abstract JsonObject invoke(JsonObject request);
 
     public enum StreamState {
         INITIALIZED("initialize"),

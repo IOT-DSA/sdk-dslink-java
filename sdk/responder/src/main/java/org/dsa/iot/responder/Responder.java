@@ -1,9 +1,11 @@
 package org.dsa.iot.responder;
 
+import lombok.Getter;
 import org.dsa.iot.responder.connection.Connector;
 import org.dsa.iot.responder.methods.*;
 import org.dsa.iot.responder.node.Node;
 import org.dsa.iot.responder.node.NodeManager;
+import org.dsa.iot.responder.node.SubscriptionManager;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
@@ -18,21 +20,23 @@ import static org.dsa.iot.responder.methods.Method.StreamState;
 /**
  * @author Samuel Grenier
  */
+@Getter
 public class Responder {
 
-    private final NodeManager manager = new NodeManager();
+    private NodeManager nodeManager;
+    private SubscriptionManager subManager;
 
     private Connector connector;
     private boolean connected;
 
     public void createRoot(String name) {
         checkConnected();
-        manager.createRootNode(name);
+        nodeManager.createRootNode(name);
     }
 
     public void addRoot(Node node) {
         checkConnected();
-        manager.addRootNode(node);
+        nodeManager.addRootNode(node);
     }
 
     /**
@@ -42,6 +46,31 @@ public class Responder {
     public void setConnector(Connector connector) {
         checkConnected();
         this.connector = connector;
+        subManager = new SubscriptionManager(connector);
+        setSubscriptionManager(new SubscriptionManager(connector));
+        setNodeManager(new NodeManager(subManager));
+    }
+
+    /**
+     * Requires that the subscription manager is already configured.
+     * Sets the node manager used for handling root nodes and node lookups.
+     * @param manager Manager instance to use
+     */
+    public void setNodeManager(NodeManager manager) {
+        checkConnector();
+        checkConnected();
+        nodeManager = manager;
+    }
+
+    /**
+     * Requires that the connector is already configured. Used to configure how
+     * subscriptions will be updated and handled.
+     * @param manager Manager instance to use
+     */
+    public void setSubscriptionManager(SubscriptionManager manager) {
+        checkConnector();
+        checkConnected();
+        subManager = manager;
     }
 
     /**
@@ -106,7 +135,7 @@ public class Responder {
             Method method;
             switch (sMethod) {
                 case "list":
-                    Node node = manager.getNode(path);
+                    Node node = nodeManager.getNode(path);
                     method = new ListMethod(node);
                     break;
                 case "set":
@@ -119,10 +148,10 @@ public class Responder {
                     method = new InvokeMethod();
                     break;
                 case "subscribe":
-                    method = new SubscribeMethod();
+                    method = new SubscribeMethod(nodeManager);
                     break;
                 case "unsubscribe":
-                    method = new UnsubscribeMethod();
+                    method = new UnsubscribeMethod(nodeManager);
                     break;
                 case "close":
                     method = new CloseMethod();
@@ -135,7 +164,7 @@ public class Responder {
             try {
                 resp.putNumber("rid", rid);
 
-                JsonObject updates = method.invoke();
+                JsonObject updates = method.invoke(o);
                 StreamState state = method.getState();
 
                 if (state == null) {
@@ -146,7 +175,7 @@ public class Responder {
                     resp.putString("stream", state.jsonName);
                 }
 
-                if (updates != null) {
+                if (updates != null && updates.size() > 0) {
                     resp.putElement("update", updates);
                 }
             } catch (Exception e) {

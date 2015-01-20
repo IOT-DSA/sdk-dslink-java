@@ -7,7 +7,7 @@ import org.vertx.java.core.json.JsonObject;
  */
 public class CloseMethod extends Method {
     @Override
-    public JsonObject invoke() {
+    public JsonObject invoke(JsonObject request) {
         throw new UnsupportedOperationException();
     }
 }

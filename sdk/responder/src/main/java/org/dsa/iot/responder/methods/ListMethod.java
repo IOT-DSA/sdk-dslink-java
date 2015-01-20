@@ -1,7 +1,8 @@
 package org.dsa.iot.responder.methods;
 
+import lombok.AllArgsConstructor;
+import lombok.NonNull;
 import org.dsa.iot.responder.node.Node;
-import org.dsa.iot.responder.node.exceptions.NoSuchPathException;
 import org.dsa.iot.responder.node.value.Value;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
@@ -11,22 +12,14 @@ import java.util.Map;
 /**
  * @author Samuel Grenier
  */
+@AllArgsConstructor
 public class ListMethod extends Method {
 
+    @NonNull
     private final Node parent;
 
-    /**
-     * @param parent The node to be listed
-     */
-    public ListMethod(Node parent) {
-        if (parent == null) {
-            throw new NoSuchPathException();
-        }
-        this.parent = parent;
-    }
-
     @Override
-    public JsonObject invoke() {
+    public JsonObject invoke(JsonObject request) {
         JsonArray array = new JsonArray();
         writeParentData(array, parent.getConfigurations());
         writeParentData(array, parent.getAttributes());
@@ -61,6 +54,7 @@ public class ListMethod extends Method {
             }
         }
 
+        setState(StreamState.CLOSED);
         return array.asObject();
     }
 
@@ -79,7 +73,7 @@ public class ListMethod extends Method {
                         valArray.addNumber(value.getInteger());
                         break;
                     case BOOL:
-                        valArray.addBoolean(value.getBoolean());
+                        valArray.addBoolean(value.getBool());
                         break;
                     default:
                         throw new RuntimeException("Unhandled value type");

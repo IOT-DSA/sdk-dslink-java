@@ -19,7 +19,7 @@ public class ValueTest {
         Assert.assertNotNull(val.getInteger());
         Assert.assertEquals(1, val.getInteger().intValue());
 
-        Assert.assertNull(val.getBoolean());
+        Assert.assertNull(val.getBool());
         Assert.assertNull(val.getString());
     }
 
@@ -29,10 +29,34 @@ public class ValueTest {
         val.set(true);
 
         Assert.assertEquals(ValueType.BOOL, val.getType());
-        Assert.assertNotNull(val.getBoolean());
-        Assert.assertEquals(true, val.getBoolean());
+        Assert.assertNotNull(val.getBool());
+        Assert.assertEquals(true, val.getBool());
 
         Assert.assertNull(val.getInteger());
         Assert.assertNull(val.getString());
+    }
+
+    @Test
+    public void equals() {
+        Value a = new Value(1);
+        Value b = new Value(true);
+        Value c = new Value(false);
+        Value d = new Value("string");
+
+        Assert.assertFalse(a.equals(b));
+        Assert.assertFalse(a.equals(c));
+        Assert.assertFalse(a.equals(d));
+
+        Assert.assertFalse(b.equals(a));
+        Assert.assertFalse(b.equals(c));
+        Assert.assertFalse(b.equals(d));
+
+        Assert.assertFalse(c.equals(a));
+        Assert.assertFalse(c.equals(b));
+        Assert.assertFalse(c.equals(d));
+
+        Assert.assertFalse(d.equals(a));
+        Assert.assertFalse(d.equals(b));
+        Assert.assertFalse(d.equals(c));
     }
 }

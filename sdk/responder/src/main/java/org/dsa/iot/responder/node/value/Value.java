@@ -1,15 +1,20 @@
 package org.dsa.iot.responder.node.value;
 
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+
 /**
  * @author Samuel Grenier
  */
+@Getter
+@EqualsAndHashCode
 public class Value {
 
     private ValueType type;
 
-    private Integer i;
-    private Boolean b;
-    private String s;
+    private Integer integer;
+    private Boolean bool;
+    private String string;
 
     public Value(Integer i) {
         set(i);
@@ -37,24 +42,8 @@ public class Value {
 
     private void set(ValueType type, Integer i, Boolean b, String s) {
         this.type = type;
-        this.i = i;
-        this.b = b;
-        this.s = s;
-    }
-
-    public ValueType getType() {
-        return type;
-    }
-
-    public Integer getInteger() {
-        return i;
-    }
-
-    public Boolean getBoolean() {
-        return b;
-    }
-
-    public String getString() {
-        return s;
+        this.integer = i;
+        this.bool = b;
+        this.string = s;
     }
 }

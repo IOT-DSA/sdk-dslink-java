@@ -1,5 +1,8 @@
 package org.dsa.iot.responder.node;
 
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.Setter;
 import org.dsa.iot.responder.node.exceptions.DuplicateException;
 import org.dsa.iot.responder.node.value.Value;
 
@@ -9,31 +12,44 @@ import java.util.Map;
 /**
  * @author Samuel Grenier
  */
+@Getter
 public class Node {
 
+    private final SubscriptionManager manager;
     private final Node parent;
 
     private Map<String, Node> children;
     private Map<String, Value> attributes;
     private Map<String, Value> configurations;
+    private final String name;
+    private final String path;
 
-    public final String name;
     private String displayName;
+    private Value currentValue;
+
+    @Setter
+    private boolean invokable; // TODO
+
+    /**
+     * Whether the node is currently subscribed to or not
+     */
+    @Setter
+    private boolean subscribed;
 
     /**
      *
      * @param parent The parent of this node, or null if a root node
      * @param name The name of this node
      */
-    public Node(Node parent, String name) {
-        if (name == null
-                || name.isEmpty()
-                || name.contains("/")
-                || name.startsWith("@")
-                || name.startsWith("$"))
+    public Node(SubscriptionManager manager,
+                                        Node parent, @NonNull String name) {
+        if (name.isEmpty() || name.contains("/")
+                || name.startsWith("@") || name.startsWith("$"))
             throw new IllegalArgumentException("name");
+        this.manager = manager;
         this.parent = parent;
         this.name = name;
+        path = parent == null ? "/" + name : parent.getPath() + "/" + name;
     }
 
     public void setDisplayName(String name) {
@@ -41,12 +57,15 @@ public class Node {
             displayName = null;
             return;
         }
-        if (name.isEmpty()
-                || name.contains("/")
-                || name.startsWith("@")
-                || name.startsWith("$"))
+        if (name.isEmpty() || name.contains("/") || name.startsWith("@")
+                                                    || name.startsWith("$"))
             throw new IllegalArgumentException("name");
         this.displayName = name;
+    }
+
+    public void setCurrentValue(Value value) {
+        this.currentValue = value;
+        update();
     }
 
     public void addAttribute(String name, Value value) {
@@ -76,7 +95,7 @@ public class Node {
     }
 
     public Node createChild(String name) {
-        return addChild(new Node(this, name));
+        return addChild(new Node(manager, this, name));
     }
 
     public Node addChild(Node node) {
@@ -93,63 +112,32 @@ public class Node {
     }
 
     public Node removeChild(String name) {
-        if (children != null)
-            return children.remove(name);
-        return null;
+        return children != null ? children.remove(name) : null;
     }
 
     public Value removeAttribute(String name) {
-        if (attributes != null)
-            return attributes.remove(name);
-        return null;
+        return attributes != null ? attributes.remove(name) : null;
     }
 
     public Value removeConfiguration(String name) {
-        if (configurations != null)
-            return configurations.remove(name);
-        return null;
-    }
-
-    /**
-     * @return Whether the node can be invoked or not
-     */
-    public boolean isInvokable() {
-        return false;
-    }
-
-    public String getDisplayName() {
-        return displayName;
-    }
-
-    public String getPath() {
-        if (parent == null) {
-            // This is a root node
-            return "/" + name;
-        }
-        return parent.getPath() + "/" + name;
+        return configurations != null ? configurations.remove(name) : null;
     }
 
     public Value getAttribute(String name) {
         return attributes != null ? attributes.get(name) : null;
     }
 
-    public Map<String, Value> getAttributes() {
-        return attributes;
-    }
-
     public Value getConfiguration(String name) {
         return configurations != null ? configurations.get(name) : null;
-    }
-
-    public Map<String, Value> getConfigurations() {
-        return configurations;
     }
 
     public Node getChild(String name) {
         return children != null ? children.get(name) : null;
     }
 
-    public Map<String, Node> getChildren() {
-        return children;
+    private void update() {
+        if (manager != null && isSubscribed()) {
+            manager.update(this);
+        }
     }
 }
