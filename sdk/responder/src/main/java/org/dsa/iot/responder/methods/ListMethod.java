@@ -1,9 +1,13 @@
 package org.dsa.iot.responder.methods;
 
-import lombok.AllArgsConstructor;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import org.dsa.iot.responder.connection.Connector;
 import org.dsa.iot.responder.node.Node;
+import org.dsa.iot.responder.node.NodeManager;
+import org.dsa.iot.responder.node.RequestTracker;
 import org.dsa.iot.responder.node.value.Value;
+import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
@@ -12,14 +16,51 @@ import java.util.Map;
 /**
  * @author Samuel Grenier
  */
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class ListMethod extends Method {
+
+    @NonNull
+    private final Connector connector;
 
     @NonNull
     private final Node parent;
 
+    @NonNull
+    private final RequestTracker tracker;
+
+    private final int rid;
+
+    private Handler<NodeManager.NodeBooleanTuple> handler;
+
     @Override
     public JsonObject invoke(JsonObject request) {
+        handler = parent.addChildrenHandler(new Handler<NodeManager.NodeBooleanTuple>() {
+            @Override
+            public void handle(NodeManager.NodeBooleanTuple event) {
+                nodeUpdate(event.getNode(), event.isBool());
+            }
+        });
+        setState(StreamState.OPEN);
+        return getResponse().asObject();
+    }
+
+    public void nodeUpdate(Node node, boolean removed) {
+        if (tracker.isTracking(rid)) {
+            JsonObject response = new JsonObject();
+            response.putNumber("rid", rid);
+            response.putString("stream", getState().jsonName);
+
+            JsonArray updates = new JsonArray();
+            updates.addElement(getChild(node, removed));
+            response.putArray("update", updates);
+
+            connector.write(response);
+        } else {
+            parent.removeChildrenHandler(handler);
+        }
+    }
+
+    private JsonArray getResponse() {
         JsonArray array = new JsonArray();
         writeParentData(array, parent.getConfigurations());
         writeParentData(array, parent.getAttributes());
@@ -31,31 +72,41 @@ public class ListMethod extends Method {
                 arr.addString(entry.getKey());
 
                 Node node = entry.getValue();
-
-                JsonObject obj = new JsonObject();
-                {
-                    obj.putString("$is", node.getConfiguration("is").getString());
-
-                    String name = node.getDisplayName();
-                    if (name != null) {
-                        obj.putString("$name", name);
-                    }
-
-                    obj.putBoolean("$invokable", node.isInvokable());
-
-                    Value interfaces = node.getConfiguration("interface");
-                    if (interfaces != null) {
-                        obj.putString("$interface", interfaces.getString());
-                    }
-                }
-                arr.addElement(obj);
+                arr.addElement(getChild(node, false));
 
                 array.addElement(arr);
             }
         }
+        return array;
+    }
 
-        setState(StreamState.CLOSED);
-        return array.asObject();
+    private JsonArray getChild(Node node, boolean removed) {
+        JsonArray array = new JsonArray();
+        array.addString(node.getName());
+
+        {
+            JsonObject obj = new JsonObject();
+            obj.putString("$is", node.getConfiguration("is").getString());
+
+            String name = node.getDisplayName();
+            if (name != null) {
+                obj.putString("$name", name);
+            }
+
+            obj.putBoolean("$invokable", node.isInvokable());
+
+            Value interfaces = node.getConfiguration("interface");
+            if (interfaces != null) {
+                obj.putString("$interface", interfaces.getString());
+            }
+
+            if (removed) {
+                obj.putString("$change", "remove");
+            }
+
+            array.addObject(obj);
+        }
+        return array;
     }
 
     private void writeParentData(JsonArray out, Map<String, Value> data) {

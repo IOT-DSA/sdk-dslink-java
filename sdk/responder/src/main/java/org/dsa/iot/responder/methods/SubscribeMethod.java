@@ -37,10 +37,10 @@ public class SubscribeMethod extends Method {
     protected List<Node> getPaths(JsonArray array) {
         List<Node> subscriptions = new ArrayList<>();
         for (String s : (List<String>) array.toList()) {
-            Node n = manager.getNode(s);
-            if (n == null)
+            NodeManager.NodeStringTuple tuple = manager.getNode(s);
+            if (tuple == null)
                 throw new NoSuchPathException(s);
-            subscriptions.add(n);
+            subscriptions.add(tuple.getNode());
         }
         return subscriptions;
     }

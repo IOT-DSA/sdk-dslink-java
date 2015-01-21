@@ -28,7 +28,7 @@ public class SubscriptionManager {
         JsonArray array = new JsonArray();
         array.addString(node.getPath());
 
-        Value value = node.getCurrentValue();
+        Value value = node.getValue();
         if (value != null) {
             switch (value.getType()) {
                 case STRING:

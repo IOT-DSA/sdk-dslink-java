@@ -5,6 +5,7 @@ import org.dsa.iot.responder.connection.Connector;
 import org.dsa.iot.responder.methods.*;
 import org.dsa.iot.responder.node.Node;
 import org.dsa.iot.responder.node.NodeManager;
+import org.dsa.iot.responder.node.RequestTracker;
 import org.dsa.iot.responder.node.SubscriptionManager;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
@@ -15,6 +16,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Iterator;
 
+import static org.dsa.iot.responder.node.NodeManager.NodeStringTuple;
 import static org.dsa.iot.responder.methods.Method.StreamState;
 
 /**
@@ -25,6 +27,7 @@ public class Responder {
 
     private NodeManager nodeManager;
     private SubscriptionManager subManager;
+    private RequestTracker tracker;
 
     private Connector connector;
     private boolean connected;
@@ -44,6 +47,7 @@ public class Responder {
         subManager = new SubscriptionManager(connector);
         setSubscriptionManager(new SubscriptionManager(connector));
         setNodeManager(new NodeManager(subManager));
+        setRequestTracker(new RequestTracker());
     }
 
     /**
@@ -66,6 +70,16 @@ public class Responder {
         checkConnector();
         checkConnected();
         subManager = manager;
+    }
+
+    /**
+     * Used to configure how tracking is configured. The tracker is used by methods
+     * who need to keep track if it should continue writing or not.
+     * @param tracker Tracker instance to use.
+     */
+    public void setRequestTracker(RequestTracker tracker) {
+        checkConnected();
+        this.tracker = tracker;
     }
 
     /**
@@ -126,21 +140,22 @@ public class Responder {
             Number rid = o.getNumber("rid");
             String sMethod = o.getString("method");
             String path = o.getString("path");
+            NodeStringTuple node = nodeManager.getNode(path);
 
             Method method;
             switch (sMethod) {
                 case "list":
-                    Node node = nodeManager.getNode(path);
-                    method = new ListMethod(node);
+                    method = new ListMethod(connector, node.getNode(),
+                                            tracker, rid.intValue());
                     break;
                 case "set":
-                    method = new SetMethod();
+                    method = new SetMethod(node.getNode(), node.getString());
                     break;
                 case "remove":
-                    method = new RemoveMethod();
+                    method = new RemoveMethod(node.getNode(), node.getString());
                     break;
                 case "invoke":
-                    method = new InvokeMethod();
+                    method = new InvokeMethod(node.getNode());
                     break;
                 case "subscribe":
                     method = new SubscribeMethod(nodeManager);
@@ -149,7 +164,7 @@ public class Responder {
                     method = new UnsubscribeMethod(nodeManager);
                     break;
                 case "close":
-                    method = new CloseMethod();
+                    method = new CloseMethod(tracker, rid.intValue());
                     break;
                 default:
                     throw new RuntimeException("Unknown method");
@@ -169,7 +184,10 @@ public class Responder {
                     // This is a first response, default value is initialized if omitted
                     resp.putString("stream", state.jsonName);
                 }
-
+                if (state == StreamState.OPEN
+                        || state == StreamState.INITIALIZED) {
+                    tracker.track(rid.intValue());
+                }
                 if (updates != null && updates.size() > 0) {
                     resp.putElement("update", updates);
                 }
