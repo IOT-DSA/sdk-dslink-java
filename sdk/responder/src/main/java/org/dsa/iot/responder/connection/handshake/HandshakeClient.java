@@ -7,14 +7,13 @@ import org.bouncycastle.crypto.generators.RSAKeyPairGenerator;
 import org.bouncycastle.crypto.params.RSAKeyGenerationParameters;
 import org.bouncycastle.crypto.params.RSAKeyParameters;
 import org.bouncycastle.crypto.util.SubjectPublicKeyInfoFactory;
-import org.bouncycastle.jcajce.provider.digest.SHA384;
+import org.bouncycastle.jcajce.provider.digest.SHA256;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.json.impl.Base64;
 
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.SecureRandom;
-import java.util.Arrays;
 
 /**
  * Handshake information for the client.
@@ -51,11 +50,9 @@ public class HandshakeClient {
         byte[] modBytes = modulus.toByteArray();
         this.publicKey = Base64.encodeBytes(modBytes, Base64.URL_SAFE);
 
-        SHA384.Digest sha = new SHA384.Digest();
+        SHA256.Digest sha = new SHA256.Digest();
         byte[] hash = sha.digest(modBytes);
         this.dsId = dsIdPrefix + "-" + Base64.encodeBytes(hash, Base64.URL_SAFE);
-        System.out.println(Arrays.toString(modBytes)); // DEBUG
-        System.out.println(Arrays.toString(hash)); // DEBUG
     }
 
     public JsonObject toJson() {
