@@ -52,7 +52,9 @@ public class HandshakeClient {
 
         SHA256.Digest sha = new SHA256.Digest();
         byte[] hash = sha.digest(modBytes);
-        this.dsId = dsIdPrefix + "-" + Base64.encodeBytes(hash, Base64.URL_SAFE);
+
+        String encoded = Base64.encodeBytes(hash, Base64.URL_SAFE);
+        this.dsId = dsIdPrefix + "-" + encoded.substring(0, encoded.length() - 1);
     }
 
     public JsonObject toJson() {
