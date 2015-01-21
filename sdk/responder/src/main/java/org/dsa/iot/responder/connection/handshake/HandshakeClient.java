@@ -47,10 +47,11 @@ public class HandshakeClient {
         this.privKeyInfo = key.getPrivate();
 
         BigInteger modulus = pubParams.getModulus();
-        this.publicKey = Base64.encodeBytes(modulus.toByteArray(), Base64.URL_SAFE);
+        byte[] modBytes = modulus.toByteArray();
+        this.publicKey = Base64.encodeBytes(modBytes, Base64.URL_SAFE);
 
         SHA384.Digest sha = new SHA384.Digest();
-        byte[] hash = sha.digest(pubKeyInfo.getEncoded());
+        byte[] hash = sha.digest(modBytes);
         this.dsId = dsIdPrefix + "-" + Base64.encodeBytes(hash, Base64.URL_SAFE);
 
     }
