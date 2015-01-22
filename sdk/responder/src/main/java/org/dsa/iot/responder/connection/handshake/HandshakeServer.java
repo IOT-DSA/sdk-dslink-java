@@ -93,6 +93,8 @@ public class HandshakeServer {
 
     private static byte[] decryptNonce(HandshakeClient client,
                                        String encryptedNonce) {
+        while (encryptedNonce.length() % 4 != 0)
+            encryptedNonce += ".";
         byte[] decrypted = UrlBase64.decode(encryptedNonce);
         RSAEngine engine = new RSAEngine();
         engine.init(false, client.privKeyInfo);
