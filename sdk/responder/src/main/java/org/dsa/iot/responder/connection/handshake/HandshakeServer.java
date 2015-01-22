@@ -1,6 +1,7 @@
 package org.dsa.iot.responder.connection.handshake;
 
 import org.bouncycastle.crypto.engines.RSAEngine;
+import org.bouncycastle.util.encoders.UrlBase64;
 import org.dsa.iot.core.SyncHandler;
 import org.dsa.iot.core.URLInfo;
 import org.dsa.iot.core.Utils;
@@ -9,7 +10,6 @@ import org.vertx.java.core.http.HttpClient;
 import org.vertx.java.core.http.HttpClientRequest;
 import org.vertx.java.core.http.HttpClientResponse;
 import org.vertx.java.core.json.JsonObject;
-import org.vertx.java.core.json.impl.Base64;
 
 import java.util.concurrent.TimeUnit;
 
@@ -91,9 +91,9 @@ public class HandshakeServer {
 
     private static byte[] decryptNonce(HandshakeClient client,
                                        String encryptedNonce) {
-        byte[] encrypted = Base64.decode(encryptedNonce);
+        byte[] decrypted = UrlBase64.decode(encryptedNonce);
         RSAEngine engine = new RSAEngine();
         engine.init(false, client.privKeyInfo);
-        return engine.processBlock(encrypted, 0, encrypted.length);
+        return engine.processBlock(decrypted, 0, decrypted.length - 2);
     }
 }

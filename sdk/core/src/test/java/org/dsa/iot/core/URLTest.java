@@ -18,23 +18,30 @@ public class URLTest {
 
     @Test
     public void urlParser() {
-        URLInfo info = URLInfo.parse("https://localhost");
+        URLInfo[] info = new URLInfo[] {
+            URLInfo.parse("https://localhost"),
+            URLInfo.parse("https://localhost/"),
+            URLInfo.parse("https://localhost:443"),
+            URLInfo.parse("https://localhost:443/")
+        };
 
-        Assert.assertEquals(info.host, "localhost");
-        Assert.assertEquals(info.path, "/");
-        Assert.assertEquals(info.protocol, "https");
-        Assert.assertEquals(info.port, 443);
-        Assert.assertTrue(info.secure);
+        for (URLInfo i : info) {
+            Assert.assertEquals("localhost", i.host);
+            Assert.assertEquals("/", i.path);
+            Assert.assertEquals("https", i.protocol);
+            Assert.assertEquals(443, i.port);
+            Assert.assertTrue(i.secure);
+        }
     }
 
     @Test
     public void urlParserOverride() {
-        URLInfo info = URLInfo.parse("https://localhost:80/test", false);
+        URLInfo info = URLInfo.parse("https://localhost:8080/test", false);
 
         Assert.assertEquals(info.host, "localhost");
         Assert.assertEquals(info.path, "/test");
         Assert.assertEquals(info.protocol, "https");
-        Assert.assertEquals(info.port, 80);
+        Assert.assertEquals(info.port, 8080);
         Assert.assertFalse(info.secure);
     }
 }

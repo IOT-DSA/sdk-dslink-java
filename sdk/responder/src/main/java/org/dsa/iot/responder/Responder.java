@@ -34,6 +34,7 @@ public class Responder {
 
     public Node createRoot(String name) {
         checkConnected();
+        checkConnector();
         return nodeManager.createRootNode(name);
     }
 

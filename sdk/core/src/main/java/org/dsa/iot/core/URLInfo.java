@@ -1,8 +1,5 @@
 package org.dsa.iot.core;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-
 /**
  * @author Samuel Grenier
  */
@@ -33,31 +30,46 @@ public class URLInfo {
      * @return An information object about a URL.
      */
     public static URLInfo parse(String url, Boolean secureOverride) {
-        URL u = getURL(url);
+        if (!url.contains("://"))
+            throw new RuntimeException("Invalid URL");
+        String[] parts = url.split("://");
+        if (parts.length > 2)
+            throw new RuntimeException("Invalid URL");
 
-        String protocol = u.getProtocol();
+        String protocol = parts[0];
         boolean secure = false;
         if (secureOverride != null)
             secure = secureOverride;
         else if ("wss".equals(protocol) || "https".equals(protocol))
             secure = true;
 
-        String host = u.getHost();
-        int port = u.getPort();
-        if (port == -1)
-            port = Utils.getDefaultPort(u.getProtocol());
+        String host = parts[1];
+        String path = "/";
+        int port = -1;
 
-        String path = u.getPath();
-        if (path == null || path.isEmpty())
-            path = "/";
-        return new URLInfo(protocol, host, port, path, secure);
-    }
+        if (parts[1].contains(":")) {
+            int index = parts[1].indexOf(':');
+            host = parts[1].substring(0, index);
 
-    public static URL getURL(String url) {
-        try {
-            return new URL(url);
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
+            // Secondary can contain port and path
+            String secondary = parts[1].substring(index + 1);
+            if (secondary.contains("/")) {
+                index = secondary.indexOf('/');
+                port = Integer.parseInt(secondary.substring(0, index));
+                path = secondary.substring(index);
+            } else {
+                port = Integer.parseInt(secondary);
+            }
+        } else if (host.contains("/")) {
+            int index = host.indexOf('/');
+            host = host.substring(0, index);
+            path = host.substring(index);
+            if (path.isEmpty())
+                path = "/";
         }
+
+        if (port == -1)
+            port = Utils.getDefaultPort(protocol);
+        return new URLInfo(protocol, host, port, path, secure);
     }
 }

@@ -13,18 +13,23 @@ import org.dsa.iot.responder.connection.handshake.HandshakeServer;
 public class Main {
 
     @SneakyThrows
+    @SuppressWarnings("InfiniteLoopStatement")
     public static void main(String[] args) {
         System.out.println("Initializing...");
         Responder resp = new Responder();
 
         HandshakeClient client = HandshakeClient.generate("demo");
         HandshakeServer server = HandshakeServer.perform("http://localhost:8080/conn", client);
+        resp.setConnector(Connector.create("ws://localhost:8080", server, ConnectionType.WS));
 
         resp.createRoot("Demo");
 
-        resp.setConnector(Connector.create("ws://localhost:8080", server, ConnectionType.WS));
+        System.out.println("Connecting...");
         resp.connect();
         System.out.println("Connected");
+        while (true) {
+            Thread.sleep(1000);
+        }
     }
 
 }

@@ -46,6 +46,12 @@ public abstract class Connector {
     protected String getPath() {
         StringBuilder query = new StringBuilder(dataEndpoint.path);
         try { // Auth parameter
+            String uri = hs.wsUri;
+            if (uri.startsWith("/"))
+                uri = uri.substring(1);
+            if (!dataEndpoint.path.equals("/"))
+                query.append("/");
+            query.append(uri);
             query.append("?auth=");
 
             byte[] salt = getSalt().getBytes("UTF-8");
@@ -57,7 +63,9 @@ public abstract class Connector {
 
             SHA256.Digest digest = new SHA256.Digest();
             byte[] output = digest.digest(buffer.getBytes());
-            query.append(Base64.encodeBytes(output, Base64.URL_SAFE));
+
+            String encoded = Base64.encodeBytes(output, Base64.URL_SAFE);
+            query.append(encoded.substring(0, encoded.length() - 1));
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }
