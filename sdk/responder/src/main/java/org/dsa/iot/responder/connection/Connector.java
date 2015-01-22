@@ -1,9 +1,11 @@
 package org.dsa.iot.responder.connection;
 
 import lombok.AllArgsConstructor;
+import lombok.NonNull;
 import org.bouncycastle.jcajce.provider.digest.SHA256;
 import org.dsa.iot.core.URLInfo;
 import org.dsa.iot.responder.connection.connector.WebSocketConnector;
+import org.dsa.iot.responder.connection.handshake.HandshakeClient;
 import org.dsa.iot.responder.connection.handshake.HandshakeServer;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
@@ -18,7 +20,13 @@ import java.io.UnsupportedEncodingException;
 @AllArgsConstructor
 public abstract class Connector {
 
+    @NonNull
     public final URLInfo dataEndpoint;
+
+    @NonNull
+    public final HandshakeClient hc;
+
+    @NonNull
     public final HandshakeServer hs;
 
     /**
@@ -66,6 +74,9 @@ public abstract class Connector {
 
             String encoded = Base64.encodeBytes(output, Base64.URL_SAFE);
             query.append(encoded.substring(0, encoded.length() - 1));
+
+            query.append("&dsId=");
+            query.append(hc.dsId);
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }
@@ -79,20 +90,21 @@ public abstract class Connector {
     /**
      *
      * @param url URL to connect to.
+     * @param hc Handshake client
      * @param hs Retrieved information about the handshake from the server.
      * @param type If type is {@link ConnectionType#HTTP}
      *             or {@link ConnectionType#WS} then the URL must be a handshake
      *             connection initiation endpoint, not the actual data URL.
      * @return A connector instance
      */
-    public static Connector create(String url, HandshakeServer hs, ConnectionType type) {
+    public static Connector create(String url, HandshakeClient hc, HandshakeServer hs, ConnectionType type) {
         switch (type) {
             case SOCKET:
                 throw new UnsupportedOperationException("Sockets not implemented yet");
             case HTTP:
                 throw new UnsupportedOperationException("HTTP not implemented yet");
             case WS:
-                return new WebSocketConnector(URLInfo.parse(url), hs);
+                return new WebSocketConnector(URLInfo.parse(url), hc, hs);
             default:
                 throw new RuntimeException("Unknown type: " + type);
         }

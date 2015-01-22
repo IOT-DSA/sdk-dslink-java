@@ -20,7 +20,7 @@ public class Main {
 
         HandshakeClient client = HandshakeClient.generate("demo");
         HandshakeServer server = HandshakeServer.perform("http://localhost:8080/conn", client);
-        resp.setConnector(Connector.create("ws://localhost:8080", server, ConnectionType.WS));
+        resp.setConnector(Connector.create("ws://localhost:8080", client, server, ConnectionType.WS));
 
         resp.createRoot("Demo");
 

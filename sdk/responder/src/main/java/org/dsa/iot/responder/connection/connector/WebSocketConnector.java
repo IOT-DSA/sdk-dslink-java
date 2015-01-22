@@ -3,6 +3,7 @@ package org.dsa.iot.responder.connection.connector;
 import org.dsa.iot.core.URLInfo;
 import org.dsa.iot.core.Utils;
 import org.dsa.iot.responder.connection.Connector;
+import org.dsa.iot.responder.connection.handshake.HandshakeClient;
 import org.dsa.iot.responder.connection.handshake.HandshakeServer;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
@@ -18,8 +19,9 @@ public class WebSocketConnector extends Connector {
     protected HttpClient client;
     protected WebSocket socket;
 
-    public WebSocketConnector(URLInfo info, HandshakeServer hs) {
-        super(info, hs);
+    public WebSocketConnector(URLInfo info,
+                              HandshakeClient hc, HandshakeServer hs) {
+        super(info, hc, hs);
     }
 
     @Override
