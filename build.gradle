@@ -18,7 +18,7 @@ subprojects {
     }
 }
 
-configure([project(':sdk/requester'), project(':sdk/responder')]) {
+configure(project(':sdk/dslink')) {
     dependencies {
         compile project(':sdk/core')
     }

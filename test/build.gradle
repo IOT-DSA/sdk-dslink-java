@@ -4,5 +4,5 @@ version = '0.0.1-SNAPSHOT'
 mainClassName = 'org.dsa.iot.demo.Main'
 
 dependencies {
-    compile project(':sdk/responder')
+    compile project(':sdk/dslink')
 }
