@@ -1,11 +1,11 @@
 package org.dsa.iot.demo;
 
 import lombok.SneakyThrows;
-import org.dsa.iot.responder.Responder;
-import org.dsa.iot.responder.connection.ConnectionType;
-import org.dsa.iot.responder.connection.Connector;
-import org.dsa.iot.responder.connection.handshake.HandshakeClient;
-import org.dsa.iot.responder.connection.handshake.HandshakeServer;
+import org.dsa.iot.dslink.Responder;
+import org.dsa.iot.dslink.connection.ConnectionType;
+import org.dsa.iot.dslink.connection.Connector;
+import org.dsa.iot.dslink.connection.handshake.HandshakeClient;
+import org.dsa.iot.dslink.connection.handshake.HandshakeServer;
 
 /**
  * @author Samuel Grenier
