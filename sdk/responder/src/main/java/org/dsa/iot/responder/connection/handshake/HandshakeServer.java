@@ -73,7 +73,9 @@ public class HandshakeServer {
         SyncHandler<Buffer> bufHandler = new SyncHandler<>();
         resp.bodyHandler(bufHandler);
 
-        Buffer buf = bufHandler.get();
+        Buffer buf = bufHandler.get(5, TimeUnit.SECONDS);
+        if (buf == null)
+            throw new NullPointerException("buf (Failed to receive any data)");
         JsonObject obj = new JsonObject(buf.toString());
 
         String dsId = obj.getString("dsId");

@@ -14,7 +14,6 @@ import org.vertx.java.core.json.impl.Base64;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.SecureRandom;
-import java.util.Arrays;
 
 /**
  * Handshake information for the client.
@@ -49,7 +48,8 @@ public class HandshakeClient {
 
         BigInteger modulus = pubParams.getModulus();
         byte[] modBytes = modulus.toByteArray();
-        modBytes = Arrays.copyOfRange(modBytes, 1, modBytes.length);
+        // DEBUG COMMENT
+        //modBytes = Arrays.copyOfRange(modBytes, 1, modBytes.length);
 
         this.publicKey = Base64.encodeBytes(modBytes, Base64.URL_SAFE);
 
@@ -58,9 +58,6 @@ public class HandshakeClient {
 
         String encoded = Base64.encodeBytes(hash, Base64.URL_SAFE);
         this.dsId = dsIdPrefix + "-" + encoded.substring(0, encoded.length() - 1);
-
-        System.out.println("Modulus bytes: " + Arrays.toString(modBytes)); // DEBUG
-        System.out.println("SHA256 hash: " + Arrays.toString(hash)); // DEBUG
     }
 
     public JsonObject toJson() {
