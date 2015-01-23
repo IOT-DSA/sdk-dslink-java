@@ -5,8 +5,7 @@ import lombok.NonNull;
 import org.bouncycastle.jcajce.provider.digest.SHA256;
 import org.dsa.iot.core.URLInfo;
 import org.dsa.iot.dslink.connection.connector.WebSocketConnector;
-import org.dsa.iot.dslink.connection.handshake.HandshakeClient;
-import org.dsa.iot.dslink.connection.handshake.HandshakeServer;
+import org.dsa.iot.dslink.connection.handshake.HandshakePair;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.json.JsonObject;
@@ -24,21 +23,15 @@ public abstract class Connector {
     public final URLInfo dataEndpoint;
 
     @NonNull
-    public final HandshakeClient hc;
-
-    @NonNull
-    public final HandshakeServer hs;
+    public final HandshakePair pair;
 
     /**
      * Connects to the server based on the implementation.
      * @param data Handles incoming JSON parsed data
-     * @param dcHandler Disconnection handler. If {@link #disconnect} is called,
-     *                  this handler will not be called.
      * @param sslVerify Whether to validate the server SSL certificate if
      *                  attempting to connect over secure communications
      */
     public abstract void connect(final Handler<JsonObject> data,
-                                 final Handler<Void> dcHandler,
                                  final boolean sslVerify);
 
     /**
@@ -46,7 +39,13 @@ public abstract class Connector {
      */
     public abstract void disconnect();
 
+    /**
+     * Writes the data to the server.
+     * @param obj Object to be encoded
+     */
     public abstract void write(JsonObject obj);
+
+    public abstract boolean isConnected();
 
     /**
      * @return A full path with an attached query string
@@ -54,7 +53,7 @@ public abstract class Connector {
     protected String getPath() {
         StringBuilder query = new StringBuilder(dataEndpoint.path);
         try { // Auth parameter
-            String uri = hs.wsUri;
+            String uri = pair.getServer().getWsUri();
             if (uri.startsWith("/"))
                 uri = uri.substring(1);
             if (!dataEndpoint.path.equals("/"))
@@ -63,7 +62,7 @@ public abstract class Connector {
             query.append("?auth=");
 
             byte[] salt = getSalt().getBytes("UTF-8");
-            byte[] nonce = hs.nonce;
+            byte[] nonce = pair.getServer().getNonce();
 
             Buffer buffer = new Buffer(salt.length + nonce.length);
             buffer.appendBytes(salt);
@@ -76,7 +75,7 @@ public abstract class Connector {
             query.append(encoded.substring(0, encoded.length() - 1));
 
             query.append("&dsId=");
-            query.append(hc.dsId);
+            query.append(pair.getClient().getDsId());
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }
@@ -84,27 +83,26 @@ public abstract class Connector {
     }
 
     protected String getSalt() {
-        return hs.salt;
+        return pair.getServer().getSalt();
     }
 
     /**
      *
      * @param url URL to connect to.
-     * @param hc Handshake client
-     * @param hs Retrieved information about the handshake from the server.
+     * @param pair The handshake authentication information
      * @param type If type is {@link ConnectionType#HTTP}
      *             or {@link ConnectionType#WS} then the URL must be a handshake
      *             connection initiation endpoint, not the actual data URL.
      * @return A connector instance
      */
-    public static Connector create(String url, HandshakeClient hc, HandshakeServer hs, ConnectionType type) {
+    public static Connector create(String url, HandshakePair pair, ConnectionType type) {
         switch (type) {
             case SOCKET:
                 throw new UnsupportedOperationException("Sockets not implemented yet");
             case HTTP:
                 throw new UnsupportedOperationException("HTTP not implemented yet");
             case WS:
-                return new WebSocketConnector(URLInfo.parse(url), hc, hs);
+                return new WebSocketConnector(URLInfo.parse(url), pair);
             default:
                 throw new RuntimeException("Unknown type: " + type);
         }

@@ -1,10 +1,11 @@
 package org.dsa.iot.demo;
 
 import lombok.SneakyThrows;
-import org.dsa.iot.dslink.Responder;
+import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.connection.ConnectionType;
 import org.dsa.iot.dslink.connection.Connector;
 import org.dsa.iot.dslink.connection.handshake.HandshakeClient;
+import org.dsa.iot.dslink.connection.handshake.HandshakePair;
 import org.dsa.iot.dslink.connection.handshake.HandshakeServer;
 
 /**
@@ -16,16 +17,17 @@ public class Main {
     @SuppressWarnings("InfiniteLoopStatement")
     public static void main(String[] args) {
         System.out.println("Initializing...");
-        Responder resp = new Responder();
 
         HandshakeClient client = HandshakeClient.generate("demo");
         HandshakeServer server = HandshakeServer.perform("http://localhost:8080/conn", client);
-        resp.setConnector(Connector.create("ws://localhost:8080", client, server, ConnectionType.WS));
+        HandshakePair pair = new HandshakePair(client, server);
+        Connector conn = Connector.create("ws://localhost:8080", pair, ConnectionType.WS);
+        DSLink link = new DSLink(conn);
 
-        resp.createRoot("Demo");
+        link.getResponder().createRoot("Demo");
 
         System.out.println("Connecting...");
-        resp.connect();
+        link.connect();
         System.out.println("Connected");
         while (true) {
             Thread.sleep(1000);

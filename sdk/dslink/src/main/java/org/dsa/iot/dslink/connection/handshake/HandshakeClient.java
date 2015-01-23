@@ -1,5 +1,6 @@
 package org.dsa.iot.dslink.connection.handshake;
 
+import lombok.Getter;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.CipherParameters;
@@ -20,20 +21,21 @@ import java.util.Arrays;
  * Handshake information for the client.
  * @author Samuel Grenier
  */
+@Getter
 public class HandshakeClient {
 
     public static final BigInteger PUBLIC_EXPONENT = BigInteger.valueOf(65537);
     public static final int KEY_STRENGTH = 2048;
     public static final int KEY_CERTAINTY = 32;
 
-    public final CipherParameters privKeyInfo;
-    public final SubjectPublicKeyInfo pubKeyInfo;
+    private final CipherParameters privKeyInfo;
+    private final SubjectPublicKeyInfo pubKeyInfo;
 
-    public final String dsId;
-    public final String publicKey;
-    public final String zone;
-    public final boolean isRequester;
-    public final boolean isResponder;
+    private final String dsId;
+    private final String publicKey;
+    private final String zone;
+    private final boolean isRequester;
+    private final boolean isResponder;
 
     private HandshakeClient(String dsIdPrefix,
                             AsymmetricCipherKeyPair key, String zone,
@@ -93,10 +95,10 @@ public class HandshakeClient {
             throw new IllegalArgumentException("zone");
         try {
             RSAKeyPairGenerator gen = new RSAKeyPairGenerator();
-            gen.init(new RSAKeyGenerationParameters(HandshakeClient.PUBLIC_EXPONENT,
+            gen.init(new RSAKeyGenerationParameters(PUBLIC_EXPONENT,
                     new SecureRandom(),
-                    HandshakeClient.KEY_STRENGTH,
-                    HandshakeClient.KEY_CERTAINTY));
+                    KEY_STRENGTH,
+                    KEY_CERTAINTY));
             AsymmetricCipherKeyPair key = gen.generateKeyPair();
 
             boolean isRequester = false;

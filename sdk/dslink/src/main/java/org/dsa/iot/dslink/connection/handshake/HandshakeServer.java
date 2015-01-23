@@ -1,5 +1,8 @@
 package org.dsa.iot.dslink.connection.handshake;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import org.bouncycastle.crypto.engines.RSAEngine;
 import org.bouncycastle.util.encoders.UrlBase64;
 import org.dsa.iot.core.SyncHandler;
@@ -17,29 +20,18 @@ import java.util.concurrent.TimeUnit;
  * Holds handshake information about a server.
  * @author Samuel Grenier
  */
+@Getter
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class HandshakeServer {
 
-    public final String dsId;
-    public final String publicKey;
-    public final String wsUri;
-    public final String httpUri;
-    public final byte[] nonce;
-    public final String salt;
-    public final String saltS;
-    public final Integer updateInterval;
-
-    public HandshakeServer(String dsId, String publicKey, String wsUri,
-                           String httpUri, byte[] nonce, String salt,
-                           String saltS, Integer updateInterval) {
-        this.dsId = dsId;
-        this.publicKey = publicKey;
-        this.wsUri = wsUri;
-        this.httpUri = httpUri;
-        this.nonce = nonce;
-        this.salt = salt;
-        this.saltS = saltS;
-        this.updateInterval = updateInterval;
-    }
+    private final String dsId;
+    private final String publicKey;
+    private final String wsUri;
+    private final String httpUri;
+    private final byte[] nonce;
+    private final String salt;
+    private final String saltS;
+    private final Integer updateInterval;
 
     public static HandshakeServer perform(String url, HandshakeClient hc) {
         return perform(URLInfo.parse(url), hc);
@@ -60,7 +52,7 @@ public class HandshakeServer {
         }
 
         SyncHandler<HttpClientResponse> reqHandler = new SyncHandler<>();
-        HttpClientRequest req = client.post(url.path + "?dsId=" + hc.dsId, reqHandler);
+        HttpClientRequest req = client.post(url.path + "?dsId=" + hc.getDsId(), reqHandler);
 
         String encoded = hc.toJson().encode();
         req.putHeader("Content-Length", String.valueOf(encoded.length()));
@@ -97,7 +89,7 @@ public class HandshakeServer {
             encryptedNonce += ".";
         byte[] decrypted = UrlBase64.decode(encryptedNonce);
         RSAEngine engine = new RSAEngine();
-        engine.init(false, client.privKeyInfo);
+        engine.init(false, client.getPrivKeyInfo());
         return engine.processBlock(decrypted, 0, decrypted.length - 2);
     }
 }

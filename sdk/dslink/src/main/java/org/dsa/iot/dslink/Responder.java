@@ -7,48 +7,32 @@ import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.RequestTracker;
 import org.dsa.iot.dslink.node.SubscriptionManager;
-import org.vertx.java.core.Handler;
+import org.dsa.iot.dslink.util.Linkable;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Iterator;
 
-import static org.dsa.iot.dslink.node.NodeManager.NodeStringTuple;
 import static org.dsa.iot.dslink.methods.Method.StreamState;
+import static org.dsa.iot.dslink.node.NodeManager.NodeStringTuple;
 
 /**
  * @author Samuel Grenier
  */
 @Getter
-public class Responder {
+public class Responder implements Linkable {
 
     private NodeManager nodeManager;
     private SubscriptionManager subManager;
     private RequestTracker tracker;
 
     private Connector connector;
-    private boolean connected;
 
     public Node createRoot(String name) {
         checkConnected();
-        checkConnector();
         return nodeManager.createRootNode(name);
-    }
-
-    /**
-     * Used to set the connector implementation.
-     * @param connector Connector instance to use
-     */
-    public void setConnector(Connector connector) {
-        checkConnected();
-        this.connector = connector;
-        subManager = new SubscriptionManager(connector);
-        setSubscriptionManager(new SubscriptionManager(connector));
-        setNodeManager(new NodeManager(subManager));
-        setRequestTracker(new RequestTracker());
     }
 
     /**
@@ -57,7 +41,6 @@ public class Responder {
      * @param manager Manager instance to use
      */
     public void setNodeManager(NodeManager manager) {
-        checkConnector();
         checkConnected();
         nodeManager = manager;
     }
@@ -68,7 +51,6 @@ public class Responder {
      * @param manager Manager instance to use
      */
     public void setSubscriptionManager(SubscriptionManager manager) {
-        checkConnector();
         checkConnected();
         subManager = manager;
     }
@@ -84,56 +66,14 @@ public class Responder {
     }
 
     /**
-     * Performs the connection to the server. If attempting to connect over
-     * secure communications, the SSL certificate of the server will be validated.
-     * @throws IOException
-     * @see #connect(boolean)
+     * @param requests The requests the other endpoint wants
      */
-    public void connect() throws IOException {
-        connect(true);
-    }
-
-    /**
-     * Performs the connection to the server.
-     * @param sslVerify Whether to verify ssl if attempting to connect over
-     *                  secure communications.
-     * @throws IOException
-     */
-    public synchronized void connect(boolean sslVerify) throws IOException {
-        checkConnected();
-        checkConnector();
-        connector.connect(new Handler<JsonObject>() {
-            @Override
-            public void handle(JsonObject event) {
-                parse(event);
-            }
-        }, new Handler<Void>() {
-            @Override
-            public void handle(Void event) {
-                synchronized (Responder.this) {
-                    connected = false;
-                }
-            }
-        }, sslVerify);
-        connected = true;
-    }
-
-    public synchronized void disconnect() {
-        connector.disconnect();
-        connected = false;
-    }
-
-    /**
-     * Parse the object for requests
-     * @param object Object to parse
-     */
-    protected synchronized void parse(JsonObject object) {
-        JsonArray array = object.getObject("requests").asArray();
-
+    @Override
+    public synchronized void parse(JsonArray requests) {
         JsonObject top = new JsonObject();
 
         @SuppressWarnings("unchecked")
-        Iterator<JsonObject> it = (Iterator) array.iterator();
+        Iterator<JsonObject> it = (Iterator) requests.iterator();
         JsonArray responses = new JsonArray();
         for (JsonObject o; it.hasNext();) {
             o = it.next();
@@ -212,15 +152,22 @@ public class Responder {
         connector.write(top);
     }
 
-    private synchronized void checkConnected() {
-        if (connected) {
-            throw new IllegalStateException("Already connected");
-        }
+    /**
+     * When setting the connector, the subscription manager, node manager, and
+     * request tracker will be overwritten to default instances.
+     * @param connector Connector to be set.
+     */
+    @Override
+    public void setConnector(Connector connector) {
+        this.connector = connector;
+        setSubscriptionManager(new SubscriptionManager(connector));
+        setNodeManager(new NodeManager(subManager));
+        setRequestTracker(new RequestTracker());
     }
 
-    private void checkConnector() {
-        if (connector == null) {
-             throw new IllegalStateException("Connector not set");
+    private synchronized void checkConnected() {
+        if (connector.isConnected()) {
+            throw new IllegalStateException("Already connected");
         }
     }
 }
