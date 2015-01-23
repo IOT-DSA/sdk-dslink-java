@@ -57,6 +57,9 @@ public class HandshakeClient {
 
         String encoded = Base64.encodeBytes(hash, Base64.URL_SAFE);
         this.dsId = dsIdPrefix + "-" + encoded.substring(0, encoded.length() - 1);
+
+        System.out.println("Modulus bytes: " + Arrays.toString(modBytes)); // DEBUG
+        System.out.println("SHA256 hash: " + Arrays.toString(hash)); // DEBUG
     }
 
     public JsonObject toJson() {
