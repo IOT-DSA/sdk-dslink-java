@@ -12,6 +12,7 @@ import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.json.impl.Base64;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 
 /**
  * @author Samuel Grenier
@@ -76,6 +77,9 @@ public abstract class Connector {
 
             query.append("&dsId=");
             query.append(pair.getClient().getDsId());
+
+            System.out.println("Auth buffer: " + Arrays.toString(buffer.getBytes())); // DEBUG
+            System.out.println("Auth SHA256 Digest: " + Arrays.toString(output)); // DEBUG
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }
