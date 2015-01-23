@@ -1,13 +1,11 @@
 package org.dsa.iot.dslink.connection.handshake;
 
 import lombok.Getter;
-import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
-import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.generators.RSAKeyPairGenerator;
 import org.bouncycastle.crypto.params.RSAKeyGenerationParameters;
 import org.bouncycastle.crypto.params.RSAKeyParameters;
-import org.bouncycastle.crypto.util.SubjectPublicKeyInfoFactory;
+import org.bouncycastle.crypto.params.RSAPrivateCrtKeyParameters;
 import org.bouncycastle.jcajce.provider.digest.SHA256;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.json.impl.Base64;
@@ -28,8 +26,8 @@ public class HandshakeClient {
     public static final int KEY_STRENGTH = 2048;
     public static final int KEY_CERTAINTY = 32;
 
-    private final CipherParameters privKeyInfo;
-    private final SubjectPublicKeyInfo pubKeyInfo;
+    private final RSAPrivateCrtKeyParameters privKeyInfo;
+    private final RSAKeyParameters pubKeyInfo;
 
     private final String dsId;
     private final String publicKey;
@@ -45,11 +43,10 @@ public class HandshakeClient {
         this.isRequester = isRequester;
         this.isResponder = isResponder;
 
-        RSAKeyParameters pubParams = (RSAKeyParameters) key.getPublic();
-        this.pubKeyInfo = SubjectPublicKeyInfoFactory.createSubjectPublicKeyInfo(pubParams);
-        this.privKeyInfo = key.getPrivate();
+        this.pubKeyInfo = (RSAKeyParameters) key.getPublic();
+        this.privKeyInfo = (RSAPrivateCrtKeyParameters) key.getPrivate();
 
-        BigInteger modulus = pubParams.getModulus();
+        BigInteger modulus = pubKeyInfo.getModulus();
         byte[] modBytes = modulus.toByteArray();
         modBytes = Arrays.copyOfRange(modBytes, 1, modBytes.length);
 

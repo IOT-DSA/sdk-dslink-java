@@ -3,7 +3,6 @@ package org.dsa.iot.dslink.connection.handshake;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.bouncycastle.crypto.engines.RSAEngine;
 import org.bouncycastle.util.encoders.UrlBase64;
 import org.dsa.iot.core.SyncHandler;
 import org.dsa.iot.core.URLInfo;
@@ -14,6 +13,8 @@ import org.vertx.java.core.http.HttpClientRequest;
 import org.vertx.java.core.http.HttpClientResponse;
 import org.vertx.java.core.json.JsonObject;
 
+import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -87,9 +88,22 @@ public class HandshakeServer {
                                        String encryptedNonce) {
         while (encryptedNonce.length() % 4 != 0)
             encryptedNonce += ".";
-        byte[] decrypted = UrlBase64.decode(encryptedNonce);
-        RSAEngine engine = new RSAEngine();
-        engine.init(false, client.getPrivKeyInfo());
-        return engine.processBlock(decrypted, 0, decrypted.length - 2);
+        byte[] decoded = UrlBase64.decode(encryptedNonce);
+
+        BigInteger e = new BigInteger(decoded);
+        BigInteger d = e.modPow(client.getPrivKeyInfo().getExponent(),
+                                client.getPubKeyInfo().getModulus());
+        byte[] decrypted = d.toByteArray();
+        if (decrypted.length < 16) {
+            byte[] fixed = new byte[16];
+            System.arraycopy(decrypted, 0, fixed, 16 - decrypted.length, decrypted.length);
+            decrypted = fixed;
+        } else if (decrypted.length > 16) {
+            byte[] fixed = new byte[16];
+            System.arraycopy(decrypted, decrypted.length - 16, fixed, 0, 16);
+            decrypted = fixed;
+        }
+        System.out.println("Decrypted nonce bytes: " + Arrays.toString(decrypted)); // DEBUG
+        return decrypted;
     }
 }

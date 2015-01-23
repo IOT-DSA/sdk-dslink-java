@@ -18,6 +18,7 @@ public class Main {
     public static void main(String[] args) {
         System.out.println("Initializing...");
 
+        // TODO: handle handshaking in the DSLink class
         HandshakeClient client = HandshakeClient.generate("demo");
         HandshakeServer server = HandshakeServer.perform("http://localhost:8080/conn", client);
         HandshakePair pair = new HandshakePair(client, server);
