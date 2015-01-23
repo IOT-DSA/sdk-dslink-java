@@ -37,6 +37,15 @@ public class WebSocketConnector extends Connector {
         client.connectWebsocket(getPath(), new Handler<WebSocket>() {
             @Override
             public void handle(WebSocket event) {
+                socket = event;
+
+                event.exceptionHandler(new Handler<Throwable>() {
+                    @Override
+                    public void handle(Throwable event) {
+                        event.printStackTrace(System.err);
+                    }
+                });
+
                 event.dataHandler(new Handler<Buffer>() {
                     @Override
                     public void handle(Buffer event) {
@@ -68,6 +77,7 @@ public class WebSocketConnector extends Connector {
     @Override
     public synchronized void write(JsonObject obj) {
         if (socket != null) {
+            System.out.println("Sending data: " + obj.encode()); // DEBUG
             socket.writeTextFrame(obj.encode());
         }
     }

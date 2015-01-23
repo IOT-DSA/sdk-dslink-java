@@ -83,37 +83,37 @@ public class Responder implements Linkable {
             String path = o.getString("path");
             NodeStringTuple node = nodeManager.getNode(path);
 
-            Method method;
-            switch (sMethod) {
-                case "list":
-                    method = new ListMethod(connector, node.getNode(),
-                                            tracker, rid.intValue());
-                    break;
-                case "set":
-                    method = new SetMethod(node.getNode(), node.getString());
-                    break;
-                case "remove":
-                    method = new RemoveMethod(node.getNode(), node.getString());
-                    break;
-                case "invoke":
-                    method = new InvokeMethod(node.getNode());
-                    break;
-                case "subscribe":
-                    method = new SubscribeMethod(nodeManager);
-                    break;
-                case "unsubscribe":
-                    method = new UnsubscribeMethod(nodeManager);
-                    break;
-                case "close":
-                    method = new CloseMethod(tracker, rid.intValue());
-                    break;
-                default:
-                    throw new RuntimeException("Unknown method");
-            }
-
             JsonObject resp = new JsonObject();
             try {
                 resp.putNumber("rid", rid);
+
+                Method method;
+                switch (sMethod) {
+                    case "list":
+                        method = new ListMethod(connector, node.getNode(),
+                                                tracker, rid.intValue());
+                        break;
+                    case "set":
+                        method = new SetMethod(node.getNode(), node.getString());
+                        break;
+                    case "remove":
+                        method = new RemoveMethod(node.getNode(), node.getString());
+                        break;
+                    case "invoke":
+                        method = new InvokeMethod(node.getNode());
+                        break;
+                    case "subscribe":
+                        method = new SubscribeMethod(nodeManager);
+                        break;
+                    case "unsubscribe":
+                        method = new UnsubscribeMethod(nodeManager);
+                        break;
+                    case "close":
+                        method = new CloseMethod(tracker, rid.intValue());
+                        break;
+                    default:
+                        throw new RuntimeException("Unknown method");
+                }
 
                 JsonObject updates = method.invoke(o);
                 StreamState state = method.getState();
