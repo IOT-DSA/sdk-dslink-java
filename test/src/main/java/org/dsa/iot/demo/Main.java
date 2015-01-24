@@ -19,28 +19,18 @@ public class Main {
         System.out.println("Initializing...");
 
         // TODO: handle handshaking in the DSLink class
-        int errors = 0;
-        for (int i = 0; i < 100; i++) {
-            try {
-                HandshakeClient client = HandshakeClient.generate("demo");
-                HandshakeServer server = HandshakeServer.perform("http://localhost:8080/conn", client);
-                HandshakePair pair = new HandshakePair(client, server);
-                Connector conn = Connector.create("ws://localhost:8080", pair, ConnectionType.WS);
+        HandshakeClient client = HandshakeClient.generate("demo");
+        HandshakeServer server = HandshakeServer.perform("http://localhost:8080/conn", client);
+        HandshakePair pair = new HandshakePair(client, server);
+        Connector conn = Connector.create("ws://localhost:8080", pair, ConnectionType.WS);
 
-                DSLink link = new DSLink(conn);
-                link.getResponder().createRoot("Demo");
-                System.out.println("Connecting...");
-                link.connect();
-                System.out.println("Connected");
-                Thread.sleep(1000);
-
-                System.out.println(i + " ----------------");
-            } catch (NullPointerException e) {
-                errors++;
-            }
-
+        DSLink link = new DSLink(conn);
+        link.getResponder().createRoot("Demo");
+        System.out.println("Connecting...");
+        link.connect();
+        System.out.println("Connected");
+        while (true) {
+            Thread.sleep(1000);
         }
-        System.out.println("There were " + errors + " errors for retrieving data (this does not count security exceptions)");
     }
-
 }

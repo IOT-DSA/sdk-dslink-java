@@ -14,7 +14,6 @@ import org.vertx.java.core.http.HttpClientResponse;
 import org.vertx.java.core.json.JsonObject;
 
 import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -90,7 +89,7 @@ public class HandshakeServer {
             encryptedNonce += ".";
         byte[] decoded = UrlBase64.decode(encryptedNonce);
 
-        BigInteger e = new BigInteger(decoded);
+        BigInteger e = new BigInteger(1, decoded);
         BigInteger d = e.modPow(client.getPrivKeyInfo().getExponent(),
                                 client.getPubKeyInfo().getModulus());
         byte[] decrypted = d.toByteArray();
@@ -103,7 +102,6 @@ public class HandshakeServer {
             System.arraycopy(decrypted, decrypted.length - 16, fixed, 0, 16);
             decrypted = fixed;
         }
-        System.out.println("Decrypted nonce bytes: " + Arrays.toString(decrypted)); // DEBUG
         return decrypted;
     }
 }

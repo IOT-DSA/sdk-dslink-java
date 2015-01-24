@@ -77,7 +77,6 @@ public class WebSocketConnector extends Connector {
     @Override
     public synchronized void write(JsonObject obj) {
         if (socket != null) {
-            System.out.println("Sending data: " + obj.encode()); // DEBUG
             socket.writeTextFrame(obj.encode());
         }
     }
