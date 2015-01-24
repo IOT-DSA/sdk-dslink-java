@@ -39,13 +39,6 @@ public class WebSocketConnector extends Connector {
             public void handle(WebSocket event) {
                 socket = event;
 
-                event.exceptionHandler(new Handler<Throwable>() {
-                    @Override
-                    public void handle(Throwable event) {
-                        event.printStackTrace(System.err);
-                    }
-                });
-
                 event.dataHandler(new Handler<Buffer>() {
                     @Override
                     public void handle(Buffer event) {
@@ -53,14 +46,8 @@ public class WebSocketConnector extends Connector {
                     }
                 });
 
-                event.closeHandler(new Handler<Void>() {
-                    @Override
-                    public void handle(Void event) {
-                        synchronized (WebSocketConnector.this) {
-                            connected = false;
-                        }
-                    }
-                });
+                event.endHandler(getDisconnectHandler());
+                event.closeHandler(getDisconnectHandler());
             }
         });
 
@@ -84,5 +71,16 @@ public class WebSocketConnector extends Connector {
     @Override
     public synchronized boolean isConnected() {
         return connected;
+    }
+
+    private Handler<Void> getDisconnectHandler() {
+        return new Handler<Void>() {
+            @Override
+            public void handle(Void event) {
+                synchronized (WebSocketConnector.this) {
+                    connected = false;
+                }
+            }
+        };
     }
 }

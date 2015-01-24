@@ -2,7 +2,11 @@ package org.dsa.iot.dslink;
 
 import lombok.Getter;
 import lombok.NonNull;
+import org.dsa.iot.dslink.connection.ConnectionType;
 import org.dsa.iot.dslink.connection.Connector;
+import org.dsa.iot.dslink.connection.handshake.HandshakeClient;
+import org.dsa.iot.dslink.connection.handshake.HandshakePair;
+import org.dsa.iot.dslink.connection.handshake.HandshakeServer;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
@@ -43,6 +47,10 @@ public class DSLink {
             responder.setConnector(conn);
     }
 
+    public boolean isConnected() {
+        return connector.isConnected();
+    }
+
     public void connect() {
         connect(true);
     }
@@ -78,5 +86,24 @@ public class DSLink {
         if (connector.isConnected()) {
             throw new IllegalStateException("Already connected");
         }
+    }
+
+    /**
+     *
+     * @param url URL to perform the handshake authentication
+     * @param endpoint Data endpoint URL
+     * @param type Type of connection to use
+     * @param zone Quarantine zone to use
+     * @return A factory created DSLink object
+     */
+    public static DSLink generate(@NonNull String url,
+                                  @NonNull String endpoint,
+                                  @NonNull ConnectionType type,
+                                  @NonNull String zone) {
+        HandshakeClient client = HandshakeClient.generate(zone);
+        HandshakeServer server = HandshakeServer.perform(url, client);
+        HandshakePair pair = new HandshakePair(client, server);
+        Connector conn = Connector.create(endpoint, pair, type);
+        return new DSLink(conn);
     }
 }
