@@ -4,32 +4,32 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
 import org.dsa.iot.core.StringUtils;
-import org.dsa.iot.dslink.node.exceptions.DuplicateException;
 import org.dsa.iot.dslink.node.exceptions.NoSuchPathException;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Handles nodes based on paths.
  * @author Samuel Grenier
  */
-@AllArgsConstructor
 public class NodeManager {
 
     private final SubscriptionManager subManager;
 
-    private final Map<String, Node> rootNodes = new HashMap<>();
+    // Fake root to provide a listing on "/"
+    private final Node superRoot;
+
+    public NodeManager(SubscriptionManager subManager) {
+        this.subManager = subManager;
+        this.superRoot = new Node(subManager, null, "_");
+    }
 
     public Node createRootNode(String name) {
         return addRootNode(new Node(subManager, null, name));
     }
 
     public Node addRootNode(Node node) {
-        if (rootNodes.containsKey(node.getName())) {
-            throw new DuplicateException(node.getName());
-        }
-        rootNodes.put(node.getName(), node);
+        superRoot.addChild(node);
         return node;
     }
 
@@ -43,19 +43,23 @@ public class NodeManager {
     public NodeStringTuple getNode(String path) {
         if (path == null || path.isEmpty())
             throw new IllegalArgumentException("path");
+        else if ("/".equals(path))
+            return new NodeStringTuple(superRoot, null);
         else if (path.startsWith("/"))
             path = path.substring(1);
         String[] parts = path.split("/");
-        Node current = rootNodes.get(parts[0]);
+        Node current = superRoot.getChild(parts[0]);
         for (int i = 1; i < parts.length; i++) {
             if (current == null)
-                return null;
+                break;
             else if (i + 1 == parts.length && StringUtils.isAttribOrConf(parts[i]))
                 return new NodeStringTuple(current, parts[i]);
             else
                 current = current.getChild(parts[i]);
         }
-        return current != null ? new NodeStringTuple(current, null) : null;
+        if (current == null)
+            throw new NoSuchPathException(path);
+        return new NodeStringTuple(current, null);
     }
 
     @Getter

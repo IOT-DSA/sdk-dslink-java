@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.value.Value;
+import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 /**
@@ -22,7 +23,7 @@ public class SetMethod extends Method {
     private final String specialPath;
 
     @Override
-    public JsonObject invoke(JsonObject request) {
+    public JsonArray invoke(JsonObject request) {
         Object obj = request.getField("value");
 
         Value value;

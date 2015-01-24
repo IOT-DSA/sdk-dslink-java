@@ -22,7 +22,14 @@ public class NodeTest {
         Assert.assertNotNull(manager.getNode("/A/"));
         Assert.assertNotNull(manager.getNode("/A//"));
 
-        Assert.assertNull(manager.getNode("/B"));
+        boolean noPath = false;
+        try {
+            manager.getNode("/A/A_A");
+        } catch (NoSuchPathException e) {
+            noPath = true;
+        } finally {
+            Assert.assertTrue(noPath);
+        }
         manager.createRootNode("B");
 
         Assert.assertNotNull(manager.getNode("B"));
@@ -30,8 +37,23 @@ public class NodeTest {
         Assert.assertNotNull(manager.getNode("/B/"));
         Assert.assertNotNull(manager.getNode("/B//"));
 
-        Assert.assertNull(manager.getNode("/A/B"));
-        Assert.assertNull(manager.getNode("/B/A"));
+        try {
+            noPath = false;
+            manager.getNode("/A/B");
+        } catch (NoSuchPathException e) {
+            noPath = true;
+        } finally {
+            Assert.assertTrue(noPath);
+        }
+
+        try {
+            noPath = false;
+            manager.getNode("/B/A");
+        } catch (NoSuchPathException e) {
+            noPath = true;
+        } finally {
+            Assert.assertTrue(noPath);
+        }
 
         Assert.assertNull(nodeA.getChildren());
         nodeA.createChild("A");
@@ -56,8 +78,25 @@ public class NodeTest {
         a.removeChild(new Node(null, null, "A_B"));
 
         Assert.assertNotNull(manager.getNode("/A"));
-        Assert.assertNull(manager.getNode("/A/A_A"));
-        Assert.assertNull(manager.getNode("/A/A_B"));
+
+        boolean noPath = false;
+
+        try {
+            manager.getNode("/A/A_A");
+        } catch (NoSuchPathException e) {
+            noPath = true;
+        } finally {
+            Assert.assertTrue(noPath);
+        }
+
+        try {
+            noPath = false;
+            manager.getNode("/A/A_A");
+        } catch (NoSuchPathException e) {
+            noPath = true;
+        } finally {
+            Assert.assertTrue(noPath);
+        }
 
         Assert.assertNotNull(a.getChildren());
         Assert.assertTrue(manager.getChildren("A").isEmpty());

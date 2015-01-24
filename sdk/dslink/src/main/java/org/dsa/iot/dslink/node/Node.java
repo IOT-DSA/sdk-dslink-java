@@ -59,6 +59,7 @@ public class Node {
         this.parent = parent;
         this.name = name;
         path = parent == null ? "/" + name : parent.getPath() + "/" + name;
+        setConfiguration("is", new Value((String) null)); // TODO: full profile support
     }
 
     public void setDisplayName(String name) {
@@ -82,10 +83,10 @@ public class Node {
 
     public void setAttribute(@NonNull String name, Value value) {
         StringUtils.checkNodeName(name);
-
         if (attributes == null)
             attributes = new HashMap<>();
-        else if (attributes.containsKey(name))
+
+        if (attributes.containsKey(name))
             throw new DuplicateException(name);
         else if (value == null)
             attributes.remove(name);
@@ -95,10 +96,10 @@ public class Node {
 
     public void setConfiguration(@NonNull String name, Value value) {
         StringUtils.checkNodeName(name);
-
         if (configurations == null)
             configurations = new HashMap<>();
-        else if (configurations.containsKey(name))
+
+        if (configurations.containsKey(name))
             throw new DuplicateException(name);
         else if (value == null)
             configurations.remove(name);

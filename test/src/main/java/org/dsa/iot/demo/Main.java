@@ -19,6 +19,8 @@ public class Main {
 
         DSLink link = DSLink.generate(url, endpoint, ConnectionType.WS, "default");
         link.getResponder().createRoot("Demo");
+        link.getResponder().createRoot("Test");
+
         System.out.println("Connecting...");
         link.connect();
         System.out.println("Connected");

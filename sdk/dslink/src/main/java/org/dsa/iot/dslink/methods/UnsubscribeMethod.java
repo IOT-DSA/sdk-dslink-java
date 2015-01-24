@@ -2,6 +2,7 @@ package org.dsa.iot.dslink.methods;
 
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
+import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 import java.util.List;
@@ -16,7 +17,7 @@ public class UnsubscribeMethod extends SubscribeMethod {
     }
 
     @Override
-    public JsonObject invoke(JsonObject request) {
+    public JsonArray invoke(JsonObject request) {
         List<Node> nodes = getPaths(request.getArray("paths"));
         for (Node n : nodes) {
             n.setSubscribed(false);

@@ -23,7 +23,7 @@ public class SubscribeMethod extends Method {
     private final NodeManager manager;
 
     @Override
-    public JsonObject invoke(JsonObject request) {
+    public JsonArray invoke(JsonObject request) {
         List<Node> nodes = getPaths(request.getArray("paths"));
         for (Node n : nodes) {
             n.setSubscribed(true);

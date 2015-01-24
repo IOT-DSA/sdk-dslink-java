@@ -115,7 +115,7 @@ public class Responder implements Linkable {
                         throw new RuntimeException("Unknown method");
                 }
 
-                JsonObject updates = method.invoke(o);
+                JsonArray updates = method.invoke(o);
                 StreamState state = method.getState();
 
                 if (state == null) {
@@ -133,6 +133,7 @@ public class Responder implements Linkable {
                     resp.putElement("update", updates);
                 }
             } catch (Exception e) {
+                e.printStackTrace(System.err);
                 resp.putString("stream", StreamState.CLOSED.jsonName);
 
                 JsonObject error = new JsonObject();

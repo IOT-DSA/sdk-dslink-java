@@ -33,7 +33,7 @@ public class ListMethod extends Method {
     private Handler<NodeManager.NodeBooleanTuple> handler;
 
     @Override
-    public JsonObject invoke(JsonObject request) {
+    public JsonArray invoke(JsonObject request) {
         handler = parent.addChildrenHandler(new Handler<NodeManager.NodeBooleanTuple>() {
             @Override
             public void handle(NodeManager.NodeBooleanTuple event) {
@@ -41,7 +41,7 @@ public class ListMethod extends Method {
             }
         });
         setState(StreamState.OPEN);
-        return getResponse().asObject();
+        return getResponse();
     }
 
     public void nodeUpdate(Node node, boolean removed) {
@@ -67,14 +67,8 @@ public class ListMethod extends Method {
 
         Map<String, Node> children = parent.getChildren();
         if (children != null) {
-            for (Map.Entry<String, Node> entry : children.entrySet()) {
-                JsonArray arr = new JsonArray();
-                arr.addString(entry.getKey());
-
-                Node node = entry.getValue();
-                arr.addElement(getChild(node, false));
-
-                array.addElement(arr);
+            for (Node node : children.values()) {
+                array.addArray(getChild(node, false));
             }
         }
         return array;

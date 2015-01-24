@@ -3,6 +3,7 @@ package org.dsa.iot.dslink.methods;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import org.dsa.iot.dslink.node.Node;
+import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 /**
@@ -20,7 +21,7 @@ public class RemoveMethod extends Method {
     private final String specialPath;
 
     @Override
-    public JsonObject invoke(JsonObject request) {
+    public JsonArray invoke(JsonObject request) {
         boolean config = false;
         String name = null;
         if (specialPath != null)

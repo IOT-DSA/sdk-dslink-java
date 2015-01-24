@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import org.dsa.iot.dslink.node.Node;
 import org.vertx.java.core.Handler;
+import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 /**
@@ -16,7 +17,7 @@ public class InvokeMethod extends Method {
     private final Node node;
 
     @Override
-    public JsonObject invoke(JsonObject request) {
+    public JsonArray invoke(JsonObject request) {
         if (node.isInvokable()) {
             Handler<Void> handler = node.getInvocationHandler();
             handler.handle(null);

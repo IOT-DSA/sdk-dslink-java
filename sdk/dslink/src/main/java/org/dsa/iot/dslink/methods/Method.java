@@ -3,6 +3,7 @@ package org.dsa.iot.dslink.methods;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 /**
@@ -16,9 +17,9 @@ public abstract class Method {
 
     /**
      * @param request Original request body
-     * @return An array of invocations
+     * @return An array of update responses
      */
-    public abstract JsonObject invoke(JsonObject request);
+    public abstract JsonArray invoke(JsonObject request);
 
     public enum StreamState {
         INITIALIZED("initialize"),

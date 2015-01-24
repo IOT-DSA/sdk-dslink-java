@@ -2,6 +2,7 @@ package org.dsa.iot.dslink.methods;
 
 import lombok.AllArgsConstructor;
 import org.dsa.iot.dslink.node.RequestTracker;
+import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 /**
@@ -14,7 +15,7 @@ public class CloseMethod extends Method {
     private final int rid;
 
     @Override
-    public JsonObject invoke(JsonObject request) {
+    public JsonArray invoke(JsonObject request) {
         tracker.untrack(rid);
         setState(StreamState.CLOSED);
         return null;
