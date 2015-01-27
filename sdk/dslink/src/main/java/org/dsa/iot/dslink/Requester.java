@@ -41,7 +41,7 @@ public class Requester extends Linkable {
                 o = it.next();
 
                 Number rid = o.getNumber("rid");
-                if (rid != 0) {
+                if (rid.intValue() != 0) {
                     // Response
                     tracker.untrack(rid.intValue());
 

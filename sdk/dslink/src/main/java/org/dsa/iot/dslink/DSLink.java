@@ -23,19 +23,7 @@ public class DSLink {
     @Getter
     private final Responder responder;
 
-    public DSLink(Connector conn) {
-        this(conn, new Responder());
-    }
-
-    public DSLink(Connector conn, Requester req) {
-        this(conn, req, null);
-    }
-
-    public DSLink(Connector conn, Responder resp) {
-        this(conn, null, resp);
-    }
-
-    public DSLink(@NonNull Connector conn,
+    private DSLink(@NonNull Connector conn,
                   Requester req,
                   Responder resp) {
         this.connector = conn;
@@ -88,22 +76,59 @@ public class DSLink {
         }
     }
 
+    public static DSLink generate(@NonNull String url,
+                                  @NonNull String endpoint,
+                                  @NonNull ConnectionType type,
+                                  @NonNull String dsId) {
+        return generate(url, endpoint, type, dsId, "default");
+    }
+
+    /**
+     * Defaults to generating a responder only dslink.
+     */
+    public static DSLink generate(@NonNull String url,
+                                  @NonNull String endpoint,
+                                  @NonNull ConnectionType type,
+                                  @NonNull String dsId,
+                                  @NonNull String zone) {
+        return generate(url, endpoint, type, dsId, zone, false, true);
+    }
+
+    public static DSLink generate(@NonNull String url,
+                                  @NonNull String endpoint,
+                                  @NonNull ConnectionType type,
+                                  @NonNull String dsId,
+                                  @NonNull String zone,
+                                  boolean isRequester,
+                                  boolean isResponder) {
+        Requester requester = isRequester ? new Requester() : null;
+        Responder responder = isResponder ? new Responder() : null;
+
+        return generate(url, endpoint, type, dsId, zone, requester, responder);
+    }
+
     /**
      *
      * @param url URL to perform the handshake authentication
      * @param endpoint Data endpoint URL
      * @param type Type of connection to use
      * @param zone Quarantine zone to use
+     * @param requester Requester instance to use, otherwise null
+     * @param responder Responder instance to use, otherwise null
      * @return A factory created DSLink object
      */
     public static DSLink generate(@NonNull String url,
                                   @NonNull String endpoint,
                                   @NonNull ConnectionType type,
-                                  @NonNull String zone) {
-        HandshakeClient client = HandshakeClient.generate(zone);
+                                  @NonNull String dsId,
+                                  @NonNull String zone,
+                                  Requester requester,
+                                  Responder responder) {
+        HandshakeClient client = HandshakeClient.generate(dsId, zone,
+                requester != null, responder != null);
         HandshakeServer server = HandshakeServer.perform(url, client);
         HandshakePair pair = new HandshakePair(client, server);
         Connector conn = Connector.create(endpoint, pair, type);
-        return new DSLink(conn);
+        return new DSLink(conn, requester, responder);
     }
 }

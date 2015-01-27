@@ -1,7 +1,6 @@
 package org.dsa.iot.dslink.requests;
 
 import lombok.AllArgsConstructor;
-import lombok.NonNull;
 import org.vertx.java.core.json.JsonObject;
 
 /**
@@ -10,7 +9,6 @@ import org.vertx.java.core.json.JsonObject;
 @AllArgsConstructor
 public class CloseRequest extends Request {
 
-    @NonNull
     private final int rid;
 
     @Override

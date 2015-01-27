@@ -17,7 +17,7 @@ public class Main {
         final String url = "http://localhost:8080/conn";
         final String endpoint = "ws://localhost:8080";
 
-        DSLink link = DSLink.generate(url, endpoint, ConnectionType.WS, "default");
+        DSLink link = DSLink.generate(url, endpoint, ConnectionType.WS, "test", "default");
         link.getResponder().createRoot("Demo");
         link.getResponder().createRoot("Test");
 
@@ -25,7 +25,7 @@ public class Main {
         link.connect();
         System.out.println("Connected");
         while (link.isConnected()) {
-            Thread.sleep(1000);
+            Thread.sleep(500);
         }
         System.out.println("Disconnected");
     }

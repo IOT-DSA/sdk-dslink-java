@@ -69,20 +69,13 @@ public class HandshakeClient {
     }
 
     /**
-     * The zone used will be the default zone.
      * @param dsId ID prefix of the client appended by a dash and a hash
      * @return The generated client
      */
-    public static HandshakeClient generate(String dsId) {
-        return generate(dsId, "default");
-    }
-
-    /**
-     * @param dsId ID prefix of the client appended by a dash and a hash
-     * @return The generated client
-     */
-    @SuppressWarnings("ConstantConditions")
-    public static HandshakeClient generate(String dsId, String zone) {
+    public static HandshakeClient generate(String dsId,
+                                           String zone,
+                                           boolean isRequester,
+                                           boolean isResponder) {
         if (dsId == null || dsId.isEmpty())
             throw new IllegalArgumentException("dsId");
         else if (zone == null || zone.isEmpty())
@@ -94,9 +87,6 @@ public class HandshakeClient {
                     KEY_STRENGTH,
                     KEY_CERTAINTY));
             AsymmetricCipherKeyPair key = gen.generateKeyPair();
-
-            boolean isRequester = false;
-            boolean isResponder = true;
             return new HandshakeClient(dsId, key, zone, isRequester, isResponder);
         } catch (Exception e) {
             throw new RuntimeException(e);
