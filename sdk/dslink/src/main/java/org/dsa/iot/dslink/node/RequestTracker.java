@@ -11,18 +11,28 @@ import java.util.List;
 public class RequestTracker {
 
     private final List<Integer> reqs = new ArrayList<>();
+    private int currentID = 0;
 
-    public boolean isTracking(int id) {
+    public int getNextID() {
+        return getNextID(true);
+    }
+
+    public synchronized int getNextID(boolean track) {
+        return track ? track(++currentID) : ++currentID;
+    }
+
+    public synchronized boolean isTracking(int id) {
         return reqs.contains(id);
     }
 
-    public void track(int id) {
+    public synchronized int track(int id) {
         if (reqs.contains(id))
             throw new DuplicateException("ID already being tracked");
         reqs.add(id);
+        return id;
     }
 
-    public void untrack(int id) {
+    public synchronized void untrack(int id) {
         reqs.remove(id);
     }
 }

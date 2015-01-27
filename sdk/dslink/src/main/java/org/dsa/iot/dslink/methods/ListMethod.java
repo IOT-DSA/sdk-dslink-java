@@ -13,6 +13,8 @@ import org.vertx.java.core.json.JsonObject;
 
 import java.util.Map;
 
+import static org.dsa.iot.dslink.node.NodeManager.NodeBooleanTuple;
+
 /**
  * @author Samuel Grenier
  */
@@ -34,7 +36,7 @@ public class ListMethod extends Method {
 
     @Override
     public JsonArray invoke(JsonObject request) {
-        handler = parent.addChildrenHandler(new Handler<NodeManager.NodeBooleanTuple>() {
+        handler = parent.addChildrenHandler(new Handler<NodeBooleanTuple>() {
             @Override
             public void handle(NodeManager.NodeBooleanTuple event) {
                 nodeUpdate(event.getNode(), event.isBool());
@@ -44,7 +46,7 @@ public class ListMethod extends Method {
         return getResponse();
     }
 
-    public void nodeUpdate(Node node, boolean removed) {
+    private void nodeUpdate(Node node, boolean removed) {
         if (tracker.isTracking(rid)) {
             JsonObject response = new JsonObject();
             response.putNumber("rid", rid);

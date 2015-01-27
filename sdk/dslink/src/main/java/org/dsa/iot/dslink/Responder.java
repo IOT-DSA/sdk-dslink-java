@@ -1,6 +1,7 @@
 package org.dsa.iot.dslink;
 
 import lombok.Getter;
+import lombok.NonNull;
 import org.dsa.iot.dslink.connection.Connector;
 import org.dsa.iot.dslink.methods.*;
 import org.dsa.iot.dslink.node.Node;
@@ -22,13 +23,11 @@ import static org.dsa.iot.dslink.node.NodeManager.NodeStringTuple;
  * @author Samuel Grenier
  */
 @Getter
-public class Responder implements Linkable {
+public class Responder extends Linkable {
 
     private NodeManager nodeManager;
     private SubscriptionManager subManager;
     private RequestTracker tracker;
-
-    private Connector connector;
 
     public Node createRoot(String name) {
         checkConnected();
@@ -69,10 +68,8 @@ public class Responder implements Linkable {
      * @param requests The requests the other endpoint wants
      */
     @Override
+    @SuppressWarnings("unchecked")
     public synchronized void parse(JsonArray requests) {
-        JsonObject top = new JsonObject();
-
-        @SuppressWarnings("unchecked")
         Iterator<JsonObject> it = (Iterator) requests.iterator();
         JsonArray responses = new JsonArray();
         for (JsonObject o; it.hasNext();) {
@@ -87,34 +84,7 @@ public class Responder implements Linkable {
             try {
                 resp.putNumber("rid", rid);
 
-                Method method;
-                switch (sMethod) {
-                    case "list":
-                        method = new ListMethod(connector, node.getNode(),
-                                                tracker, rid.intValue());
-                        break;
-                    case "set":
-                        method = new SetMethod(node.getNode(), node.getString());
-                        break;
-                    case "remove":
-                        method = new RemoveMethod(node.getNode(), node.getString());
-                        break;
-                    case "invoke":
-                        method = new InvokeMethod(node.getNode());
-                        break;
-                    case "subscribe":
-                        method = new SubscribeMethod(nodeManager);
-                        break;
-                    case "unsubscribe":
-                        method = new UnsubscribeMethod(nodeManager);
-                        break;
-                    case "close":
-                        method = new CloseMethod(tracker, rid.intValue());
-                        break;
-                    default:
-                        throw new RuntimeException("Unknown method");
-                }
-
+                Method method = getMethod(sMethod, rid.intValue(), node);
                 JsonArray updates = method.invoke(o);
                 StreamState state = method.getState();
 
@@ -133,24 +103,15 @@ public class Responder implements Linkable {
                     resp.putElement("update", updates);
                 }
             } catch (Exception e) {
-                e.printStackTrace(System.err);
-                resp.putString("stream", StreamState.CLOSED.jsonName);
-
-                JsonObject error = new JsonObject();
-                error.putString("msg", e.getMessage());
-
-                StringWriter writer = new StringWriter();
-                e.printStackTrace(new PrintWriter(writer));
-                error.putString("detail", writer.toString());
-
-                resp.putElement("error", error);
+                handleInvocationError(resp, e);
             } finally {
                 responses.addElement(resp);
             }
         }
 
+        JsonObject top = new JsonObject();
         top.putElement("responses", responses);
-        connector.write(top);
+        getConnector().write(top);
     }
 
     /**
@@ -160,15 +121,46 @@ public class Responder implements Linkable {
      */
     @Override
     public void setConnector(Connector connector) {
-        this.connector = connector;
+        super.setConnector(connector);
         setSubscriptionManager(new SubscriptionManager(connector));
         setNodeManager(new NodeManager(subManager));
         setRequestTracker(new RequestTracker());
     }
 
-    private synchronized void checkConnected() {
-        if (connector.isConnected()) {
-            throw new IllegalStateException("Already connected");
+    protected Method getMethod(@NonNull String name, int rid,
+                               NodeStringTuple tuple) {
+        switch (name) {
+            case "list":
+                return new ListMethod(getConnector(), tuple.getNode(),
+                                        tracker, rid);
+            case "set":
+                return new SetMethod(tuple.getNode(), tuple.getString());
+            case "remove":
+                return new RemoveMethod(tuple.getNode(), tuple.getString());
+            case "invoke":
+                return new InvokeMethod(tuple.getNode());
+            case "subscribe":
+                return new SubscribeMethod(nodeManager);
+            case "unsubscribe":
+                return new UnsubscribeMethod(nodeManager);
+            case "close":
+                return new CloseMethod(tracker, rid);
+            default:
+                throw new RuntimeException("Unknown method");
         }
+    }
+
+    protected void handleInvocationError(JsonObject resp, Exception e) {
+        e.printStackTrace(System.err);
+        resp.putString("stream", StreamState.CLOSED.jsonName);
+
+        JsonObject error = new JsonObject();
+        error.putString("msg", e.getMessage());
+
+        StringWriter writer = new StringWriter();
+        e.printStackTrace(new PrintWriter(writer));
+        error.putString("detail", writer.toString());
+
+        resp.putElement("error", error);
     }
 }
