@@ -3,6 +3,7 @@ package org.dsa.iot.dslink.requests;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import org.dsa.iot.dslink.node.value.Value;
+import org.dsa.iot.dslink.util.ValueUtils;
 import org.vertx.java.core.json.JsonObject;
 
 /**
@@ -25,18 +26,6 @@ public class SetRequest extends Request {
     @Override
     public void addJsonValues(JsonObject obj) {
         obj.putString("path", path);
-        switch (value.getType()) {
-            case BOOL:
-                obj.putBoolean("value", value.getBool());
-                break;
-            case NUMBER:
-                obj.putNumber("value", value.getInteger());
-                break;
-            case STRING:
-                obj.putString("value", value.getString());
-                break;
-            default:
-                throw new RuntimeException("Unhandled type: " + value.getType());
-        }
+        ValueUtils.toJson(obj, "value", value);
     }
 }

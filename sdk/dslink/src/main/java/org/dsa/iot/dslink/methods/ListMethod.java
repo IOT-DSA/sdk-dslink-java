@@ -7,6 +7,7 @@ import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.util.ResponseTracker;
+import org.dsa.iot.dslink.util.ValueUtils;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
@@ -119,19 +120,7 @@ public class ListMethod extends Method {
                 valArray.addString(entry.getKey());
 
                 Value value = entry.getValue();
-                switch (value.getType()) {
-                    case STRING:
-                        valArray.addString(value.getString());
-                        break;
-                    case NUMBER:
-                        valArray.addNumber(value.getInteger());
-                        break;
-                    case BOOL:
-                        valArray.addBoolean(value.getBool());
-                        break;
-                    default:
-                        throw new RuntimeException("Unhandled value type");
-                }
+                ValueUtils.toJson(valArray, value);
                 out.addElement(valArray);
             }
         }

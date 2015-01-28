@@ -4,10 +4,8 @@ import org.dsa.iot.dslink.connection.Connector;
 import org.dsa.iot.dslink.methods.Method;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.SubscriptionManager;
-import org.dsa.iot.dslink.requests.ListRequest;
-import org.dsa.iot.dslink.requests.Request;
-import org.dsa.iot.dslink.responses.ListResponse;
-import org.dsa.iot.dslink.responses.Response;
+import org.dsa.iot.dslink.requests.*;
+import org.dsa.iot.dslink.responses.*;
 import org.dsa.iot.dslink.util.Linkable;
 import org.dsa.iot.dslink.util.RequestTracker;
 import org.vertx.java.core.json.JsonArray;
@@ -68,23 +66,23 @@ public class Requester extends Linkable {
                             resp = new ListResponse((ListRequest) request, nodeManager);
                             break;
                         case "set":
-                            throw new UnsupportedOperationException(); // TODO
-                            //break;
+                            resp = new SetResponse((SetRequest) request);
+                            break;
                         case "remove":
-                            throw new UnsupportedOperationException(); // TODO
-                            //break;
+                            resp = new RemoveResponse((RemoveRequest) request);
+                            break;
                         case "invoke":
-                            throw new UnsupportedOperationException(); // TODO
-                            //break;
+                            resp = new InvokeResponse((InvokeRequest) request);
+                            break;
                         case "subscribe":
-                            throw new UnsupportedOperationException(); // TODO
-                            //break;
+                            resp = new SubscribeResponse((SubscribeRequest) request);
+                            break;
                         case "unsubscribe":
-                            throw new UnsupportedOperationException(); // TODO
-                            //break;
+                            resp = new UnsubscribeResponse((UnsubscribeRequest) request);
+                            break;
                         case "close":
-                            throw new UnsupportedOperationException(); // TODO
-                            //break;
+                            resp = new CloseResponse((CloseRequest) request);
+                            break;
                         default:
                             throw new RuntimeException("Unknown method");
                     }

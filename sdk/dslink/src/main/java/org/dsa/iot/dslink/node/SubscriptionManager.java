@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import org.dsa.iot.dslink.connection.Connector;
 import org.dsa.iot.dslink.node.value.Value;
+import org.dsa.iot.dslink.util.ValueUtils;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
@@ -30,20 +31,7 @@ public class SubscriptionManager {
 
         Value value = node.getValue();
         if (value != null) {
-            switch (value.getType()) {
-                case STRING:
-                    array.addString(value.getString());
-                    break;
-                case NUMBER:
-                    array.addNumber(value.getInteger());
-                    break;
-                case BOOL:
-                    array.addBoolean(value.getBool());
-                    break;
-                default:
-                    throw new RuntimeException("Unsupported type: "
-                                                + value.getType());
-            }
+            ValueUtils.toJson(array, value);
         } else {
             array.add(null);
         }

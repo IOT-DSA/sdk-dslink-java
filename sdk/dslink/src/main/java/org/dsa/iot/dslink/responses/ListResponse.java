@@ -5,6 +5,7 @@ import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.requests.ListRequest;
+import org.dsa.iot.dslink.util.ValueUtils;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
@@ -33,16 +34,9 @@ public class ListResponse extends Response<ListRequest> {
             Object val = nodeData.get(1);
 
             Value value = null;
-            if (val instanceof Number) {
-                value = new Value(((Number) val).intValue());
-            } else if (val instanceof Boolean) {
-                value = new Value(((Boolean) val));
-            } else if (val instanceof String) {
-                value = new Value((String) val);
-            } else if (!(val instanceof JsonObject)) {
-                throw new RuntimeException("Unhandled type");
+            if (!(val instanceof JsonObject)) {
+                value = ValueUtils.toValue(val);
             }
-
             char start = name.charAt(0);
             name = name.substring(1);
             if (start == '$') {
