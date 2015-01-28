@@ -5,8 +5,8 @@ import lombok.RequiredArgsConstructor;
 import org.dsa.iot.dslink.connection.Connector;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
-import org.dsa.iot.dslink.node.RequestTracker;
 import org.dsa.iot.dslink.node.value.Value;
+import org.dsa.iot.dslink.util.ResponseTracker;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
@@ -28,7 +28,7 @@ public class ListMethod extends Method {
     private final Node parent;
 
     @NonNull
-    private final RequestTracker tracker;
+    private final ResponseTracker tracker;
 
     private final int rid;
 

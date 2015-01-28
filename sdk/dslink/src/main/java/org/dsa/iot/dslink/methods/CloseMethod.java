@@ -1,7 +1,7 @@
 package org.dsa.iot.dslink.methods;
 
 import lombok.AllArgsConstructor;
-import org.dsa.iot.dslink.node.RequestTracker;
+import org.dsa.iot.dslink.util.ResponseTracker;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
@@ -11,7 +11,7 @@ import org.vertx.java.core.json.JsonObject;
 @AllArgsConstructor
 public class CloseMethod extends Method {
 
-    private final RequestTracker tracker;
+    private final ResponseTracker tracker;
     private final int rid;
 
     @Override

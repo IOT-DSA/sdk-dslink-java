@@ -6,9 +6,9 @@ import org.dsa.iot.dslink.connection.Connector;
 import org.dsa.iot.dslink.methods.*;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
-import org.dsa.iot.dslink.node.RequestTracker;
 import org.dsa.iot.dslink.node.SubscriptionManager;
 import org.dsa.iot.dslink.util.Linkable;
+import org.dsa.iot.dslink.util.ResponseTracker;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
@@ -26,8 +26,15 @@ import static org.dsa.iot.dslink.node.NodeManager.NodeStringTuple;
 public class Responder extends Linkable {
 
     private NodeManager nodeManager;
-    private SubscriptionManager subManager;
-    private RequestTracker tracker;
+    private ResponseTracker tracker;
+
+    public Responder() {
+        this(new ResponseTracker());
+    }
+
+    public Responder(ResponseTracker tracker) {
+        this.tracker = tracker;
+    }
 
     public Node createRoot(String name) {
         checkConnected();
@@ -45,23 +52,14 @@ public class Responder extends Linkable {
     }
 
     /**
-     * Requires that the connector is already configured. Used to configure how
-     * subscriptions will be updated and handled.
-     * @param manager Manager instance to use
+     * When setting the connector, the node manager will be overwritten to
+     * default instances.
+     * @param connector Connector to be set.
      */
-    public void setSubscriptionManager(SubscriptionManager manager) {
-        checkConnected();
-        subManager = manager;
-    }
-
-    /**
-     * Used to configure how tracking is configured. The tracker is used by methods
-     * who need to keep track if it should continue writing or not.
-     * @param tracker Tracker instance to use.
-     */
-    public void setRequestTracker(RequestTracker tracker) {
-        checkConnected();
-        this.tracker = tracker;
+    @Override
+    public void setConnector(Connector connector) {
+        super.setConnector(connector);
+        setNodeManager(new NodeManager(new SubscriptionManager(connector)));
     }
 
     /**
@@ -78,11 +76,14 @@ public class Responder extends Linkable {
             Number rid = o.getNumber("rid");
             String sMethod = o.getString("method");
             String path = o.getString("path");
-            NodeStringTuple node = nodeManager.getNode(path);
 
             JsonObject resp = new JsonObject();
             try {
                 resp.putNumber("rid", rid);
+                NodeStringTuple node = null;
+                if (path != null) {
+                    node = nodeManager.getNode(path);
+                }
 
                 Method method = getMethod(sMethod, rid.intValue(), node);
                 JsonArray updates = method.invoke(o);
@@ -112,19 +113,6 @@ public class Responder extends Linkable {
         JsonObject top = new JsonObject();
         top.putElement("responses", responses);
         getConnector().write(top);
-    }
-
-    /**
-     * When setting the connector, the subscription manager, node manager, and
-     * request tracker will be overwritten to default instances.
-     * @param connector Connector to be set.
-     */
-    @Override
-    public void setConnector(Connector connector) {
-        super.setConnector(connector);
-        setSubscriptionManager(new SubscriptionManager(connector));
-        setNodeManager(new NodeManager(subManager));
-        setRequestTracker(new RequestTracker());
     }
 
     protected Method getMethod(@NonNull String name, int rid,

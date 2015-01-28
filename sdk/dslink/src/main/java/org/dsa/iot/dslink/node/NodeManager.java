@@ -41,6 +41,10 @@ public class NodeManager {
     }
 
     public NodeStringTuple getNode(String path) {
+        return getNode(path, false);
+    }
+
+    public NodeStringTuple getNode(String path, boolean create) {
         if (path == null || path.isEmpty())
             throw new IllegalArgumentException("path");
         else if ("/".equals(path))
@@ -49,13 +53,23 @@ public class NodeManager {
             path = path.substring(1);
         String[] parts = path.split("/");
         Node current = superRoot.getChild(parts[0]);
+        if (create && current == null) {
+            StringUtils.checkNodeName(parts[0]);
+            current = superRoot.createChild(parts[0]);
+        }
         for (int i = 1; i < parts.length; i++) {
-            if (current == null)
+            if (current == null) {
                 break;
-            else if (i + 1 == parts.length && StringUtils.isAttribOrConf(parts[i]))
+            } else if (i + 1 == parts.length && StringUtils.isAttribOrConf(parts[i])) {
                 return new NodeStringTuple(current, parts[i]);
-            else
-                current = current.getChild(parts[i]);
+            } else {
+                Node temp = current.getChild(parts[i]);
+                if (create && temp == null) {
+                    StringUtils.checkNodeName(parts[i]);
+                    temp = current.createChild(parts[i]);
+                }
+                current = temp;
+            }
         }
         if (current == null)
             throw new NoSuchPathException(path);

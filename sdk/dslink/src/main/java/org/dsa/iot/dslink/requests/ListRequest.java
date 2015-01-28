@@ -1,6 +1,7 @@
 package org.dsa.iot.dslink.requests;
 
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NonNull;
 import org.vertx.java.core.json.JsonObject;
 
@@ -10,6 +11,7 @@ import org.vertx.java.core.json.JsonObject;
 @AllArgsConstructor
 public class ListRequest extends Request {
 
+    @Getter
     @NonNull
     private final String path;
 
