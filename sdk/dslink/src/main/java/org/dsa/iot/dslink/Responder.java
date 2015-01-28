@@ -9,6 +9,7 @@ import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.SubscriptionManager;
 import org.dsa.iot.dslink.util.Linkable;
 import org.dsa.iot.dslink.util.ResponseTracker;
+import org.dsa.iot.dslink.util.StreamState;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
@@ -16,7 +17,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Iterator;
 
-import static org.dsa.iot.dslink.methods.Method.StreamState;
 import static org.dsa.iot.dslink.node.NodeManager.NodeStringTuple;
 
 /**

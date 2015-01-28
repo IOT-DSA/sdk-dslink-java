@@ -1,13 +1,13 @@
 package org.dsa.iot.dslink;
 
 import org.dsa.iot.dslink.connection.Connector;
-import org.dsa.iot.dslink.methods.Method;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.SubscriptionManager;
 import org.dsa.iot.dslink.requests.*;
 import org.dsa.iot.dslink.responses.*;
 import org.dsa.iot.dslink.util.Linkable;
 import org.dsa.iot.dslink.util.RequestTracker;
+import org.dsa.iot.dslink.util.StreamState;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
@@ -51,12 +51,11 @@ public class Requester extends Linkable {
                 o = it.next();
 
                 int rid = o.getNumber("rid").intValue();
+                Request request = tracker.getRequest(rid);
                 if (rid != 0) {
                     // Response
-
-                    Request request = tracker.getRequest(rid);
                     String state = o.getString("state");
-                    if (Method.StreamState.CLOSED.jsonName.equals(state)) {
+                    if (StreamState.CLOSED.jsonName.equals(state)) {
                         tracker.untrack(rid);
                     }
 
@@ -90,7 +89,10 @@ public class Requester extends Linkable {
                     // TODO: get the data to the API that wants it
                 } else {
                     // Subscription update
-                    // TODO
+                    SubscribeRequest req = (SubscribeRequest) request;
+                    Response<SubscribeRequest> resp
+                                = new SubscriptionResponse(req, nodeManager);
+                    resp.populate(o.getArray("update"));
                 }
             }
         } catch (Exception e) {
