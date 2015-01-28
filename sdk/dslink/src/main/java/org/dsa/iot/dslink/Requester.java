@@ -8,6 +8,7 @@ import org.dsa.iot.dslink.responses.*;
 import org.dsa.iot.dslink.util.Linkable;
 import org.dsa.iot.dslink.util.RequestTracker;
 import org.dsa.iot.dslink.util.StreamState;
+import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
@@ -20,6 +21,7 @@ public class Requester extends Linkable {
 
     private NodeManager nodeManager;
     private RequestTracker tracker;
+    private Handler<Response<?>> responseHandler;
 
     public Requester() {
         this(new RequestTracker());
@@ -52,6 +54,7 @@ public class Requester extends Linkable {
 
                 int rid = o.getNumber("rid").intValue();
                 Request request = tracker.getRequest(rid);
+                Response<?> resp;
                 if (rid != 0) {
                     // Response
                     String state = o.getString("state");
@@ -59,7 +62,6 @@ public class Requester extends Linkable {
                         tracker.untrack(rid);
                     }
 
-                    Response<?> resp;
                     switch (o.getString("method")) {
                         case "list":
                             resp = new ListResponse((ListRequest) request, nodeManager);
@@ -86,14 +88,16 @@ public class Requester extends Linkable {
                             throw new RuntimeException("Unknown method");
                     }
                     resp.populate(o.getArray("update"));
-                    // TODO: get the data to the API that wants it
                 } else {
                     // Subscription update
                     SubscribeRequest req = (SubscribeRequest) request;
-                    Response<SubscribeRequest> resp
-                                = new SubscriptionResponse(req, nodeManager);
+                    resp = new SubscriptionResponse(req, nodeManager);
                     resp.populate(o.getArray("update"));
                 }
+                if (responseHandler != null) {
+                    responseHandler.handle(resp);
+                }
+
             }
         } catch (Exception e) {
             // Error handler data
@@ -104,6 +108,11 @@ public class Requester extends Linkable {
     public void setRequestTracker(RequestTracker tracker) {
         checkConnected();
         this.tracker = tracker;
+    }
+
+    public void setResponseHandler(Handler<Response<?>> handler) {
+        checkConnected();
+        this.responseHandler = handler;
     }
 
     /**
