@@ -27,9 +27,10 @@ public class Node {
     private Map<String, Node> children;
     private Map<String, Value> attributes;
     private Map<String, Value> configurations;
+    private List<String> interfaces;
+
     private final String name;
     private final String path;
-
     private String displayName;
     private Value value;
 
@@ -62,7 +63,7 @@ public class Node {
         setConfiguration("is", new Value((String) null)); // TODO: full profile support
     }
 
-    public void setDisplayName(String name) {
+    public synchronized void setDisplayName(String name) {
         if (name == null) {
             displayName = null;
             return;
@@ -75,13 +76,13 @@ public class Node {
         setValue(value, true);
     }
 
-    public void setValue(Value value, boolean update) {
+    public synchronized void setValue(Value value, boolean update) {
         this.value = value;
         if (update)
             update();
     }
 
-    public void setAttribute(@NonNull String name, Value value) {
+    public synchronized void setAttribute(@NonNull String name, Value value) {
         StringUtils.checkNodeName(name);
         if (attributes == null)
             attributes = new HashMap<>();
@@ -94,7 +95,7 @@ public class Node {
             attributes.put(name, value);
     }
 
-    public void setConfiguration(@NonNull String name, Value value) {
+    public synchronized void setConfiguration(@NonNull String name, Value value) {
         StringUtils.checkNodeName(name);
         if (configurations == null)
             configurations = new HashMap<>();
@@ -107,11 +108,18 @@ public class Node {
             configurations.put(name, value);
     }
 
+    public synchronized void addInterface(@NonNull String name) {
+        if (interfaces == null)
+            interfaces = new ArrayList<>();
+        if (!interfaces.contains(name))
+            interfaces.add(name);
+    }
+
     public Node createChild(String name) {
         return addChild(new Node(manager, this, name));
     }
 
-    public Node addChild(@NonNull Node node) {
+    public synchronized Node addChild(@NonNull Node node) {
         if (children == null)
             children = new HashMap<>();
         else if (children.containsKey(node.name))
@@ -125,30 +133,40 @@ public class Node {
         return removeChild(node.name);
     }
 
-    public Node removeChild(@NonNull String name) {
+    public synchronized Node removeChild(@NonNull String name) {
         Node n = children != null ? children.remove(name) : null;
         if (n != null)
             notifyChildrenHandlers(n, true);
         return n;
     }
 
-    public Value removeAttribute(@NonNull String name) {
+    public synchronized void clearInterfaces() {
+        if (interfaces != null)
+            interfaces.clear();
+    }
+
+    public synchronized void removeInterface(@NonNull String name) {
+        if (interfaces != null)
+            interfaces.remove(name);
+    }
+
+    public synchronized Value removeAttribute(@NonNull String name) {
         return attributes != null ? attributes.remove(name) : null;
     }
 
-    public Value removeConfiguration(@NonNull String name) {
+    public synchronized Value removeConfiguration(@NonNull String name) {
         return configurations != null ? configurations.remove(name) : null;
     }
 
-    public Value getAttribute(@NonNull String name) {
+    public synchronized Value getAttribute(@NonNull String name) {
         return attributes != null ? attributes.get(name) : null;
     }
 
-    public Value getConfiguration(@NonNull String name) {
+    public synchronized Value getConfiguration(@NonNull String name) {
         return configurations != null ? configurations.get(name) : null;
     }
 
-    public Node getChild(@NonNull String name) {
+    public synchronized Node getChild(@NonNull String name) {
         return children != null ? children.get(name) : null;
     }
 
@@ -158,16 +176,19 @@ public class Node {
         }
     }
 
-    public synchronized Handler<NodeBooleanTuple> addChildrenHandler(Handler<NodeBooleanTuple> handler) {
+    public synchronized Handler<NodeBooleanTuple> addChildrenHandler(
+                                @NonNull Handler<NodeBooleanTuple> handler) {
         childrenUpdates.add(handler);
         return handler;
     }
 
-    public synchronized void removeChildrenHandler(Handler<NodeBooleanTuple> handler) {
+    public synchronized void removeChildrenHandler(
+                                @NonNull Handler<NodeBooleanTuple> handler) {
         childrenUpdates.remove(handler);
     }
 
-    private synchronized void notifyChildrenHandlers(Node n, boolean removed) {
+    private synchronized void notifyChildrenHandlers(@NonNull Node n,
+                                                     boolean removed) {
         for (Handler<NodeBooleanTuple> handler : childrenUpdates) {
             handler.handle(new NodeBooleanTuple(n, removed));
         }

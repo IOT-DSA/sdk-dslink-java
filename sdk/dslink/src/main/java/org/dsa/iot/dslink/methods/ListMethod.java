@@ -11,6 +11,7 @@ import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.dsa.iot.dslink.node.NodeManager.NodeBooleanTuple;
@@ -91,9 +92,15 @@ public class ListMethod extends Method {
 
             obj.putBoolean("$invokable", node.isInvokable());
 
-            Value interfaces = node.getConfiguration("interface");
+            List<String> interfaces = node.getInterfaces();
+            StringBuilder builder = new StringBuilder();
             if (interfaces != null) {
-                obj.putString("$interface", interfaces.getString());
+                for (String i : interfaces) {
+                    builder.append(i);
+                    builder.append("|");
+                }
+                String built = builder.substring(0, builder.length() - 1);
+                obj.putString("$interface", built);
             }
 
             if (removed) {

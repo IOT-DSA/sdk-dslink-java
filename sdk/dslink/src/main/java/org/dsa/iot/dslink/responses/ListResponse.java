@@ -78,7 +78,14 @@ public class ListResponse extends Response<ListRequest> {
                     child.setInvokable(invokable);
                 }
 
-                // TODO interfaces
+                String interfaces = childData.getString("$interfaces");
+                child.clearInterfaces();
+                if (interfaces != null) {
+                    String[] split = interfaces.split("\\|");
+                    for (String i : split) {
+                        child.addInterface(i);
+                    }
+                }
             }
         }
     }
