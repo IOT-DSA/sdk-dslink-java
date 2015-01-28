@@ -78,7 +78,7 @@ public class ListResponse extends Response<ListRequest> {
                     child.setInvokable(invokable);
                 }
 
-                String interfaces = childData.getString("$interfaces");
+                String interfaces = childData.getString("$interface");
                 child.clearInterfaces();
                 if (interfaces != null) {
                     String[] split = interfaces.split("\\|");
