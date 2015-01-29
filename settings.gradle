@@ -1,5 +1,6 @@
 include 'sdk/core'
 include 'sdk/dslink'
+include 'sdk/broker'
 include 'test'
 
 rootProject.name = 'sdk-dslink-java'
