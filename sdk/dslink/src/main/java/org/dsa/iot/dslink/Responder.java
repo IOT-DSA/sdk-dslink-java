@@ -2,7 +2,7 @@ package org.dsa.iot.dslink;
 
 import lombok.Getter;
 import lombok.NonNull;
-import org.dsa.iot.dslink.connection.Connector;
+import org.dsa.iot.dslink.connection.ClientConnector;
 import org.dsa.iot.dslink.methods.*;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
@@ -57,7 +57,7 @@ public class Responder extends Linkable {
      * @param connector Connector to be set.
      */
     @Override
-    public void setConnector(Connector connector) {
+    public void setConnector(ClientConnector connector) {
         super.setConnector(connector);
         setNodeManager(new NodeManager(new SubscriptionManager(connector)));
     }

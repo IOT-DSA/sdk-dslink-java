@@ -1,8 +1,8 @@
-package org.dsa.iot.dslink.connection.connector;
+package org.dsa.iot.dslink.connection.connector.client;
 
 import org.dsa.iot.core.URLInfo;
 import org.dsa.iot.core.Utils;
-import org.dsa.iot.dslink.connection.Connector;
+import org.dsa.iot.dslink.connection.ClientConnector;
 import org.dsa.iot.dslink.connection.handshake.HandshakePair;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
@@ -13,7 +13,7 @@ import org.vertx.java.core.json.JsonObject;
 /**
  * @author Samuel Grenier
  */
-public class WebSocketConnector extends Connector {
+public class WebSocketConnector extends ClientConnector {
 
     protected HttpClient client;
     protected WebSocket socket;

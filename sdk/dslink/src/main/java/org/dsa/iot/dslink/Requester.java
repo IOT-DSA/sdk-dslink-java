@@ -1,6 +1,6 @@
 package org.dsa.iot.dslink;
 
-import org.dsa.iot.dslink.connection.Connector;
+import org.dsa.iot.dslink.connection.ClientConnector;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.SubscriptionManager;
 import org.dsa.iot.dslink.requests.*;
@@ -121,7 +121,7 @@ public class Requester extends Linkable {
      * @param connector Connector to be set.
      */
     @Override
-    public void setConnector(Connector connector) {
+    public void setConnector(ClientConnector connector) {
         super.setConnector(connector);
         nodeManager = new NodeManager(new SubscriptionManager(connector));
     }

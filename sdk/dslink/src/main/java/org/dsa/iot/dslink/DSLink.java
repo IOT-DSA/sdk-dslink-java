@@ -2,8 +2,8 @@ package org.dsa.iot.dslink;
 
 import lombok.Getter;
 import lombok.NonNull;
+import org.dsa.iot.dslink.connection.ClientConnector;
 import org.dsa.iot.dslink.connection.ConnectionType;
-import org.dsa.iot.dslink.connection.Connector;
 import org.dsa.iot.dslink.connection.handshake.HandshakeClient;
 import org.dsa.iot.dslink.connection.handshake.HandshakePair;
 import org.dsa.iot.dslink.connection.handshake.HandshakeServer;
@@ -16,14 +16,14 @@ import org.vertx.java.core.json.JsonObject;
  */
 public class DSLink {
 
-    private final Connector connector;
+    private final ClientConnector connector;
 
     private final Requester requester;
 
     @Getter
     private final Responder responder;
 
-    private DSLink(@NonNull Connector conn,
+    private DSLink(@NonNull ClientConnector conn,
                   Requester req,
                   Responder resp) {
         this.connector = conn;
@@ -128,7 +128,7 @@ public class DSLink {
                 requester != null, responder != null);
         HandshakeServer server = HandshakeServer.perform(url, client);
         HandshakePair pair = new HandshakePair(client, server);
-        Connector conn = Connector.create(endpoint, pair, type);
+        ClientConnector conn = ClientConnector.create(endpoint, pair, type);
         return new DSLink(conn, requester, responder);
     }
 }

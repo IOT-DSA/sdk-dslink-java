@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import org.bouncycastle.jcajce.provider.digest.SHA256;
 import org.dsa.iot.core.URLInfo;
-import org.dsa.iot.dslink.connection.connector.WebSocketConnector;
+import org.dsa.iot.dslink.connection.connector.client.WebSocketConnector;
 import org.dsa.iot.dslink.connection.handshake.HandshakePair;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
@@ -14,10 +14,11 @@ import org.vertx.java.core.json.impl.Base64;
 import java.io.UnsupportedEncodingException;
 
 /**
+ * Used for handling client connections to servers.
  * @author Samuel Grenier
  */
 @AllArgsConstructor
-public abstract class Connector {
+public abstract class ClientConnector {
 
     @NonNull
     public final URLInfo dataEndpoint;
@@ -95,7 +96,7 @@ public abstract class Connector {
      *             connection initiation endpoint, not the actual data URL.
      * @return A connector instance
      */
-    public static Connector create(String url, HandshakePair pair, ConnectionType type) {
+    public static ClientConnector create(String url, HandshakePair pair, ConnectionType type) {
         switch (type) {
             case SOCKET:
                 throw new UnsupportedOperationException("Sockets not implemented yet");

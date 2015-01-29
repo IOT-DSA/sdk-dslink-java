@@ -2,7 +2,7 @@ package org.dsa.iot.dslink.methods;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.dsa.iot.dslink.connection.Connector;
+import org.dsa.iot.dslink.connection.ClientConnector;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.value.Value;
@@ -25,7 +25,7 @@ import static org.dsa.iot.dslink.node.NodeManager.NodeBooleanTuple;
 public class ListMethod extends Method {
 
     @NonNull
-    private final Connector connector;
+    private final ClientConnector connector;
 
     @NonNull
     private final Node parent;

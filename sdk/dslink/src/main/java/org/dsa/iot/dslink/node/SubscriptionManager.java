@@ -2,7 +2,7 @@ package org.dsa.iot.dslink.node;
 
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
-import org.dsa.iot.dslink.connection.Connector;
+import org.dsa.iot.dslink.connection.ClientConnector;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.util.ValueUtils;
 import org.vertx.java.core.json.JsonArray;
@@ -21,7 +21,7 @@ public class SubscriptionManager {
     private static final DateFormat FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
 
     @NonNull
-    private final Connector connector;
+    private final ClientConnector connector;
 
     //private final List<JsonObject> updates = new ArrayList<>();
 

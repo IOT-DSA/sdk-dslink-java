@@ -2,7 +2,7 @@ package org.dsa.iot.dslink.util;
 
 import lombok.AccessLevel;
 import lombok.Getter;
-import org.dsa.iot.dslink.connection.Connector;
+import org.dsa.iot.dslink.connection.ClientConnector;
 import org.vertx.java.core.json.JsonArray;
 
 /**
@@ -11,7 +11,7 @@ import org.vertx.java.core.json.JsonArray;
 public abstract class Linkable {
 
     @Getter(AccessLevel.PROTECTED)
-    private Connector connector;
+    private ClientConnector connector;
 
     public abstract void parse(JsonArray array);
 
@@ -20,7 +20,7 @@ public abstract class Linkable {
      * and write to the server.
      * @param connector Connector to be set.
      */
-    public synchronized void setConnector(Connector connector) {
+    public synchronized void setConnector(ClientConnector connector) {
         checkConnected();
         this.connector = connector;
     }
