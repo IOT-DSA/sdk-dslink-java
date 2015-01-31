@@ -1,6 +1,7 @@
 package org.dsa.iot.dslink.connection.handshake;
 
 import lombok.Getter;
+import lombok.NonNull;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.generators.RSAKeyPairGenerator;
 import org.bouncycastle.crypto.params.RSAKeyGenerationParameters;
@@ -72,13 +73,13 @@ public class HandshakeClient {
      * @param dsId ID prefix of the client appended by a dash and a hash
      * @return The generated client
      */
-    public static HandshakeClient generate(String dsId,
-                                           String zone,
+    public static HandshakeClient generate(@NonNull String dsId,
+                                           @NonNull String zone,
                                            boolean isRequester,
                                            boolean isResponder) {
-        if (dsId == null || dsId.isEmpty())
+        if (dsId.isEmpty())
             throw new IllegalArgumentException("dsId");
-        else if (zone == null || zone.isEmpty())
+        else if (zone.isEmpty())
             throw new IllegalArgumentException("zone");
         try {
             RSAKeyPairGenerator gen = new RSAKeyPairGenerator();
