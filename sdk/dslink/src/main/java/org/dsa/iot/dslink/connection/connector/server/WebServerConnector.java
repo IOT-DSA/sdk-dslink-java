@@ -50,7 +50,7 @@ public class WebServerConnector extends ServerConnector {
                         resp.setStatusCode(401); // Unauthorized
                     } else {
                         Client c = new Client(clientDsId, generateNonce(),
-                                                generateSalt(), generateSalt());
+                                generateSalt(), generateSalt());
                         JsonObject obj = new JsonObject();
                         obj.putString("dsId", getClient().getDsId());
                         obj.putString("publicKey", getClient().getPublicKey());
@@ -69,6 +69,9 @@ public class WebServerConnector extends ServerConnector {
                         // TODO: updateInterval
                         resp.write(obj.encode(), "UTF-8");
                     }
+
+                } if (event.path().equals("/http")) {
+                    resp.setStatusCode(501); // Not implemented
                 } else {
                     // TODO: handle ws and http endpoints
                     resp.setStatusCode(404); // Page not found
