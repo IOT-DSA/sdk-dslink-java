@@ -85,8 +85,7 @@ public class HandshakeServer {
 
     private static byte[] decryptNonce(HandshakeClient client,
                                        String encryptedNonce) {
-        while (encryptedNonce.length() % 4 != 0)
-            encryptedNonce += ".";
+        encryptedNonce = Utils.addPadding(encryptedNonce, true);
         byte[] decoded = UrlBase64.decode(encryptedNonce);
 
         BigInteger e = new BigInteger(1, decoded);

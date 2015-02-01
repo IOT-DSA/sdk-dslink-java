@@ -1,5 +1,6 @@
 package org.dsa.iot.dslink.connection.connector.server;
 
+import lombok.SneakyThrows;
 import org.bouncycastle.jcajce.provider.digest.SHA256;
 import org.bouncycastle.util.encoders.UrlBase64;
 import org.dsa.iot.core.SyncHandler;
@@ -16,14 +17,17 @@ import org.vertx.java.core.http.ServerWebSocket;
 import org.vertx.java.core.json.JsonObject;
 
 import java.math.BigInteger;
-import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Handles web sockets and HTTP connections.
  * @author Samuel Grenier
  */
 public class WebServerConnector extends ServerConnector {
+
+    private final Map<String, Client> clients = new HashMap<>();
 
     public WebServerConnector(HandshakeClient client) {
         super(client);
@@ -46,11 +50,10 @@ public class WebServerConnector extends ServerConnector {
 
                     String clientDsId = clientJson.getString("dsId");
                     String pubKey = clientJson.getString("publicKey");
-                    if (!validID(clientDsId, pubKey)) {
+                    if (!validID(clientDsId, pubKey) || (getClient(clientDsId) != null)) {
                         resp.setStatusCode(401); // Unauthorized
                     } else {
-                        Client c = new Client(clientDsId, generateNonce(),
-                                generateSalt(), generateSalt());
+                        Client c = new Client(clientDsId);
                         JsonObject obj = new JsonObject();
                         obj.putString("dsId", getClient().getDsId());
                         obj.putString("publicKey", getClient().getPublicKey());
@@ -68,8 +71,8 @@ public class WebServerConnector extends ServerConnector {
                         obj.putString("saltS", c.getSaltS());
                         // TODO: updateInterval
                         resp.write(obj.encode(), "UTF-8");
+                        addClient(c);
                     }
-
                 } if (event.path().equals("/http")) {
                     resp.setStatusCode(501); // Not implemented
                 } else {
@@ -82,8 +85,47 @@ public class WebServerConnector extends ServerConnector {
 
         server.websocketHandler(new Handler<ServerWebSocket>() {
             @Override
+            @SneakyThrows
             public void handle(ServerWebSocket event) {
+                if (event.path().equals("/ws")) {
+                    final String dsId = event.headers().get("dsId");
+                    final String auth = event.headers().get("auth");
 
+                    event.closeHandler(new Handler<Void>() {
+                        @Override
+                        public void handle(Void event) {
+                            removeClient(dsId);
+                        }
+                    });
+
+                    final Client client = getClient(dsId);
+                    if (client == null || client.isSetup()) {
+                        event.reject();
+                    } else {
+                        byte[] originalHash = UrlBase64.decode(Utils.addPadding(auth, true));
+
+                        Buffer buffer = new Buffer(client.getSalt().length() + client.getDecryptedNonce().length);
+                        buffer.appendBytes(client.getSalt().getBytes("UTF-8"));
+                        buffer.appendBytes(client.getDecryptedNonce());
+
+                        SHA256.Digest digest = new SHA256.Digest();
+                        byte[] output = digest.digest(buffer.getBytes());
+
+                        if (!Arrays.equals(originalHash, output)) {
+                            event.reject();
+                        } else {
+                            client.setSetup(true);
+                            event.dataHandler(new Handler<Buffer>() {
+                                @Override
+                                public void handle(Buffer event) {
+                                    client.parse(new JsonObject(event.toString("UTF-8")));
+                                }
+                            });
+                        }
+                    }
+                } else {
+                    event.reject();
+                }
             }
         });
 
@@ -108,14 +150,15 @@ public class WebServerConnector extends ServerConnector {
         return Arrays.equals(originalHash, newHash);
     }
 
-    private byte[] generateNonce() {
-        SecureRandom rand = new SecureRandom();
-        byte[] b = new byte[16];
-        rand.nextBytes(b);
-        return b;
+    private synchronized void addClient(Client c) {
+        clients.put(c.getDsId(), c);
     }
 
-    private String generateSalt() {
-        return new String(generateNonce());
+    private synchronized void removeClient(String name) {
+        clients.remove(name);
+    }
+
+    private synchronized Client getClient(String name) {
+        return clients.get(name);
     }
 }

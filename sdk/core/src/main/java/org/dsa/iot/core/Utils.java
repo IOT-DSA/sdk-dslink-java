@@ -26,6 +26,14 @@ public class Utils {
         return -1;
     }
 
+    public static String addPadding(String encoded, boolean urlSafe) {
+        String padding = urlSafe ? "." : "=";
+        while (encoded.length() % 4 != 0) {
+            encoded += padding;
+        }
+        return encoded;
+    }
+
     static {
         VERTX = VertxFactory.newVertx();
     }
