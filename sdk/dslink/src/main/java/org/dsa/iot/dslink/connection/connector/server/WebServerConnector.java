@@ -69,7 +69,7 @@ public class WebServerConnector extends ServerConnector {
                         }
                         obj.putString("salt", c.getSalt());
                         obj.putString("saltS", c.getSaltS());
-                        // TODO: updateInterval
+                        obj.putNumber("updateInterval", 200);
                         resp.write(obj.encode(), "UTF-8");
                         addClient(c);
                     }
