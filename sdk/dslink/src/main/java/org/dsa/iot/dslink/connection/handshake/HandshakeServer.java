@@ -17,8 +17,6 @@ import org.vertx.java.core.http.HttpClientRequest;
 import org.vertx.java.core.http.HttpClientResponse;
 import org.vertx.java.core.json.JsonObject;
 
-import java.util.Arrays;
-
 /**
  * Holds handshake information about a server.
  * @author Samuel Grenier
@@ -90,15 +88,19 @@ public class HandshakeServer {
 
     private static byte[] decryptSharedSecret(HandshakeClient client,
                                                 String tempKey) {
-        System.out.println("Temporary key: " + tempKey); // DEBUG
         tempKey = Utils.addPadding(tempKey, true);
         byte[] decoded = UrlBase64.decode(tempKey);
-        System.out.println("Base64 Decoded key: " + Arrays.toString(decoded)); // DEBUG
 
         ECParameterSpec params = client.getPrivKeyInfo().getParameters();
         ECPoint point = params.getCurve().decodePoint(decoded);
         ECPublicKeySpec spec = new ECPublicKeySpec(point, params);
         point = spec.getQ().multiply(client.getPrivKeyInfo().getD());
-        return point.normalize().getAffineXCoord().toBigInteger().toByteArray();
+        byte[] sharedSecret = point.normalize().getXCoord().toBigInteger().toByteArray();
+        if (sharedSecret.length < 32) {
+            byte[] fixed = new byte[32];
+            System.arraycopy(sharedSecret, 0, fixed, 1, sharedSecret.length);
+            sharedSecret = fixed;
+        }
+        return sharedSecret;
     }
 }
