@@ -1,1 +1,8 @@
+# Default to unix line endings
 * text eol=lf
+
+# Specific line endings
+*.bat eol=crlf
+
+# Binaries
+*.jar binary
