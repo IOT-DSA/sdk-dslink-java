@@ -63,11 +63,11 @@ public abstract class ClientConnector {
             query.append("?auth=");
 
             byte[] salt = getSalt().getBytes("UTF-8");
-            byte[] nonce = pair.getServer().getNonce();
+            byte[] sharedSecret = pair.getServer().getSharedSecret();
 
-            Buffer buffer = new Buffer(salt.length + nonce.length);
+            Buffer buffer = new Buffer(salt.length + sharedSecret.length);
             buffer.appendBytes(salt);
-            buffer.appendBytes(nonce);
+            buffer.appendBytes(sharedSecret);
 
             SHA256.Digest digest = new SHA256.Digest();
             byte[] output = digest.digest(buffer.getBytes());

@@ -3,6 +3,7 @@ package org.dsa.iot.dslink.connection.connector.server;
 import lombok.SneakyThrows;
 import org.bouncycastle.jcajce.provider.digest.SHA256;
 import org.bouncycastle.util.encoders.UrlBase64;
+import org.dsa.iot.core.ECKeyPair;
 import org.dsa.iot.core.SyncHandler;
 import org.dsa.iot.core.Utils;
 import org.dsa.iot.dslink.connection.ServerConnector;
@@ -16,7 +17,6 @@ import org.vertx.java.core.http.HttpServerResponse;
 import org.vertx.java.core.http.ServerWebSocket;
 import org.vertx.java.core.json.JsonObject;
 
-import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -60,12 +60,9 @@ public class WebServerConnector extends ServerConnector {
                         obj.putString("wsUri", "/ws");
                         obj.putString("httpUri", "/http");
                         {
-                            BigInteger nonce = new BigInteger(1, c.getDecryptedNonce());
-                            nonce = nonce.modPow(HandshakeClient.PUBLIC_EXPONENT,
-                                    getClient().getPubKeyInfo().getModulus());
-                            byte[] encoded = UrlBase64.encode(nonce.toByteArray());
-                            obj.putString("encryptedNonce", new String(encoded));
-
+                            ECKeyPair pair = c.getTempKey();
+                            byte[] encoded = UrlBase64.encode(pair.getPubKey().getQ().getEncoded(false));
+                            obj.putString("tempKey", new String(encoded));
                         }
                         obj.putString("salt", c.getSalt());
                         obj.putString("saltS", c.getSaltS());
@@ -104,9 +101,9 @@ public class WebServerConnector extends ServerConnector {
                     } else {
                         byte[] originalHash = UrlBase64.decode(Utils.addPadding(auth, true));
 
-                        Buffer buffer = new Buffer(client.getSalt().length() + client.getDecryptedNonce().length);
+                        Buffer buffer = new Buffer(client.getSalt().length() + client.getSharedSecret().length);
                         buffer.appendBytes(client.getSalt().getBytes("UTF-8"));
-                        buffer.appendBytes(client.getDecryptedNonce());
+                        buffer.appendBytes(client.getSharedSecret());
 
                         SHA256.Digest digest = new SHA256.Digest();
                         byte[] output = digest.digest(buffer.getBytes());

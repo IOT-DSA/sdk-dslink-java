@@ -3,6 +3,9 @@ package org.dsa.iot.dslink.connection.handshake;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.bouncycastle.jce.spec.ECParameterSpec;
+import org.bouncycastle.jce.spec.ECPublicKeySpec;
+import org.bouncycastle.math.ec.ECPoint;
 import org.bouncycastle.util.encoders.UrlBase64;
 import org.dsa.iot.core.SyncHandler;
 import org.dsa.iot.core.URLInfo;
@@ -13,7 +16,6 @@ import org.vertx.java.core.http.HttpClientRequest;
 import org.vertx.java.core.http.HttpClientResponse;
 import org.vertx.java.core.json.JsonObject;
 
-import java.math.BigInteger;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -28,7 +30,7 @@ public class HandshakeServer {
     private final String publicKey;
     private final String wsUri;
     private final String httpUri;
-    private final byte[] nonce;
+    private final byte[] sharedSecret;
     private final String salt;
     private final String saltS;
     private final Integer updateInterval;
@@ -65,7 +67,7 @@ public class HandshakeServer {
         SyncHandler<Buffer> bufHandler = new SyncHandler<>();
         resp.bodyHandler(bufHandler);
 
-        Buffer buf = bufHandler.get(5, TimeUnit.SECONDS);
+        Buffer buf = bufHandler.get(30, TimeUnit.SECONDS);
         if (buf == null)
             throw new NullPointerException("buf (Failed to receive any data)");
         JsonObject obj = new JsonObject(buf.toString());
@@ -74,33 +76,23 @@ public class HandshakeServer {
         String publicKey = obj.getString("publicKey");
         String wsUri = obj.getString("wsUri");
         String httpUri = obj.getString("httpUri");
-        byte[] nonce = decryptNonce(hc, obj.getString("encryptedNonce"));
+        byte[] sharedSecret = decryptSharedSecret(hc, obj.getString("tempKey"));
         String salt = obj.getString("salt");
         String saltS = obj.getString("saltS");
         Integer updateInterval = obj.getInteger("updateInterval");
 
         return new HandshakeServer(dsId, publicKey, wsUri, httpUri,
-                                    nonce, salt, saltS, updateInterval);
+                                    sharedSecret, salt, saltS, updateInterval);
     }
 
-    private static byte[] decryptNonce(HandshakeClient client,
-                                       String encryptedNonce) {
-        encryptedNonce = Utils.addPadding(encryptedNonce, true);
-        byte[] decoded = UrlBase64.decode(encryptedNonce);
-
-        BigInteger e = new BigInteger(1, decoded);
-        BigInteger d = e.modPow(client.getPrivKeyInfo().getExponent(),
-                                client.getPubKeyInfo().getModulus());
-        byte[] decrypted = d.toByteArray();
-        if (decrypted.length < 16) {
-            byte[] fixed = new byte[16];
-            System.arraycopy(decrypted, 0, fixed, 16 - decrypted.length, decrypted.length);
-            decrypted = fixed;
-        } else if (decrypted.length > 16) {
-            byte[] fixed = new byte[16];
-            System.arraycopy(decrypted, decrypted.length - 16, fixed, 0, 16);
-            decrypted = fixed;
-        }
-        return decrypted;
+    private static byte[] decryptSharedSecret(HandshakeClient client,
+                                                String tempKey) {
+        tempKey = Utils.addPadding(tempKey, true);
+        byte[] decoded = UrlBase64.decode(tempKey);
+        ECParameterSpec params = client.getPrivKeyInfo().getParameters();
+        ECPoint point = params.getCurve().decodePoint(decoded);
+        ECPublicKeySpec spec = new ECPublicKeySpec(point, params);
+        point = spec.getQ().multiply(client.getPrivKeyInfo().getD());
+        return point.getAffineXCoord().toBigInteger().toByteArray();
     }
 }

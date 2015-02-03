@@ -2,19 +2,19 @@ package org.dsa.iot.dslink.connection.handshake;
 
 import lombok.Getter;
 import lombok.NonNull;
-import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
-import org.bouncycastle.crypto.generators.RSAKeyPairGenerator;
-import org.bouncycastle.crypto.params.RSAKeyGenerationParameters;
-import org.bouncycastle.crypto.params.RSAKeyParameters;
-import org.bouncycastle.crypto.params.RSAPrivateCrtKeyParameters;
+import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPrivateKey;
+import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
+import org.bouncycastle.jcajce.provider.asymmetric.ec.KeyPairGeneratorSpi;
 import org.bouncycastle.jcajce.provider.digest.SHA256;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.json.impl.Base64;
 
 import java.io.IOException;
-import java.math.BigInteger;
-import java.security.SecureRandom;
-import java.util.Arrays;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.Security;
+import java.security.spec.ECGenParameterSpec;
 
 /**
  * Handshake information for the client.
@@ -23,12 +23,8 @@ import java.util.Arrays;
 @Getter
 public class HandshakeClient {
 
-    public static final BigInteger PUBLIC_EXPONENT = BigInteger.valueOf(65537);
-    public static final int KEY_STRENGTH = 2048;
-    public static final int KEY_CERTAINTY = 32;
-
-    private final RSAPrivateCrtKeyParameters privKeyInfo;
-    private final RSAKeyParameters pubKeyInfo;
+    private final BCECPrivateKey privKeyInfo;
+    private final BCECPublicKey pubKeyInfo;
 
     private final String dsId;
     private final String publicKey;
@@ -37,24 +33,21 @@ public class HandshakeClient {
     private final boolean isResponder;
 
     private HandshakeClient(String dsIdPrefix,
-                            AsymmetricCipherKeyPair key, String zone,
+                            KeyPair key, String zone,
                             boolean isRequester, boolean isResponder)
                                                     throws IOException {
         this.zone = zone;
         this.isRequester = isRequester;
         this.isResponder = isResponder;
 
-        this.pubKeyInfo = (RSAKeyParameters) key.getPublic();
-        this.privKeyInfo = (RSAPrivateCrtKeyParameters) key.getPrivate();
+        this.pubKeyInfo = (BCECPublicKey) key.getPublic();
+        this.privKeyInfo = (BCECPrivateKey) key.getPrivate();
 
-        BigInteger modulus = pubKeyInfo.getModulus();
-        byte[] modBytes = modulus.toByteArray();
-        modBytes = Arrays.copyOfRange(modBytes, 1, modBytes.length);
-
-        this.publicKey = Base64.encodeBytes(modBytes, Base64.URL_SAFE);
+        byte[] pubKey = pubKeyInfo.getQ().getEncoded(false);
+        this.publicKey = Base64.encodeBytes(pubKey, Base64.URL_SAFE);
 
         SHA256.Digest sha = new SHA256.Digest();
-        byte[] hash = sha.digest(modBytes);
+        byte[] hash = sha.digest(pubKey);
 
         String encoded = Base64.encodeBytes(hash, Base64.URL_SAFE);
         this.dsId = dsIdPrefix + "-" + encoded.substring(0, encoded.length() - 1);
@@ -82,15 +75,18 @@ public class HandshakeClient {
         else if (zone.isEmpty())
             throw new IllegalArgumentException("zone");
         try {
-            RSAKeyPairGenerator gen = new RSAKeyPairGenerator();
-            gen.init(new RSAKeyGenerationParameters(PUBLIC_EXPONENT,
-                    new SecureRandom(),
-                    KEY_STRENGTH,
-                    KEY_CERTAINTY));
-            AsymmetricCipherKeyPair key = gen.generateKeyPair();
+            KeyPairGenerator gen = new KeyPairGeneratorSpi.ECDH();
+            ECGenParameterSpec params = new ECGenParameterSpec("SECP256R1");
+            gen.initialize(params);
+
+            KeyPair key = gen.generateKeyPair();
             return new HandshakeClient(dsId, key, zone, isRequester, isResponder);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    static {
+        Security.addProvider(new BouncyCastleProvider());
     }
 }
