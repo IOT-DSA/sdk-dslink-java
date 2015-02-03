@@ -15,6 +15,7 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.Security;
 import java.security.spec.ECGenParameterSpec;
+import java.util.Arrays;
 
 /**
  * Handshake information for the client.
@@ -51,6 +52,11 @@ public class HandshakeClient {
 
         String encoded = Base64.encodeBytes(hash, Base64.URL_SAFE);
         this.dsId = dsIdPrefix + "-" + encoded.substring(0, encoded.length() - 1);
+
+        System.out.println("Public key encoded: " + Arrays.toString(pubKey)); // DEBUG
+        System.out.println("Base64 hash of public key: " + publicKey);
+        System.out.println("SHA256 hash of public key: " + Arrays.toString(hash));
+        System.out.println("DSID: " + dsId);
     }
 
     public JsonObject toJson() {
