@@ -10,13 +10,12 @@ import org.bouncycastle.util.encoders.UrlBase64;
 import org.dsa.iot.core.SyncHandler;
 import org.dsa.iot.core.URLInfo;
 import org.dsa.iot.core.Utils;
+import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.http.HttpClient;
 import org.vertx.java.core.http.HttpClientRequest;
 import org.vertx.java.core.http.HttpClientResponse;
 import org.vertx.java.core.json.JsonObject;
-
-import java.util.concurrent.TimeUnit;
 
 /**
  * Holds handshake information about a server.
@@ -53,23 +52,25 @@ public class HandshakeServer {
             client.setVerifyHost(verifySsl);
         }
 
-        SyncHandler<HttpClientResponse> reqHandler = new SyncHandler<>();
-        HttpClientRequest req = client.post(url.path + "?dsId=" + hc.getDsId(), reqHandler);
+        final SyncHandler<Buffer> bufHandler = new SyncHandler<>();
+        HttpClientRequest req = client.post(url.path + "?dsId=" + hc.getDsId(),
+                                            new Handler<HttpClientResponse>() {
+            @Override
+            public void handle(HttpClientResponse event) {
+                event.bodyHandler(new Handler<Buffer>() {
+                    @Override
+                    public void handle(Buffer event) {
+                        bufHandler.handle(event);
+                    }
+                });
+            }
+        });
 
         String encoded = hc.toJson().encode();
-        req.putHeader("Content-Length", String.valueOf(encoded.length()));
-        req.write(encoded);
-        req.end();
+        req.setTimeout(10000);
+        req.end(encoded, "UTF-8");
 
-        HttpClientResponse resp = reqHandler.get(2, TimeUnit.SECONDS);
-        if (resp == null)
-            throw new NullPointerException("resp");
-        SyncHandler<Buffer> bufHandler = new SyncHandler<>();
-        resp.bodyHandler(bufHandler);
-
-        Buffer buf = bufHandler.get(30, TimeUnit.SECONDS);
-        if (buf == null)
-            throw new NullPointerException("buf (Failed to receive any data)");
+        Buffer buf = bufHandler.get();
         JsonObject obj = new JsonObject(buf.toString());
 
         String dsId = obj.getString("dsId");
