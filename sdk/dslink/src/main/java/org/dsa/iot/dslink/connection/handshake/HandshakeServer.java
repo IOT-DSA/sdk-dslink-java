@@ -99,6 +99,6 @@ public class HandshakeServer {
         ECPoint point = params.getCurve().decodePoint(decoded);
         ECPublicKeySpec spec = new ECPublicKeySpec(point, params);
         point = spec.getQ().multiply(client.getPrivKeyInfo().getD());
-        return point.getXCoord().toBigInteger().toByteArray();
+        return point.normalize().getAffineXCoord().toBigInteger().toByteArray();
     }
 }
