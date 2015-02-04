@@ -27,6 +27,7 @@ import java.util.Map;
 public class WebServerConnector extends ServerConnector {
 
     private final Map<String, Client> clients = new HashMap<>();
+    private final HttpServer server = Utils.VERTX.createHttpServer();
 
     public WebServerConnector(HandshakeClient client) {
         super(client);
@@ -34,7 +35,6 @@ public class WebServerConnector extends ServerConnector {
 
     @Override
     public void start(int port, String bindAddr) {
-        HttpServer server = Utils.VERTX.createHttpServer();
         server.requestHandler(new Handler<HttpServerRequest>() {
             @Override
             public void handle(HttpServerRequest event) {
@@ -75,7 +75,8 @@ public class WebServerConnector extends ServerConnector {
                         }
                     });
 
-                } if (event.path().equals("/http")) {
+                }
+                if (event.path().equals("/http")) {
                     resp.setStatusCode(501); // Not implemented
                     resp.end();
                 } else {
@@ -136,11 +137,13 @@ public class WebServerConnector extends ServerConnector {
             server.listen(port, bindAddr);
         else
             server.listen(port);
+        setListening(true);
     }
 
     @Override
     public void stop() {
-
+        server.close();
+        setListening(false);
     }
 
     private boolean validID(String dsId, String publicKey) {

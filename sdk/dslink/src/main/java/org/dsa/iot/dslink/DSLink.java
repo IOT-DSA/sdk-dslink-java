@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import org.dsa.iot.dslink.connection.ClientConnector;
 import org.dsa.iot.dslink.connection.ConnectionType;
+import org.dsa.iot.dslink.connection.ServerConnector;
 import org.dsa.iot.dslink.connection.handshake.HandshakeClient;
 import org.dsa.iot.dslink.connection.handshake.HandshakePair;
 import org.dsa.iot.dslink.connection.handshake.HandshakeServer;
@@ -16,27 +17,49 @@ import org.vertx.java.core.json.JsonObject;
  */
 public class DSLink {
 
-    private final ClientConnector connector;
+    private final ClientConnector clientConnector;
+    private final ServerConnector serverConnector;
 
     private final Requester requester;
 
     @Getter
     private final Responder responder;
 
-    public DSLink(@NonNull ClientConnector conn,
-                  Requester req,
-                  Responder resp) {
-        this.connector = conn;
+    private DSLink(ClientConnector clientConn,
+                   ServerConnector serverConn,
+                    Requester req,
+                    Responder resp) {
+        this.clientConnector = clientConn;
+        this.serverConnector = serverConn;
         this.requester = req;
         this.responder = resp;
         if (requester != null)
-            requester.setConnector(conn);
+            requester.setConnector(clientConn);
         if (responder != null)
-            responder.setConnector(conn);
+            responder.setConnector(clientConn);
+    }
+
+    public boolean isListening() {
+        return serverConnector != null && serverConnector.isListening();
+    }
+
+    public void listen(int port) {
+        listen(port, "0.0.0.0");
+    }
+
+    public void listen(int port, @NonNull String bindAddr) {
+        // TODO: SSL support
+        checkListening();
+        serverConnector.start(port, bindAddr);
+    }
+
+    public void stopListening() {
+        checkListening();
+        serverConnector.stop();
     }
 
     public boolean isConnected() {
-        return connector.isConnected();
+        return clientConnector != null && clientConnector.isConnected();
     }
 
     public void connect() {
@@ -50,8 +73,8 @@ public class DSLink {
     public void connect(boolean sslVerify,
                         Handler<Throwable> exceptionHandler) {
         checkConnected();
-        connector.setExceptionHandler(exceptionHandler);
-        connector.connect(new Handler<JsonObject>() {
+        clientConnector.setExceptionHandler(exceptionHandler);
+        clientConnector.connect(new Handler<JsonObject>() {
             @Override
             public void handle(JsonObject event) {
                 if (responder != null) {
@@ -71,14 +94,24 @@ public class DSLink {
     }
 
     public void disconnect() {
-        if (connector.isConnected()) {
-            connector.disconnect();
+        if (clientConnector.isConnected()) {
+            clientConnector.disconnect();
         }
     }
 
     private void checkConnected() {
-        if (connector.isConnected()) {
+        if (clientConnector == null) {
+            throw new IllegalStateException("No client connector implementation provided");
+        } else if (clientConnector.isConnected()) {
             throw new IllegalStateException("Already connected");
+        }
+    }
+
+    private void checkListening() {
+        if (serverConnector == null) {
+            throw new IllegalStateException("No server connector implementation provided");
+        } else if (serverConnector.isListening()) {
+            throw new IllegalStateException("Already listening");
         }
     }
 
@@ -153,8 +186,13 @@ public class DSLink {
             public void handle(HandshakeServer event) {
                 HandshakePair pair = new HandshakePair(client, event);
                 ClientConnector conn = ClientConnector.create(endpoint, pair, type);
-                onComplete.handle(new DSLink(conn, requester, responder));
+                onComplete.handle(new DSLink(conn, null, requester, responder));
             }
         }, exceptionHandler);
+    }
+
+    public static void generate(@NonNull final ServerConnector connector,
+                                @NonNull final Handler<DSLink> onComplete) {
+        onComplete.handle(new DSLink(null, connector, new Requester(), new Responder()));
     }
 }
