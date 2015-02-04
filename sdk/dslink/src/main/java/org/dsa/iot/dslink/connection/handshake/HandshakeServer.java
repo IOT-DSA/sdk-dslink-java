@@ -104,6 +104,10 @@ public class HandshakeServer {
             byte[] fixed = new byte[32];
             System.arraycopy(sharedSecret, 0, fixed, 1, sharedSecret.length);
             sharedSecret = fixed;
+        } else if (sharedSecret.length > 32) {
+            byte[] fixed = new byte[32];
+            System.arraycopy(sharedSecret, 1, fixed, 0, fixed.length);
+            sharedSecret = fixed;
         }
         return sharedSecret;
     }
