@@ -4,7 +4,6 @@ import lombok.SneakyThrows;
 import org.bouncycastle.jcajce.provider.digest.SHA256;
 import org.bouncycastle.util.encoders.UrlBase64;
 import org.dsa.iot.core.ECKeyPair;
-import org.dsa.iot.core.SyncHandler;
 import org.dsa.iot.core.Utils;
 import org.dsa.iot.dslink.connection.ServerConnector;
 import org.dsa.iot.dslink.connection.handshake.HandshakeClient;
@@ -39,44 +38,51 @@ public class WebServerConnector extends ServerConnector {
         server.requestHandler(new Handler<HttpServerRequest>() {
             @Override
             public void handle(HttpServerRequest event) {
-                HttpServerResponse resp = event.response();
-                resp.setStatusCode(200);
+                final HttpServerResponse resp = event.response();
                 if (!event.method().equals("POST")) {
                     resp.setStatusCode(405); // Method not allowed
+                    resp.end();
                 } else if (event.path().equals("/conn")) {
-                    SyncHandler<Buffer> buf = new SyncHandler<>();
-                    event.bodyHandler(buf);
-                    JsonObject clientJson = new JsonObject(buf.get().toString("UTF-8"));
+                    resp.setStatusCode(200);
+                    event.bodyHandler(new Handler<Buffer>() {
+                        @Override
+                        public void handle(Buffer buf) {
+                            JsonObject clientJson = new JsonObject(buf.toString("UTF-8"));
 
-                    String clientDsId = clientJson.getString("dsId");
-                    String pubKey = clientJson.getString("publicKey");
-                    if (!validID(clientDsId, pubKey) || (getClient(clientDsId) != null)) {
-                        resp.setStatusCode(401); // Unauthorized
-                    } else {
-                        Client c = new Client(clientDsId);
-                        JsonObject obj = new JsonObject();
-                        obj.putString("dsId", getClient().getDsId());
-                        obj.putString("publicKey", getClient().getPublicKey());
-                        obj.putString("wsUri", "/ws");
-                        obj.putString("httpUri", "/http");
-                        {
-                            ECKeyPair pair = c.getTempKey();
-                            byte[] encoded = UrlBase64.encode(pair.getPubKey().getQ().getEncoded(false));
-                            obj.putString("tempKey", new String(encoded));
+                            String clientDsId = clientJson.getString("dsId");
+                            String pubKey = clientJson.getString("publicKey");
+                            if (!validID(clientDsId, pubKey) || (getClient(clientDsId) != null)) {
+                                resp.setStatusCode(401); // Unauthorized
+                            } else {
+                                Client c = new Client(clientDsId);
+                                JsonObject obj = new JsonObject();
+                                obj.putString("dsId", getClient().getDsId());
+                                obj.putString("publicKey", getClient().getPublicKey());
+                                obj.putString("wsUri", "/ws");
+                                obj.putString("httpUri", "/http");
+                                {
+                                    ECKeyPair pair = c.getTempKey();
+                                    byte[] encoded = UrlBase64.encode(pair.getPubKey().getQ().getEncoded(false));
+                                    obj.putString("tempKey", new String(encoded));
+                                }
+                                obj.putString("salt", c.getSalt());
+                                obj.putString("saltS", c.getSaltS());
+                                obj.putNumber("updateInterval", 200);
+                                resp.write(obj.encode(), "UTF-8");
+                                addClient(c);
+                            }
+                            resp.end();
                         }
-                        obj.putString("salt", c.getSalt());
-                        obj.putString("saltS", c.getSaltS());
-                        obj.putNumber("updateInterval", 200);
-                        resp.write(obj.encode(), "UTF-8");
-                        addClient(c);
-                    }
+                    });
+
                 } if (event.path().equals("/http")) {
                     resp.setStatusCode(501); // Not implemented
+                    resp.end();
                 } else {
                     // TODO: handle ws and http endpoints
                     resp.setStatusCode(404); // Page not found
+                    resp.end();
                 }
-                resp.end();
             }
         });
 

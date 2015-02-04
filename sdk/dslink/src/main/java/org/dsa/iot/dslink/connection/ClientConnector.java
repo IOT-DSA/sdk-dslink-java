@@ -1,7 +1,6 @@
 package org.dsa.iot.dslink.connection;
 
-import lombok.AllArgsConstructor;
-import lombok.NonNull;
+import lombok.*;
 import org.bouncycastle.jcajce.provider.digest.SHA256;
 import org.dsa.iot.core.URLInfo;
 import org.dsa.iot.dslink.connection.connector.client.WebSocketConnector;
@@ -17,14 +16,18 @@ import java.io.UnsupportedEncodingException;
  * Used for handling client connections to servers.
  * @author Samuel Grenier
  */
-@AllArgsConstructor
+@Getter
+@RequiredArgsConstructor
 public abstract class ClientConnector {
 
     @NonNull
-    public final URLInfo dataEndpoint;
+    private final URLInfo dataEndpoint;
 
     @NonNull
-    public final HandshakePair pair;
+    private final HandshakePair pair;
+
+    @Setter
+    private Handler<Throwable> exceptionHandler;
 
     /**
      * Connects to the server based on the implementation.

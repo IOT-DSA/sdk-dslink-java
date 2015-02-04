@@ -23,7 +23,7 @@ public class DSLink {
     @Getter
     private final Responder responder;
 
-    private DSLink(@NonNull ClientConnector conn,
+    public DSLink(@NonNull ClientConnector conn,
                   Requester req,
                   Responder resp) {
         this.connector = conn;
@@ -40,11 +40,17 @@ public class DSLink {
     }
 
     public void connect() {
-        connect(true);
+        connect(null);
     }
 
-    public void connect(boolean sslVerify) {
+    public void connect(Handler<Throwable> exceptionHandler) {
+        connect(true, exceptionHandler);
+    }
+
+    public void connect(boolean sslVerify,
+                        Handler<Throwable> exceptionHandler) {
         checkConnected();
+        connector.setExceptionHandler(exceptionHandler);
         connector.connect(new Handler<JsonObject>() {
             @Override
             public void handle(JsonObject event) {
@@ -76,35 +82,49 @@ public class DSLink {
         }
     }
 
-    public static DSLink generate(@NonNull String url,
-                                  @NonNull String endpoint,
-                                  @NonNull ConnectionType type,
-                                  @NonNull String dsId) {
-        return generate(url, endpoint, type, dsId, "default");
+    public static void generate(String url,
+                                String endpoint,
+                                ConnectionType type,
+                                String dsId,
+                                Handler<DSLink> onComplete) {
+        generate(url, endpoint, type, dsId, "default", onComplete, null);
+    }
+
+    public static void generate(String url,
+                                String endpoint,
+                                ConnectionType type,
+                                String dsId,
+                                Handler<DSLink> onComplete,
+                                Handler<Throwable> exceptionHandler) {
+        generate(url, endpoint, type, dsId, "default", onComplete, exceptionHandler);
     }
 
     /**
      * Defaults to generating a responder only dslink.
      */
-    public static DSLink generate(@NonNull String url,
-                                  @NonNull String endpoint,
-                                  @NonNull ConnectionType type,
-                                  @NonNull String dsId,
-                                  @NonNull String zone) {
-        return generate(url, endpoint, type, dsId, zone, false, true);
+    public static void generate(String url,
+                                String endpoint,
+                                ConnectionType type,
+                                String dsId,
+                                String zone,
+                                Handler<DSLink> onComplete,
+                                Handler<Throwable> exceptionHandler) {
+        generate(url, endpoint, type, dsId, zone, false, true, onComplete, exceptionHandler);
     }
 
-    public static DSLink generate(@NonNull String url,
-                                  @NonNull String endpoint,
-                                  @NonNull ConnectionType type,
-                                  @NonNull String dsId,
-                                  @NonNull String zone,
+    public static void generate(String url,
+                                  String endpoint,
+                                  ConnectionType type,
+                                  String dsId,
+                                  String zone,
                                   boolean isRequester,
-                                  boolean isResponder) {
+                                  boolean isResponder,
+                                  Handler<DSLink> onComplete,
+                                  Handler<Throwable> exceptionHandler) {
         Requester requester = isRequester ? new Requester() : null;
         Responder responder = isResponder ? new Responder() : null;
 
-        return generate(url, endpoint, type, dsId, zone, requester, responder);
+        generate(url, endpoint, type, dsId, zone, requester, responder, onComplete, exceptionHandler);
     }
 
     /**
@@ -115,20 +135,26 @@ public class DSLink {
      * @param zone Quarantine zone to use
      * @param requester Requester instance to use, otherwise null
      * @param responder Responder instance to use, otherwise null
-     * @return A factory created DSLink object
+     * @param onComplete Callback when a DSLink is generated and authenticated to a server
      */
-    public static DSLink generate(@NonNull String url,
-                                  @NonNull String endpoint,
-                                  @NonNull ConnectionType type,
-                                  @NonNull String dsId,
-                                  @NonNull String zone,
-                                  Requester requester,
-                                  Responder responder) {
-        HandshakeClient client = HandshakeClient.generate(dsId, zone,
-                requester != null, responder != null);
-        HandshakeServer server = HandshakeServer.perform(url, client);
-        HandshakePair pair = new HandshakePair(client, server);
-        ClientConnector conn = ClientConnector.create(endpoint, pair, type);
-        return new DSLink(conn, requester, responder);
+    public static void generate(@NonNull final String url,
+                                  @NonNull final String endpoint,
+                                  @NonNull final ConnectionType type,
+                                  @NonNull final String dsId,
+                                  @NonNull final String zone,
+                                  final Requester requester,
+                                  final Responder responder,
+                                  @NonNull final Handler<DSLink> onComplete,
+                                  final Handler<Throwable> exceptionHandler) {
+        final HandshakeClient client = HandshakeClient.generate(dsId, zone,
+                                            requester != null, responder != null);
+        HandshakeServer.perform(url, client, new Handler<HandshakeServer>() {
+            @Override
+            public void handle(HandshakeServer event) {
+                HandshakePair pair = new HandshakePair(client, event);
+                ClientConnector conn = ClientConnector.create(endpoint, pair, type);
+                onComplete.handle(new DSLink(conn, requester, responder));
+            }
+        }, exceptionHandler);
     }
 }

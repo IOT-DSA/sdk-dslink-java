@@ -28,10 +28,15 @@ public class WebSocketConnector extends ClientConnector {
     public synchronized void connect(final Handler<JsonObject> data,
                                         final boolean sslVerify) {
         client = Utils.VERTX.createHttpClient();
-        client.setHost(dataEndpoint.host).setPort(dataEndpoint.port);
-        if (dataEndpoint.secure) {
+        client.setHost(getDataEndpoint().host).setPort(getDataEndpoint().port);
+        if (getDataEndpoint().secure) {
             client.setSSL(true);
             client.setVerifyHost(sslVerify);
+        }
+
+        Handler<Throwable> handler = getExceptionHandler();
+        if (handler != null) {
+            client.exceptionHandler(handler);
         }
 
         client.connectWebsocket(getPath(), new Handler<WebSocket>() {
