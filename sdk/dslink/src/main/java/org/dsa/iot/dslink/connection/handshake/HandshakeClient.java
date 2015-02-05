@@ -62,8 +62,17 @@ public class HandshakeClient {
         return obj;
     }
 
+    public static HandshakeClient generate(@NonNull String dsId,
+                                            boolean isRequester,
+                                            boolean isResponder) {
+        return generate(dsId, "default", isRequester, isResponder);
+    }
+
     /**
      * @param dsId ID prefix of the client appended by a dash and a hash
+     * @param zone Zone to run the client in
+     * @param isRequester Whether or not this is a requester
+     * @param isResponder Whether or not this is a responder
      * @return The generated client
      */
     public static HandshakeClient generate(@NonNull String dsId,

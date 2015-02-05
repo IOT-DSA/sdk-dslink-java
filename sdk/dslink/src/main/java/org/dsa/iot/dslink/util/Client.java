@@ -24,7 +24,6 @@ import java.security.spec.ECGenParameterSpec;
 public class Client {
 
     private final String dsId;
-    private final byte[] sharedSecret = generateSecret();
     private final ECKeyPair tempKey = generateTempKey();
 
     private final String salt = generateSalt();
@@ -33,13 +32,16 @@ public class Client {
     @Setter
     private boolean setup = false;
 
+    @Setter
+    private byte[] sharedSecret = null;
+
     public void parse(JsonObject obj) {
 
     }
 
     private byte[] generateSecret() {
         SecureRandom rand = new SecureRandom();
-        byte[] b = new byte[16];
+        byte[] b = new byte[32];
         rand.nextBytes(b);
         return b;
     }
