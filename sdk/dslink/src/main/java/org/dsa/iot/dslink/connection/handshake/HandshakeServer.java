@@ -1,5 +1,6 @@
 package org.dsa.iot.dslink.connection.handshake;
 
+import com.google.common.eventbus.EventBus;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -10,6 +11,7 @@ import org.bouncycastle.math.ec.ECPoint;
 import org.bouncycastle.util.encoders.UrlBase64;
 import org.dsa.iot.core.URLInfo;
 import org.dsa.iot.core.Utils;
+import org.dsa.iot.dslink.events.AsyncExceptionEvent;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.http.HttpClient;
@@ -34,23 +36,21 @@ public class HandshakeServer {
     private final String saltS;
     private final Integer updateInterval;
 
-    public static void perform(String url, HandshakeClient hc,
-                                      Handler<HandshakeServer> onComplete,
-                                      Handler<Throwable> exceptionHandler) {
-        perform(URLInfo.parse(url), hc, onComplete, exceptionHandler);
+    public static void perform(EventBus bus, String url, HandshakeClient hc,
+                                      Handler<HandshakeServer> onComplete) {
+        perform(bus, URLInfo.parse(url), hc, onComplete);
     }
 
-    public static void perform(URLInfo url, HandshakeClient hc,
-                                      Handler<HandshakeServer> onComplete,
-                                      Handler<Throwable> exceptionHandler) {
-        perform(url, hc, true, onComplete, exceptionHandler);
+    public static void perform(EventBus bus, URLInfo url, HandshakeClient hc,
+                                      Handler<HandshakeServer> onComplete) {
+        perform(bus, url, hc, true, onComplete);
     }
 
-    public static void perform(@NonNull final URLInfo url,
-                                  @NonNull final HandshakeClient hc,
-                                  final boolean verifySsl,
-                                  @NonNull final Handler<HandshakeServer> onComplete,
-                                  final Handler<Throwable> exceptionHandler) {
+    public static void perform(@NonNull final EventBus bus,
+                                @NonNull final URLInfo url,
+                                @NonNull final HandshakeClient hc,
+                                final boolean verifySsl,
+                                @NonNull final Handler<HandshakeServer> onComplete) {
         HttpClient client = Utils.VERTX.createHttpClient();
         client.setHost(url.host).setPort(url.port);
         if (url.secure) {
@@ -84,9 +84,12 @@ public class HandshakeServer {
                     }
                 });
         String encoded = hc.toJson().encode();
-        if (exceptionHandler != null) {
-            req.exceptionHandler(exceptionHandler);
-        }
+        req.exceptionHandler(new Handler<Throwable>() {
+            @Override
+            public void handle(Throwable event) {
+                bus.post(new AsyncExceptionEvent(event));
+            }
+        });
         req.end(encoded, "UTF-8");
     }
 

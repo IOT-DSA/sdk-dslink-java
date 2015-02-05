@@ -83,7 +83,7 @@ public class WebServerConnector extends ServerConnector {
             } else if (event.path().equals("/http")) {
                 handleHTTP(resp);
             } else {
-                // TODO: handle ws and http endpoints
+                // TODO: http endpoints
                 resp.setStatusCode(404); // Page not found
                 resp.end();
             }

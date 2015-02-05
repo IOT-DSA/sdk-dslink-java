@@ -1,5 +1,7 @@
 package org.dsa.iot.dslink;
 
+import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
 import lombok.Getter;
 import lombok.NonNull;
 import org.dsa.iot.dslink.connection.ClientConnector;
@@ -8,6 +10,7 @@ import org.dsa.iot.dslink.connection.ServerConnector;
 import org.dsa.iot.dslink.connection.handshake.HandshakeClient;
 import org.dsa.iot.dslink.connection.handshake.HandshakePair;
 import org.dsa.iot.dslink.connection.handshake.HandshakeServer;
+import org.dsa.iot.dslink.events.IncomingDataEvent;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
@@ -17,6 +20,9 @@ import org.vertx.java.core.json.JsonObject;
  */
 public class DSLink {
 
+    @Getter
+    private final EventBus bus;
+
     private final ClientConnector clientConnector;
     private final ServerConnector serverConnector;
 
@@ -25,20 +31,24 @@ public class DSLink {
     @Getter
     private final Responder responder;
 
-    private DSLink(ClientConnector clientConn,
-                   ServerConnector serverConn,
+    private DSLink(EventBus bus,
+                    ClientConnector clientConn,
+                    ServerConnector serverConn,
                     Requester req,
                     Responder resp) {
+        this.bus = bus;
         this.clientConnector = clientConn;
         this.serverConnector = serverConn;
         this.requester = req;
         this.responder = resp;
+        bus.register(this);
         if (clientConn != null) {
             if (requester != null)
                 requester.setConnector(clientConn);
             if (responder != null)
                 responder.setConnector(clientConn);
         }
+
     }
 
     public boolean isListening() {
@@ -65,39 +75,34 @@ public class DSLink {
     }
 
     public void connect() {
-        connect(null);
+        connect(true);
     }
 
-    public void connect(Handler<Throwable> exceptionHandler) {
-        connect(true, exceptionHandler);
-    }
-
-    public void connect(boolean sslVerify,
-                        Handler<Throwable> exceptionHandler) {
+    public void connect(boolean sslVerify) {
         checkConnected();
-        clientConnector.setExceptionHandler(exceptionHandler);
-        clientConnector.connect(new Handler<JsonObject>() {
-            @Override
-            public void handle(JsonObject event) {
-                if (responder != null) {
-                    JsonArray array = event.getArray("requests");
-                    if (array != null) {
-                        responder.parse(array);
-                    }
-                }
-                if (requester != null) {
-                    JsonArray array = event.getArray("responses");
-                    if (array != null) {
-                        requester.parse(array);
-                    }
-                }
-            }
-        }, sslVerify);
+        clientConnector.connect(sslVerify);
     }
 
     public void disconnect() {
         if (clientConnector.isConnected()) {
             clientConnector.disconnect();
+        }
+    }
+
+    @Subscribe
+    public void jsonHandler(IncomingDataEvent event) {
+        JsonObject data = event.getData();
+        if (responder != null) {
+            JsonArray array = data.getArray("requests");
+            if (array != null) {
+                responder.parse(array);
+            }
+        }
+        if (requester != null) {
+            JsonArray array = data.getArray("responses");
+            if (array != null) {
+                requester.parse(array);
+            }
         }
     }
 
@@ -117,49 +122,42 @@ public class DSLink {
         }
     }
 
-    public static void generate(String url,
+    public static void generate(EventBus master,
+                                String url,
                                 String endpoint,
                                 ConnectionType type,
                                 String dsId,
                                 Handler<DSLink> onComplete) {
-        generate(url, endpoint, type, dsId, "default", onComplete, null);
-    }
-
-    public static void generate(String url,
-                                String endpoint,
-                                ConnectionType type,
-                                String dsId,
-                                Handler<DSLink> onComplete,
-                                Handler<Throwable> exceptionHandler) {
-        generate(url, endpoint, type, dsId, "default", onComplete, exceptionHandler);
+        generate(master, url, endpoint, type, dsId, "default", onComplete);
     }
 
     /**
      * Defaults to generating a responder only dslink.
      */
-    public static void generate(String url,
+    public static void generate(EventBus master,
+                                String url,
                                 String endpoint,
                                 ConnectionType type,
                                 String dsId,
                                 String zone,
-                                Handler<DSLink> onComplete,
-                                Handler<Throwable> exceptionHandler) {
-        generate(url, endpoint, type, dsId, zone, false, true, onComplete, exceptionHandler);
+                                Handler<DSLink> onComplete) {
+        generate(master, url, endpoint, type, dsId, zone, false, true, onComplete);
     }
 
-    public static void generate(String url,
-                                  String endpoint,
-                                  ConnectionType type,
-                                  String dsId,
-                                  String zone,
-                                  boolean isRequester,
-                                  boolean isResponder,
-                                  Handler<DSLink> onComplete,
-                                  Handler<Throwable> exceptionHandler) {
+    public static void generate(EventBus master,
+                                String url,
+                                String endpoint,
+                                ConnectionType type,
+                                String dsId,
+                                String zone,
+                                boolean isRequester,
+                                boolean isResponder,
+                                Handler<DSLink> onComplete) {
         Requester requester = isRequester ? new Requester() : null;
         Responder responder = isResponder ? new Responder() : null;
 
-        generate(url, endpoint, type, dsId, zone, requester, responder, onComplete, exceptionHandler);
+        generate(master, url, endpoint, type, dsId, zone,
+                    requester, responder, onComplete);
     }
 
     /**
@@ -172,29 +170,35 @@ public class DSLink {
      * @param responder Responder instance to use, otherwise null
      * @param onComplete Callback when a DSLink is generated and authenticated to a server
      */
-    public static void generate(@NonNull final String url,
-                                  @NonNull final String endpoint,
-                                  @NonNull final ConnectionType type,
-                                  @NonNull final String dsId,
-                                  @NonNull final String zone,
-                                  final Requester requester,
-                                  final Responder responder,
-                                  @NonNull final Handler<DSLink> onComplete,
-                                  final Handler<Throwable> exceptionHandler) {
+    public static void generate(@NonNull final EventBus master,
+                                @NonNull final String url,
+                                @NonNull final String endpoint,
+                                @NonNull final ConnectionType type,
+                                @NonNull final String dsId,
+                                @NonNull final String zone,
+                                final Requester requester,
+                                final Responder responder,
+                                @NonNull final Handler<DSLink> onComplete) {
         final HandshakeClient client = HandshakeClient.generate(dsId, zone,
                                             requester != null, responder != null);
-        HandshakeServer.perform(url, client, new Handler<HandshakeServer>() {
+        HandshakeServer.perform(master, url, client, new Handler<HandshakeServer>() {
             @Override
             public void handle(HandshakeServer event) {
                 HandshakePair pair = new HandshakePair(client, event);
-                ClientConnector conn = ClientConnector.create(endpoint, pair, type);
-                onComplete.handle(new DSLink(conn, null, requester, responder));
+                ClientConnector conn = ClientConnector.create(master, endpoint, pair, type);
+                onComplete.handle(new DSLink(master, conn, null, requester, responder));
             }
-        }, exceptionHandler);
+        });
     }
 
-    public static void generate(@NonNull final ServerConnector connector,
+    public static void generate(@NonNull final EventBus master,
+                                @NonNull final ServerConnector connector,
                                 @NonNull final Handler<DSLink> onComplete) {
-        onComplete.handle(new DSLink(null, connector, new Requester(), new Responder()));
+        DSLink link = new DSLink(master,
+                                    null,
+                                    connector,
+                                    new Requester(),
+                                    new Responder());
+        onComplete.handle(link);
     }
 }

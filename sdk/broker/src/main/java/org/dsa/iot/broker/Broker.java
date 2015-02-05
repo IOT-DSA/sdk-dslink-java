@@ -1,5 +1,7 @@
 package org.dsa.iot.broker;
 
+import com.google.common.eventbus.EventBus;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.dsa.iot.dslink.DSLink;
@@ -13,16 +15,20 @@ import org.vertx.java.core.Handler;
 @RequiredArgsConstructor
 public class Broker {
 
+    @Getter
+    private final EventBus bus;
+
     @NonNull
     private final DSLink dslink;
 
     @SuppressWarnings("InfiniteLoopStatement")
     public static void main(String[] args) throws InterruptedException {
-        HandshakeClient hc = HandshakeClient.generate("broker", true, true);
-        DSLink.generate(new WebServerConnector(hc), new Handler<DSLink>() {
+        final EventBus bus = new EventBus();
+        final HandshakeClient hc = HandshakeClient.generate("broker", true, true);
+        DSLink.generate(bus, new WebServerConnector(hc), new Handler<DSLink>() {
             @Override
             public void handle(DSLink event) {
-                Broker broker = new Broker(event);
+                Broker broker = new Broker(bus, event);
                 broker.listen();
             }
         });

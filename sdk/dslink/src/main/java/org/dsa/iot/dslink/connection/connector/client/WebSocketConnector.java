@@ -1,9 +1,12 @@
 package org.dsa.iot.dslink.connection.connector.client;
 
+import com.google.common.eventbus.EventBus;
 import org.dsa.iot.core.URLInfo;
 import org.dsa.iot.core.Utils;
 import org.dsa.iot.dslink.connection.ClientConnector;
 import org.dsa.iot.dslink.connection.handshake.HandshakePair;
+import org.dsa.iot.dslink.events.AsyncExceptionEvent;
+import org.dsa.iot.dslink.events.IncomingDataEvent;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.http.HttpClient;
@@ -20,13 +23,12 @@ public class WebSocketConnector extends ClientConnector {
 
     private boolean connected = false;
 
-    public WebSocketConnector(URLInfo info, HandshakePair pair) {
-        super(info, pair);
+    public WebSocketConnector(EventBus bus, URLInfo info, HandshakePair pair) {
+        super(bus, info, pair);
     }
 
     @Override
-    public synchronized void connect(final Handler<JsonObject> data,
-                                        final boolean sslVerify) {
+    public synchronized void connect(final boolean sslVerify) {
         client = Utils.VERTX.createHttpClient();
         client.setHost(getDataEndpoint().host).setPort(getDataEndpoint().port);
         if (getDataEndpoint().secure) {
@@ -34,10 +36,12 @@ public class WebSocketConnector extends ClientConnector {
             client.setVerifyHost(sslVerify);
         }
 
-        Handler<Throwable> handler = getExceptionHandler();
-        if (handler != null) {
-            client.exceptionHandler(handler);
-        }
+        client.exceptionHandler(new Handler<Throwable>() {
+            @Override
+            public void handle(Throwable event) {
+                getBus().register(new AsyncExceptionEvent(event));
+            }
+        });
 
         client.connectWebsocket(getPath(), new Handler<WebSocket>() {
             @Override
@@ -47,7 +51,8 @@ public class WebSocketConnector extends ClientConnector {
                 event.dataHandler(new Handler<Buffer>() {
                     @Override
                     public void handle(Buffer event) {
-                        data.handle(new JsonObject(event.toString()));
+                        JsonObject data = new JsonObject(event.toString());
+                        getBus().post(new IncomingDataEvent(data));
                     }
                 });
 

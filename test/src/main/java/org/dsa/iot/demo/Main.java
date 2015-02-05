@@ -1,8 +1,11 @@
 package org.dsa.iot.demo;
 
+import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
 import lombok.SneakyThrows;
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.connection.ConnectionType;
+import org.dsa.iot.dslink.events.AsyncExceptionEvent;
 import org.vertx.java.core.Handler;
 
 /**
@@ -10,6 +13,7 @@ import org.vertx.java.core.Handler;
  */
 public class Main {
 
+    private static final EventBus master = new EventBus();
     private static boolean running = true;
     private static DSLink link;
 
@@ -17,11 +21,13 @@ public class Main {
     @SuppressWarnings("InfiniteLoopStatement")
     public static void main(String[] args) {
         System.out.println("Initializing...");
+        master.register(new Main());
 
         final String url = "http://localhost:8080/conn";
         final String endpoint = "ws://localhost:8080";
 
-        DSLink.generate(url, endpoint, ConnectionType.WS, "test", new Handler<DSLink>() {
+        DSLink.generate(master, url, endpoint,
+                        ConnectionType.WS, "test", new Handler<DSLink>() {
             @Override
             @SneakyThrows
             public void handle(DSLink link) {
@@ -30,22 +36,8 @@ public class Main {
                 link.getResponder().createRoot("Test");
 
                 System.out.println("Connecting...");
-                link.connect(new Handler<Throwable>() {
-                    @Override
-                    public void handle(Throwable event) {
-                        System.err.println("A fatal error has occurred during the data endpoint connection");
-                        event.printStackTrace();
-                        running = false;
-                    }
-                });
+                link.connect();
                 System.out.println("Connected");
-            }
-        }, new Handler<Throwable>() {
-            @Override
-            public void handle(Throwable event) {
-                System.err.println("A fatal error has occurred during the handshake");
-                event.printStackTrace();
-                running = false;
             }
         });
 
@@ -53,5 +45,12 @@ public class Main {
             Thread.sleep(500);
         }
         System.out.println("Disconnected");
+    }
+
+    @Subscribe
+    public void errorHandler(AsyncExceptionEvent event) {
+        System.err.println("A fatal error has occurred");
+        event.getThrowable().printStackTrace();
+        running = false;
     }
 }
