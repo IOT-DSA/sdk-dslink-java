@@ -107,7 +107,6 @@ public class WebServerConnector extends ServerConnector {
                         obj.putString("publicKey", getClient().getPublicKey());
                         obj.putString("wsUri", "/ws");
                         obj.putString("httpUri", "/http");
-                        // TODO: tempKey
                         {
                             String pubKey = clientJson.getString("publicKey");
                             pubKey = Utils.addPadding(pubKey, true);
