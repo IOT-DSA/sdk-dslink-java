@@ -33,10 +33,12 @@ public class DSLink {
         this.serverConnector = serverConn;
         this.requester = req;
         this.responder = resp;
-        if (requester != null)
-            requester.setConnector(clientConn);
-        if (responder != null)
-            responder.setConnector(clientConn);
+        if (clientConn != null) {
+            if (requester != null)
+                requester.setConnector(clientConn);
+            if (responder != null)
+                responder.setConnector(clientConn);
+        }
     }
 
     public boolean isListening() {

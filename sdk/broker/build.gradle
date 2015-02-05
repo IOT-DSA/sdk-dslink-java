@@ -1,7 +1,7 @@
 apply plugin: 'application'
 
 version = '0.0.1-SNAPSHOT'
-mainClassName = 'org.dsa.iot.broker.Main'
+mainClassName = 'org.dsa.iot.broker.Broker'
 
 dependencies {
     compile project(':sdk/dslink')
