@@ -80,19 +80,19 @@ public class Node {
     }
 
     public synchronized List<String> getInterfaces() {
-        return ImmutableList.copyOf(interfaces);
+        return interfaces != null ? ImmutableList.copyOf(interfaces) : null;
     }
 
     public synchronized Map<String, Node> getChildren() {
-        return ImmutableMap.copyOf(children);
+        return children != null ? ImmutableMap.copyOf(children) : null;
     }
 
     public synchronized Map<String, Value> getAttributes() {
-        return ImmutableMap.copyOf(attributes);
+        return attributes != null ? ImmutableMap.copyOf(attributes) : null;
     }
 
     public synchronized Map<String, Value> getConfigurations() {
-        return ImmutableMap.copyOf(configurations);
+        return configurations != null ? ImmutableMap.copyOf(configurations) : null;
     }
 
     public synchronized void setDisplayName(String name) {
