@@ -1,5 +1,7 @@
 package org.dsa.iot.dslink.node;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -18,7 +20,6 @@ import static org.dsa.iot.dslink.node.NodeManager.NodeBooleanTuple;
 /**
  * @author Samuel Grenier
  */
-@Getter
 public class Node {
 
     private final SubscriptionManager manager;
@@ -29,14 +30,20 @@ public class Node {
     private Map<String, Value> configurations;
     private List<String> interfaces;
 
+    @Getter
     private final String name;
+
+    @Getter
     private final String path;
+
     private String displayName;
     private Value value;
 
+    @Getter
     @Setter
     private boolean invokable;
 
+    @Getter
     @Setter
     private Handler<Void> invocationHandler;
 
@@ -45,6 +52,7 @@ public class Node {
     /**
      * Whether the node is currently subscribed to or not
      */
+    @Getter
     @Setter
     private boolean subscribed;
 
@@ -63,6 +71,30 @@ public class Node {
         setConfiguration("is", new Value((String) null)); // TODO: full profile support
     }
 
+    public synchronized String getDisplayName() {
+        return displayName;
+    }
+
+    public synchronized Value getValue() {
+        return value;
+    }
+
+    public synchronized List<String> getInterfaces() {
+        return ImmutableList.copyOf(interfaces);
+    }
+
+    public synchronized Map<String, Node> getChildren() {
+        return ImmutableMap.copyOf(children);
+    }
+
+    public synchronized Map<String, Value> getAttributes() {
+        return ImmutableMap.copyOf(attributes);
+    }
+
+    public synchronized Map<String, Value> getConfigurations() {
+        return ImmutableMap.copyOf(configurations);
+    }
+
     public synchronized void setDisplayName(String name) {
         if (name == null) {
             displayName = null;
@@ -72,14 +104,17 @@ public class Node {
         this.displayName = name;
     }
 
-    public void setValue(Value value) {
+    public synchronized void setValue(Value value) {
         setValue(value, true);
     }
 
     public synchronized void setValue(Value value, boolean update) {
-        this.value = value;
-        if (update)
-            update();
+        if (!(value == null || this.value == null || value.equals(this.value))) {
+            this.value = value;
+            this.value.setImmutable();
+            if (update)
+                update();
+        }
     }
 
     public synchronized void setAttribute(@NonNull String name, Value value) {

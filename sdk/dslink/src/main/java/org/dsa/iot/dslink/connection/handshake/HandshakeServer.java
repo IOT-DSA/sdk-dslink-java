@@ -36,6 +36,10 @@ public class HandshakeServer {
     private final String saltS;
     private final Integer updateInterval;
 
+    public byte[] getSharedSecret() {
+        return sharedSecret.clone();
+    }
+
     public static void perform(EventBus bus, String url, HandshakeClient hc,
                                       Handler<HandshakeServer> onComplete) {
         perform(bus, URLInfo.parse(url), hc, onComplete);

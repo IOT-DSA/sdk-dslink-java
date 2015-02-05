@@ -28,10 +28,11 @@ public class Utils {
 
     public static String addPadding(String encoded, boolean urlSafe) {
         String padding = urlSafe ? "." : "=";
+        StringBuilder buffer = new StringBuilder(encoded);
         while (encoded.length() % 4 != 0) {
-            encoded += padding;
+            buffer.append(padding);
         }
-        return encoded;
+        return buffer.toString();
     }
 
     static {

@@ -13,13 +13,19 @@ import org.vertx.java.core.Handler;
  */
 public class Main {
 
-    private static final EventBus master = new EventBus();
-    private static boolean running = true;
-    private static DSLink link;
+    private final EventBus master = new EventBus();
+    private boolean running = true;
+    private DSLink link;
+
+
+    public static void main(String[] args) {
+        Main m = new Main();
+        m.main();
+    }
 
     @SneakyThrows
     @SuppressWarnings("InfiniteLoopStatement")
-    public static void main(String[] args) {
+    private void main() {
         System.out.println("Initializing...");
         master.register(new Main());
 
@@ -27,19 +33,19 @@ public class Main {
         final String endpoint = "ws://localhost:8080";
 
         DSLink.generate(master, url, endpoint,
-                        ConnectionType.WS, "test", new Handler<DSLink>() {
-            @Override
-            @SneakyThrows
-            public void handle(DSLink link) {
-                Main.link = link;
-                link.getResponder().createRoot("Demo");
-                link.getResponder().createRoot("Test");
+                ConnectionType.WS, "test", new Handler<DSLink>() {
+                    @Override
+                    @SneakyThrows
+                    public void handle(DSLink link) {
+                        Main.this.link = link;
+                        link.getResponder().createRoot("Demo");
+                        link.getResponder().createRoot("Test");
 
-                System.out.println("Connecting...");
-                link.connect();
-                System.out.println("Connected");
-            }
-        });
+                        System.out.println("Connecting...");
+                        link.connect();
+                        System.out.println("Connected");
+                    }
+                });
 
         while (running && (link == null || link.isConnected())) {
             Thread.sleep(500);

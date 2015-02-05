@@ -1,15 +1,13 @@
 package org.dsa.iot.dslink.util;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-import lombok.SneakyThrows;
+import lombok.*;
 import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPrivateKey;
 import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 import org.bouncycastle.jcajce.provider.asymmetric.ec.KeyPairGeneratorSpi;
 import org.dsa.iot.core.ECKeyPair;
 import org.vertx.java.core.json.JsonObject;
 
+import java.nio.charset.Charset;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.SecureRandom;
@@ -23,7 +21,9 @@ import java.security.spec.ECGenParameterSpec;
 @RequiredArgsConstructor
 public class Client {
 
+    @NonNull
     private final String dsId;
+
     private final ECKeyPair tempKey = generateTempKey();
 
     private final String salt = generateSalt();
@@ -32,11 +32,18 @@ public class Client {
     @Setter
     private boolean setup = false;
 
-    @Setter
     private byte[] sharedSecret = null;
 
     public void parse(JsonObject obj) {
 
+    }
+
+    public void setSharedSecret(@NonNull byte[] bytes) {
+        sharedSecret = bytes.clone();
+    }
+
+    public byte[] getSharedSecret() {
+        return sharedSecret == null ? null : sharedSecret.clone();
     }
 
     private byte[] generateSecret() {
@@ -47,7 +54,7 @@ public class Client {
     }
 
     private String generateSalt() {
-        return new String(generateSecret());
+        return new String(generateSecret(), Charset.forName("UTF-8"));
     }
 
     @SneakyThrows

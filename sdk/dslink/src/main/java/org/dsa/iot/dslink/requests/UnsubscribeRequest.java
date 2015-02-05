@@ -16,7 +16,7 @@ public class UnsubscribeRequest extends Request {
     }
 
     public UnsubscribeRequest(@NonNull String[] paths) {
-        this.paths = paths;
+        this.paths = paths.clone();
     }
 
     @Override

@@ -7,9 +7,10 @@ import lombok.Getter;
  * @author Samuel Grenier
  */
 @Getter
-@EqualsAndHashCode
+@EqualsAndHashCode(exclude = "immutable")
 public class Value {
 
+    private boolean immutable;
     private ValueType type;
 
     private Integer integer;
@@ -45,5 +46,15 @@ public class Value {
         this.integer = i;
         this.bool = b;
         this.string = s;
+    }
+
+    public void setImmutable() {
+        immutable = true;
+    }
+
+    private void checkImmutable() {
+        if (isImmutable()) {
+            throw new IllegalStateException("Attempting to modify immutable value");
+        }
     }
 }

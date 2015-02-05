@@ -16,7 +16,7 @@ public class SubscribeRequest extends Request {
     }
 
     public SubscribeRequest(@NonNull String[] paths) {
-        this.paths = paths;
+        this.paths = paths.clone();
     }
 
     @Override

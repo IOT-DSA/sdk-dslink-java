@@ -2,6 +2,7 @@ package org.dsa.iot.dslink.util;
 
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.Setter;
 import org.dsa.iot.dslink.connection.ClientConnector;
 import org.vertx.java.core.json.JsonArray;
 
@@ -15,17 +16,18 @@ public abstract class Linkable {
 
     public abstract void parse(JsonArray array);
 
+
     /**
      * A link must hold onto this in order to check for connectivity
      * and write to the server.
      * @param connector Connector to be set.
      */
-    public synchronized void setConnector(ClientConnector connector) {
+    public void setConnector(ClientConnector connector) {
         checkConnected();
         this.connector = connector;
     }
 
-    protected synchronized void checkConnected() {
+    protected void checkConnected() {
         if (connector != null && connector.isConnected()) {
             throw new IllegalStateException("Already connected");
         }
