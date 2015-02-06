@@ -109,11 +109,12 @@ public class HandshakeServer {
         byte[] sharedSecret = point.normalize().getXCoord().toBigInteger().toByteArray();
         if (sharedSecret.length < 32) {
             byte[] fixed = new byte[32];
-            System.arraycopy(sharedSecret, 0, fixed, 1, sharedSecret.length);
+            int len = sharedSecret.length;
+            System.arraycopy(sharedSecret, 0, fixed, 32 - len, len);
             sharedSecret = fixed;
         } else if (sharedSecret.length > 32) {
             byte[] fixed = new byte[32];
-            System.arraycopy(sharedSecret, 1, fixed, 0, fixed.length);
+            System.arraycopy(sharedSecret, sharedSecret.length - 32, fixed, 0, fixed.length);
             sharedSecret = fixed;
         }
         return sharedSecret;

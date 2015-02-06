@@ -1,18 +1,20 @@
 package org.dsa.iot.broker;
 
 import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.connection.connector.server.WebServerConnector;
 import org.dsa.iot.dslink.connection.handshake.HandshakeClient;
+import org.dsa.iot.dslink.events.AsyncExceptionEvent;
+import org.dsa.iot.dslink.events.IncomingDataEvent;
 import org.vertx.java.core.Handler;
 
 /**
  * @author Samuel Grenier
  */
-@RequiredArgsConstructor
 public class Broker {
 
     @Getter
@@ -38,9 +40,26 @@ public class Broker {
         }
     }
 
+    public Broker(@NonNull EventBus master,
+                  @NonNull DSLink link) {
+        this.bus = master;
+        this.dslink = link;
+        bus.register(this);
+    }
+
     public void listen() {
         // TODO: Setup configurable ports
         System.out.println("Listening on port 8080");
         dslink.listen(8080);
+    }
+
+    @Subscribe
+    public void incomingData(IncomingDataEvent event) {
+        // TODO
+    }
+
+    @Subscribe
+    public void error(AsyncExceptionEvent event) {
+        event.getThrowable().printStackTrace();
     }
 }

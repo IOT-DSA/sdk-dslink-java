@@ -11,6 +11,7 @@ import org.dsa.iot.dslink.connection.ServerConnector;
 import org.dsa.iot.dslink.connection.handshake.HandshakeClient;
 import org.dsa.iot.dslink.util.Client;
 import org.vertx.java.core.Handler;
+import org.vertx.java.core.MultiMap;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.http.HttpServer;
 import org.vertx.java.core.http.HttpServerRequest;
@@ -19,6 +20,7 @@ import org.vertx.java.core.http.ServerWebSocket;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.json.impl.Base64;
 
+import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -97,9 +99,12 @@ public class WebServerConnector extends ServerConnector {
                 public void handle(Buffer buf) {
                     JsonObject clientJson = new JsonObject(buf.toString("UTF-8"));
 
-                    String clientDsId = clientJson.getString("dsId");
-                    if (!validID(clientDsId) || (getClient(clientDsId) != null)) {
+                    String clientDsId = req.params().get("dsId");
+                    Client client = getClient(clientDsId);
+                    if (!validID(clientDsId) || (client != null && client.isSetup())) {
+                        removeClient(clientDsId);
                         resp.setStatusCode(401); // Unauthorized
+                        resp.end();
                     } else {
                         Client c = new Client(clientDsId);
                         JsonObject obj = new JsonObject();
@@ -118,17 +123,16 @@ public class WebServerConnector extends ServerConnector {
                             point = spec.getQ().multiply(getClient().getPrivKeyInfo().getD());
                             c.setSharedSecret(point.normalize().getXCoord().toBigInteger().toByteArray());
 
-                            byte[] encoded = getClient().getPubKeyInfo().getEncoded();
+                            byte[] encoded = getClient().getPubKeyInfo().getQ().getEncoded(false);
                             String key = Base64.encodeBytes(encoded, Base64.URL_SAFE);
                             obj.putString("tempKey", key);
                         }
                         obj.putString("salt", c.getSalt());
                         obj.putString("saltS", c.getSaltS());
                         obj.putNumber("updateInterval", 200);
-                        resp.write(obj.encode(), "UTF-8");
+                        resp.end(obj.encode(), "UTF-8");
                         addClient(c);
                     }
-                    resp.end();
                 }
             });
         }
@@ -144,9 +148,10 @@ public class WebServerConnector extends ServerConnector {
         @Override
         @SneakyThrows
         public void handle(ServerWebSocket event) {
-            if (event.path().equals("/ws")) {
-                final String dsId = event.headers().get("dsId");
-                final String auth = event.headers().get("auth");
+            MultiMap params = Utils.parseQueryParams(event.uri());
+            if (event.path().equals("/ws") && params != null) {
+                final String dsId = params.get("dsId");
+                final String auth = params.get("auth");
 
                 event.closeHandler(new Handler<Void>() {
                     @Override
@@ -168,7 +173,7 @@ public class WebServerConnector extends ServerConnector {
                     SHA256.Digest digest = new SHA256.Digest();
                     byte[] output = digest.digest(buffer.getBytes());
 
-                    if (!Arrays.equals(originalHash, output)) {
+                    if (!MessageDigest.isEqual(originalHash, output)) {
                         event.reject();
                     } else {
                         client.setSetup(true);
