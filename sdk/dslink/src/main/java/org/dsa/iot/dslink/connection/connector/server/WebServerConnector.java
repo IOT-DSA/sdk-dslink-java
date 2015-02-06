@@ -117,7 +117,7 @@ public class WebServerConnector extends ServerConnector {
                             pubKey = Utils.addPadding(pubKey, true);
                             byte[] decoded = UrlBase64.decode(pubKey);
 
-                            ECParameterSpec params = getClient().getPubKeyInfo().getParameters();
+                            ECParameterSpec params = getClient().getPrivKeyInfo().getParameters();
                             ECPoint point = params.getCurve().decodePoint(decoded);
                             ECPublicKeySpec spec = new ECPublicKeySpec(point, params);
                             point = spec.getQ().multiply(getClient().getPrivKeyInfo().getD());
@@ -174,11 +174,6 @@ public class WebServerConnector extends ServerConnector {
                     byte[] output = digest.digest(buffer.getBytes());
 
                     if (!MessageDigest.isEqual(originalHash, output)) {
-                        // DEBUG
-                        System.out.println("Salt: " + Arrays.toString(client.getSalt().getBytes("UTF-8")));
-                        System.out.println("Client hash: " + Arrays.toString(originalHash));
-                        System.out.println("Server hash: " + Arrays.toString(output));
-                        System.out.println("Shared secret: " + Arrays.toString(client.getSharedSecret()));
                         event.reject();
                     } else {
                         client.setSetup(true);
