@@ -2,8 +2,10 @@ package org.dsa.iot.dslink.methods;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.dsa.iot.dslink.Responder;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.value.Value;
+import org.dsa.iot.dslink.util.ResponseTracker;
 import org.dsa.iot.dslink.util.StreamState;
 import org.dsa.iot.dslink.util.ValueUtils;
 import org.vertx.java.core.json.JsonArray;
@@ -19,12 +21,16 @@ import java.util.Map;
 public class ListMethod extends Method {
 
     @NonNull
+    private final Responder responder;
+
+    @NonNull
     private final Node parent;
 
     private final int rid;
 
     @Override
     public JsonArray invoke(JsonObject request) {
+        responder.closeStream(parent.getChildrenRid());
         parent.setChildrenRid(rid);
         setState(StreamState.OPEN);
         return getResponse();

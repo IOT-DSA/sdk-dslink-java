@@ -95,11 +95,29 @@ public class Responder extends Linkable {
         getConnector().write(top);
     }
 
+    public void closeStream(int rid) {
+        if (tracker.isTracking(rid)) {
+            tracker.untrack(rid);
+
+            val array = new JsonArray();
+            {
+                val obj = new JsonObject();
+                obj.putNumber("rid", rid);
+                obj.putString("stream", StreamState.CLOSED.jsonName);
+                array.add(obj);
+            }
+
+            val resp = new JsonObject();
+            resp.putArray("responses", array);
+            getConnector().write(resp);
+        }
+    }
+
     protected Method getMethod(@NonNull String name, int rid,
                                NodeStringTuple tuple) {
         switch (name) {
             case "list":
-                return new ListMethod(tuple.getNode(), rid);
+                return new ListMethod(this, tuple.getNode(), rid);
             case "set":
                 return new SetMethod(tuple.getNode(), tuple.getString());
             case "remove":
