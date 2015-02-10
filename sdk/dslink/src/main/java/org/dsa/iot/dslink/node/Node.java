@@ -177,6 +177,7 @@ public class Node {
             children = new HashMap<>();
         else if (children.containsKey(node.name))
             throw new DuplicateException(node.name + "(parent: " + name + ")");
+        node.init();
         children.put(node.name, node);
         notifyChildrenHandlers(node, false);
         return node;
