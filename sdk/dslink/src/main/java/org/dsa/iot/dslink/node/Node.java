@@ -2,10 +2,14 @@ package org.dsa.iot.dslink.node;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import org.dsa.iot.core.StringUtils;
+import org.dsa.iot.dslink.events.ChildrenUpdateEvent;
+import org.dsa.iot.dslink.events.ClosedStreamEvent;
 import org.dsa.iot.dslink.node.exceptions.DuplicateException;
 import org.dsa.iot.dslink.node.value.Value;
 import org.vertx.java.core.Handler;
@@ -14,8 +18,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static org.dsa.iot.dslink.node.NodeManager.NodeBooleanTuple;
 
 /**
  * @author Samuel Grenier
@@ -29,6 +31,8 @@ public class Node {
     private Map<String, Value> attributes;
     private Map<String, Value> configurations;
     private List<String> interfaces;
+
+    private final EventBus bus;
 
     @Getter
     private final String name;
@@ -47,8 +51,6 @@ public class Node {
     @Setter
     private Handler<Void> invocationHandler;
 
-    private final List<Handler<NodeBooleanTuple>> childrenUpdates = new ArrayList<>();
-
     /**
      * Whether the node is currently subscribed to or not
      */
@@ -57,18 +59,34 @@ public class Node {
     private boolean subscribed;
 
     /**
-     *
+     * Request ID to send subscription updates on, or -1 for none
+     */
+    @Getter
+    @Setter
+    private int childrenRid = -1;
+
+    /**
+     * @param bus Event bus to publish events to
      * @param parent The parent of this node, or null if a root node
      * @param name The name of this node
      */
-    public Node(SubscriptionManager manager,
+    public Node(EventBus bus, SubscriptionManager manager,
                                         Node parent, @NonNull String name) {
         StringUtils.checkNodeName(name);
+        this.bus = bus;
         this.manager = manager;
         this.parent = parent;
         this.name = name;
         path = parent == null ? "/" + name : parent.getPath() + "/" + name;
         setConfiguration("is", new Value((String) null)); // TODO: full profile support
+    }
+
+    protected void init() {
+        bus.register(this);
+    }
+
+    protected void deInit() {
+        bus.unregister(this);
     }
 
     public synchronized String getDisplayName() {
@@ -151,7 +169,7 @@ public class Node {
     }
 
     public Node createChild(String name) {
-        return addChild(new Node(manager, this, name));
+        return addChild(new Node(bus, manager, this, name));
     }
 
     public synchronized Node addChild(@NonNull Node node) {
@@ -170,8 +188,10 @@ public class Node {
 
     public synchronized Node removeChild(@NonNull String name) {
         Node n = children != null ? children.remove(name) : null;
-        if (n != null)
+        if (n != null) {
+            n.deInit();
             notifyChildrenHandlers(n, true);
+        }
         return n;
     }
 
@@ -211,21 +231,17 @@ public class Node {
         }
     }
 
-    public synchronized Handler<NodeBooleanTuple> addChildrenHandler(
-                                @NonNull Handler<NodeBooleanTuple> handler) {
-        childrenUpdates.add(handler);
-        return handler;
-    }
-
-    public synchronized void removeChildrenHandler(
-                                @NonNull Handler<NodeBooleanTuple> handler) {
-        childrenUpdates.remove(handler);
-    }
-
     private synchronized void notifyChildrenHandlers(@NonNull Node n,
                                                      boolean removed) {
-        for (Handler<NodeBooleanTuple> handler : childrenUpdates) {
-            handler.handle(new NodeBooleanTuple(n, removed));
+        if (childrenRid != -1) {
+            bus.post(new ChildrenUpdateEvent(n, removed, childrenRid));
+        }
+    }
+
+    @Subscribe
+    public void closedStream(ClosedStreamEvent event) {
+        if (event.getRid() == childrenRid) {
+            childrenRid = -1;
         }
     }
 }

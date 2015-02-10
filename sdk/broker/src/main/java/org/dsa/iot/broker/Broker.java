@@ -4,12 +4,11 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import lombok.val;
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.connection.connector.server.WebServerConnector;
 import org.dsa.iot.dslink.connection.handshake.HandshakeClient;
 import org.dsa.iot.dslink.events.AsyncExceptionEvent;
-import org.dsa.iot.dslink.events.IncomingDataEvent;
 import org.vertx.java.core.Handler;
 
 /**
@@ -26,7 +25,7 @@ public class Broker {
     @SuppressWarnings("InfiniteLoopStatement")
     public static void main(String[] args) throws InterruptedException {
         final EventBus bus = new EventBus();
-        final HandshakeClient hc = HandshakeClient.generate("broker", true, true);
+        val hc = HandshakeClient.generate("broker", true, true);
         DSLink.generate(bus, new WebServerConnector(hc), new Handler<DSLink>() {
             @Override
             public void handle(DSLink event) {
@@ -51,11 +50,6 @@ public class Broker {
         // TODO: Setup configurable ports
         System.out.println("Listening on port 8080");
         dslink.listen(8080);
-    }
-
-    @Subscribe
-    public void incomingData(IncomingDataEvent event) {
-        // TODO
     }
 
     @Subscribe

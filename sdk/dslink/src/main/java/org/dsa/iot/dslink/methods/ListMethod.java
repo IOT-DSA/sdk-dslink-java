@@ -2,21 +2,15 @@ package org.dsa.iot.dslink.methods;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.dsa.iot.dslink.connection.ClientConnector;
 import org.dsa.iot.dslink.node.Node;
-import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.value.Value;
-import org.dsa.iot.dslink.util.ResponseTracker;
 import org.dsa.iot.dslink.util.StreamState;
 import org.dsa.iot.dslink.util.ValueUtils;
-import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 import java.util.List;
 import java.util.Map;
-
-import static org.dsa.iot.dslink.node.NodeManager.NodeBooleanTuple;
 
 /**
  * @author Samuel Grenier
@@ -25,44 +19,15 @@ import static org.dsa.iot.dslink.node.NodeManager.NodeBooleanTuple;
 public class ListMethod extends Method {
 
     @NonNull
-    private final ClientConnector connector;
-
-    @NonNull
     private final Node parent;
-
-    @NonNull
-    private final ResponseTracker tracker;
 
     private final int rid;
 
-    private Handler<NodeManager.NodeBooleanTuple> handler;
-
     @Override
     public JsonArray invoke(JsonObject request) {
-        handler = parent.addChildrenHandler(new Handler<NodeBooleanTuple>() {
-            @Override
-            public void handle(NodeManager.NodeBooleanTuple event) {
-                nodeUpdate(event.getNode(), event.isBool());
-            }
-        });
+        parent.setChildrenRid(rid);
         setState(StreamState.OPEN);
         return getResponse();
-    }
-
-    private void nodeUpdate(Node node, boolean removed) {
-        if (tracker.isTracking(rid)) {
-            JsonObject response = new JsonObject();
-            response.putNumber("rid", rid);
-            response.putString("stream", getState().jsonName);
-
-            JsonArray updates = new JsonArray();
-            updates.addElement(getChild(node, removed));
-            response.putArray("update", updates);
-
-            connector.write(response);
-        } else {
-            parent.removeChildrenHandler(handler);
-        }
     }
 
     private JsonArray getResponse() {
@@ -73,13 +38,26 @@ public class ListMethod extends Method {
         Map<String, Node> children = parent.getChildren();
         if (children != null) {
             for (Node node : children.values()) {
-                array.addArray(getChild(node, false));
+                array.addArray(getChildUpdate(node, false));
             }
         }
         return array;
     }
 
-    private JsonArray getChild(Node node, boolean removed) {
+    private void writeParentData(JsonArray out, Map<String, Value> data) {
+        if (data != null) {
+            for (Map.Entry<String, Value> entry : data.entrySet()) {
+                JsonArray valArray = new JsonArray();
+                valArray.addString(entry.getKey());
+
+                Value value = entry.getValue();
+                ValueUtils.toJson(valArray, value);
+                out.addElement(valArray);
+            }
+        }
+    }
+
+    public static JsonArray getChildUpdate(Node node, boolean removed) {
         JsonArray array = new JsonArray();
         array.addString(node.getName());
 
@@ -112,18 +90,5 @@ public class ListMethod extends Method {
             array.addObject(obj);
         }
         return array;
-    }
-
-    private void writeParentData(JsonArray out, Map<String, Value> data) {
-        if (data != null) {
-            for (Map.Entry<String, Value> entry : data.entrySet()) {
-                JsonArray valArray = new JsonArray();
-                valArray.addString(entry.getKey());
-
-                Value value = entry.getValue();
-                ValueUtils.toJson(valArray, value);
-                out.addElement(valArray);
-            }
-        }
     }
 }

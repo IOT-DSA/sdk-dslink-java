@@ -1,5 +1,6 @@
 package org.dsa.iot.dslink.node;
 
+import com.google.common.eventbus.EventBus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
@@ -16,20 +17,24 @@ public class NodeManager {
 
     private final SubscriptionManager subManager;
 
+    private final EventBus bus;
+
     // Fake root to provide a listing on "/"
     private final Node superRoot;
 
-    public NodeManager(SubscriptionManager subManager) {
+    public NodeManager(EventBus bus, SubscriptionManager subManager) {
+        this.bus = bus;
         this.subManager = subManager;
-        this.superRoot = new Node(subManager, null, "_");
+        this.superRoot = new Node(bus, subManager, null, "_");
     }
 
     public Node createRootNode(String name) {
-        return addRootNode(new Node(subManager, null, name));
+        return addRootNode(new Node(bus, subManager, null, name));
     }
 
     public Node addRootNode(Node node) {
         superRoot.addChild(node);
+        node.init();
         return node;
     }
 

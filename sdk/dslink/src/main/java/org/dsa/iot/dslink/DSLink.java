@@ -4,6 +4,7 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.val;
 import org.dsa.iot.dslink.connection.ClientConnector;
 import org.dsa.iot.dslink.connection.ConnectionType;
 import org.dsa.iot.dslink.connection.ServerConnector;
@@ -11,9 +12,9 @@ import org.dsa.iot.dslink.connection.handshake.HandshakeClient;
 import org.dsa.iot.dslink.connection.handshake.HandshakePair;
 import org.dsa.iot.dslink.connection.handshake.HandshakeServer;
 import org.dsa.iot.dslink.events.IncomingDataEvent;
+import org.dsa.iot.dslink.node.NodeManager;
+import org.dsa.iot.dslink.node.SubscriptionManager;
 import org.vertx.java.core.Handler;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
 
 /**
  * @author Samuel Grenier
@@ -43,12 +44,12 @@ public class DSLink {
         this.responder = resp;
         bus.register(this);
         if (clientConn != null) {
+            NodeManager common = new NodeManager(bus, new SubscriptionManager(clientConn));
             if (requester != null)
-                requester.setConnector(clientConn);
+                requester.setConnector(clientConn, common);
             if (responder != null)
-                responder.setConnector(clientConn);
+                responder.setConnector(clientConn, common);
         }
-
     }
 
     public boolean isListening() {
@@ -91,15 +92,15 @@ public class DSLink {
 
     @Subscribe
     public void jsonHandler(IncomingDataEvent event) {
-        JsonObject data = event.getData();
+        val data = event.getData();
         if (responder != null) {
-            JsonArray array = data.getArray("requests");
+            val array = data.getArray("requests");
             if (array != null) {
                 responder.parse(array);
             }
         }
         if (requester != null) {
-            JsonArray array = data.getArray("responses");
+            val array = data.getArray("responses");
             if (array != null) {
                 requester.parse(array);
             }
@@ -153,8 +154,8 @@ public class DSLink {
                                 boolean isRequester,
                                 boolean isResponder,
                                 Handler<DSLink> onComplete) {
-        Requester requester = isRequester ? new Requester() : null;
-        Responder responder = isResponder ? new Responder() : null;
+        val requester = isRequester ? new Requester(master) : null;
+        val responder = isResponder ? new Responder(master) : null;
 
         generate(master, url, endpoint, type, dsId, zone,
                     requester, responder, onComplete);
@@ -184,8 +185,8 @@ public class DSLink {
         HandshakeServer.perform(master, url, client, new Handler<HandshakeServer>() {
             @Override
             public void handle(HandshakeServer event) {
-                HandshakePair pair = new HandshakePair(client, event);
-                ClientConnector conn = ClientConnector.create(master, endpoint, pair, type);
+                val pair = new HandshakePair(client, event);
+                val conn = ClientConnector.create(master, endpoint, pair, type);
                 onComplete.handle(new DSLink(master, conn, null, requester, responder));
             }
         });
@@ -194,11 +195,11 @@ public class DSLink {
     public static void generate(@NonNull final EventBus master,
                                 @NonNull final ServerConnector connector,
                                 @NonNull final Handler<DSLink> onComplete) {
-        DSLink link = new DSLink(master,
+        val link = new DSLink(master,
                                     null,
                                     connector,
-                                    new Requester(),
-                                    new Responder());
+                                    new Requester(master),
+                                    new Responder(master));
         onComplete.handle(link);
     }
 }

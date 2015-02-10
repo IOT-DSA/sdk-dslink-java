@@ -1,5 +1,8 @@
 package org.dsa.iot.dslink;
 
+import com.google.common.eventbus.EventBus;
+import lombok.NonNull;
+import lombok.val;
 import org.dsa.iot.dslink.connection.ClientConnector;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.SubscriptionManager;
@@ -19,27 +22,27 @@ import java.util.Iterator;
  */
 public class Requester extends Linkable {
 
-    private NodeManager nodeManager;
     private RequestTracker tracker;
     private Handler<Response<?>> responseHandler;
 
-    public Requester() {
-        this(new RequestTracker());
+    public Requester(EventBus bus) {
+        this(bus, new RequestTracker());
     }
 
-    public Requester(RequestTracker tracker) {
+    public Requester(EventBus bus, RequestTracker tracker) {
+        super(bus);
         this.tracker = tracker;
     }
 
-    public void sendRequest(Request req) {
+    public void sendRequest(@NonNull Request req) {
         checkConnected();
 
-        JsonObject obj = new JsonObject();
+        val obj = new JsonObject();
         obj.putNumber("rid", tracker.track(req));
         obj.putString("method", req.getName());
         req.addJsonValues(obj);
 
-        JsonObject reqs = new JsonObject();
+        val reqs = new JsonObject();
         reqs.putObject("requests", obj);
         getConnector().write(reqs);
     }
@@ -48,9 +51,9 @@ public class Requester extends Linkable {
     @SuppressWarnings("unchecked")
     public void parse(JsonArray responses) {
         try {
-            Iterator<JsonObject> it = (Iterator) responses.iterator();
+            val it = responses.iterator();
             for (JsonObject o; it.hasNext();) {
-                o = it.next();
+                o = (JsonObject) it.next();
 
                 int rid = o.getNumber("rid").intValue();
                 Request request = tracker.getRequest(rid);
@@ -64,7 +67,7 @@ public class Requester extends Linkable {
 
                     switch (o.getString("method")) {
                         case "list":
-                            resp = new ListResponse((ListRequest) request, nodeManager);
+                            resp = new ListResponse((ListRequest) request, getManager());
                             break;
                         case "set":
                             resp = new SetResponse((SetRequest) request);
@@ -91,7 +94,7 @@ public class Requester extends Linkable {
                 } else {
                     // Subscription update
                     SubscribeRequest req = (SubscribeRequest) request;
-                    resp = new SubscriptionResponse(req, nodeManager);
+                    resp = new SubscriptionResponse(req, getManager());
                     resp.populate(o.getArray("update"));
                 }
                 if (responseHandler != null) {
@@ -113,16 +116,5 @@ public class Requester extends Linkable {
     public void setResponseHandler(Handler<Response<?>> handler) {
         checkConnected();
         this.responseHandler = handler;
-    }
-
-    /**
-     * When setting the connector, the subscription manager, node manager, and
-     * request tracker will be overwritten to default instances.
-     * @param connector Connector to be set.
-     */
-    @Override
-    public void setConnector(ClientConnector connector) {
-        super.setConnector(connector);
-        nodeManager = new NodeManager(new SubscriptionManager(connector));
     }
 }

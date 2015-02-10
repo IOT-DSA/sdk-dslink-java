@@ -1,12 +1,13 @@
 package org.dsa.iot.dslink;
 
+import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
 import lombok.Getter;
 import lombok.NonNull;
-import org.dsa.iot.dslink.connection.ClientConnector;
+import lombok.val;
+import org.dsa.iot.dslink.events.ChildrenUpdateEvent;
 import org.dsa.iot.dslink.methods.*;
 import org.dsa.iot.dslink.node.Node;
-import org.dsa.iot.dslink.node.NodeManager;
-import org.dsa.iot.dslink.node.SubscriptionManager;
 import org.dsa.iot.dslink.util.Linkable;
 import org.dsa.iot.dslink.util.ResponseTracker;
 import org.dsa.iot.dslink.util.StreamState;
@@ -15,7 +16,6 @@ import org.vertx.java.core.json.JsonObject;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.Iterator;
 
 import static org.dsa.iot.dslink.node.NodeManager.NodeStringTuple;
 
@@ -25,41 +25,21 @@ import static org.dsa.iot.dslink.node.NodeManager.NodeStringTuple;
 @Getter
 public class Responder extends Linkable {
 
-    private NodeManager nodeManager;
     private ResponseTracker tracker;
 
-    public Responder() {
-        this(new ResponseTracker());
+    public Responder(EventBus bus) {
+        this(bus, new ResponseTracker());
     }
 
-    public Responder(ResponseTracker tracker) {
+    public Responder(@NonNull EventBus bus,
+                     @NonNull ResponseTracker tracker) {
+        super(bus);
         this.tracker = tracker;
     }
 
     public Node createRoot(String name) {
         checkConnected();
-        return nodeManager.createRootNode(name);
-    }
-
-    /**
-     * Requires that the subscription manager is already configured.
-     * Sets the node manager used for handling root nodes and node lookups.
-     * @param manager Manager instance to use
-     */
-    public void setNodeManager(NodeManager manager) {
-        checkConnected();
-        nodeManager = manager;
-    }
-
-    /**
-     * When setting the connector, the node manager will be overwritten to
-     * default instances.
-     * @param connector Connector to be set.
-     */
-    @Override
-    public void setConnector(ClientConnector connector) {
-        super.setConnector(connector);
-        setNodeManager(new NodeManager(new SubscriptionManager(connector)));
+        return getManager().createRootNode(name);
     }
 
     /**
@@ -68,26 +48,26 @@ public class Responder extends Linkable {
     @Override
     @SuppressWarnings("unchecked")
     public synchronized void parse(JsonArray requests) {
-        Iterator<JsonObject> it = (Iterator) requests.iterator();
-        JsonArray responses = new JsonArray();
+        val it = requests.iterator();
+        val responses = new JsonArray();
         for (JsonObject o; it.hasNext();) {
-            o = it.next();
+            o = (JsonObject) it.next();
 
-            Number rid = o.getNumber("rid");
-            String sMethod = o.getString("method");
-            String path = o.getString("path");
+            val rid = o.getNumber("rid");
+            val sMethod = o.getString("method");
+            val path = o.getString("path");
 
-            JsonObject resp = new JsonObject();
+            val resp = new JsonObject();
             try {
                 resp.putNumber("rid", rid);
                 NodeStringTuple node = null;
                 if (path != null) {
-                    node = nodeManager.getNode(path);
+                    node = getManager().getNode(path);
                 }
 
-                Method method = getMethod(sMethod, rid.intValue(), node);
-                JsonArray updates = method.invoke(o);
-                StreamState state = method.getState();
+                val method = getMethod(sMethod, rid.intValue(), node);
+                val updates = method.invoke(o);
+                val state = method.getState();
 
                 if (state == null) {
                     throw new IllegalStateException("state");
@@ -110,7 +90,7 @@ public class Responder extends Linkable {
             }
         }
 
-        JsonObject top = new JsonObject();
+        val top = new JsonObject();
         top.putElement("responses", responses);
         getConnector().write(top);
     }
@@ -119,8 +99,7 @@ public class Responder extends Linkable {
                                NodeStringTuple tuple) {
         switch (name) {
             case "list":
-                return new ListMethod(getConnector(), tuple.getNode(),
-                                        tracker, rid);
+                return new ListMethod(tuple.getNode(), rid);
             case "set":
                 return new SetMethod(tuple.getNode(), tuple.getString());
             case "remove":
@@ -128,11 +107,11 @@ public class Responder extends Linkable {
             case "invoke":
                 return new InvokeMethod(tuple.getNode());
             case "subscribe":
-                return new SubscribeMethod(nodeManager);
+                return new SubscribeMethod(getManager());
             case "unsubscribe":
-                return new UnsubscribeMethod(nodeManager);
+                return new UnsubscribeMethod(getManager());
             case "close":
-                return new CloseMethod(tracker, rid);
+                return new CloseMethod(getBus(), tracker, rid);
             default:
                 throw new RuntimeException("Unknown method");
         }
@@ -142,13 +121,28 @@ public class Responder extends Linkable {
         e.printStackTrace(System.err);
         resp.putString("stream", StreamState.CLOSED.jsonName);
 
-        JsonObject error = new JsonObject();
+        val error = new JsonObject();
         error.putString("msg", e.getMessage());
 
-        StringWriter writer = new StringWriter();
+        val writer = new StringWriter();
         e.printStackTrace(new PrintWriter(writer));
         error.putString("detail", writer.toString());
 
         resp.putElement("error", error);
+    }
+
+    @Subscribe
+    protected void childrenUpdate(ChildrenUpdateEvent event) {
+        if (tracker.isTracking(event.getRid())) {
+            val response = new JsonObject();
+            response.putNumber("rid", event.getRid());
+            response.putString("stream", StreamState.OPEN.jsonName);
+
+            val updates = new JsonArray();
+            updates.addElement(ListMethod.getChildUpdate(event.getParent(), event.isRemoved()));
+            response.putArray("update", updates);
+
+            getConnector().write(response);
+        }
     }
 }
