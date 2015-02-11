@@ -1,6 +1,8 @@
 package org.dsa.iot.core;
 
 import io.netty.handler.codec.http.QueryStringDecoder;
+import lombok.NonNull;
+import lombok.val;
 import org.vertx.java.core.MultiMap;
 import org.vertx.java.core.Vertx;
 import org.vertx.java.core.VertxFactory;
@@ -21,10 +23,7 @@ public class Utils {
      * @param scheme Scheme to get the default port of.
      * @return Default port of the scheme, or -1 if unsupported.
      */
-    public static int getDefaultPort(String scheme) {
-        if (scheme == null)
-            throw new NullPointerException("scheme");
-
+    public static int getDefaultPort(@NonNull String scheme) {
         if ("ws".equals(scheme) || "http".equals(scheme))
             return 80;
         else if ("wss".equals(scheme) || "https".equals(scheme))
@@ -32,9 +31,9 @@ public class Utils {
         return -1;
     }
 
-    public static String addPadding(String encoded, boolean urlSafe) {
-        String padding = urlSafe ? "." : "=";
-        StringBuilder buffer = new StringBuilder(encoded);
+    public static String addPadding(@NonNull String encoded, boolean urlSafe) {
+        val padding = urlSafe ? "." : "=";
+        val buffer = new StringBuilder(encoded);
         while (buffer.length() % 4 != 0) {
             buffer.append(padding);
         }
@@ -44,11 +43,11 @@ public class Utils {
     public static MultiMap parseQueryParams(String uri) {
         if (uri == null)
             return null;
-        QueryStringDecoder queryStringDecoder = new QueryStringDecoder(uri);
-        Map<String, List<String>> prms = queryStringDecoder.parameters();
-        MultiMap params = new CaseInsensitiveMultiMap();
-        if (!prms.isEmpty()) {
-            for (Map.Entry<String, List<String>> entry: prms.entrySet()) {
+        val queryStringDecoder = new QueryStringDecoder(uri);
+        val decoded = queryStringDecoder.parameters();
+        val params = new CaseInsensitiveMultiMap();
+        if (!decoded.isEmpty()) {
+            for (Map.Entry<String, List<String>> entry: decoded.entrySet()) {
                 params.add(entry.getKey(), entry.getValue());
             }
         }

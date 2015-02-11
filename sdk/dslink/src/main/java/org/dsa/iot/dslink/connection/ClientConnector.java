@@ -55,14 +55,16 @@ public abstract class ClientConnector {
      * @return A full path with an attached query string
      */
     protected String getPath() {
-        StringBuilder query = new StringBuilder(dataEndpoint.path);
+        StringBuilder query = new StringBuilder();
         try { // Auth parameter
             String uri = pair.getServer().getWsUri();
             if (uri.startsWith("/"))
-                uri = uri.substring(1);
-            if (!dataEndpoint.path.equals("/"))
+                query.append(uri);
+            else {
+                query.append(dataEndpoint.path);
                 query.append("/");
-            query.append(uri);
+                query.append(uri);
+            }
             query.append("?auth=");
 
             byte[] salt = getSalt().getBytes("UTF-8");

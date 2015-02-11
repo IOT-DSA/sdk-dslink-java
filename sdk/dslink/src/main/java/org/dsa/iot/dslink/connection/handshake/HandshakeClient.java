@@ -7,6 +7,7 @@ import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 import org.bouncycastle.jcajce.provider.asymmetric.ec.KeyPairGeneratorSpi;
 import org.bouncycastle.jcajce.provider.digest.SHA256;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.util.encoders.UrlBase64;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.json.impl.Base64;
 
@@ -44,12 +45,12 @@ public class HandshakeClient {
         this.privKeyInfo = (BCECPrivateKey) key.getPrivate();
 
         byte[] pubKey = pubKeyInfo.getQ().getEncoded(false);
-        this.publicKey = Base64.encodeBytes(pubKey, Base64.URL_SAFE);
+        this.publicKey = new String(UrlBase64.encode(pubKey), "UTF-8");
 
         SHA256.Digest sha = new SHA256.Digest();
         byte[] hash = sha.digest(pubKey);
 
-        String encoded = Base64.encodeBytes(hash, Base64.URL_SAFE);
+        String encoded = new String(UrlBase64.encode(hash), "UTF-8");
         this.dsId = dsIdPrefix + "-" + encoded.substring(0, encoded.length() - 1);
     }
 

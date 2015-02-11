@@ -139,10 +139,9 @@ public class DSLink {
 
     public static DSLink generate(EventBus master,
                                 String url,
-                                String endpoint,
                                 ConnectionType type,
                                 String dsId) {
-        return generate(master, url, endpoint, type, dsId, "default");
+        return generate(master, url, type, dsId, "default");
     }
 
     /**
@@ -150,16 +149,14 @@ public class DSLink {
      */
     public static DSLink generate(EventBus master,
                                 String url,
-                                String endpoint,
                                 ConnectionType type,
                                 String dsId,
                                 String zone) {
-        return generate(master, url, endpoint, type, dsId, zone, false, true);
+        return generate(master, url, type, dsId, zone, false, true);
     }
 
     public static DSLink generate(EventBus master,
                                 String url,
-                                String endpoint,
                                 ConnectionType type,
                                 String dsId,
                                 String zone,
@@ -168,14 +165,13 @@ public class DSLink {
         val requester = isRequester ? new Requester(master) : null;
         val responder = isResponder ? new Responder(master) : null;
 
-        return generate(master, url, endpoint, type, dsId, zone,
+        return generate(master, url, type, dsId, zone,
                     requester, responder);
     }
 
     /**
      *
      * @param url URL to perform the handshake authentication
-     * @param endpoint Data endpoint URL
      * @param type Type of connection to use
      * @param zone Quarantine zone to use
      * @param requester Requester instance to use, otherwise null
@@ -185,12 +181,12 @@ public class DSLink {
     @SneakyThrows
     public static DSLink generate(@NonNull final EventBus master,
                                 @NonNull final String url,
-                                @NonNull final String endpoint,
                                 @NonNull final ConnectionType type,
                                 @NonNull final String dsId,
                                 @NonNull final String zone,
                                 final Requester requester,
                                 final Responder responder) {
+        // TODO: overload for custom handshake client
         val client = HandshakeClient.generate(dsId, zone,
                                             requester != null, responder != null);
 
@@ -209,14 +205,13 @@ public class DSLink {
         }
 
         val pair = new HandshakePair(client, server.getServer());
-        val conn = ClientConnector.create(master, endpoint, pair, type);
+        val conn = ClientConnector.create(master, url, pair, type);
         return new DSLink(master, conn, null, requester, responder);
     }
 
     public static DSLink generate(@NonNull final EventBus master,
                                 @NonNull final ServerConnector connector) {
-        return new DSLink(master,
-                                    null,
+        return new DSLink(master, null,
                                     connector,
                                     new Requester(master),
                                     new Responder(master));

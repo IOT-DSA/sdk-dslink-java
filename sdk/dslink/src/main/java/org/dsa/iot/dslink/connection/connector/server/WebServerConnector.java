@@ -18,10 +18,8 @@ import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.http.HttpServerResponse;
 import org.vertx.java.core.http.ServerWebSocket;
 import org.vertx.java.core.json.JsonObject;
-import org.vertx.java.core.json.impl.Base64;
 
 import java.security.MessageDigest;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -96,6 +94,7 @@ public class WebServerConnector extends ServerConnector {
             resp.setStatusCode(200);
             req.bodyHandler(new Handler<Buffer>() {
                 @Override
+                @SneakyThrows
                 public void handle(Buffer buf) {
                     JsonObject clientJson = new JsonObject(buf.toString("UTF-8"));
 
@@ -124,7 +123,7 @@ public class WebServerConnector extends ServerConnector {
                             c.setSharedSecret(point.normalize().getXCoord().toBigInteger().toByteArray());
 
                             byte[] encoded = getClient().getPubKeyInfo().getQ().getEncoded(false);
-                            String key = Base64.encodeBytes(encoded, Base64.URL_SAFE);
+                            String key = new String(UrlBase64.encode(encoded), "UTF-8");
                             obj.putString("tempKey", key);
                         }
                         obj.putString("salt", c.getSalt());

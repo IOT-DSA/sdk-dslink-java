@@ -97,7 +97,9 @@ public class WebSocketConnector extends ClientConnector {
             @Override
             public void handle(Void event) {
                 synchronized (WebSocketConnector.this) {
+                    connecting = false;
                     connected = false;
+                    client.close();
                 }
             }
         };

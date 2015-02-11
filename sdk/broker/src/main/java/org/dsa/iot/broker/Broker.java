@@ -41,8 +41,12 @@ public class Broker {
 
     public void listen() {
         // TODO: Setup configurable ports
-        System.out.println("Listening on port 8080");
-        dslink.listen(8080);
+        listen(8080);
+    }
+
+    public void listen(int port) {
+        System.out.println("Listening on port " + port);
+        dslink.listen(port);
     }
 
     @Subscribe

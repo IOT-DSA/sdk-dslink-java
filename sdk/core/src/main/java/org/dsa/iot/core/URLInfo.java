@@ -30,10 +30,8 @@ public class URLInfo {
      * @return An information object about a URL.
      */
     public static URLInfo parse(String url, Boolean secureOverride) {
-        if (!url.contains("://"))
-            throw new RuntimeException("Invalid URL");
         String[] parts = url.split("://");
-        if (parts.length > 2)
+        if (!url.contains("://") || parts.length > 2)
             throw new RuntimeException("Invalid URL");
 
         String protocol = parts[0];
@@ -47,9 +45,9 @@ public class URLInfo {
         String path = "/";
         int port = -1;
 
-        if (parts[1].contains(":")) {
-            int index = parts[1].indexOf(':');
-            host = parts[1].substring(0, index);
+        if (host.contains(":")) {
+            int index = host.indexOf(':');
+            host = host.substring(0, index);
 
             // Secondary can contain port and path
             String secondary = parts[1].substring(index + 1);
