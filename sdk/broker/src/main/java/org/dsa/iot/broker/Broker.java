@@ -9,7 +9,6 @@ import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.connection.connector.server.WebServerConnector;
 import org.dsa.iot.dslink.connection.handshake.HandshakeClient;
 import org.dsa.iot.dslink.events.AsyncExceptionEvent;
-import org.vertx.java.core.Handler;
 
 /**
  * @author Samuel Grenier
@@ -23,20 +22,14 @@ public class Broker {
     private final DSLink dslink;
 
     @SuppressWarnings("InfiniteLoopStatement")
-    public static void main(String[] args) throws InterruptedException {
-        final EventBus bus = new EventBus();
+    public static void main(String[] args) {
+        val bus = new EventBus();
         val hc = HandshakeClient.generate("broker", true, true);
-        DSLink.generate(bus, new WebServerConnector(hc), new Handler<DSLink>() {
-            @Override
-            public void handle(DSLink event) {
-                Broker broker = new Broker(bus, event);
-                broker.listen();
-            }
-        });
+        val link = DSLink.generate(bus, new WebServerConnector(hc));
 
-        while (true) {
-            Thread.sleep(500);
-        }
+        Broker broker = new Broker(bus, link);
+        broker.listen();
+        link.sleep();
     }
 
     public Broker(@NonNull EventBus master,

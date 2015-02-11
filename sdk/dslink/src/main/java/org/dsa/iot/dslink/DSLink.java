@@ -2,9 +2,7 @@ package org.dsa.iot.dslink;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.val;
+import lombok.*;
 import org.dsa.iot.dslink.connection.ClientConnector;
 import org.dsa.iot.dslink.connection.ConnectionType;
 import org.dsa.iot.dslink.connection.ServerConnector;
@@ -15,6 +13,7 @@ import org.dsa.iot.dslink.events.IncomingDataEvent;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.SubscriptionManager;
 import org.vertx.java.core.Handler;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * @author Samuel Grenier
@@ -71,6 +70,10 @@ public class DSLink {
         serverConnector.stop();
     }
 
+    public boolean isConnecting() {
+        return clientConnector != null && clientConnector.isConnecting();
+    }
+
     public boolean isConnected() {
         return clientConnector != null && clientConnector.isConnected();
     }
@@ -87,6 +90,17 @@ public class DSLink {
     public void disconnect() {
         if (clientConnector.isConnected()) {
             clientConnector.disconnect();
+        }
+    }
+
+    /**
+     * Blocks the thread until the link is disconnected or the server is
+     * stopped.
+     */
+    @SneakyThrows
+    public void sleep() {
+        while (isConnecting() || isConnected() || isListening()) {
+            Thread.sleep(500);
         }
     }
 
@@ -123,42 +137,39 @@ public class DSLink {
         }
     }
 
-    public static void generate(EventBus master,
+    public static DSLink generate(EventBus master,
                                 String url,
                                 String endpoint,
                                 ConnectionType type,
-                                String dsId,
-                                Handler<DSLink> onComplete) {
-        generate(master, url, endpoint, type, dsId, "default", onComplete);
+                                String dsId) {
+        return generate(master, url, endpoint, type, dsId, "default");
     }
 
     /**
      * Defaults to generating a responder only dslink.
      */
-    public static void generate(EventBus master,
+    public static DSLink generate(EventBus master,
                                 String url,
                                 String endpoint,
                                 ConnectionType type,
                                 String dsId,
-                                String zone,
-                                Handler<DSLink> onComplete) {
-        generate(master, url, endpoint, type, dsId, zone, false, true, onComplete);
+                                String zone) {
+        return generate(master, url, endpoint, type, dsId, zone, false, true);
     }
 
-    public static void generate(EventBus master,
+    public static DSLink generate(EventBus master,
                                 String url,
                                 String endpoint,
                                 ConnectionType type,
                                 String dsId,
                                 String zone,
                                 boolean isRequester,
-                                boolean isResponder,
-                                Handler<DSLink> onComplete) {
+                                boolean isResponder) {
         val requester = isRequester ? new Requester(master) : null;
         val responder = isResponder ? new Responder(master) : null;
 
-        generate(master, url, endpoint, type, dsId, zone,
-                    requester, responder, onComplete);
+        return generate(master, url, endpoint, type, dsId, zone,
+                    requester, responder);
     }
 
     /**
@@ -169,37 +180,52 @@ public class DSLink {
      * @param zone Quarantine zone to use
      * @param requester Requester instance to use, otherwise null
      * @param responder Responder instance to use, otherwise null
-     * @param onComplete Callback when a DSLink is generated and authenticated to a server
+     * @return DSLink object on success, otherwise null
      */
-    public static void generate(@NonNull final EventBus master,
+    @SneakyThrows
+    public static DSLink generate(@NonNull final EventBus master,
                                 @NonNull final String url,
                                 @NonNull final String endpoint,
                                 @NonNull final ConnectionType type,
                                 @NonNull final String dsId,
                                 @NonNull final String zone,
                                 final Requester requester,
-                                final Responder responder,
-                                @NonNull final Handler<DSLink> onComplete) {
-        final HandshakeClient client = HandshakeClient.generate(dsId, zone,
+                                final Responder responder) {
+        val client = HandshakeClient.generate(dsId, zone,
                                             requester != null, responder != null);
+
+        final CountDownLatch latch = new CountDownLatch(1);
+        final HandshakeCont server = new HandshakeCont();
         HandshakeServer.perform(master, url, client, new Handler<HandshakeServer>() {
             @Override
             public void handle(HandshakeServer event) {
-                val pair = new HandshakePair(client, event);
-                val conn = ClientConnector.create(master, endpoint, pair, type);
-                onComplete.handle(new DSLink(master, conn, null, requester, responder));
+                server.setServer(event);
+                latch.countDown();
             }
         });
+        latch.await();
+        if (server.getServer() == null) {
+            throw new RuntimeException("Failed to authenticate to the server");
+        }
+
+        val pair = new HandshakePair(client, server.getServer());
+        val conn = ClientConnector.create(master, endpoint, pair, type);
+        return new DSLink(master, conn, null, requester, responder);
     }
 
-    public static void generate(@NonNull final EventBus master,
-                                @NonNull final ServerConnector connector,
-                                @NonNull final Handler<DSLink> onComplete) {
-        val link = new DSLink(master,
+    public static DSLink generate(@NonNull final EventBus master,
+                                @NonNull final ServerConnector connector) {
+        return new DSLink(master,
                                     null,
                                     connector,
                                     new Requester(master),
                                     new Responder(master));
-        onComplete.handle(link);
+    }
+
+    private static class HandshakeCont {
+
+        @Getter
+        @Setter
+        private HandshakeServer server;
     }
 }

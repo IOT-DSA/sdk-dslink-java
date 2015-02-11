@@ -47,6 +47,8 @@ public abstract class ClientConnector {
      */
     public abstract void write(JsonObject obj);
 
+    public abstract boolean isConnecting();
+
     public abstract boolean isConnected();
 
     /**
