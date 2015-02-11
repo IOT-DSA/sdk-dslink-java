@@ -21,6 +21,7 @@ public class WebSocketConnector extends ClientConnector {
     protected HttpClient client;
     protected WebSocket socket;
 
+    private boolean connecting = false;
     private boolean connected = false;
 
     public WebSocketConnector(EventBus bus, URLInfo info, HandshakePair pair) {
@@ -29,6 +30,7 @@ public class WebSocketConnector extends ClientConnector {
 
     @Override
     public synchronized void connect(final boolean sslVerify) {
+        connecting = true;
         client = Utils.VERTX.createHttpClient();
         client.setHost(getDataEndpoint().host).setPort(getDataEndpoint().port);
         if (getDataEndpoint().secure) {
@@ -39,13 +41,17 @@ public class WebSocketConnector extends ClientConnector {
         client.exceptionHandler(new Handler<Throwable>() {
             @Override
             public void handle(Throwable event) {
-                getBus().register(new AsyncExceptionEvent(event));
+                getBus().post(new AsyncExceptionEvent(event));
+                connecting = false;
+                connected = false;
             }
         });
 
         client.connectWebsocket(getPath(), new Handler<WebSocket>() {
             @Override
             public void handle(WebSocket event) {
+                connected = true;
+                connecting = false;
                 socket = event;
 
                 event.dataHandler(new Handler<Buffer>() {
@@ -60,8 +66,6 @@ public class WebSocketConnector extends ClientConnector {
                 event.closeHandler(getDisconnectHandler());
             }
         });
-
-        connected = true;
     }
 
     @Override
@@ -76,6 +80,11 @@ public class WebSocketConnector extends ClientConnector {
         if (socket != null) {
             socket.writeTextFrame(obj.encode());
         }
+    }
+
+    @Override
+    public synchronized boolean isConnecting() {
+        return connecting;
     }
 
     @Override

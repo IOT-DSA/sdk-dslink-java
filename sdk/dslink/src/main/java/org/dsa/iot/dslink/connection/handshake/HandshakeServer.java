@@ -92,6 +92,7 @@ public class HandshakeServer {
             @Override
             public void handle(Throwable event) {
                 bus.post(new AsyncExceptionEvent(event));
+                onComplete.handle(null);
             }
         });
         req.end(encoded, "UTF-8");
