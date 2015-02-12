@@ -99,7 +99,6 @@ public class WebSocketConnector extends ClientConnector {
                 synchronized (WebSocketConnector.this) {
                     connecting = false;
                     connected = false;
-                    client.close();
                 }
             }
         };

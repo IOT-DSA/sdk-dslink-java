@@ -66,7 +66,6 @@ public class DSLink {
     }
 
     public void stopListening() {
-        checkListening();
         serverConnector.stop();
     }
 

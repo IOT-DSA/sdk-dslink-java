@@ -9,6 +9,7 @@ import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.connection.ConnectionType;
 import org.dsa.iot.dslink.connection.connector.server.WebServerConnector;
 import org.dsa.iot.dslink.connection.handshake.HandshakeClient;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -34,6 +35,11 @@ public class Main {
         broker.listen(port);
         // Ensure the server is listening
         Thread.sleep(100);
+    }
+
+    @AfterClass
+    public static void tearDown() {
+        broker.stop();
     }
 
     @Test

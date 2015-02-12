@@ -49,6 +49,10 @@ public class Broker {
         dslink.listen(port);
     }
 
+    public void stop() {
+        dslink.stopListening();
+    }
+
     @Subscribe
     public void error(AsyncExceptionEvent event) {
         event.getThrowable().printStackTrace();
