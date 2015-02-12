@@ -24,6 +24,7 @@ public class Main {
     private static int port;
 
     @BeforeClass
+    @SneakyThrows
     public static void setup() {
         val bus = new EventBus();
         val client = HandshakeClient.generate("broker", "_", true, true);
@@ -31,6 +32,8 @@ public class Main {
         broker = new Broker(bus, link);
         port = getRandomPort();
         broker.listen(port);
+        // Ensure the server is listening
+        Thread.sleep(100);
     }
 
     @Test
