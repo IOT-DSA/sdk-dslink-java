@@ -34,7 +34,7 @@ public class Main {
         port = getRandomPort();
         broker.listen(port);
         // Ensure the server is listening
-        Thread.sleep(100);
+        Thread.sleep(250);
     }
 
     @AfterClass
