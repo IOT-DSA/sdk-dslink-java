@@ -25,7 +25,12 @@ public class NodeManager {
     public NodeManager(EventBus bus, SubscriptionManager subManager) {
         this.bus = bus;
         this.subManager = subManager;
-        this.superRoot = new Node(bus, subManager, null, "_");
+        this.superRoot = new Node(bus, subManager, null, "") {
+            @Override
+            protected boolean isRootNode() {
+                return true;
+            }
+        };
     }
 
     public Node createRootNode(String name) {
@@ -97,15 +102,5 @@ public class NodeManager {
          */
         private final String string;
 
-    }
-
-    @Getter
-    @AllArgsConstructor
-    public static class NodeBooleanTuple {
-
-        @NonNull
-        private final Node node;
-
-        private final boolean bool;
     }
 }

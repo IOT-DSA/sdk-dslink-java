@@ -72,13 +72,17 @@ public class Node {
      */
     public Node(EventBus bus, SubscriptionManager manager,
                                         Node parent, @NonNull String name) {
-        StringUtils.checkNodeName(name);
         this.bus = bus;
         this.manager = manager;
         this.parent = parent;
         this.name = name;
-        path = parent == null ? "/" + name : parent.getPath() + "/" + name;
-        setConfiguration("is", new Value((String) null)); // TODO: full profile support
+        if (isRootNode()) {
+            path = name;
+        } else {
+            StringUtils.checkNodeName(name);
+            path = parent == null ? "/" + name : parent.getPath() + "/" + name;
+        }
+        setConfiguration("is", new Value("node")); // TODO: full profile support
     }
 
     protected void init() {
@@ -139,10 +143,10 @@ public class Node {
         StringUtils.checkNodeName(name);
         if (attributes == null)
             attributes = new HashMap<>();
+        else if (attributes.containsKey(name))
+            attributes.remove(name);
 
-        if (attributes.containsKey(name))
-            throw new DuplicateException(name);
-        else if (value == null)
+        if (value == null)
             attributes.remove(name);
         else
             attributes.put(name, value);
@@ -152,10 +156,10 @@ public class Node {
         StringUtils.checkNodeName(name);
         if (configurations == null)
             configurations = new HashMap<>();
+        else if (configurations.containsKey(name))
+            configurations.remove(name);
 
-        if (configurations.containsKey(name))
-            throw new DuplicateException(name);
-        else if (value == null)
+        if (value == null)
             configurations.remove(name);
         else
             configurations.put(name, value);
@@ -244,5 +248,9 @@ public class Node {
         if (event.getRid() == childrenRid) {
             childrenRid = -1;
         }
+    }
+
+    protected boolean isRootNode() {
+        return false;
     }
 }

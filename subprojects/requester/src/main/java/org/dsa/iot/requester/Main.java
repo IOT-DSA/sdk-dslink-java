@@ -51,10 +51,14 @@ public class Main {
         System.out.println("Received response: " + event.getName());
         val resp = (ListResponse) event.getResponse();
         System.out.println("Path: " + resp.getPath());
-        System.out.println("Root nodes: ");
-        val nodes = resp.getManager().getChildren("/");
-        for (Map.Entry<String, Node> entry : nodes.entrySet()) {
-            System.out.println("    " + entry.getKey());
+        val nodes = resp.getManager().getChildren(resp.getPath());
+        if (nodes != null) {
+            System.out.println("Children: ");
+            for (Map.Entry<String, Node> entry : nodes.entrySet()) {
+                System.out.println("    " + entry.getKey());
+                val req = new ListRequest(entry.getValue().getPath());
+                link.getRequester().sendRequest(req);
+            }
         }
     }
 }
