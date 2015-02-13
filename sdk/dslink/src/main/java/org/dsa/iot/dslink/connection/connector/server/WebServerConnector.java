@@ -1,5 +1,7 @@
 package org.dsa.iot.dslink.connection.connector.server;
 
+import lombok.AllArgsConstructor;
+import lombok.NonNull;
 import lombok.SneakyThrows;
 import org.bouncycastle.jcajce.provider.digest.SHA256;
 import org.bouncycastle.jce.spec.ECParameterSpec;
@@ -9,7 +11,9 @@ import org.bouncycastle.util.encoders.UrlBase64;
 import org.dsa.iot.core.Utils;
 import org.dsa.iot.dslink.connection.ServerConnector;
 import org.dsa.iot.dslink.connection.handshake.HandshakeClient;
+import org.dsa.iot.dslink.connection.handshake.HandshakeServer;
 import org.dsa.iot.dslink.util.Client;
+import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.MultiMap;
 import org.vertx.java.core.buffer.Buffer;
@@ -22,6 +26,7 @@ import org.vertx.java.core.json.JsonObject;
 import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * Handles web sockets and HTTP connections.
@@ -37,14 +42,17 @@ public class WebServerConnector extends ServerConnector {
     }
 
     @Override
+    @SneakyThrows
     public void start(int port, String bindAddr) {
         server.requestHandler(new HttpHandler());
         server.websocketHandler(new WebSocketHandler());
 
+        CountDownLatch latch = new CountDownLatch(1);
         if (bindAddr != null)
-            server.listen(port, bindAddr);
+            server.listen(port, bindAddr, new AsyncHandler(latch));
         else
-            server.listen(port);
+            server.listen(port, new AsyncHandler(latch));
+        latch.await();
         setListening(true);
     }
 
@@ -68,6 +76,18 @@ public class WebServerConnector extends ServerConnector {
 
     private synchronized Client getClient(String name) {
         return clients.get(name);
+    }
+
+    @AllArgsConstructor
+    private class AsyncHandler implements Handler<AsyncResult<HttpServer>> {
+
+        @NonNull
+        private final CountDownLatch latch;
+
+        @Override
+        public void handle(AsyncResult<HttpServer> event) {
+            latch.countDown();
+        }
     }
 
     private class HttpHandler implements Handler<HttpServerRequest> {
@@ -120,7 +140,9 @@ public class WebServerConnector extends ServerConnector {
                             ECPoint point = params.getCurve().decodePoint(decoded);
                             ECPublicKeySpec spec = new ECPublicKeySpec(point, params);
                             point = spec.getQ().multiply(getClient().getPrivKeyInfo().getD());
-                            c.setSharedSecret(point.normalize().getXCoord().toBigInteger().toByteArray());
+                            byte[] sharedSecret = point.normalize().getXCoord().toBigInteger().toByteArray();
+                            sharedSecret = HandshakeServer.normalize(sharedSecret);
+                            c.setSharedSecret(sharedSecret);
 
                             byte[] encoded = getClient().getPubKeyInfo().getQ().getEncoded(false);
                             String key = new String(UrlBase64.encode(encoded), "UTF-8");

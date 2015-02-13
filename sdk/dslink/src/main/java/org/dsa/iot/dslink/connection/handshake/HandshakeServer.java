@@ -108,6 +108,11 @@ public class HandshakeServer {
         ECPublicKeySpec spec = new ECPublicKeySpec(point, params);
         point = spec.getQ().multiply(client.getPrivKeyInfo().getD());
         byte[] sharedSecret = point.normalize().getXCoord().toBigInteger().toByteArray();
+        sharedSecret = normalize(sharedSecret);
+        return sharedSecret;
+    }
+
+    public static byte[] normalize(byte[] sharedSecret) {
         if (sharedSecret.length < 32) {
             byte[] fixed = new byte[32];
             int len = sharedSecret.length;

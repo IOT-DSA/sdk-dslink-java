@@ -1,7 +1,6 @@
 package org.dsa.iot.tests;
 
 import com.google.common.eventbus.EventBus;
-import com.google.common.eventbus.Subscribe;
 import lombok.SneakyThrows;
 import lombok.val;
 import org.dsa.iot.broker.Broker;
@@ -33,8 +32,6 @@ public class Main {
         broker = new Broker(bus, link);
         port = getRandomPort();
         broker.listen(port);
-        // Ensure the server is listening
-        Thread.sleep(250);
     }
 
     @AfterClass
