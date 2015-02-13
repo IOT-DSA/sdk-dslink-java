@@ -6,6 +6,7 @@ import org.dsa.iot.core.Utils;
 import org.dsa.iot.dslink.connection.ClientConnector;
 import org.dsa.iot.dslink.connection.handshake.HandshakePair;
 import org.dsa.iot.dslink.events.AsyncExceptionEvent;
+import org.dsa.iot.dslink.events.ConnectedToServerEvent;
 import org.dsa.iot.dslink.events.IncomingDataEvent;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
@@ -54,6 +55,7 @@ public class WebSocketConnector extends ClientConnector {
                 connecting = false;
                 socket = event;
 
+                getBus().post(new ConnectedToServerEvent());
                 event.dataHandler(new Handler<Buffer>() {
                     @Override
                     public void handle(Buffer event) {

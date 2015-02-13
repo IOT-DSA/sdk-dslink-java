@@ -2,6 +2,7 @@ package org.dsa.iot.dslink.connection.handshake;
 
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.val;
 import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPrivateKey;
 import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 import org.bouncycastle.jcajce.provider.asymmetric.ec.KeyPairGeneratorSpi;
@@ -45,7 +46,8 @@ public class HandshakeClient {
         this.privKeyInfo = (BCECPrivateKey) key.getPrivate();
 
         byte[] pubKey = pubKeyInfo.getQ().getEncoded(false);
-        this.publicKey = new String(UrlBase64.encode(pubKey), "UTF-8");
+        val pKey = new String(UrlBase64.encode(pubKey), "UTF-8");
+        this.publicKey = pKey.substring(0, pKey.length() - 1);
 
         SHA256.Digest sha = new SHA256.Digest();
         byte[] hash = sha.digest(pubKey);

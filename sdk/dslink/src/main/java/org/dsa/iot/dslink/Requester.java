@@ -35,16 +35,19 @@ public class Requester extends Linkable {
     }
 
     public void sendRequest(@NonNull Request req) {
-        checkConnected();
+        ensureConnected();
 
         val obj = new JsonObject();
         obj.putNumber("rid", tracker.track(req));
         obj.putString("method", req.getName());
         req.addJsonValues(obj);
 
-        val reqs = new JsonObject();
-        reqs.putObject("requests", obj);
-        getConnector().write(reqs);
+        val requests = new JsonArray();
+        requests.add(obj);
+
+        val top = new JsonObject();
+        top.putArray("requests", requests);
+        getConnector().write(top);
     }
 
     @Override
@@ -65,7 +68,7 @@ public class Requester extends Linkable {
                         tracker.untrack(rid);
                     }
 
-                    switch (o.getString("method")) {
+                    switch (request.getName()) {
                         case "list":
                             resp = new ListResponse((ListRequest) request, getManager());
                             break;
@@ -90,12 +93,12 @@ public class Requester extends Linkable {
                         default:
                             throw new RuntimeException("Unknown method");
                     }
-                    resp.populate(o.getArray("update"));
+                    resp.populate(o.getArray("updates"));
                 } else {
                     // Subscription update
                     SubscribeRequest req = (SubscribeRequest) request;
                     resp = new SubscriptionResponse(req, getManager());
-                    resp.populate(o.getArray("update"));
+                    resp.populate(o.getArray("updates"));
                 }
                 if (responseHandler != null) {
                     responseHandler.handle(resp);

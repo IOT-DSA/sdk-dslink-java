@@ -21,7 +21,6 @@ public class Broker {
     @NonNull
     private final DSLink dslink;
 
-    @SuppressWarnings("InfiniteLoopStatement")
     public static void main(String[] args) {
         val bus = new EventBus();
         val hc = HandshakeClient.generate("broker", true, true);

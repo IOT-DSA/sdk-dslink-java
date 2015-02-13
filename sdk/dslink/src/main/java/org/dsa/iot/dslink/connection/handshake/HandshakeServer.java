@@ -1,10 +1,7 @@
 package org.dsa.iot.dslink.connection.handshake;
 
 import com.google.common.eventbus.EventBus;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NonNull;
+import lombok.*;
 import org.bouncycastle.jce.spec.ECParameterSpec;
 import org.bouncycastle.jce.spec.ECPublicKeySpec;
 import org.bouncycastle.math.ec.ECPoint;
@@ -70,7 +67,8 @@ public class HandshakeServer {
                         event.bodyHandler(new Handler<Buffer>() {
                             @Override
                             public void handle(Buffer event) {
-                                JsonObject obj = new JsonObject(event.toString());
+                                val string = event.toString();
+                                JsonObject obj = new JsonObject(string);
 
                                 String dsId = obj.getString("dsId");
                                 String publicKey = obj.getString("publicKey");

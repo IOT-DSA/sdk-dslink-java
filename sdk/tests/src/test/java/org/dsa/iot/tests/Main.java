@@ -24,7 +24,6 @@ public class Main {
     private static int port;
 
     @BeforeClass
-    @SneakyThrows
     public static void setup() {
         val bus = new EventBus();
         val client = HandshakeClient.generate("broker", "_", true, true);

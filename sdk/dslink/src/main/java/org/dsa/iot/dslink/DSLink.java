@@ -26,6 +26,7 @@ public class DSLink {
     private final ClientConnector clientConnector;
     private final ServerConnector serverConnector;
 
+    @Getter
     private final Requester requester;
 
     @Getter
@@ -152,6 +153,16 @@ public class DSLink {
                                 String dsId,
                                 String zone) {
         return generate(master, url, type, dsId, zone, false, true);
+    }
+
+    public static DSLink generate(EventBus master,
+                                  String url,
+                                  ConnectionType type,
+                                  String dsId,
+                                  boolean isRequester,
+                                  boolean isResponder) {
+        return generate(master, url, type, dsId, "default",
+                        isRequester, isResponder);
     }
 
     public static DSLink generate(EventBus master,

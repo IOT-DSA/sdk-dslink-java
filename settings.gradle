@@ -3,4 +3,6 @@ include 'sdk/dslink'
 include 'sdk/broker'
 include 'sdk/tests'
 
+include 'subprojects/requester'
+
 rootProject.name = 'sdk-dslink-java'

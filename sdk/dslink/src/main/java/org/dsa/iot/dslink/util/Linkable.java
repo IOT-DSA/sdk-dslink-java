@@ -58,4 +58,10 @@ public abstract class Linkable {
             throw new IllegalStateException("Already connected");
         }
     }
+
+    protected void ensureConnected() {
+        if (connector == null || !connector.isConnected()) {
+            throw new IllegalStateException("Not connected");
+        }
+    }
 }
