@@ -38,10 +38,11 @@ public class ListResponse extends Response<ListRequest> {
                 value = ValueUtils.toValue(val);
             }
             char start = name.charAt(0);
-            name = name.substring(1);
             if (start == '$') {
+                name = name.substring(1);
                 node.setConfiguration(name, value);
             } else if (start == '@') {
+                name = name.substring(1);
                 node.setAttribute(name, value);
             } else {
                 // Child node

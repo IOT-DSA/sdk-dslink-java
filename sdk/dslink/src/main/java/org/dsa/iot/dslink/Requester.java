@@ -3,19 +3,14 @@ package org.dsa.iot.dslink;
 import com.google.common.eventbus.EventBus;
 import lombok.NonNull;
 import lombok.val;
-import org.dsa.iot.dslink.connection.ClientConnector;
-import org.dsa.iot.dslink.node.NodeManager;
-import org.dsa.iot.dslink.node.SubscriptionManager;
+import org.dsa.iot.dslink.events.ResponseEvent;
 import org.dsa.iot.dslink.requests.*;
 import org.dsa.iot.dslink.responses.*;
 import org.dsa.iot.dslink.util.Linkable;
 import org.dsa.iot.dslink.util.RequestTracker;
 import org.dsa.iot.dslink.util.StreamState;
-import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
-
-import java.util.Iterator;
 
 /**
  * @author Samuel Grenier
@@ -23,7 +18,6 @@ import java.util.Iterator;
 public class Requester extends Linkable {
 
     private RequestTracker tracker;
-    private Handler<Response<?>> responseHandler;
 
     public Requester(EventBus bus) {
         this(bus, new RequestTracker());
@@ -60,6 +54,7 @@ public class Requester extends Linkable {
 
                 int rid = o.getNumber("rid").intValue();
                 Request request = tracker.getRequest(rid);
+                String name = request.getName();
                 Response<?> resp;
                 if (rid != 0) {
                     // Response
@@ -68,7 +63,7 @@ public class Requester extends Linkable {
                         tracker.untrack(rid);
                     }
 
-                    switch (request.getName()) {
+                    switch (name) {
                         case "list":
                             resp = new ListResponse((ListRequest) request, getManager());
                             break;
@@ -100,10 +95,8 @@ public class Requester extends Linkable {
                     resp = new SubscriptionResponse(req, getManager());
                     resp.populate(o.getArray("updates"));
                 }
-                if (responseHandler != null) {
-                    responseHandler.handle(resp);
-                }
-
+                val ev = new ResponseEvent(rid, name, resp);
+                getBus().post(ev);
             }
         } catch (Exception e) {
             // Error handler data
@@ -114,10 +107,5 @@ public class Requester extends Linkable {
     public void setRequestTracker(RequestTracker tracker) {
         checkConnected();
         this.tracker = tracker;
-    }
-
-    public void setResponseHandler(Handler<Response<?>> handler) {
-        checkConnected();
-        this.responseHandler = handler;
     }
 }
