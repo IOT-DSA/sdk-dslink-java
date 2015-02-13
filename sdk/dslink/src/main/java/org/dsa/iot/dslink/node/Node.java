@@ -210,14 +210,6 @@ public class Node {
             interfaces.remove(name);
     }
 
-    public synchronized Value removeAttribute(@NonNull String name) {
-        return attributes != null ? attributes.remove(name) : null;
-    }
-
-    public synchronized Value removeConfiguration(@NonNull String name) {
-        return configurations != null ? configurations.remove(name) : null;
-    }
-
     public synchronized Value getAttribute(@NonNull String name) {
         return attributes != null ? attributes.get(name) : null;
     }
