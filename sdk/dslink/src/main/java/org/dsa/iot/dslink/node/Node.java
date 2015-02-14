@@ -12,6 +12,7 @@ import org.dsa.iot.dslink.events.ChildrenUpdateEvent;
 import org.dsa.iot.dslink.events.ClosedStreamEvent;
 import org.dsa.iot.dslink.node.exceptions.DuplicateException;
 import org.dsa.iot.dslink.node.value.Value;
+import org.dsa.iot.dslink.util.Permission;
 import org.vertx.java.core.Handler;
 
 import java.util.ArrayList;
@@ -43,9 +44,12 @@ public class Node {
     private String displayName;
     private Value value;
 
+    /**
+     * Null means the node is not invokable.
+     */
     @Getter
     @Setter
-    private boolean invokable;
+    private Permission invokable;
 
     @Getter
     @Setter
