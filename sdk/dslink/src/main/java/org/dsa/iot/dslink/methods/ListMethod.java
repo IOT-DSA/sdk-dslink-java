@@ -75,7 +75,9 @@ public class ListMethod extends Method {
                 obj.putString("$name", name);
             }
 
-            obj.putBoolean("$invokable", node.isInvokable());
+            if (node.isInvokable()) {
+                obj.putBoolean("$invokable", true);
+            }
 
             List<String> interfaces = node.getInterfaces();
             StringBuilder builder = new StringBuilder();

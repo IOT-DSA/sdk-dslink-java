@@ -5,9 +5,6 @@ package org.dsa.iot.dslink.node.exceptions;
  */
 public class NoSuchPathException extends RuntimeException {
 
-    public NoSuchPathException() {
-    }
-
     public NoSuchPathException(String msg) {
         super("Path does not exist: " + msg);
     }
