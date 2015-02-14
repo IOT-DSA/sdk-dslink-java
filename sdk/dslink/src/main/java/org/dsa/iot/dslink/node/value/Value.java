@@ -57,4 +57,18 @@ public class Value {
             throw new IllegalStateException("Attempting to modify immutable value");
         }
     }
+
+    @Override
+    public String toString() {
+        switch (type) {
+            case NUMBER:
+                return integer.toString();
+            case BOOL:
+                return bool.toString();
+            case STRING:
+                return string;
+            default:
+                throw new RuntimeException("Unknown type");
+        }
+    }
 }

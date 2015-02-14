@@ -8,6 +8,7 @@ import org.dsa.iot.dslink.connection.ConnectionType;
 import org.dsa.iot.dslink.events.ConnectedToServerEvent;
 import org.dsa.iot.dslink.events.ResponseEvent;
 import org.dsa.iot.dslink.node.Node;
+import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.requests.ListRequest;
 import org.dsa.iot.dslink.responses.ListResponse;
 
@@ -55,9 +56,26 @@ public class Main {
         if (nodes != null) {
             System.out.println("Children: ");
             for (Map.Entry<String, Node> entry : nodes.entrySet()) {
-                System.out.println("    " + entry.getKey());
-                val req = new ListRequest(entry.getValue().getPath());
+                String name = entry.getKey();
+                Node node = entry.getValue();
+                System.out.println("     Name: " + name);
+
+                printValueMap(node.getAttributes(), "Attribute");
+                printValueMap(node.getConfigurations(), "Configuration");
+
+                // List children
+                val req = new ListRequest(node.getPath());
                 link.getRequester().sendRequest(req);
+            }
+        }
+    }
+
+    private void printValueMap(Map<String, Value> map, String name) {
+        if (map != null) {
+            for (Map.Entry<String, Value> conf : map.entrySet()) {
+                String a = conf.getKey();
+                String v = conf.getValue().toString();
+                System.out.println("      " + name + ": " + a + " => " + v);
             }
         }
     }
