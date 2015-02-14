@@ -42,6 +42,7 @@ public class Value {
     }
 
     private void set(ValueType type, Integer i, Boolean b, String s) {
+        checkImmutable();
         this.type = type;
         this.integer = i;
         this.bool = b;
