@@ -19,7 +19,7 @@ public class InvokeMethod extends Method {
 
     @Override
     public JsonArray invoke(JsonObject request) {
-        if (node.isInvokable()) {
+        if (node.getInvokable() != null) {
             Handler<Void> handler = node.getInvocationHandler();
             handler.handle(null);
         } else {

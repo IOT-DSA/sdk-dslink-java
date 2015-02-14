@@ -1,10 +1,12 @@
 package org.dsa.iot.dslink.responses;
 
 import lombok.Getter;
+import lombok.val;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.requests.ListRequest;
+import org.dsa.iot.dslink.util.Permission;
 import org.dsa.iot.dslink.util.ValueUtils;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
@@ -31,11 +33,11 @@ public class ListResponse extends Response<ListRequest> {
         for (Object obj : o) {
             JsonArray nodeData = (JsonArray) obj;
             String name = nodeData.get(0);
-            Object val = nodeData.get(1);
+            Object v = nodeData.get(1);
 
             Value value = null;
-            if (!(val instanceof JsonObject)) {
-                value = ValueUtils.toValue(val);
+            if (!(v instanceof JsonObject)) {
+                value = ValueUtils.toValue(v);
             }
             char start = name.charAt(0);
             if (start == '$') {
@@ -47,10 +49,10 @@ public class ListResponse extends Response<ListRequest> {
             } else {
                 // Child node
                 @SuppressWarnings("ConstantConditions")
-                JsonObject childData = (JsonObject) val;
+                val childData = (JsonObject) v;
                 Node child = node.getChild(name);
 
-                String change = childData.getString("change");
+                val change = childData.getString("change");
                 if (change != null && "remove".equals(change)) {
                     if (child != null) {
                         node.removeChild(child);
@@ -68,9 +70,9 @@ public class ListResponse extends Response<ListRequest> {
 
                 child.setDisplayName(childData.getString("$name"));
 
-                Boolean invokable = childData.getBoolean("$invokable");
+                val invokable = childData.getString("$invokable");
                 if (invokable != null) {
-                    child.setInvokable(invokable);
+                    child.setInvokable(Permission.toEnum(invokable));
                 }
 
                 String interfaces = childData.getString("$interface");
