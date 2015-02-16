@@ -51,31 +51,38 @@ public class Main {
         System.out.println("--------------");
         System.out.println("Received response: " + event.getName());
         val resp = (ListResponse) event.getResponse();
+        val manager = resp.getManager();
+        val node = manager.getNode(resp.getPath()).getNode();
         System.out.println("Path: " + resp.getPath());
-        val nodes = resp.getManager().getChildren(resp.getPath());
+        printValueMap(node.getAttributes(), "Attribute", false);
+        printValueMap(node.getConfigurations(), "Configuration", false);
+        val nodes = node.getChildren();
         if (nodes != null) {
             System.out.println("Children: ");
             for (Map.Entry<String, Node> entry : nodes.entrySet()) {
                 String name = entry.getKey();
-                Node node = entry.getValue();
-                System.out.println("     Name: " + name);
+                Node child = entry.getValue();
+                System.out.println("    Name: " + name);
 
-                printValueMap(node.getAttributes(), "Attribute");
-                printValueMap(node.getConfigurations(), "Configuration");
+                printValueMap(child.getAttributes(), "Attribute", true);
+                printValueMap(child.getConfigurations(), "Configuration", true);
 
                 // List children
-                val req = new ListRequest(node.getPath());
+                val req = new ListRequest(child.getPath());
                 link.getRequester().sendRequest(req);
             }
         }
     }
 
-    private void printValueMap(Map<String, Value> map, String name) {
+    private void printValueMap(Map<String, Value> map, String name, boolean indent) {
         if (map != null) {
             for (Map.Entry<String, Value> conf : map.entrySet()) {
                 String a = conf.getKey();
                 String v = conf.getValue().toString();
-                System.out.println("      " + name + ": " + a + " => " + v);
+                if (indent) {
+                    System.out.print("      ");
+                }
+                System.out.println(name + ": " + a + " => " + v);
             }
         }
     }
