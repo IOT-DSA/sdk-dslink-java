@@ -12,6 +12,7 @@ import org.dsa.iot.dslink.connection.handshake.HandshakeServer;
 import org.dsa.iot.dslink.events.IncomingDataEvent;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.SubscriptionManager;
+import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.Handler;
 import java.util.concurrent.CountDownLatch;
 
@@ -91,6 +92,15 @@ public class DSLink {
         if (clientConnector.isConnected()) {
             clientConnector.disconnect();
         }
+    }
+
+    public NodeManager getNodeManager() {
+        if (requester != null)
+            return requester.getManager();
+        else if (responder != null)
+            return responder.getManager();
+        else
+            return null;
     }
 
     /**
@@ -202,19 +212,19 @@ public class DSLink {
 
         final CountDownLatch latch = new CountDownLatch(1);
         final HandshakeCont server = new HandshakeCont();
-        HandshakeServer.perform(master, url, client, new Handler<HandshakeServer>() {
+        HandshakeServer.perform(master, url, client, new Handler<AsyncResult<HandshakeServer>>() {
             @Override
-            public void handle(HandshakeServer event) {
+            public void handle(AsyncResult<HandshakeServer> event) {
                 server.setServer(event);
                 latch.countDown();
             }
         });
         latch.await();
-        if (server.getServer() == null) {
-            throw new RuntimeException("Failed to authenticate to the server");
+        if (server.getServer().failed()) {
+            throw new RuntimeException(server.getServer().cause());
         }
 
-        val pair = new HandshakePair(client, server.getServer());
+        val pair = new HandshakePair(client, server.getServer().result());
         val conn = ClientConnector.create(master, url, pair, type);
         return new DSLink(master, conn, null, requester, responder);
     }
@@ -231,6 +241,6 @@ public class DSLink {
 
         @Getter
         @Setter
-        private HandshakeServer server;
+        private AsyncResult<HandshakeServer> server;
     }
 }

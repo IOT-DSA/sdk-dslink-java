@@ -21,7 +21,7 @@ public abstract class Linkable {
     @Getter(AccessLevel.PROTECTED)
     private ClientConnector connector;
 
-    @Getter(AccessLevel.PROTECTED)
+    @Getter
     private NodeManager manager;
 
     public Linkable(@NonNull EventBus bus) {

@@ -7,7 +7,6 @@ import lombok.NonNull;
 import lombok.val;
 import org.dsa.iot.dslink.events.ChildrenUpdateEvent;
 import org.dsa.iot.dslink.methods.*;
-import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.util.Linkable;
 import org.dsa.iot.dslink.util.ResponseTracker;
 import org.dsa.iot.dslink.util.StreamState;
@@ -35,11 +34,6 @@ public class Responder extends Linkable {
                      @NonNull ResponseTracker tracker) {
         super(bus);
         this.tracker = tracker;
-    }
-
-    public Node createRoot(String name) {
-        checkConnected();
-        return getManager().createRootNode(name);
     }
 
     /**

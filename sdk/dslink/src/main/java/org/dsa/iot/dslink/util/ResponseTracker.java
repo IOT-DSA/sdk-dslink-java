@@ -23,7 +23,7 @@ public class ResponseTracker {
         return id;
     }
 
-    public synchronized void untrack(int id) {
+    public synchronized void untrack(Integer id) {
         reqs.remove(id);
     }
 }

@@ -9,11 +9,13 @@ import org.bouncycastle.util.encoders.UrlBase64;
 import org.dsa.iot.core.URLInfo;
 import org.dsa.iot.core.Utils;
 import org.dsa.iot.dslink.events.AsyncExceptionEvent;
+import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.http.HttpClient;
 import org.vertx.java.core.http.HttpClientRequest;
 import org.vertx.java.core.http.HttpClientResponse;
+import org.vertx.java.core.impl.DefaultFutureResult;
 import org.vertx.java.core.json.JsonObject;
 
 /**
@@ -38,12 +40,12 @@ public class HandshakeServer {
     }
 
     public static void perform(EventBus bus, String url, HandshakeClient hc,
-                                      Handler<HandshakeServer> onComplete) {
+                                Handler<AsyncResult<HandshakeServer>> onComplete) {
         perform(bus, URLInfo.parse(url), hc, onComplete);
     }
 
     public static void perform(EventBus bus, URLInfo url, HandshakeClient hc,
-                                      Handler<HandshakeServer> onComplete) {
+                                Handler<AsyncResult<HandshakeServer>> onComplete) {
         perform(bus, url, hc, true, onComplete);
     }
 
@@ -51,7 +53,7 @@ public class HandshakeServer {
                                 @NonNull final URLInfo url,
                                 @NonNull final HandshakeClient hc,
                                 final boolean verifySsl,
-                                @NonNull final Handler<HandshakeServer> onComplete) {
+                                @NonNull final Handler<AsyncResult<HandshakeServer>> onComplete) {
         HttpClient client = Utils.VERTX.createHttpClient();
         client.setHost(url.host).setPort(url.port);
         if (url.secure) {
@@ -60,6 +62,8 @@ public class HandshakeServer {
         }
 
         final String fullPath = url.path + "?dsId=" + hc.getDsId();
+        final DefaultFutureResult<HandshakeServer> res = new DefaultFutureResult<>();
+        res.setHandler(onComplete);
         HttpClientRequest req = client.post(fullPath,
                                             new Handler<HttpClientResponse>() {
                     @Override
@@ -79,8 +83,9 @@ public class HandshakeServer {
                                 String saltS = obj.getString("saltS");
                                 Integer updateInterval = obj.getInteger("updateInterval");
 
-                                onComplete.handle(new HandshakeServer(dsId, publicKey, wsUri, httpUri,
-                                        sharedSecret, salt, saltS, updateInterval));
+                                val server = new HandshakeServer(dsId, publicKey, wsUri, httpUri,
+                                        sharedSecret, salt, saltS, updateInterval);
+                                res.setResult(server);
                             }
                         });
                     }
@@ -89,6 +94,7 @@ public class HandshakeServer {
         req.exceptionHandler(new Handler<Throwable>() {
             @Override
             public void handle(Throwable event) {
+                res.setFailure(event);
                 bus.post(new AsyncExceptionEvent(event));
                 onComplete.handle(null);
             }
