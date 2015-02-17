@@ -37,8 +37,8 @@ public class ListMethod extends Method {
 
     private JsonArray getResponse() {
         JsonArray array = new JsonArray();
-        writeParentData(array, parent.getConfigurations());
-        writeParentData(array, parent.getAttributes());
+        writeParentData(array, "$", parent.getConfigurations());
+        writeParentData(array, "@", parent.getAttributes());
 
         Map<String, Node> children = parent.getChildren();
         if (children != null) {
@@ -49,11 +49,12 @@ public class ListMethod extends Method {
         return array;
     }
 
-    private void writeParentData(JsonArray out, Map<String, Value> data) {
+    private void writeParentData(JsonArray out, String prefix,
+                                    Map<String, Value> data) {
         if (data != null) {
             for (Map.Entry<String, Value> entry : data.entrySet()) {
                 JsonArray valArray = new JsonArray();
-                valArray.addString(entry.getKey());
+                valArray.addString(prefix + entry.getKey());
 
                 Value value = entry.getValue();
                 ValueUtils.toJson(valArray, value);
