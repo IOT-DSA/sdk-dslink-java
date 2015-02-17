@@ -6,9 +6,10 @@ import org.bouncycastle.jcajce.provider.digest.SHA256;
 import org.dsa.iot.core.URLInfo;
 import org.dsa.iot.dslink.connection.connector.client.WebSocketConnector;
 import org.dsa.iot.dslink.connection.handshake.HandshakePair;
-import org.dsa.iot.dslink.util.Writable;
+import org.dsa.iot.dslink.util.Client;
+import org.dsa.iot.dslink.util.RequestTracker;
+import org.dsa.iot.dslink.util.ResponseTracker;
 import org.vertx.java.core.buffer.Buffer;
-import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.json.impl.Base64;
 
 import java.io.UnsupportedEncodingException;
@@ -19,16 +20,13 @@ import java.io.UnsupportedEncodingException;
  */
 @Getter
 @RequiredArgsConstructor
-public abstract class ClientConnector implements Writable {
+public abstract class ClientConnector implements Client {
 
-    @NonNull
-    private final EventBus bus;
-
-    @NonNull
-    private final URLInfo dataEndpoint;
-
-    @NonNull
-    private final HandshakePair pair;
+    @NonNull private final EventBus bus;
+    @NonNull private final URLInfo dataEndpoint;
+    @NonNull private final HandshakePair pair;
+    @NonNull private final RequestTracker requestTracker;
+    @NonNull private final ResponseTracker responseTracker;
 
     /**
      * Connects to the server based on the implementation.
@@ -104,7 +102,11 @@ public abstract class ClientConnector implements Writable {
             case HTTP:
                 throw new UnsupportedOperationException("HTTP not implemented yet");
             case WS:
-                return new WebSocketConnector(bus, URLInfo.parse(url), pair);
+                return new WebSocketConnector(bus,
+                                                URLInfo.parse(url),
+                                                pair,
+                                                new RequestTracker(),
+                                                new ResponseTracker());
             default:
                 throw new RuntimeException("Unknown type: " + type);
         }

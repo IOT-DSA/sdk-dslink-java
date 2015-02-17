@@ -2,7 +2,6 @@ package org.dsa.iot.dslink;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
-import lombok.Getter;
 import lombok.NonNull;
 import lombok.val;
 import org.dsa.iot.dslink.events.ChildrenUpdateEvent;
@@ -19,19 +18,10 @@ import static org.dsa.iot.dslink.node.NodeManager.NodeStringTuple;
 /**
  * @author Samuel Grenier
  */
-@Getter
 public class Responder extends Linkable {
 
-    private ResponseTracker tracker;
-
-    public Responder(EventBus bus) {
-        this(bus, new ResponseTracker());
-    }
-
-    public Responder(@NonNull EventBus bus,
-                     @NonNull ResponseTracker tracker) {
+    public Responder(@NonNull EventBus bus) {
         super(bus);
-        this.tracker = tracker;
     }
 
     /**
@@ -39,7 +29,7 @@ public class Responder extends Linkable {
      */
     @Override
     @SuppressWarnings("unchecked")
-    public synchronized void parse(Writable client, JsonArray requests) {
+    public synchronized void parse(Client client, JsonArray requests) {
         val it = requests.iterator();
         val responses = new JsonArray();
         for (JsonObject o; it.hasNext();) {
@@ -57,7 +47,7 @@ public class Responder extends Linkable {
                     node = getManager().getNode(path);
                 }
 
-                val method = getMethod(sMethod, rid.intValue(), node);
+                val method = getMethod(client, sMethod, rid.intValue(), node);
                 val updates = method.invoke(o);
                 val state = method.getState();
 
@@ -70,7 +60,7 @@ public class Responder extends Linkable {
                 }
                 if (state == StreamState.OPEN
                         || state == StreamState.INITIALIZED) {
-                    tracker.track(rid.intValue());
+                    client.getResponseTracker().track(rid.intValue());
                 }
                 if (updates != null && updates.size() > 0) {
                     resp.putElement("updates", updates);
@@ -87,9 +77,9 @@ public class Responder extends Linkable {
         client.write(top);
     }
 
-    public void closeStream(int rid) {
-        if (tracker.isTracking(rid)) {
-            tracker.untrack(rid);
+    public void closeStream(Client client, int rid) {
+        if (client.getResponseTracker().isTracking(rid)) {
+            client.getResponseTracker().untrack(rid);
 
             val array = new JsonArray();
             {
@@ -101,15 +91,17 @@ public class Responder extends Linkable {
 
             val resp = new JsonObject();
             resp.putArray("responses", array);
-            getClientConnector().write(resp);
+            client.write(resp);
         }
     }
 
-    protected Method getMethod(@NonNull String name, int rid,
-                               NodeStringTuple tuple) {
+    protected Method getMethod(@NonNull Client client,
+                                @NonNull String name,
+                                int rid,
+                                NodeStringTuple tuple) {
         switch (name) {
             case "list":
-                return new ListMethod(this, tuple.getNode(), rid);
+                return new ListMethod(this, client, tuple.getNode(), rid);
             case "set":
                 return new SetMethod(tuple.getNode(), tuple.getString());
             case "remove":
@@ -121,7 +113,7 @@ public class Responder extends Linkable {
             case "unsubscribe":
                 return new UnsubscribeMethod(getManager());
             case "close":
-                return new CloseMethod(getBus(), tracker, rid);
+                return new CloseMethod(getBus(), client.getResponseTracker(), rid);
             default:
                 throw new RuntimeException("Unknown method");
         }
@@ -143,6 +135,7 @@ public class Responder extends Linkable {
 
     @Subscribe
     protected void childrenUpdate(ChildrenUpdateEvent event) {
+        /*
         if (tracker.isTracking(event.getRid())) {
             val response = new JsonObject();
             response.putNumber("rid", event.getRid());
@@ -152,7 +145,8 @@ public class Responder extends Linkable {
             updates.addElement(ListMethod.getChildUpdate(event.getParent(), event.isRemoved()));
             response.putArray("updates", updates);
 
-            getClientConnector().write(response);
+            event.getClient().write(response);
         }
+        */
     }
 }

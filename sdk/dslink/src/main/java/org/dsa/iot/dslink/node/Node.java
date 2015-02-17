@@ -61,14 +61,7 @@ public class Node {
     @Getter
     @Setter
     private boolean subscribed;
-
-    /**
-     * Request ID to send subscription updates on, or -1 for none
-     */
-    @Getter
-    @Setter
-    private int childrenRid = -1;
-
+    
     /**
      * @param bus Event bus to publish events to
      * @param parent The parent of this node, or null if a root node
@@ -234,16 +227,7 @@ public class Node {
 
     private synchronized void notifyChildrenHandlers(@NonNull Node n,
                                                      boolean removed) {
-        if (childrenRid != -1) {
-            bus.post(new ChildrenUpdateEvent(n, removed, childrenRid));
-        }
-    }
-
-    @Subscribe
-    public void closedStream(ClosedStreamEvent event) {
-        if (event.getRid() == childrenRid) {
-            childrenRid = -1;
-        }
+        bus.post(new ChildrenUpdateEvent(n, removed));
     }
 
     protected boolean isRootNode() {

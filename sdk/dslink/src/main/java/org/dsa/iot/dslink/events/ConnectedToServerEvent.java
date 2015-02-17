@@ -3,7 +3,7 @@ package org.dsa.iot.dslink.events;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
-import org.dsa.iot.dslink.util.Writable;
+import org.dsa.iot.dslink.util.Client;
 
 /**
  * Posted when the DSLink connects to a web server.
@@ -14,5 +14,5 @@ import org.dsa.iot.dslink.util.Writable;
 public class ConnectedToServerEvent extends Event {
     
     @NonNull
-    private final Writable client;
+    private final Client client;
 }

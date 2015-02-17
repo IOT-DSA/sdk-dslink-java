@@ -7,9 +7,8 @@ import org.dsa.iot.dslink.events.ResponseEvent;
 import org.dsa.iot.dslink.requests.*;
 import org.dsa.iot.dslink.responses.*;
 import org.dsa.iot.dslink.util.Linkable;
-import org.dsa.iot.dslink.util.RequestTracker;
 import org.dsa.iot.dslink.util.StreamState;
-import org.dsa.iot.dslink.util.Writable;
+import org.dsa.iot.dslink.util.Client;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
@@ -18,23 +17,16 @@ import org.vertx.java.core.json.JsonObject;
  */
 public class Requester extends Linkable {
 
-    private RequestTracker tracker;
-
     public Requester(EventBus bus) {
-        this(bus, new RequestTracker());
-    }
-
-    public Requester(EventBus bus, RequestTracker tracker) {
         super(bus);
-        this.tracker = tracker;
     }
 
-    public void sendRequest(@NonNull Writable client,
+    public void sendRequest(@NonNull Client client,
                             @NonNull Request req) {
         ensureConnected();
 
         val obj = new JsonObject();
-        obj.putNumber("rid", tracker.track(req));
+        obj.putNumber("rid", client.getRequestTracker().track(req));
         obj.putString("method", req.getName());
         req.addJsonValues(obj);
 
@@ -48,21 +40,21 @@ public class Requester extends Linkable {
 
     @Override
     @SuppressWarnings("unchecked")
-    public void parse(Writable client, JsonArray responses) {
+    public void parse(Client client, JsonArray responses) {
         try {
             val it = responses.iterator();
             for (JsonObject o; it.hasNext();) {
                 o = (JsonObject) it.next();
 
                 int rid = o.getNumber("rid").intValue();
-                Request request = tracker.getRequest(rid);
+                Request request = client.getRequestTracker().getRequest(rid);
                 String name = request.getName();
                 Response<?> resp;
                 if (rid != 0) {
                     // Response
                     String state = o.getString("state");
                     if (StreamState.CLOSED.jsonName.equals(state)) {
-                        tracker.untrack(rid);
+                        client.getRequestTracker().untrack(rid);
                     }
 
                     switch (name) {
@@ -104,10 +96,5 @@ public class Requester extends Linkable {
             // Error handler data
             e.printStackTrace(System.err);
         }
-    }
-
-    public void setRequestTracker(RequestTracker tracker) {
-        checkConnected();
-        this.tracker = tracker;
     }
 }

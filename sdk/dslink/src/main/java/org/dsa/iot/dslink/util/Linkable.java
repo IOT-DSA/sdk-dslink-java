@@ -1,7 +1,6 @@
 package org.dsa.iot.dslink.util;
 
 import com.google.common.eventbus.EventBus;
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.val;
@@ -18,10 +17,7 @@ public abstract class Linkable {
     @Getter
     private final EventBus bus;
 
-    @Getter(AccessLevel.PROTECTED)
     private ClientConnector clientConnector;
-
-    @Getter(AccessLevel.PROTECTED)
     private ServerConnector serverConnector;
 
     @Getter
@@ -31,7 +27,7 @@ public abstract class Linkable {
         this.bus = bus;
     }
 
-    public abstract void parse(Writable client, JsonArray array);
+    public abstract void parse(Client client, JsonArray array);
 
     /**
      * A link must hold onto this in order to check for connectivity

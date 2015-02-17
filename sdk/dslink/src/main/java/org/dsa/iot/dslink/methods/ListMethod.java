@@ -7,6 +7,7 @@ import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.util.StreamState;
 import org.dsa.iot.dslink.util.ValueUtils;
+import org.dsa.iot.dslink.util.Client;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
@@ -19,18 +20,13 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ListMethod extends Method {
 
-    @NonNull
-    private final Responder responder;
-
-    @NonNull
-    private final Node parent;
-
+    @NonNull private final Responder responder;
+    @NonNull private final Client client;
+    @NonNull private final Node parent;
     private final int rid;
 
     @Override
     public JsonArray invoke(JsonObject request) {
-        responder.closeStream(parent.getChildrenRid());
-        parent.setChildrenRid(rid);
         setState(StreamState.OPEN);
         return getResponse();
     }

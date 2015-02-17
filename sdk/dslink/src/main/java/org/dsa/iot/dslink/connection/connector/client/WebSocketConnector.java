@@ -8,6 +8,8 @@ import org.dsa.iot.dslink.connection.handshake.HandshakePair;
 import org.dsa.iot.dslink.events.AsyncExceptionEvent;
 import org.dsa.iot.dslink.events.ConnectedToServerEvent;
 import org.dsa.iot.dslink.events.IncomingDataEvent;
+import org.dsa.iot.dslink.util.RequestTracker;
+import org.dsa.iot.dslink.util.ResponseTracker;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.http.HttpClient;
@@ -25,8 +27,12 @@ public class WebSocketConnector extends ClientConnector {
     private boolean connecting = false;
     private boolean connected = false;
 
-    public WebSocketConnector(EventBus bus, URLInfo info, HandshakePair pair) {
-        super(bus, info, pair);
+    public WebSocketConnector(EventBus bus,
+                              URLInfo info,
+                              HandshakePair pair,
+                              RequestTracker reqTracker,
+                              ResponseTracker respTracker) {
+        super(bus, info, pair, reqTracker, respTracker);
     }
 
     @Override

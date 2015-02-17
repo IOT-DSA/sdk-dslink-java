@@ -13,7 +13,9 @@ import org.dsa.iot.dslink.connection.handshake.HandshakeClient;
 import org.dsa.iot.dslink.connection.handshake.HandshakeServer;
 import org.dsa.iot.dslink.events.AsyncExceptionEvent;
 import org.dsa.iot.dslink.events.IncomingDataEvent;
-import org.dsa.iot.dslink.util.Client;
+import org.dsa.iot.dslink.util.RequestTracker;
+import org.dsa.iot.dslink.util.ResponseTracker;
+import org.dsa.iot.dslink.util.ServerClient;
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.MultiMap;
@@ -35,7 +37,7 @@ import java.util.concurrent.CountDownLatch;
  */
 public class WebServerConnector extends ServerConnector {
 
-    private final Map<String, Client> clients = new HashMap<>();
+    private final Map<String, ServerClient> clients = new HashMap<>();
     private final HttpServer server = Utils.VERTX.createHttpServer();
 
     public WebServerConnector(EventBus bus, HandshakeClient client) {
@@ -70,7 +72,7 @@ public class WebServerConnector extends ServerConnector {
         return dsId != null && dsId.length() >= 43;
     }
 
-    private synchronized void addClient(Client c) {
+    private synchronized void addClient(ServerClient c) {
         clients.put(c.getDsId(), c);
     }
 
@@ -78,7 +80,7 @@ public class WebServerConnector extends ServerConnector {
         clients.remove(name);
     }
 
-    private synchronized Client getClient(String name) {
+    private synchronized ServerClient getClient(String name) {
         return clients.get(name);
     }
 
@@ -130,13 +132,15 @@ public class WebServerConnector extends ServerConnector {
                     JsonObject clientJson = new JsonObject(buf.toString("UTF-8"));
 
                     String clientDsId = req.params().get("dsId");
-                    Client client = getClient(clientDsId);
+                    ServerClient client = getClient(clientDsId);
                     if (!validID(clientDsId) || (client != null && client.isSetup())) {
                         removeClient(clientDsId);
                         resp.setStatusCode(401); // Unauthorized
                         resp.end();
                     } else {
-                        Client c = new Client(clientDsId);
+                        ServerClient c = new ServerClient(clientDsId,
+                                                            new RequestTracker(),
+                                                            new ResponseTracker());
                         JsonObject obj = new JsonObject();
                         obj.putString("dsId", getClient().getDsId());
                         obj.putString("publicKey", getClient().getPublicKey());
@@ -192,7 +196,7 @@ public class WebServerConnector extends ServerConnector {
                     }
                 });
 
-                final Client client = getClient(dsId);
+                final ServerClient client = getClient(dsId);
                 if (client == null || client.isSetup()) {
                     event.reject();
                 } else {
