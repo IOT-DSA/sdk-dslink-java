@@ -21,16 +21,6 @@ public class Broker {
     @NonNull
     private final DSLink dslink;
 
-    public static void main(String[] args) {
-        val bus = new EventBus();
-        val hc = HandshakeClient.generate("broker", true, true);
-        val link = DSLink.generate(bus, new WebServerConnector(hc));
-
-        Broker broker = new Broker(bus, link);
-        broker.listen();
-        link.sleep();
-    }
-
     public Broker(@NonNull EventBus master,
                   @NonNull DSLink link) {
         this.bus = master;

@@ -6,13 +6,7 @@ import lombok.val;
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.connection.ConnectionType;
 import org.dsa.iot.dslink.events.ConnectedToServerEvent;
-import org.dsa.iot.dslink.events.ResponseEvent;
-import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.value.Value;
-import org.dsa.iot.dslink.requests.ListRequest;
-import org.dsa.iot.dslink.responses.ListResponse;
-
-import java.util.Map;
 
 /**
  * @author Samuel Grenier
