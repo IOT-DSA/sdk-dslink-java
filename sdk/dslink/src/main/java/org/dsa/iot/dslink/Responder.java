@@ -75,7 +75,7 @@ public class Responder extends Linkable {
                     tracker.track(rid.intValue());
                 }
                 if (updates != null && updates.size() > 0) {
-                    resp.putElement("update", updates);
+                    resp.putElement("updates", updates);
                 }
             } catch (Exception e) {
                 handleInvocationError(resp, e);
@@ -152,7 +152,7 @@ public class Responder extends Linkable {
 
             val updates = new JsonArray();
             updates.addElement(ListMethod.getChildUpdate(event.getParent(), event.isRemoved()));
-            response.putArray("update", updates);
+            response.putArray("updates", updates);
 
             getClientConnector().write(response);
         }
