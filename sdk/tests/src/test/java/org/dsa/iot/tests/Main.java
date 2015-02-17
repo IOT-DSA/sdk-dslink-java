@@ -27,7 +27,7 @@ public class Main {
     public static void setup() {
         val bus = new EventBus();
         val client = HandshakeClient.generate("broker", "_", true, true);
-        val link = DSLink.generate(bus, new WebServerConnector(client));
+        val link = DSLink.generate(bus, new WebServerConnector(bus, client));
         broker = new Broker(bus, link);
         port = getRandomPort();
         broker.listen(port);
