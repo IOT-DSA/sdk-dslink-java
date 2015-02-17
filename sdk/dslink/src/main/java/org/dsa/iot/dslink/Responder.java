@@ -152,7 +152,7 @@ public class Responder extends Linkable {
 
             val updates = new JsonArray();
             updates.addElement(ListMethod.getChildUpdate(event.getParent(), event.isRemoved()));
-            response.putArray("update", updates);
+            response.putArray("updates", updates);
 
             getClientConnector().write(response);
         }
