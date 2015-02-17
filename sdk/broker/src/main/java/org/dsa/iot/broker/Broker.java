@@ -6,9 +6,8 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.val;
 import org.dsa.iot.dslink.DSLink;
-import org.dsa.iot.dslink.connection.connector.server.WebServerConnector;
-import org.dsa.iot.dslink.connection.handshake.HandshakeClient;
 import org.dsa.iot.dslink.events.AsyncExceptionEvent;
+import org.dsa.iot.dslink.node.Node;
 
 /**
  * @author Samuel Grenier
@@ -21,11 +20,20 @@ public class Broker {
     @NonNull
     private final DSLink dslink;
 
+    private final Node connections;
+    private final Node defs;
+    private final Node quarantine;
+
     public Broker(@NonNull EventBus master,
                   @NonNull DSLink link) {
         this.bus = master;
         this.dslink = link;
         bus.register(this);
+
+        val manager = dslink.getNodeManager();
+        connections = manager.createRootNode("conns");
+        defs = manager.createRootNode("def");
+        quarantine = manager.createRootNode("quarantine");
     }
 
     public void listen() {

@@ -6,8 +6,8 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.val;
 import org.dsa.iot.dslink.connection.ClientConnector;
+import org.dsa.iot.dslink.connection.ServerConnector;
 import org.dsa.iot.dslink.node.NodeManager;
-import org.dsa.iot.dslink.node.SubscriptionManager;
 import org.vertx.java.core.json.JsonArray;
 
 /**
@@ -19,7 +19,10 @@ public abstract class Linkable {
     private final EventBus bus;
 
     @Getter(AccessLevel.PROTECTED)
-    private ClientConnector connector;
+    private ClientConnector clientConnector;
+
+    @Getter(AccessLevel.PROTECTED)
+    private ServerConnector serverConnector;
 
     @Getter
     private NodeManager manager;
@@ -34,34 +37,33 @@ public abstract class Linkable {
      * A link must hold onto this in order to check for connectivity
      * and write to the server. Note that the node manager will be overwritten
      * when setting the connector.
-     * @param connector Connector to be set.
+     * @param cc Client connector to be set.
+     * @param sc Server connector to be set.
      */
-    public void setConnector(ClientConnector connector) {
-        val man = new SubscriptionManager(connector);
-        setConnector(connector, new NodeManager(bus, man));
-    }
-
-    /**
-     * A link must hold onto this in order to check for connectivity
-     * and write to the server. Note that the node manager will be overwritten
-     * when setting the connector.
-     * @param connector Connector to be set.
-     */
-    public void setConnector(ClientConnector connector, NodeManager manager) {
+    public void setConnector(ClientConnector cc,
+                             ServerConnector sc,
+                             NodeManager manager) {
         checkConnected();
-        this.connector = connector;
+        this.clientConnector = cc;
+        this.serverConnector = sc;
         this.manager = manager;
     }
 
     protected void checkConnected() {
-        if (connector != null && connector.isConnected()) {
-            throw new IllegalStateException("Already connected");
+        val err = "Already connected";
+        if (clientConnector != null && clientConnector.isConnected()) {
+            throw new IllegalStateException(err);
+        } else if (serverConnector != null && serverConnector.isListening()) {
+            throw new IllegalStateException(err);
         }
     }
 
     protected void ensureConnected() {
-        if (connector == null || !connector.isConnected()) {
-            throw new IllegalStateException("Not connected");
+        val err = "Not connected";
+        if (clientConnector != null && !clientConnector.isConnected()) {
+            throw new IllegalStateException(err);
+        } else if (serverConnector != null && !serverConnector.isListening()) {
+            throw new IllegalStateException(err);
         }
     }
 }

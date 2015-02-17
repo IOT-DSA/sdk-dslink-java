@@ -44,13 +44,16 @@ public class DSLink {
         this.requester = req;
         this.responder = resp;
         bus.register(this);
-        if (clientConn != null) {
-            NodeManager common = new NodeManager(bus, new SubscriptionManager(clientConn));
-            if (requester != null)
-                requester.setConnector(clientConn, common);
-            if (responder != null)
-                responder.setConnector(clientConn, common);
-        }
+
+        SubscriptionManager subManager = null;
+        if (clientConn != null)
+            subManager = new SubscriptionManager(clientConn);
+        NodeManager common = new NodeManager(bus, subManager);
+        if (requester != null)
+            requester.setConnector(clientConn, serverConn, common);
+        if (responder != null)
+            responder.setConnector(clientConn, serverConn, common);
+
     }
 
     public boolean isListening() {

@@ -86,7 +86,7 @@ public class Responder extends Linkable {
 
         val top = new JsonObject();
         top.putElement("responses", responses);
-        getConnector().write(top);
+        getClientConnector().write(top);
     }
 
     public void closeStream(int rid) {
@@ -103,7 +103,7 @@ public class Responder extends Linkable {
 
             val resp = new JsonObject();
             resp.putArray("responses", array);
-            getConnector().write(resp);
+            getClientConnector().write(resp);
         }
     }
 
@@ -154,7 +154,7 @@ public class Responder extends Linkable {
             updates.addElement(ListMethod.getChildUpdate(event.getParent(), event.isRemoved()));
             response.putArray("update", updates);
 
-            getConnector().write(response);
+            getClientConnector().write(response);
         }
     }
 }

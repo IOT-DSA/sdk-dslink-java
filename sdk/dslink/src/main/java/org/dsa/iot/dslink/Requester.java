@@ -41,7 +41,7 @@ public class Requester extends Linkable {
 
         val top = new JsonObject();
         top.putArray("requests", requests);
-        getConnector().write(top);
+        getClientConnector().write(top);
     }
 
     @Override
