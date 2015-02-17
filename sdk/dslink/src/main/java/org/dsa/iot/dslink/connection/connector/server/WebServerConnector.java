@@ -1,8 +1,7 @@
 package org.dsa.iot.dslink.connection.connector.server;
 
-import lombok.AllArgsConstructor;
-import lombok.NonNull;
-import lombok.SneakyThrows;
+import com.google.common.eventbus.EventBus;
+import lombok.*;
 import org.bouncycastle.jcajce.provider.digest.SHA256;
 import org.bouncycastle.jce.spec.ECParameterSpec;
 import org.bouncycastle.jce.spec.ECPublicKeySpec;
@@ -12,6 +11,7 @@ import org.dsa.iot.core.Utils;
 import org.dsa.iot.dslink.connection.ServerConnector;
 import org.dsa.iot.dslink.connection.handshake.HandshakeClient;
 import org.dsa.iot.dslink.connection.handshake.HandshakeServer;
+import org.dsa.iot.dslink.events.AsyncExceptionEvent;
 import org.dsa.iot.dslink.util.Client;
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.Handler;
@@ -37,8 +37,8 @@ public class WebServerConnector extends ServerConnector {
     private final Map<String, Client> clients = new HashMap<>();
     private final HttpServer server = Utils.VERTX.createHttpServer();
 
-    public WebServerConnector(HandshakeClient client) {
-        super(client);
+    public WebServerConnector(EventBus bus, HandshakeClient client) {
+        super(bus, client);
     }
 
     @Override
@@ -48,12 +48,15 @@ public class WebServerConnector extends ServerConnector {
         server.websocketHandler(new WebSocketHandler());
 
         CountDownLatch latch = new CountDownLatch(1);
+        val handler = new AsyncHandler(latch);
         if (bindAddr != null)
-            server.listen(port, bindAddr, new AsyncHandler(latch));
+            server.listen(port, bindAddr, handler);
         else
-            server.listen(port, new AsyncHandler(latch));
+            server.listen(port, handler);
         latch.await();
-        setListening(true);
+        if (handler.getEvent().succeeded()) {
+            setListening(true);
+        }
     }
 
     @Override
@@ -78,14 +81,21 @@ public class WebServerConnector extends ServerConnector {
         return clients.get(name);
     }
 
-    @AllArgsConstructor
+    @RequiredArgsConstructor
     private class AsyncHandler implements Handler<AsyncResult<HttpServer>> {
 
         @NonNull
         private final CountDownLatch latch;
 
+        @Getter
+        private AsyncResult<HttpServer> event;
+
         @Override
         public void handle(AsyncResult<HttpServer> event) {
+            this.event = event;
+            if (event.failed()) {
+                getBus().post(new AsyncExceptionEvent(event.cause()));
+            }
             latch.countDown();
         }
     }

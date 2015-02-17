@@ -1,5 +1,6 @@
 package org.dsa.iot.dslink.connection;
 
+import com.google.common.eventbus.EventBus;
 import lombok.*;
 import org.dsa.iot.dslink.connection.handshake.HandshakeClient;
 
@@ -7,14 +8,16 @@ import org.dsa.iot.dslink.connection.handshake.HandshakeClient;
  * Used for handling servers.
  * @author Samuel Grenier
  */
+@Getter
 @RequiredArgsConstructor
 public abstract class ServerConnector {
 
-    @Getter
+    @NonNull
+    private final EventBus bus;
+
     @NonNull
     private final HandshakeClient client;
 
-    @Getter
     @Setter(AccessLevel.PROTECTED)
     private boolean listening = false;
 
