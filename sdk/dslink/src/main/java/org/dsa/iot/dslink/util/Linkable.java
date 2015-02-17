@@ -31,7 +31,7 @@ public abstract class Linkable {
         this.bus = bus;
     }
 
-    public abstract void parse(JsonArray array);
+    public abstract void parse(Writable client, JsonArray array);
 
     /**
      * A link must hold onto this in order to check for connectivity

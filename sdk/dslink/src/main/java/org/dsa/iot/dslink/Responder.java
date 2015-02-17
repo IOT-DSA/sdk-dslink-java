@@ -7,9 +7,7 @@ import lombok.NonNull;
 import lombok.val;
 import org.dsa.iot.dslink.events.ChildrenUpdateEvent;
 import org.dsa.iot.dslink.methods.*;
-import org.dsa.iot.dslink.util.Linkable;
-import org.dsa.iot.dslink.util.ResponseTracker;
-import org.dsa.iot.dslink.util.StreamState;
+import org.dsa.iot.dslink.util.*;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
@@ -41,7 +39,7 @@ public class Responder extends Linkable {
      */
     @Override
     @SuppressWarnings("unchecked")
-    public synchronized void parse(JsonArray requests) {
+    public synchronized void parse(Writable client, JsonArray requests) {
         val it = requests.iterator();
         val responses = new JsonArray();
         for (JsonObject o; it.hasNext();) {
@@ -86,7 +84,7 @@ public class Responder extends Linkable {
 
         val top = new JsonObject();
         top.putElement("responses", responses);
-        getClientConnector().write(top);
+        client.write(top);
     }
 
     public void closeStream(int rid) {

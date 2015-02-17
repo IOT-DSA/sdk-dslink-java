@@ -12,6 +12,7 @@ import org.dsa.iot.dslink.connection.ServerConnector;
 import org.dsa.iot.dslink.connection.handshake.HandshakeClient;
 import org.dsa.iot.dslink.connection.handshake.HandshakeServer;
 import org.dsa.iot.dslink.events.AsyncExceptionEvent;
+import org.dsa.iot.dslink.events.IncomingDataEvent;
 import org.dsa.iot.dslink.util.Client;
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.Handler;
@@ -195,6 +196,7 @@ public class WebServerConnector extends ServerConnector {
                 if (client == null || client.isSetup()) {
                     event.reject();
                 } else {
+                    client.setWebSocket(event);
                     byte[] originalHash = UrlBase64.decode(Utils.addPadding(auth, true));
 
                     Buffer buffer = new Buffer(client.getSalt().length() + client.getSharedSecret().length);
@@ -211,7 +213,8 @@ public class WebServerConnector extends ServerConnector {
                         event.dataHandler(new Handler<Buffer>() {
                             @Override
                             public void handle(Buffer event) {
-                                client.parse(new JsonObject(event.toString("UTF-8")));
+                                val data = new JsonObject(event.toString("UTF-8"));
+                                getBus().post(new IncomingDataEvent(client, data));
                             }
                         });
                     }

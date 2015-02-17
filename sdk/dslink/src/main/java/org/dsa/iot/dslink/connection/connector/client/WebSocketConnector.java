@@ -55,12 +55,12 @@ public class WebSocketConnector extends ClientConnector {
                 connecting = false;
                 socket = event;
 
-                getBus().post(new ConnectedToServerEvent());
+                getBus().post(new ConnectedToServerEvent(WebSocketConnector.this));
                 event.dataHandler(new Handler<Buffer>() {
                     @Override
                     public void handle(Buffer event) {
                         JsonObject data = new JsonObject(event.toString());
-                        getBus().post(new IncomingDataEvent(data));
+                        getBus().post(new IncomingDataEvent(WebSocketConnector.this, data));
                     }
                 });
 

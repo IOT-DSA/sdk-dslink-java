@@ -6,6 +6,7 @@ import org.bouncycastle.jcajce.provider.digest.SHA256;
 import org.dsa.iot.core.URLInfo;
 import org.dsa.iot.dslink.connection.connector.client.WebSocketConnector;
 import org.dsa.iot.dslink.connection.handshake.HandshakePair;
+import org.dsa.iot.dslink.util.Writable;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.json.impl.Base64;
@@ -18,7 +19,7 @@ import java.io.UnsupportedEncodingException;
  */
 @Getter
 @RequiredArgsConstructor
-public abstract class ClientConnector {
+public abstract class ClientConnector implements Writable {
 
     @NonNull
     private final EventBus bus;
@@ -40,12 +41,6 @@ public abstract class ClientConnector {
      * Forcefully disconnects the client from the server.
      */
     public abstract void disconnect();
-
-    /**
-     * Writes the data to the server.
-     * @param obj Object to be encoded
-     */
-    public abstract void write(JsonObject obj);
 
     public abstract boolean isConnecting();
 

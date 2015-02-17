@@ -3,6 +3,7 @@ package org.dsa.iot.dslink.events;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.dsa.iot.dslink.responses.Response;
+import org.dsa.iot.dslink.util.Writable;
 
 /**
  * Posted from a completed response
@@ -12,9 +13,8 @@ import org.dsa.iot.dslink.responses.Response;
 @AllArgsConstructor
 public class ResponseEvent extends Event {
 
+    private final Writable client;
     private final int rid;
-
     private final String name;
-
     private final Response<?> response;
 }

@@ -5,6 +5,7 @@ import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPrivateKey;
 import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 import org.bouncycastle.jcajce.provider.asymmetric.ec.KeyPairGeneratorSpi;
 import org.dsa.iot.core.ECKeyPair;
+import org.vertx.java.core.http.WebSocketBase;
 import org.vertx.java.core.json.JsonObject;
 
 import java.nio.charset.Charset;
@@ -19,23 +20,21 @@ import java.security.spec.ECGenParameterSpec;
  */
 @Getter
 @RequiredArgsConstructor
-public class Client {
+public class Client implements Writable {
 
-    @NonNull
-    private final String dsId;
+    @NonNull private final String dsId;
 
+    @Setter private WebSocketBase webSocket = null;
+    @Setter private boolean setup = false;
+    
     private final ECKeyPair tempKey = generateTempKey();
-
     private final String salt = generateSalt();
     private String saltS = generateSalt();
-
-    @Setter
-    private boolean setup = false;
-
     private byte[] sharedSecret = null;
 
-    public void parse(JsonObject obj) {
-
+    @Override
+    public void write(JsonObject obj) {
+        webSocket.writeTextFrame(obj.encode());
     }
 
     public void setSharedSecret(@NonNull byte[] bytes) {

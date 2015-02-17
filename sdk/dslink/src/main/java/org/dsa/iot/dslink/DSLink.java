@@ -119,18 +119,22 @@ public class DSLink {
 
     @Subscribe
     public void jsonHandler(IncomingDataEvent event) {
-        val data = event.getData();
-        if (responder != null) {
-            val array = data.getArray("requests");
-            if (array != null) {
-                responder.parse(array);
+        try {
+            val data = event.getData();
+            if (responder != null) {
+                val array = data.getArray("requests");
+                if (array != null) {
+                    responder.parse(event.getClient(), array);
+                }
             }
-        }
-        if (requester != null) {
-            val array = data.getArray("responses");
-            if (array != null) {
-                requester.parse(array);
+            if (requester != null) {
+                val array = data.getArray("responses");
+                if (array != null) {
+                    requester.parse(event.getClient(), array);
+                }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

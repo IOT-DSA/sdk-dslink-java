@@ -42,7 +42,7 @@ public class Main {
         System.out.println("--------------");
         System.out.println("Connected!");
         ListRequest request = new ListRequest("/");
-        link.getRequester().sendRequest(request);
+        link.getRequester().sendRequest(event.getClient(), request);
         System.out.println("Sent data");
     }
 
@@ -69,7 +69,7 @@ public class Main {
 
                 // List children
                 val req = new ListRequest(child.getPath());
-                link.getRequester().sendRequest(req);
+                link.getRequester().sendRequest(event.getClient(), req);
             }
         }
     }

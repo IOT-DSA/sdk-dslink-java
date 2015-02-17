@@ -9,6 +9,7 @@ import org.dsa.iot.dslink.responses.*;
 import org.dsa.iot.dslink.util.Linkable;
 import org.dsa.iot.dslink.util.RequestTracker;
 import org.dsa.iot.dslink.util.StreamState;
+import org.dsa.iot.dslink.util.Writable;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
@@ -28,7 +29,8 @@ public class Requester extends Linkable {
         this.tracker = tracker;
     }
 
-    public void sendRequest(@NonNull Request req) {
+    public void sendRequest(@NonNull Writable client,
+                            @NonNull Request req) {
         ensureConnected();
 
         val obj = new JsonObject();
@@ -41,12 +43,12 @@ public class Requester extends Linkable {
 
         val top = new JsonObject();
         top.putArray("requests", requests);
-        getClientConnector().write(top);
+        client.write(top);
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public void parse(JsonArray responses) {
+    public void parse(Writable client, JsonArray responses) {
         try {
             val it = responses.iterator();
             for (JsonObject o; it.hasNext();) {
@@ -95,7 +97,7 @@ public class Requester extends Linkable {
                     resp = new SubscriptionResponse(req, getManager());
                     resp.populate(o.getArray("updates"));
                 }
-                val ev = new ResponseEvent(rid, name, resp);
+                val ev = new ResponseEvent(client, rid, name, resp);
                 getBus().post(ev);
             }
         } catch (Exception e) {
