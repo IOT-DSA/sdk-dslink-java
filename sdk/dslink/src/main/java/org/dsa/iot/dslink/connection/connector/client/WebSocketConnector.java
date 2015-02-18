@@ -84,10 +84,12 @@ public class WebSocketConnector extends ClientConnector {
     }
 
     @Override
-    public synchronized void write(JsonObject obj) {
+    public synchronized boolean write(JsonObject obj) {
         if (socket != null) {
             socket.writeTextFrame(obj.encode());
+            return true;
         }
+        return false;
     }
 
     @Override

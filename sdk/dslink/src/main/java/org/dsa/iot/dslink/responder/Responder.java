@@ -4,8 +4,11 @@ import com.google.common.eventbus.EventBus;
 import lombok.NonNull;
 import lombok.val;
 import org.dsa.iot.dslink.connection.Client;
+import org.dsa.iot.dslink.events.RequestEvent;
 import org.dsa.iot.dslink.responder.methods.*;
-import org.dsa.iot.dslink.util.*;
+import org.dsa.iot.dslink.util.Linkable;
+import org.dsa.iot.dslink.util.StreamState;
+import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
@@ -28,52 +31,59 @@ public class Responder extends Linkable {
      */
     @Override
     @SuppressWarnings("unchecked")
-    public synchronized void parse(Client client, JsonArray requests) {
-        val it = requests.iterator();
-        val responses = new JsonArray();
-        for (JsonObject o; it.hasNext();) {
-            o = (JsonObject) it.next();
+    public synchronized void parse(final Client client, final JsonArray requests) {
+        val event = new RequestEvent(new Handler<Void>() {
+            @Override
+            public void handle(Void event) {
+                val it = requests.iterator();
+                val responses = new JsonArray();
+                for (JsonObject o; it.hasNext();) {
+                    o = (JsonObject) it.next();
 
-            val rid = o.getNumber("rid");
-            val sMethod = o.getString("method");
-            val path = o.getString("path");
+                    val rid = o.getNumber("rid");
+                    val sMethod = o.getString("method");
+                    val path = o.getString("path");
 
-            val resp = new JsonObject();
-            try {
-                resp.putNumber("rid", rid);
-                NodeStringTuple node = null;
-                if (path != null) {
-                    node = getManager().getNode(path);
+                    val resp = new JsonObject();
+                    try {
+                        resp.putNumber("rid", rid);
+                        NodeStringTuple node = null;
+                        if (path != null) {
+                            node = getManager().getNode(path);
+                        }
+
+                        val method = getMethod(client, sMethod, rid.intValue(), node);
+                        val updates = method.invoke(o);
+                        val state = method.getState();
+
+                        if (state == null) {
+                            throw new IllegalStateException("state");
+                        }
+                        if (state != StreamState.INITIALIZED) {
+                            // This is a first response, default value is initialized if omitted
+                            resp.putString("stream", state.jsonName);
+                        }
+                        if (state == StreamState.OPEN
+                                || state == StreamState.INITIALIZED) {
+                            client.getResponseTracker().track(rid.intValue());
+                        }
+                        if (updates != null && updates.size() > 0) {
+                            resp.putElement("updates", updates);
+                        }
+                    } catch (Exception e) {
+                        handleInvocationError(resp, e);
+                    } finally {
+                        responses.addElement(resp);
+                    }
                 }
 
-                val method = getMethod(client, sMethod, rid.intValue(), node);
-                val updates = method.invoke(o);
-                val state = method.getState();
-
-                if (state == null) {
-                    throw new IllegalStateException("state");
-                }
-                if (state != StreamState.INITIALIZED) {
-                    // This is a first response, default value is initialized if omitted
-                    resp.putString("stream", state.jsonName);
-                }
-                if (state == StreamState.OPEN
-                        || state == StreamState.INITIALIZED) {
-                    client.getResponseTracker().track(rid.intValue());
-                }
-                if (updates != null && updates.size() > 0) {
-                    resp.putElement("updates", updates);
-                }
-            } catch (Exception e) {
-                handleInvocationError(resp, e);
-            } finally {
-                responses.addElement(resp);
+                val top = new JsonObject();
+                top.putElement("responses", responses);
+                client.write(top);
             }
-        }
-
-        val top = new JsonObject();
-        top.putElement("responses", responses);
-        client.write(top);
+        });
+        getBus().post(event);
+        event.call();
     }
 
     public void closeStream(Client client, int rid) {

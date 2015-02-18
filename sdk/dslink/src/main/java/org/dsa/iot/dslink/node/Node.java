@@ -266,8 +266,9 @@ public class Node {
                 val updates = new JsonArray();
                 updates.addElement(ListMethod.getChildUpdate(n, removed));
                 response.putArray("updates", updates);
-
-                client.write(response);
+                if (!client.write(response)) {
+                    iterator.remove();
+                }
             } else {
                 // Ensure the object is cleaned up
                 iterator.remove();

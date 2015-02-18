@@ -189,18 +189,23 @@ public class WebServerConnector extends ServerConnector {
             if (event.path().equals("/ws") && params != null) {
                 final String dsId = params.get("dsId");
                 final String auth = params.get("auth");
+                final ServerClient client = getClient(dsId);
 
                 event.closeHandler(new Handler<Void>() {
                     @Override
                     public void handle(Void event) {
+                        if (client != null) {
+                            client.setConnected(false);
+                        }
                         removeClient(dsId);
                     }
                 });
-
-                final ServerClient client = getClient(dsId);
+                
                 if (client == null || client.isSetup()) {
                     event.reject();
+                    removeClient(dsId);
                 } else {
+                    client.setSetup(true);
                     client.setWebSocket(event);
                     byte[] originalHash = UrlBase64.decode(Utils.addPadding(auth, true));
 
@@ -213,8 +218,8 @@ public class WebServerConnector extends ServerConnector {
 
                     if (!MessageDigest.isEqual(originalHash, output)) {
                         event.reject();
+                        removeClient(dsId);
                     } else {
-                        client.setSetup(true);
                         event.dataHandler(new Handler<Buffer>() {
                             @Override
                             public void handle(Buffer event) {

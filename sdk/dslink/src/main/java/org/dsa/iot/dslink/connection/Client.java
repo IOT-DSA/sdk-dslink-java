@@ -9,7 +9,7 @@ import org.vertx.java.core.json.JsonObject;
  */
 public interface Client {
     
-    void write(JsonObject obj);
+    boolean write(JsonObject obj);
     
     RequestTracker getRequestTracker();
     

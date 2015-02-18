@@ -30,6 +30,7 @@ public class ServerClient implements Client {
     @NonNull private final ResponseTracker responseTracker;
     
     @Setter private WebSocketBase webSocket = null;
+    @Setter private boolean connected = false;
     @Setter private boolean setup = false;
     
     private final ECKeyPair tempKey = generateTempKey();
@@ -38,8 +39,12 @@ public class ServerClient implements Client {
     private byte[] sharedSecret = null;
 
     @Override
-    public void write(JsonObject obj) {
-        webSocket.writeTextFrame(obj.encode());
+    public boolean write(JsonObject obj) {
+        if (connected) {
+            webSocket.writeTextFrame(obj.encode());
+            return true;
+        }
+        return false;
     }
 
     public void setSharedSecret(@NonNull byte[] bytes) {
