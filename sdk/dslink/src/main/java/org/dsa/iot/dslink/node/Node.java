@@ -21,6 +21,7 @@ import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
+import java.lang.ref.WeakReference;
 import java.util.*;
 
 /**
@@ -29,7 +30,7 @@ import java.util.*;
 public class Node {
 
     private final SubscriptionManager manager;
-    private final Node parent;
+    private final WeakReference<Node> parent;
 
     private Map<String, Node> children;
     private Map<String, Value> attributes;
@@ -75,7 +76,7 @@ public class Node {
                                         Node parent, @NonNull String name) {
         this.bus = bus;
         this.manager = manager;
-        this.parent = parent;
+        this.parent = new WeakReference<>(parent);
         this.name = name;
         this.childrenSubs = new WeakHashMap<>();
         if (isRootNode()) {
