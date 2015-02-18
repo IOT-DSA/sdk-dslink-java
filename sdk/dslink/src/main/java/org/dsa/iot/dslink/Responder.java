@@ -1,10 +1,8 @@
 package org.dsa.iot.dslink;
 
 import com.google.common.eventbus.EventBus;
-import com.google.common.eventbus.Subscribe;
 import lombok.NonNull;
 import lombok.val;
-import org.dsa.iot.dslink.events.ChildrenUpdateEvent;
 import org.dsa.iot.dslink.methods.*;
 import org.dsa.iot.dslink.util.*;
 import org.vertx.java.core.json.JsonArray;
@@ -113,7 +111,10 @@ public class Responder extends Linkable {
             case "unsubscribe":
                 return new UnsubscribeMethod(getManager());
             case "close":
-                return new CloseMethod(getBus(), client.getResponseTracker(), rid);
+                return new CloseMethod(getBus(),
+                                        client,
+                                        client.getResponseTracker(),
+                                        this, rid);
             default:
                 throw new RuntimeException("Unknown method");
         }
@@ -131,22 +132,5 @@ public class Responder extends Linkable {
         error.putString("detail", writer.toString());
 
         resp.putElement("error", error);
-    }
-
-    @Subscribe
-    protected void childrenUpdate(ChildrenUpdateEvent event) {
-        /*
-        if (tracker.isTracking(event.getRid())) {
-            val response = new JsonObject();
-            response.putNumber("rid", event.getRid());
-            response.putString("stream", StreamState.OPEN.jsonName);
-
-            val updates = new JsonArray();
-            updates.addElement(ListMethod.getChildUpdate(event.getParent(), event.isRemoved()));
-            response.putArray("updates", updates);
-
-            event.getClient().write(response);
-        }
-        */
     }
 }

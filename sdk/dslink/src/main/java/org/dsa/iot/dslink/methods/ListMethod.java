@@ -28,7 +28,9 @@ public class ListMethod extends Method {
     @Override
     public JsonArray invoke(JsonObject request) {
         setState(StreamState.OPEN);
-        return getResponse();
+        JsonArray resp = getResponse();
+        parent.subscribeToChildren(client, responder, rid);
+        return resp;
     }
 
     private JsonArray getResponse() {

@@ -7,18 +7,21 @@ import com.google.common.eventbus.Subscribe;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
+import lombok.val;
 import org.dsa.iot.core.StringUtils;
-import org.dsa.iot.dslink.events.ChildrenUpdateEvent;
+import org.dsa.iot.dslink.Responder;
 import org.dsa.iot.dslink.events.ClosedStreamEvent;
+import org.dsa.iot.dslink.methods.ListMethod;
 import org.dsa.iot.dslink.node.exceptions.DuplicateException;
 import org.dsa.iot.dslink.node.value.Value;
+import org.dsa.iot.dslink.util.Client;
 import org.dsa.iot.dslink.util.Permission;
+import org.dsa.iot.dslink.util.StreamState;
 import org.vertx.java.core.Handler;
+import org.vertx.java.core.json.JsonArray;
+import org.vertx.java.core.json.JsonObject;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Samuel Grenier
@@ -32,7 +35,8 @@ public class Node {
     private Map<String, Value> attributes;
     private Map<String, Value> configurations;
     private List<String> interfaces;
-
+    private Map<Client, Integer> childrenSubs;
+    
     private final EventBus bus;
 
     @Getter
@@ -73,6 +77,7 @@ public class Node {
         this.manager = manager;
         this.parent = parent;
         this.name = name;
+        this.childrenSubs = new WeakHashMap<>();
         if (isRootNode()) {
             path = name;
         } else {
@@ -224,10 +229,55 @@ public class Node {
             manager.update(this);
         }
     }
+    
+    public synchronized void subscribeToChildren(@NonNull Client client,
+                                                  @NonNull Responder responder,
+                                                  int rid) {
+        unsubscribeFromChildren(client, responder);
+        childrenSubs.put(client, rid);
+    }
+    
+    public synchronized void unsubscribeFromChildren(@NonNull Client client,
+                                                     @NonNull Responder responder) {
+        if (childrenSubs.containsKey(client)) {
+            responder.closeStream(client, childrenSubs.get(client));
+            childrenSubs.remove(client);
+        }
+    }
 
     private synchronized void notifyChildrenHandlers(@NonNull Node n,
                                                      boolean removed) {
-        bus.post(new ChildrenUpdateEvent(n, removed));
+        val iterator = childrenSubs.entrySet().iterator();
+        while (iterator.hasNext()) {
+            val entry = iterator.next();
+            val client = entry.getKey();
+            val tracker = client.getResponseTracker();
+            val rid = entry.getValue();
+            if (tracker.isTracking(rid)) {
+                val response = new JsonObject();
+                response.putNumber("rid", rid);
+                response.putString("stream", StreamState.OPEN.jsonName);
+
+                val updates = new JsonArray();
+                updates.addElement(ListMethod.getChildUpdate(n, removed));
+                response.putArray("updates", updates);
+
+                client.write(response);
+            } else {
+                // Ensure the object is cleaned up
+                iterator.remove();
+            }
+        }
+    }
+    
+    @Subscribe
+    public synchronized void closedStream(ClosedStreamEvent event) {
+        val client = event.getClient();
+        if (childrenSubs.containsKey(client)) {
+            if (event.getRid() == childrenSubs.get(client)) {
+                unsubscribeFromChildren(client, event.getResponder());
+            }
+        }
     }
 
     protected boolean isRootNode() {
