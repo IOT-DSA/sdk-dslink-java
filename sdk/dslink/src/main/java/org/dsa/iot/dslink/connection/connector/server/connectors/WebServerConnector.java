@@ -13,6 +13,7 @@ import org.dsa.iot.dslink.connection.connector.server.ServerClient;
 import org.dsa.iot.dslink.connection.handshake.HandshakeClient;
 import org.dsa.iot.dslink.connection.handshake.HandshakeServer;
 import org.dsa.iot.dslink.events.AsyncExceptionEvent;
+import org.dsa.iot.dslink.events.ClientConnectedEvent;
 import org.dsa.iot.dslink.events.IncomingDataEvent;
 import org.dsa.iot.dslink.requester.RequestTracker;
 import org.dsa.iot.dslink.responder.ResponseTracker;
@@ -221,6 +222,7 @@ public class WebServerConnector extends ServerConnector {
                                 getBus().post(new IncomingDataEvent(client, data));
                             }
                         });
+                        getBus().post(new ClientConnectedEvent(client));
                     }
                 }
             } else {

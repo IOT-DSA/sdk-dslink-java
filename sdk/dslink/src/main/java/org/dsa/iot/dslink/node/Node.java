@@ -9,12 +9,12 @@ import lombok.NonNull;
 import lombok.Setter;
 import lombok.val;
 import org.dsa.iot.core.StringUtils;
-import org.dsa.iot.dslink.responder.Responder;
+import org.dsa.iot.dslink.connection.Client;
 import org.dsa.iot.dslink.events.ClosedStreamEvent;
-import org.dsa.iot.dslink.responder.methods.ListMethod;
 import org.dsa.iot.dslink.node.exceptions.DuplicateException;
 import org.dsa.iot.dslink.node.value.Value;
-import org.dsa.iot.dslink.connection.Client;
+import org.dsa.iot.dslink.responder.Responder;
+import org.dsa.iot.dslink.responder.methods.ListMethod;
 import org.dsa.iot.dslink.util.Permission;
 import org.dsa.iot.dslink.util.StreamState;
 import org.vertx.java.core.Handler;
@@ -89,11 +89,15 @@ public class Node {
     }
 
     protected void init() {
-        bus.register(this);
+        if (bus != null) {
+            bus.register(this);
+        }
     }
 
     protected void deInit() {
-        bus.unregister(this);
+        if (bus != null) {
+            bus.unregister(this);
+        }
     }
 
     public synchronized String getDisplayName() {

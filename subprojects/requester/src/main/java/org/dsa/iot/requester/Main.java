@@ -6,7 +6,6 @@ import lombok.val;
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.connection.ConnectionType;
 import org.dsa.iot.dslink.events.ConnectedToServerEvent;
-import org.dsa.iot.dslink.events.IncomingDataEvent;
 import org.dsa.iot.dslink.events.ResponseEvent;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.value.Value;
@@ -45,11 +44,6 @@ public class Main {
         ListRequest request = new ListRequest("/");
         link.getRequester().sendRequest(event.getClient(), request);
         System.out.println("Sent data");
-    }
-
-    @Subscribe
-    public void onData(IncomingDataEvent event) {
-        System.out.println(event.getData().encode()); // DEBUG
     }
 
     @Subscribe

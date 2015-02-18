@@ -7,6 +7,7 @@ import lombok.NonNull;
 import lombok.val;
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.events.AsyncExceptionEvent;
+import org.dsa.iot.dslink.events.ClientConnectedEvent;
 import org.dsa.iot.dslink.node.Node;
 
 /**
@@ -50,6 +51,11 @@ public class Broker {
         dslink.stopListening();
     }
 
+    @Subscribe
+    public void onConnected(ClientConnectedEvent event) {
+        connections.createChild(event.getClient().getDsId());
+    }
+    
     @Subscribe
     public void error(AsyncExceptionEvent event) {
         event.getThrowable().printStackTrace();
