@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import org.dsa.iot.dslink.connection.ClientConnector;
 import org.dsa.iot.dslink.node.value.Value;
-import org.dsa.iot.dslink.util.ValueUtils;
+import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 

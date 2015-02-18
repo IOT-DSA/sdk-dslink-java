@@ -12,6 +12,8 @@ import org.dsa.iot.dslink.connection.handshake.HandshakeServer;
 import org.dsa.iot.dslink.events.IncomingDataEvent;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.SubscriptionManager;
+import org.dsa.iot.dslink.requester.Requester;
+import org.dsa.iot.dslink.responder.Responder;
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.Handler;
 import java.util.concurrent.CountDownLatch;

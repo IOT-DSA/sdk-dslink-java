@@ -2,8 +2,8 @@ package org.dsa.iot.dslink.events;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.dsa.iot.dslink.responses.Response;
-import org.dsa.iot.dslink.util.Client;
+import org.dsa.iot.dslink.requester.responses.Response;
+import org.dsa.iot.dslink.connection.Client;
 
 /**
  * Posted from a completed response

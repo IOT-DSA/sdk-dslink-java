@@ -3,7 +3,7 @@ package org.dsa.iot.dslink.events;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
-import org.dsa.iot.dslink.util.Client;
+import org.dsa.iot.dslink.connection.Client;
 import org.vertx.java.core.json.JsonObject;
 
 /**

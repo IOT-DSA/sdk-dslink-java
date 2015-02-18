@@ -9,12 +9,12 @@ import lombok.NonNull;
 import lombok.Setter;
 import lombok.val;
 import org.dsa.iot.core.StringUtils;
-import org.dsa.iot.dslink.Responder;
+import org.dsa.iot.dslink.responder.Responder;
 import org.dsa.iot.dslink.events.ClosedStreamEvent;
-import org.dsa.iot.dslink.methods.ListMethod;
+import org.dsa.iot.dslink.responder.methods.ListMethod;
 import org.dsa.iot.dslink.node.exceptions.DuplicateException;
 import org.dsa.iot.dslink.node.value.Value;
-import org.dsa.iot.dslink.util.Client;
+import org.dsa.iot.dslink.connection.Client;
 import org.dsa.iot.dslink.util.Permission;
 import org.dsa.iot.dslink.util.StreamState;
 import org.vertx.java.core.Handler;
@@ -240,9 +240,9 @@ public class Node {
     
     public synchronized void unsubscribeFromChildren(@NonNull Client client,
                                                      @NonNull Responder responder) {
-        if (childrenSubs.containsKey(client)) {
-            responder.closeStream(client, childrenSubs.get(client));
-            childrenSubs.remove(client);
+        Integer rid = childrenSubs.remove(client);
+        if (rid != null) {
+            responder.closeStream(client, rid);
         }
     }
 
@@ -274,10 +274,9 @@ public class Node {
     @Subscribe
     public synchronized void closedStream(ClosedStreamEvent event) {
         val client = event.getClient();
-        if (childrenSubs.containsKey(client)) {
-            if (event.getRid() == childrenSubs.get(client)) {
-                unsubscribeFromChildren(client, event.getResponder());
-            }
+        Integer rid = childrenSubs.get(client);
+        if (rid != null && rid == event.getRid()) {
+            unsubscribeFromChildren(client, event.getResponder());
         }
     }
 

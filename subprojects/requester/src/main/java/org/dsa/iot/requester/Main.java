@@ -10,8 +10,8 @@ import org.dsa.iot.dslink.events.IncomingDataEvent;
 import org.dsa.iot.dslink.events.ResponseEvent;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.value.Value;
-import org.dsa.iot.dslink.requests.ListRequest;
-import org.dsa.iot.dslink.responses.ListResponse;
+import org.dsa.iot.dslink.requester.requests.ListRequest;
+import org.dsa.iot.dslink.requester.responses.ListResponse;
 
 import java.util.Map;
 

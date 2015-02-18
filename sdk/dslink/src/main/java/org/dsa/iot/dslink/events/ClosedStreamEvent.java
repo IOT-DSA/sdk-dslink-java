@@ -3,8 +3,8 @@ package org.dsa.iot.dslink.events;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
-import org.dsa.iot.dslink.Responder;
-import org.dsa.iot.dslink.util.Client;
+import org.dsa.iot.dslink.responder.Responder;
+import org.dsa.iot.dslink.connection.Client;
 
 /**
  * Posted when an open stream is closed.

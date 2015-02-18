@@ -3,7 +3,7 @@ package org.dsa.iot.broker;
 import com.google.common.eventbus.EventBus;
 import lombok.val;
 import org.dsa.iot.dslink.DSLink;
-import org.dsa.iot.dslink.connection.connector.server.WebServerConnector;
+import org.dsa.iot.dslink.connection.connector.server.connectors.WebServerConnector;
 import org.dsa.iot.dslink.connection.handshake.HandshakeClient;
 
 public class Main {

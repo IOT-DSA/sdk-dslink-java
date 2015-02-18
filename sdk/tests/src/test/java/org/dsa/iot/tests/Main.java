@@ -6,7 +6,7 @@ import lombok.val;
 import org.dsa.iot.broker.Broker;
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.connection.ConnectionType;
-import org.dsa.iot.dslink.connection.connector.server.WebServerConnector;
+import org.dsa.iot.dslink.connection.connector.server.connectors.WebServerConnector;
 import org.dsa.iot.dslink.connection.handshake.HandshakeClient;
 import org.junit.AfterClass;
 import org.junit.Assert;

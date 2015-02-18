@@ -4,6 +4,7 @@ import com.google.common.eventbus.EventBus;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.val;
+import org.dsa.iot.dslink.connection.Client;
 import org.dsa.iot.dslink.connection.ClientConnector;
 import org.dsa.iot.dslink.connection.ServerConnector;
 import org.dsa.iot.dslink.node.NodeManager;

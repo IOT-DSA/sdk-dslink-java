@@ -6,9 +6,8 @@ import org.bouncycastle.jcajce.provider.digest.SHA256;
 import org.dsa.iot.core.URLInfo;
 import org.dsa.iot.dslink.connection.connector.client.WebSocketConnector;
 import org.dsa.iot.dslink.connection.handshake.HandshakePair;
-import org.dsa.iot.dslink.util.Client;
-import org.dsa.iot.dslink.util.RequestTracker;
-import org.dsa.iot.dslink.util.ResponseTracker;
+import org.dsa.iot.dslink.requester.RequestTracker;
+import org.dsa.iot.dslink.responder.ResponseTracker;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.json.impl.Base64;
 
