@@ -206,6 +206,7 @@ public class WebServerConnector extends ServerConnector {
                     removeClient(dsId);
                 } else {
                     client.setSetup(true);
+                    client.setConnected(true);
                     client.setWebSocket(event);
                     byte[] originalHash = UrlBase64.decode(Utils.addPadding(auth, true));
 
