@@ -1,8 +1,9 @@
 package org.dsa.iot.dslink.requester;
 
-import com.google.common.eventbus.EventBus;
 import lombok.NonNull;
 import lombok.val;
+import net.engio.mbassy.bus.MBassador;
+import org.dsa.iot.core.event.Event;
 import org.dsa.iot.dslink.events.ResponseEvent;
 import org.dsa.iot.dslink.requester.requests.*;
 import org.dsa.iot.dslink.requester.responses.*;
@@ -17,7 +18,7 @@ import org.vertx.java.core.json.JsonObject;
  */
 public class Requester extends Linkable {
 
-    public Requester(EventBus bus) {
+    public Requester(MBassador<Event> bus) {
         super(bus);
     }
 
@@ -90,7 +91,7 @@ public class Requester extends Linkable {
                     resp.populate(o.getArray("updates"));
                 }
                 val ev = new ResponseEvent(client, rid, name, resp);
-                getBus().post(ev);
+                getBus().publish(ev);
             }
         } catch (Exception e) {
             // Error handler data

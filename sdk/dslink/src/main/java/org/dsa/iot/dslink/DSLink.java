@@ -1,14 +1,14 @@
 package org.dsa.iot.dslink;
 
-import com.google.common.eventbus.EventBus;
-import com.google.common.eventbus.Subscribe;
 import lombok.*;
+import net.engio.mbassy.bus.MBassador;
 import org.dsa.iot.dslink.connection.ClientConnector;
 import org.dsa.iot.dslink.connection.ConnectionType;
 import org.dsa.iot.dslink.connection.ServerConnector;
 import org.dsa.iot.dslink.connection.handshake.HandshakeClient;
 import org.dsa.iot.dslink.connection.handshake.HandshakePair;
 import org.dsa.iot.dslink.connection.handshake.HandshakeServer;
+import org.dsa.iot.core.event.Event;
 import org.dsa.iot.dslink.events.IncomingDataEvent;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.SubscriptionManager;
@@ -24,7 +24,7 @@ import java.util.concurrent.CountDownLatch;
 public class DSLink {
 
     @Getter
-    private final EventBus bus;
+    private final MBassador<Event> bus;
 
     private final ClientConnector clientConnector;
     private final ServerConnector serverConnector;
@@ -35,7 +35,7 @@ public class DSLink {
     @Getter
     private final Responder responder;
 
-    private DSLink(EventBus bus,
+    private DSLink(MBassador<Event> bus,
                     ClientConnector clientConn,
                     ServerConnector serverConn,
                     Requester req,
@@ -45,7 +45,7 @@ public class DSLink {
         this.serverConnector = serverConn;
         this.requester = req;
         this.responder = resp;
-        bus.register(this);
+        bus.subscribe(this);
 
         SubscriptionManager subManager = null;
         if (clientConn != null)
@@ -119,7 +119,7 @@ public class DSLink {
         }
     }
 
-    @Subscribe
+    @net.engio.mbassy.listener.Handler
     public void jsonHandler(IncomingDataEvent event) {
         try {
             val data = event.getData();
@@ -156,7 +156,7 @@ public class DSLink {
         }
     }
 
-    public static DSLink generate(EventBus master,
+    public static DSLink generate(MBassador<Event> master,
                                 String url,
                                 ConnectionType type,
                                 String dsId) {
@@ -166,7 +166,7 @@ public class DSLink {
     /**
      * Defaults to generating a responder only dslink.
      */
-    public static DSLink generate(EventBus master,
+    public static DSLink generate(MBassador<Event> master,
                                 String url,
                                 ConnectionType type,
                                 String dsId,
@@ -174,7 +174,7 @@ public class DSLink {
         return generate(master, url, type, dsId, zone, false, true);
     }
 
-    public static DSLink generate(EventBus master,
+    public static DSLink generate(MBassador<Event> master,
                                   String url,
                                   ConnectionType type,
                                   String dsId,
@@ -184,7 +184,7 @@ public class DSLink {
                         isRequester, isResponder);
     }
 
-    public static DSLink generate(EventBus master,
+    public static DSLink generate(MBassador<Event> master,
                                 String url,
                                 ConnectionType type,
                                 String dsId,
@@ -208,7 +208,7 @@ public class DSLink {
      * @return DSLink object on success, otherwise null
      */
     @SneakyThrows
-    public static DSLink generate(@NonNull final EventBus master,
+    public static DSLink generate(@NonNull final MBassador<Event> master,
                                 @NonNull final String url,
                                 @NonNull final ConnectionType type,
                                 @NonNull final String dsId,
@@ -238,7 +238,7 @@ public class DSLink {
         return new DSLink(master, conn, null, requester, responder);
     }
 
-    public static DSLink generate(@NonNull final EventBus master,
+    public static DSLink generate(@NonNull final MBassador<Event> master,
                                 @NonNull final ServerConnector connector) {
         return new DSLink(master, null,
                                     connector,

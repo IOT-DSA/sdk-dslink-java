@@ -1,16 +1,14 @@
 package org.dsa.iot.dslink.node;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.eventbus.EventBus;
-import com.google.common.eventbus.Subscribe;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.val;
+import net.engio.mbassy.bus.MBassador;
 import org.dsa.iot.core.StringUtils;
 import org.dsa.iot.dslink.connection.Client;
 import org.dsa.iot.dslink.events.ClosedStreamEvent;
+import org.dsa.iot.core.event.Event;
 import org.dsa.iot.dslink.node.exceptions.DuplicateException;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.responder.Responder;
@@ -38,7 +36,7 @@ public class Node {
     private List<String> interfaces;
     private Map<Client, Integer> childrenSubs;
     
-    private final EventBus bus;
+    private final MBassador<Event> bus;
 
     @Getter
     private final String name;
@@ -72,7 +70,7 @@ public class Node {
      * @param parent The parent of this node, or null if a root node
      * @param name The name of this node
      */
-    public Node(EventBus bus, SubscriptionManager manager,
+    public Node(MBassador<Event> bus, SubscriptionManager manager,
                                         Node parent, @NonNull String name) {
         this.bus = bus;
         this.manager = manager;
@@ -90,13 +88,13 @@ public class Node {
 
     protected void init() {
         if (bus != null) {
-            bus.register(this);
+            bus.subscribe(this);
         }
     }
 
     protected void deInit() {
         if (bus != null) {
-            bus.unregister(this);
+            bus.unsubscribe(this);
         }
     }
 
@@ -109,19 +107,19 @@ public class Node {
     }
 
     public synchronized List<String> getInterfaces() {
-        return interfaces != null ? ImmutableList.copyOf(interfaces) : null;
+        return interfaces != null ? new ArrayList<>(interfaces) : null;
     }
 
     public synchronized Map<String, Node> getChildren() {
-        return children != null ? ImmutableMap.copyOf(children) : null;
+        return children != null ? new HashMap<>(children) : null;
     }
 
     public synchronized Map<String, Value> getAttributes() {
-        return attributes != null ? ImmutableMap.copyOf(attributes) : null;
+        return attributes != null ? new HashMap<>(attributes) : null;
     }
 
     public synchronized Map<String, Value> getConfigurations() {
-        return configurations != null ? ImmutableMap.copyOf(configurations) : null;
+        return configurations != null ? new HashMap<>(configurations) : null;
     }
 
     public synchronized void setDisplayName(String name) {
@@ -276,7 +274,7 @@ public class Node {
         }
     }
     
-    @Subscribe
+    @net.engio.mbassy.listener.Handler
     public synchronized void closedStream(ClosedStreamEvent event) {
         val client = event.getClient();
         Integer rid = childrenSubs.get(client);

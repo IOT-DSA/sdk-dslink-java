@@ -1,9 +1,10 @@
 package org.dsa.iot.dslink.responder;
 
-import com.google.common.eventbus.EventBus;
 import lombok.NonNull;
 import lombok.val;
+import net.engio.mbassy.bus.MBassador;
 import org.dsa.iot.dslink.connection.Client;
+import org.dsa.iot.core.event.Event;
 import org.dsa.iot.dslink.events.RequestEvent;
 import org.dsa.iot.dslink.responder.methods.*;
 import org.dsa.iot.dslink.util.Linkable;
@@ -22,7 +23,7 @@ import static org.dsa.iot.dslink.node.NodeManager.NodeStringTuple;
  */
 public class Responder extends Linkable {
 
-    public Responder(@NonNull EventBus bus) {
+    public Responder(MBassador<Event> bus) {
         super(bus);
     }
 
@@ -81,7 +82,7 @@ public class Responder extends Linkable {
                     }
                 }
             });
-            getBus().post(event);
+            getBus().publish(event);
             event.call();
         }
     }

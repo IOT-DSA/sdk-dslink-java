@@ -1,12 +1,13 @@
 package org.dsa.iot.dslink.connection.connector.client;
 
-import com.google.common.eventbus.EventBus;
+import net.engio.mbassy.bus.MBassador;
 import org.dsa.iot.core.URLInfo;
 import org.dsa.iot.core.Utils;
 import org.dsa.iot.dslink.connection.ClientConnector;
 import org.dsa.iot.dslink.connection.handshake.HandshakePair;
 import org.dsa.iot.dslink.events.AsyncExceptionEvent;
 import org.dsa.iot.dslink.events.ConnectedToServerEvent;
+import org.dsa.iot.core.event.Event;
 import org.dsa.iot.dslink.events.IncomingDataEvent;
 import org.dsa.iot.dslink.requester.RequestTracker;
 import org.dsa.iot.dslink.responder.ResponseTracker;
@@ -27,7 +28,7 @@ public class WebSocketConnector extends ClientConnector {
     private boolean connecting = false;
     private boolean connected = false;
 
-    public WebSocketConnector(EventBus bus,
+    public WebSocketConnector(MBassador<Event> bus,
                               URLInfo info,
                               HandshakePair pair,
                               RequestTracker reqTracker,
@@ -48,7 +49,7 @@ public class WebSocketConnector extends ClientConnector {
         client.exceptionHandler(new Handler<Throwable>() {
             @Override
             public void handle(Throwable event) {
-                getBus().post(new AsyncExceptionEvent(event));
+                getBus().publish(new AsyncExceptionEvent(event));
                 connecting = false;
                 connected = false;
             }
@@ -61,12 +62,12 @@ public class WebSocketConnector extends ClientConnector {
                 connecting = false;
                 socket = event;
 
-                getBus().post(new ConnectedToServerEvent(WebSocketConnector.this));
+                getBus().publish(new ConnectedToServerEvent(WebSocketConnector.this));
                 event.dataHandler(new Handler<Buffer>() {
                     @Override
                     public void handle(Buffer event) {
                         JsonObject data = new JsonObject(event.toString());
-                        getBus().post(new IncomingDataEvent(WebSocketConnector.this, data));
+                        getBus().publish(new IncomingDataEvent(WebSocketConnector.this, data));
                     }
                 });
 

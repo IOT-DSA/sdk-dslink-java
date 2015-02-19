@@ -1,7 +1,7 @@
 package org.dsa.iot.dslink.connection.handshake;
 
-import com.google.common.eventbus.EventBus;
 import lombok.*;
+import net.engio.mbassy.bus.MBassador;
 import org.bouncycastle.jce.spec.ECParameterSpec;
 import org.bouncycastle.jce.spec.ECPublicKeySpec;
 import org.bouncycastle.math.ec.ECPoint;
@@ -9,6 +9,7 @@ import org.bouncycastle.util.encoders.UrlBase64;
 import org.dsa.iot.core.URLInfo;
 import org.dsa.iot.core.Utils;
 import org.dsa.iot.dslink.events.AsyncExceptionEvent;
+import org.dsa.iot.core.event.Event;
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
@@ -39,17 +40,17 @@ public class HandshakeServer {
         return sharedSecret.clone();
     }
 
-    public static void perform(EventBus bus, String url, HandshakeClient hc,
+    public static void perform(MBassador<Event> bus, String url, HandshakeClient hc,
                                 Handler<AsyncResult<HandshakeServer>> onComplete) {
         perform(bus, URLInfo.parse(url), hc, onComplete);
     }
 
-    public static void perform(EventBus bus, URLInfo url, HandshakeClient hc,
+    public static void perform(MBassador<Event> bus, URLInfo url, HandshakeClient hc,
                                 Handler<AsyncResult<HandshakeServer>> onComplete) {
         perform(bus, url, hc, true, onComplete);
     }
 
-    public static void perform(@NonNull final EventBus bus,
+    public static void perform(@NonNull final MBassador<Event> bus,
                                 @NonNull final URLInfo url,
                                 @NonNull final HandshakeClient hc,
                                 final boolean verifySsl,
@@ -95,7 +96,7 @@ public class HandshakeServer {
             @Override
             public void handle(Throwable event) {
                 res.setFailure(event);
-                bus.post(new AsyncExceptionEvent(event));
+                bus.publish(new AsyncExceptionEvent(event));
                 onComplete.handle(null);
             }
         });

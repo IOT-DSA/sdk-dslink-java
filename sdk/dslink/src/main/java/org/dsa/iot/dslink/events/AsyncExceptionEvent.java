@@ -3,6 +3,7 @@ package org.dsa.iot.dslink.events;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
+import org.dsa.iot.core.event.Event;
 
 /**
  * Throws an event when an asynchronous exception occurs with vert.x

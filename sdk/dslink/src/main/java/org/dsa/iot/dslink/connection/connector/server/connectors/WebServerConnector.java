@@ -1,7 +1,7 @@
 package org.dsa.iot.dslink.connection.connector.server.connectors;
 
-import com.google.common.eventbus.EventBus;
 import lombok.*;
+import net.engio.mbassy.bus.MBassador;
 import org.bouncycastle.jcajce.provider.digest.SHA256;
 import org.bouncycastle.jce.spec.ECParameterSpec;
 import org.bouncycastle.jce.spec.ECPublicKeySpec;
@@ -14,6 +14,7 @@ import org.dsa.iot.dslink.connection.handshake.HandshakeClient;
 import org.dsa.iot.dslink.connection.handshake.HandshakeServer;
 import org.dsa.iot.dslink.events.AsyncExceptionEvent;
 import org.dsa.iot.dslink.events.ClientConnectedEvent;
+import org.dsa.iot.core.event.Event;
 import org.dsa.iot.dslink.events.IncomingDataEvent;
 import org.dsa.iot.dslink.requester.RequestTracker;
 import org.dsa.iot.dslink.responder.ResponseTracker;
@@ -41,7 +42,7 @@ public class WebServerConnector extends ServerConnector {
     private final Map<String, ServerClient> clients = new HashMap<>();
     private final HttpServer server = Utils.VERTX.createHttpServer();
 
-    public WebServerConnector(EventBus bus, HandshakeClient client) {
+    public WebServerConnector(MBassador<Event> bus, HandshakeClient client) {
         super(bus, client);
     }
 
@@ -98,7 +99,7 @@ public class WebServerConnector extends ServerConnector {
         public void handle(AsyncResult<HttpServer> event) {
             this.event = event;
             if (event.failed()) {
-                getBus().post(new AsyncExceptionEvent(event.cause()));
+                getBus().publish(new AsyncExceptionEvent(event.cause()));
             }
             latch.countDown();
         }
@@ -225,10 +226,10 @@ public class WebServerConnector extends ServerConnector {
                             @Override
                             public void handle(Buffer event) {
                                 val data = new JsonObject(event.toString("UTF-8"));
-                                getBus().post(new IncomingDataEvent(client, data));
+                                getBus().publish(new IncomingDataEvent(client, data));
                             }
                         });
-                        getBus().post(new ClientConnectedEvent(client));
+                        getBus().publish(new ClientConnectedEvent(client));
                     }
                 }
             } else {

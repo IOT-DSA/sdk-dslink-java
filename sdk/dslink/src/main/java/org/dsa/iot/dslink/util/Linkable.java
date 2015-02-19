@@ -1,12 +1,13 @@
 package org.dsa.iot.dslink.util;
 
-import com.google.common.eventbus.EventBus;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.val;
+import net.engio.mbassy.bus.MBassador;
 import org.dsa.iot.dslink.connection.Client;
 import org.dsa.iot.dslink.connection.ClientConnector;
 import org.dsa.iot.dslink.connection.ServerConnector;
+import org.dsa.iot.core.event.Event;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.vertx.java.core.json.JsonArray;
 
@@ -16,7 +17,7 @@ import org.vertx.java.core.json.JsonArray;
 public abstract class Linkable {
 
     @Getter
-    private final EventBus bus;
+    private final MBassador<Event> bus;
 
     private ClientConnector clientConnector;
     private ServerConnector serverConnector;
@@ -24,7 +25,7 @@ public abstract class Linkable {
     @Getter
     private NodeManager manager;
 
-    public Linkable(@NonNull EventBus bus) {
+    public Linkable(@NonNull MBassador<Event> bus) {
         this.bus = bus;
     }
 

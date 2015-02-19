@@ -1,8 +1,9 @@
 package org.dsa.iot.dslink.connection;
 
-import com.google.common.eventbus.EventBus;
 import lombok.*;
+import net.engio.mbassy.bus.MBassador;
 import org.dsa.iot.dslink.connection.handshake.HandshakeClient;
+import org.dsa.iot.core.event.Event;
 
 /**
  * Used for handling servers.
@@ -13,7 +14,7 @@ import org.dsa.iot.dslink.connection.handshake.HandshakeClient;
 public abstract class ServerConnector {
 
     @NonNull
-    private final EventBus bus;
+    private final MBassador<Event> bus;
 
     @NonNull
     private final HandshakeClient client;

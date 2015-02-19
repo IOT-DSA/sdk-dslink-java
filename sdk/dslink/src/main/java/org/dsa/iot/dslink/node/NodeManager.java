@@ -1,10 +1,11 @@
 package org.dsa.iot.dslink.node;
 
-import com.google.common.eventbus.EventBus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
+import net.engio.mbassy.bus.MBassador;
 import org.dsa.iot.core.StringUtils;
+import org.dsa.iot.core.event.Event;
 import org.dsa.iot.dslink.node.exceptions.NoSuchPathException;
 
 import java.util.Map;
@@ -17,12 +18,12 @@ public class NodeManager {
 
     private final SubscriptionManager subManager;
 
-    private final EventBus bus;
+    private final MBassador<Event> bus;
 
     // Fake root to provide a listing on "/"
     private final Node superRoot;
 
-    public NodeManager(EventBus bus, SubscriptionManager subManager) {
+    public NodeManager(MBassador<Event> bus, SubscriptionManager subManager) {
         this.bus = bus;
         this.subManager = subManager;
         this.superRoot = new Node(bus, subManager, null, "") {

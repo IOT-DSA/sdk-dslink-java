@@ -1,9 +1,9 @@
 package org.dsa.iot.tests;
 
-import com.google.common.eventbus.EventBus;
 import lombok.SneakyThrows;
 import lombok.val;
 import org.dsa.iot.broker.Broker;
+import org.dsa.iot.core.event.EventBusFactory;
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.connection.ConnectionType;
 import org.dsa.iot.dslink.connection.connector.server.connectors.WebServerConnector;
@@ -25,7 +25,7 @@ public class Main {
 
     @BeforeClass
     public static void setup() {
-        val bus = new EventBus();
+        val bus = EventBusFactory.create();
         val client = HandshakeClient.generate("broker", "_", true, true);
         val link = DSLink.generate(bus, new WebServerConnector(bus, client));
         broker = new Broker(bus, link);
@@ -41,7 +41,7 @@ public class Main {
     @Test
     @SneakyThrows
     public void auth() {
-        val bus = new EventBus();
+        val bus = EventBusFactory.create();
         val url = "http://localhost:" + port + "/conn";
 
         val link = DSLink.generate(bus, url, ConnectionType.WS, "dslink");

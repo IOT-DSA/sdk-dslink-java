@@ -1,4 +1,4 @@
-package org.dsa.iot.dslink.events;
+package org.dsa.iot.core.event;
 
 /**
  * @author Samuel Grenier

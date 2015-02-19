@@ -1,11 +1,12 @@
 package org.dsa.iot.dslink.connection;
 
-import com.google.common.eventbus.EventBus;
 import lombok.*;
+import net.engio.mbassy.bus.MBassador;
 import org.bouncycastle.jcajce.provider.digest.SHA256;
 import org.dsa.iot.core.URLInfo;
 import org.dsa.iot.dslink.connection.connector.client.WebSocketConnector;
 import org.dsa.iot.dslink.connection.handshake.HandshakePair;
+import org.dsa.iot.core.event.Event;
 import org.dsa.iot.dslink.requester.RequestTracker;
 import org.dsa.iot.dslink.responder.ResponseTracker;
 import org.vertx.java.core.buffer.Buffer;
@@ -21,7 +22,7 @@ import java.io.UnsupportedEncodingException;
 @RequiredArgsConstructor
 public abstract class ClientConnector implements Client {
 
-    @NonNull private final EventBus bus;
+    @NonNull private final MBassador<Event> bus;
     @NonNull private final URLInfo dataEndpoint;
     @NonNull private final HandshakePair pair;
     @NonNull private final RequestTracker requestTracker;
@@ -93,7 +94,7 @@ public abstract class ClientConnector implements Client {
      *             connection initiation endpoint, not the actual data URL.
      * @return A connector instance
      */
-    public static ClientConnector create(EventBus bus, String url,
+    public static ClientConnector create(MBassador<Event> bus, String url,
                                          HandshakePair pair, ConnectionType type) {
         switch (type) {
             case SOCKET:

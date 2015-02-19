@@ -1,6 +1,8 @@
 package org.dsa.iot.dslink;
 
-import com.google.common.eventbus.EventBus;
+import net.engio.mbassy.bus.MBassador;
+import org.dsa.iot.core.event.Event;
+import org.dsa.iot.core.event.EventBusFactory;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.exceptions.DuplicateException;
@@ -13,7 +15,7 @@ import org.junit.Test;
  */
 public class NodeTest {
 
-    private final EventBus bus = new EventBus();
+    private final MBassador<Event> bus = EventBusFactory.create();
 
     @Test
     public void nodeAdditions() {

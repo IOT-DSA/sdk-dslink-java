@@ -1,13 +1,16 @@
 package org.dsa.iot.broker;
 
-import com.google.common.eventbus.EventBus;
-import com.google.common.eventbus.Subscribe;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.SneakyThrows;
 import lombok.val;
+import net.engio.mbassy.bus.MBassador;
+import net.engio.mbassy.listener.Handler;
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.events.AsyncExceptionEvent;
 import org.dsa.iot.dslink.events.ClientConnectedEvent;
+import org.dsa.iot.core.event.Event;
+import org.dsa.iot.dslink.events.RequestEvent;
 import org.dsa.iot.dslink.node.Node;
 
 /**
@@ -16,7 +19,7 @@ import org.dsa.iot.dslink.node.Node;
 public class Broker {
 
     @Getter
-    private final EventBus bus;
+    private final MBassador<Event> bus;
 
     @NonNull
     private final DSLink dslink;
@@ -25,11 +28,11 @@ public class Broker {
     private final Node defs;
     private final Node quarantine;
 
-    public Broker(@NonNull EventBus master,
+    public Broker(@NonNull MBassador<Event> master,
                   @NonNull DSLink link) {
         this.bus = master;
         this.dslink = link;
-        bus.register(this);
+        bus.subscribe(this);
 
         val manager = dslink.getNodeManager();
         connections = manager.createRootNode("conns");
@@ -51,12 +54,12 @@ public class Broker {
         dslink.stopListening();
     }
 
-    @Subscribe
+    @Handler
     public void onConnected(ClientConnectedEvent event) {
         connections.createChild(event.getClient().getDsId());
     }
     
-    @Subscribe
+    @Handler
     public void error(AsyncExceptionEvent event) {
         event.getThrowable().printStackTrace();
     }

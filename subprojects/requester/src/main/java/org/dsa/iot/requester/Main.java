@@ -1,8 +1,10 @@
 package org.dsa.iot.requester;
 
-import com.google.common.eventbus.EventBus;
-import com.google.common.eventbus.Subscribe;
 import lombok.val;
+import net.engio.mbassy.bus.MBassador;
+import net.engio.mbassy.listener.Handler;
+import org.dsa.iot.core.event.Event;
+import org.dsa.iot.core.event.EventBusFactory;
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.connection.ConnectionType;
 import org.dsa.iot.dslink.events.ConnectedToServerEvent;
@@ -19,12 +21,12 @@ import java.util.Map;
  */
 public class Main {
 
-    private final EventBus bus = new EventBus();
+    private final MBassador<Event> bus = EventBusFactory.create();
     private DSLink link;
 
     public static void main(String[] args) {
         Main m = new Main();
-        m.bus.register(m);
+        m.bus.subscribe(m);
         m.run();
     }
 
@@ -37,7 +39,7 @@ public class Main {
         link.sleep();
     }
 
-    @Subscribe
+    @Handler
     public void onConnected(ConnectedToServerEvent event) {
         System.out.println("--------------");
         System.out.println("Connected!");
@@ -46,7 +48,7 @@ public class Main {
         System.out.println("Sent data");
     }
 
-    @Subscribe
+    @Handler
     public void onResponse(ResponseEvent event) {
         System.out.println("--------------");
         System.out.println("Received response: " + event.getName());

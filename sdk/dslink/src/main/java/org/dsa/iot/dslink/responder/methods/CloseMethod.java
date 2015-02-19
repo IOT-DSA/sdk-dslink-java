@@ -1,7 +1,8 @@
 package org.dsa.iot.dslink.responder.methods;
 
-import com.google.common.eventbus.EventBus;
 import lombok.AllArgsConstructor;
+import net.engio.mbassy.bus.MBassador;
+import org.dsa.iot.core.event.Event;
 import org.dsa.iot.dslink.responder.Responder;
 import org.dsa.iot.dslink.events.ClosedStreamEvent;
 import org.dsa.iot.dslink.connection.Client;
@@ -16,7 +17,7 @@ import org.vertx.java.core.json.JsonObject;
 @AllArgsConstructor
 public class CloseMethod extends Method {
 
-    private final EventBus bus;
+    private final MBassador<Event> bus;
     private final Client client;
     private final ResponseTracker tracker;
     private final Responder responder;
@@ -25,7 +26,7 @@ public class CloseMethod extends Method {
     @Override
     public JsonArray invoke(JsonObject request) {
         if (tracker.isTracking(rid)) {
-            bus.post(new ClosedStreamEvent(client, responder, rid));
+            bus.publish(new ClosedStreamEvent(client, responder, rid));
             tracker.untrack(rid);
         }
         setState(StreamState.CLOSED);
