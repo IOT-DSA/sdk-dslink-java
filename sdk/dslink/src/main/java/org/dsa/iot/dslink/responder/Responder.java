@@ -32,21 +32,21 @@ public class Responder extends Linkable {
     @Override
     @SuppressWarnings("unchecked")
     public synchronized void parse(final Client client, final JsonArray requests) {
-        val event = new RequestEvent(new Handler<Void>() {
-            @Override
-            public void handle(Void event) {
-                val it = requests.iterator();
-                val responses = new JsonArray();
-                for (JsonObject o; it.hasNext();) {
-                    o = (JsonObject) it.next();
-
-                    val rid = o.getNumber("rid");
-                    val sMethod = o.getString("method");
-                    val path = o.getString("path");
-
+        val it = requests.iterator();
+        for (JsonObject obj; it.hasNext();) {
+            obj = (JsonObject) it.next();
+            final JsonObject o = obj;
+            
+            val event = new RequestEvent(client, o, new Handler<Void>() {
+                @Override
+                public void handle(Void event) {
                     val resp = new JsonObject();
                     try {
+                        val rid = o.getNumber("rid");
+                        val sMethod = o.getString("method");
+                        val path = o.getString("path");
                         resp.putNumber("rid", rid);
+                        
                         NodeStringTuple node = null;
                         if (path != null) {
                             node = getManager().getNode(path);
@@ -73,17 +73,17 @@ public class Responder extends Linkable {
                     } catch (Exception e) {
                         handleInvocationError(resp, e);
                     } finally {
+                        val responses = new JsonArray();
                         responses.addElement(resp);
+                        val top = new JsonObject();
+                        top.putElement("responses", responses);
+                        client.write(top);
                     }
                 }
-
-                val top = new JsonObject();
-                top.putElement("responses", responses);
-                client.write(top);
-            }
-        });
-        getBus().post(event);
-        event.call();
+            });
+            getBus().post(event);
+            event.call();
+        }
     }
 
     public void closeStream(Client client, int rid) {
