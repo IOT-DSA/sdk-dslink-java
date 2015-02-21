@@ -9,7 +9,7 @@ import lombok.val;
 public class StringUtils {
 
     private static final String[] BANNED_CHARS = new String[] {
-        ".", "/", "\\", "?", "%", "*", ":", "|", "“", "<", ">"
+        ".", "/", "\\", "?", "%", "*", ":", "|", "<", ">"
     };
     
     public static String join(int start, @NonNull String[] parts) {
