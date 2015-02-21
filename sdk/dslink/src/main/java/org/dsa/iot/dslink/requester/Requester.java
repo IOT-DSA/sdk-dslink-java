@@ -57,63 +57,58 @@ public class Requester extends Linkable {
     @Override
     @SuppressWarnings("unchecked")
     public void parse(Client client, JsonArray responses) {
-        try {
-            val it = responses.iterator();
-            for (JsonObject o; it.hasNext();) {
-                o = (JsonObject) it.next();
+        val it = responses.iterator();
+        for (JsonObject o; it.hasNext();) {
+            o = (JsonObject) it.next();
 
-                int rid = o.getNumber("rid").intValue();
-                Request request = client.getRequestTracker().getRequest(rid);
-                String name = request.getName();
-                Response<?> resp;
-                if (rid != 0) {
-                    // Response
-                    String state = o.getString("state");
-                    if (StreamState.CLOSED.jsonName.equals(state)) {
-                        client.getRequestTracker().untrack(rid);
-                    }
+            int rid = o.getNumber("rid").intValue();
+            Request request = client.getRequestTracker().getRequest(rid);
+            String name = request.getName();
+            Response<?> resp;
+            if (rid != 0) {
+                // Response
+                String state = o.getString("state");
+                if (StreamState.CLOSED.jsonName.equals(state)) {
+                    client.getRequestTracker().untrack(rid);
+                }
 
-                    switch (name) {
-                        case "list":
-                            resp = new ListResponse((ListRequest) request, getManager());
-                            break;
-                        case "set":
-                            resp = new SetResponse((SetRequest) request);
-                            break;
-                        case "remove":
-                            resp = new RemoveResponse((RemoveRequest) request);
-                            break;
-                        case "invoke":
-                            resp = new InvokeResponse((InvokeRequest) request);
-                            break;
-                        case "subscribe":
-                            resp = new SubscribeResponse((SubscribeRequest) request);
-                            break;
-                        case "unsubscribe":
-                            resp = new UnsubscribeResponse((UnsubscribeRequest) request);
-                            break;
-                        case "close":
-                            resp = new CloseResponse((CloseRequest) request);
-                            break;
-                        default:
-                            throw new RuntimeException("Unknown method");
-                    }
-                    resp.populate(o.getArray("updates"));
-                } else {
-                    // Subscription update
-                    SubscribeRequest req = (SubscribeRequest) request;
-                    resp = new SubscriptionResponse(req, getManager());
-                    resp.populate(o.getArray("updates"));
+                switch (name) {
+                    case "list":
+                        resp = new ListResponse((ListRequest) request, getManager());
+                        break;
+                    case "set":
+                        resp = new SetResponse((SetRequest) request);
+                        break;
+                    case "remove":
+                        resp = new RemoveResponse((RemoveRequest) request);
+                        break;
+                    case "invoke":
+                        resp = new InvokeResponse((InvokeRequest) request);
+                        break;
+                    case "subscribe":
+                        resp = new SubscribeResponse((SubscribeRequest) request);
+                        break;
+                    case "unsubscribe":
+                        resp = new UnsubscribeResponse((UnsubscribeRequest) request);
+                        break;
+                    case "close":
+                        resp = new CloseResponse((CloseRequest) request);
+                        break;
+                    default:
+                        throw new RuntimeException("Unknown method");
                 }
-                synchronized (this) {
-                    val gid = gidMap.get(client);
-                    val ev = new ResponseEvent(client, gid, rid, name, resp);
-                    getBus().publish(ev);
-                }
+                resp.populate(o.getArray("updates"));
+            } else {
+                // Subscription update
+                SubscribeRequest req = (SubscribeRequest) request;
+                resp = new SubscriptionResponse(req, getManager());
+                resp.populate(o.getArray("updates"));
             }
-        } catch (Exception e) {
-            // Error handler data
-            e.printStackTrace(System.err);
+            synchronized (this) {
+                val gid = gidMap.get(client);
+                val ev = new ResponseEvent(client, gid, rid, name, resp);
+                getBus().publish(ev);
+            }
         }
     }
 }
