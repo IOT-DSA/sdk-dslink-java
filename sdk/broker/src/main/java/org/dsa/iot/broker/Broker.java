@@ -69,7 +69,7 @@ public class Broker {
     public synchronized void onRequest(final RequestEvent event) {
         event.setLocked(true);
         if (event.getMethod().equals("list")) {
-            val path = event.getRequest().getString("path");
+            String path = event.getRequest().getString("path");
             if (path != null
                     && path.length() > connections.getPath().length() + 1
                     && path.startsWith(connections.getPath())) {
