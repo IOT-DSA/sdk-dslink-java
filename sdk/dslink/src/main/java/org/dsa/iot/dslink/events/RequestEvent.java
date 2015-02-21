@@ -16,6 +16,10 @@ public class RequestEvent extends Event {
 
     @Getter @NonNull private final Client client;
     @Getter @NonNull private final JsonObject request;
+    
+    @Getter private final int rid;
+    @Getter private final String method;
+    
     @NonNull private final Handler<Void> handler;
     private boolean locked = false;
     private boolean called = false;

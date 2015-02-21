@@ -28,6 +28,8 @@ public class ServerClient implements Client {
     @NonNull private final String dsId;
     @NonNull private final RequestTracker requestTracker;
     @NonNull private final ResponseTracker responseTracker;
+    private final boolean isRequester;
+    private final boolean isResponder;
     
     @Setter private WebSocketBase webSocket = null;
     @Setter private boolean connected = false;

@@ -8,13 +8,13 @@ import org.bouncycastle.jce.spec.ECPublicKeySpec;
 import org.bouncycastle.math.ec.ECPoint;
 import org.bouncycastle.util.encoders.UrlBase64;
 import org.dsa.iot.core.Utils;
+import org.dsa.iot.core.event.Event;
 import org.dsa.iot.dslink.connection.ServerConnector;
 import org.dsa.iot.dslink.connection.connector.server.ServerClient;
 import org.dsa.iot.dslink.connection.handshake.HandshakeClient;
 import org.dsa.iot.dslink.connection.handshake.HandshakeServer;
 import org.dsa.iot.dslink.events.AsyncExceptionEvent;
 import org.dsa.iot.dslink.events.ClientConnectedEvent;
-import org.dsa.iot.core.event.Event;
 import org.dsa.iot.dslink.events.IncomingDataEvent;
 import org.dsa.iot.dslink.requester.RequestTracker;
 import org.dsa.iot.dslink.responder.ResponseTracker;
@@ -142,7 +142,9 @@ public class WebServerConnector extends ServerConnector {
                     } else {
                         ServerClient c = new ServerClient(clientDsId,
                                                             new RequestTracker(),
-                                                            new ResponseTracker());
+                                                            new ResponseTracker(),
+                                                            clientJson.getBoolean("isRequester"),
+                                                            clientJson.getBoolean("isResponder"));
                         JsonObject obj = new JsonObject();
                         obj.putString("dsId", getClient().getDsId());
                         obj.putString("publicKey", getClient().getPublicKey());

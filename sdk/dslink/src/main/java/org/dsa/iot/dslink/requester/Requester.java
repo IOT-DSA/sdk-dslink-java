@@ -4,25 +4,34 @@ import lombok.NonNull;
 import lombok.val;
 import net.engio.mbassy.bus.MBassador;
 import org.dsa.iot.core.event.Event;
+import org.dsa.iot.dslink.connection.Client;
 import org.dsa.iot.dslink.events.ResponseEvent;
 import org.dsa.iot.dslink.requester.requests.*;
 import org.dsa.iot.dslink.requester.responses.*;
 import org.dsa.iot.dslink.util.Linkable;
 import org.dsa.iot.dslink.util.StreamState;
-import org.dsa.iot.dslink.connection.Client;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
+
+import java.util.Map;
+import java.util.WeakHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author Samuel Grenier
  */
 public class Requester extends Linkable {
 
+    private final AtomicInteger gid;
+    private final Map<Client, Integer> gidMap;
+    
     public Requester(MBassador<Event> bus) {
         super(bus);
+        gid = new AtomicInteger();
+        gidMap = new WeakHashMap<>();
     }
 
-    public void sendRequest(@NonNull Client client,
+    public int sendRequest(@NonNull Client client,
                             @NonNull Request req) {
         ensureConnected();
 
@@ -33,10 +42,16 @@ public class Requester extends Linkable {
 
         val requests = new JsonArray();
         requests.add(obj);
+        
+        int id = gid.getAndIncrement();
+        synchronized (this) {
+            gidMap.put(client, id);
+        }
 
         val top = new JsonObject();
         top.putArray("requests", requests);
         client.write(top);
+        return id;
     }
 
     @Override
@@ -90,8 +105,11 @@ public class Requester extends Linkable {
                     resp = new SubscriptionResponse(req, getManager());
                     resp.populate(o.getArray("updates"));
                 }
-                val ev = new ResponseEvent(client, rid, name, resp);
-                getBus().publish(ev);
+                synchronized (this) {
+                    val gid = gidMap.get(client);
+                    val ev = new ResponseEvent(client, gid, rid, name, resp);
+                    getBus().publish(ev);
+                }
             }
         } catch (Exception e) {
             // Error handler data

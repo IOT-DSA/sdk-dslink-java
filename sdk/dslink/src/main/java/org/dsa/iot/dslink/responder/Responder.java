@@ -3,8 +3,8 @@ package org.dsa.iot.dslink.responder;
 import lombok.NonNull;
 import lombok.val;
 import net.engio.mbassy.bus.MBassador;
-import org.dsa.iot.dslink.connection.Client;
 import org.dsa.iot.core.event.Event;
+import org.dsa.iot.dslink.connection.Client;
 import org.dsa.iot.dslink.events.RequestEvent;
 import org.dsa.iot.dslink.responder.methods.*;
 import org.dsa.iot.dslink.util.Linkable;
@@ -38,13 +38,30 @@ public class Responder extends Linkable {
             obj = (JsonObject) it.next();
             final JsonObject o = obj;
             
-            val event = new RequestEvent(client, o, new Handler<Void>() {
+            final Number rid = o.getNumber("rid");
+            final String sMethod = o.getString("method");
+            if (rid == null) {
+                continue;
+            } else if (sMethod == null) {
+                val resp = new JsonObject();
+                handleInvocationError(resp, "Missing method field", null);
+                
+                val responses = new JsonArray();
+                responses.addElement(resp);
+                val top = new JsonObject();
+                top.putElement("responses", responses);
+                client.write(top);
+                continue;
+            }
+            val event = new RequestEvent(client,
+                                            o,
+                                            rid.intValue(),
+                                            sMethod,
+                                            new Handler<Void>() {
                 @Override
                 public void handle(Void event) {
                     val resp = new JsonObject();
                     try {
-                        val rid = o.getNumber("rid");
-                        val sMethod = o.getString("method");
                         val path = o.getString("path");
                         resp.putNumber("rid", rid);
                         
@@ -131,18 +148,23 @@ public class Responder extends Linkable {
                 throw new RuntimeException("Unknown method");
         }
     }
-
-    protected void handleInvocationError(JsonObject resp, Exception e) {
-        e.printStackTrace(System.err);
-        resp.putString("stream", StreamState.CLOSED.jsonName);
-
-        val error = new JsonObject();
-        error.putString("msg", e.getMessage());
-
+    
+    protected void handleInvocationError(JsonObject resp,
+                                         @NonNull Exception e) {
         val writer = new StringWriter();
         e.printStackTrace(new PrintWriter(writer));
-        error.putString("detail", writer.toString());
+        handleInvocationError(resp, e.getMessage(), writer.toString());
+    }
 
+    protected void handleInvocationError(@NonNull JsonObject resp,
+                                         @NonNull String msg,
+                                         String detail) {
+        resp.putString("stream", StreamState.CLOSED.jsonName);
+        val error = new JsonObject();
+        error.putString("msg", msg);
+        if (detail != null) {
+            error.putString("detail", detail);
+        }
         resp.putElement("error", error);
     }
 }
