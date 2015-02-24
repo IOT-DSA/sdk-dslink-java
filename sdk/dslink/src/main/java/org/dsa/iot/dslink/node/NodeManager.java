@@ -16,6 +16,7 @@ import java.util.Map;
  */
 public class NodeManager {
 
+    @Getter
     private final SubscriptionManager subManager;
 
     private final MBassador<Event> bus;

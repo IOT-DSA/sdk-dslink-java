@@ -1,8 +1,7 @@
 package org.dsa.iot.dslink.responder.methods;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.NonNull;
+import lombok.val;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.exceptions.NoSuchPathException;
@@ -17,21 +16,32 @@ import java.util.List;
 /**
  * @author Samuel Grenier
  */
-@AllArgsConstructor(access = AccessLevel.PUBLIC)
 public class SubscribeMethod extends Method {
 
-    @NonNull
-    private final NodeManager manager;
+    @NonNull private final NodeManager manager;
+    private List<Node> nodes;
+
+    public SubscribeMethod(NodeManager manager,
+                            JsonObject request) {
+        super(request);
+        this.manager = manager;
+    }
 
     @Override
-    public JsonArray invoke(JsonObject request) {
-        List<Node> nodes = getPaths(request.getArray("paths"));
+    public JsonArray invoke() {
+        nodes = getPaths(getRequest().getArray("paths"));
         for (Node n : nodes) {
             n.setSubscribed(true);
         }
 
         setState(StreamState.CLOSED);
         return null;
+    }
+    
+    @Override
+    public void postSent() {
+        val subs = manager.getSubManager();
+        subs.update(nodes);
     }
 
     @SuppressWarnings("unchecked")

@@ -1,8 +1,6 @@
 package org.dsa.iot.dslink.responder.methods;
 
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.dsa.iot.dslink.util.StreamState;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
@@ -10,15 +8,24 @@ import org.vertx.java.core.json.JsonObject;
 /**
  * @author Samuel Grenier
  */
+@Getter
+@RequiredArgsConstructor
 public abstract class Method {
 
-    @Getter
     @Setter(AccessLevel.PROTECTED)
-    private StreamState state;
-
+    private StreamState state = null;
+    
+    @NonNull private final JsonObject request;
+    
     /**
-     * @param request Original request body
      * @return An array of update responses
      */
-    public abstract JsonArray invoke(JsonObject request);
+    public abstract JsonArray invoke();
+
+    /**
+     * Called after the response was sent to the client. 
+     */
+    public void postSent() {
+        
+    }
 }

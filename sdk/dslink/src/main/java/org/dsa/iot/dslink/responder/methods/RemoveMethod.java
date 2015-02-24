@@ -1,6 +1,5 @@
 package org.dsa.iot.dslink.responder.methods;
 
-import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.util.StreamState;
@@ -10,19 +9,24 @@ import org.vertx.java.core.json.JsonObject;
 /**
  * @author Samuel Grenier
  */
-@AllArgsConstructor
 public class RemoveMethod extends Method {
-    @NonNull
-    private final Node node;
+ 
+    @NonNull private final Node node;
 
     /**
      * References a configuration or attribute. Can be null to reference
      * the node itself.
      */
     private final String specialPath;
+    
+    public RemoveMethod(Node node, String specialPath, JsonObject request) {
+        super(request);
+        this.node = node;
+        this.specialPath = specialPath;
+    }
 
     @Override
-    public JsonArray invoke(JsonObject request) {
+    public JsonArray invoke() {
         boolean config = false;
         String name = null;
         if (specialPath != null)

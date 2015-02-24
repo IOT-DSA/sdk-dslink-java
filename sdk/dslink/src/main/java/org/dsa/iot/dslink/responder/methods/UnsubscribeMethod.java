@@ -13,13 +13,14 @@ import java.util.List;
  */
 public class UnsubscribeMethod extends SubscribeMethod {
 
-    public UnsubscribeMethod(NodeManager manager) {
-        super(manager);
+    public UnsubscribeMethod(NodeManager manager,
+                                JsonObject request) {
+        super(manager, request);
     }
 
     @Override
-    public JsonArray invoke(JsonObject request) {
-        List<Node> nodes = getPaths(request.getArray("paths"));
+    public JsonArray invoke() {
+        List<Node> nodes = getPaths(getRequest().getArray("paths"));
         for (Node n : nodes) {
             n.setSubscribed(false);
         }

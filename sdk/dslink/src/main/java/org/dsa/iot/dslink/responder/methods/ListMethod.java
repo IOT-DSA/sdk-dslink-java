@@ -1,13 +1,12 @@
 package org.dsa.iot.dslink.responder.methods;
 
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import org.dsa.iot.dslink.responder.Responder;
+import org.dsa.iot.dslink.connection.Client;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.value.Value;
-import org.dsa.iot.dslink.util.StreamState;
 import org.dsa.iot.dslink.node.value.ValueUtils;
-import org.dsa.iot.dslink.connection.Client;
+import org.dsa.iot.dslink.responder.Responder;
+import org.dsa.iot.dslink.util.StreamState;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
@@ -17,7 +16,6 @@ import java.util.Map;
 /**
  * @author Samuel Grenier
  */
-@RequiredArgsConstructor
 public class ListMethod extends Method {
 
     @NonNull private final Responder responder;
@@ -25,8 +23,20 @@ public class ListMethod extends Method {
     @NonNull private final Node parent;
     private final int rid;
 
+    public ListMethod(Responder responder,
+                        Client client,
+                        Node parent,
+                        int rid,
+                        JsonObject request) {
+        super(request);
+        this.responder = responder;
+        this.client = client;
+        this.parent = parent;
+        this.rid = rid;
+    }
+
     @Override
-    public JsonArray invoke(JsonObject request) {
+    public JsonArray invoke() {
         setState(StreamState.OPEN);
         JsonArray resp = getResponse();
         parent.subscribeToChildren(client, responder, rid);

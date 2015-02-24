@@ -61,6 +61,8 @@ public class Responder extends Linkable {
                 @Override
                 public void handle(Void event) {
                     val resp = new JsonObject();
+                    boolean error = false;
+                    Method method = null;
                     try {
                         val path = o.getString("path");
                         resp.putNumber("rid", rid);
@@ -70,8 +72,8 @@ public class Responder extends Linkable {
                             node = getManager().getNode(path);
                         }
 
-                        val method = getMethod(client, sMethod, rid.intValue(), node);
-                        val updates = method.invoke(o);
+                        method = getMethod(o, client, sMethod, rid.intValue(), node);
+                        val updates = method.invoke();
                         val state = method.getState();
 
                         if (state == null) {
@@ -89,6 +91,7 @@ public class Responder extends Linkable {
                             resp.putElement("updates", updates);
                         }
                     } catch (Exception e) {
+                        error = true;
                         handleInvocationError(resp, e);
                     } finally {
                         val responses = new JsonArray();
@@ -96,6 +99,9 @@ public class Responder extends Linkable {
                         val top = new JsonObject();
                         top.putElement("responses", responses);
                         client.write(top);
+                        if (method != null && !error) {
+                            method.postSent();
+                        }
                     }
                 }
             });
@@ -122,28 +128,29 @@ public class Responder extends Linkable {
         }
     }
 
-    protected Method getMethod(@NonNull Client client,
+    protected Method getMethod(@NonNull JsonObject obj,
+                                @NonNull Client client,
                                 @NonNull String name,
                                 int rid,
                                 NodeStringTuple tuple) {
         switch (name) {
             case "list":
-                return new ListMethod(this, client, tuple.getNode(), rid);
+                return new ListMethod(this, client, tuple.getNode(), rid, obj);
             case "set":
-                return new SetMethod(tuple.getNode(), tuple.getString());
+                return new SetMethod(tuple.getNode(), tuple.getString(), obj);
             case "remove":
-                return new RemoveMethod(tuple.getNode(), tuple.getString());
+                return new RemoveMethod(tuple.getNode(), tuple.getString(), obj);
             case "invoke":
-                return new InvokeMethod(tuple.getNode());
+                return new InvokeMethod(tuple.getNode(), obj);
             case "subscribe":
-                return new SubscribeMethod(getManager());
+                return new SubscribeMethod(getManager(), obj);
             case "unsubscribe":
-                return new UnsubscribeMethod(getManager());
+                return new UnsubscribeMethod(getManager(), obj);
             case "close":
                 return new CloseMethod(getBus(),
                                         client,
                                         client.getResponseTracker(),
-                                        this, rid);
+                                        this, rid, obj);
             default:
                 throw new RuntimeException("Unknown method");
         }

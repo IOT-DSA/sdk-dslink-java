@@ -1,6 +1,5 @@
 package org.dsa.iot.dslink.responder.methods;
 
-import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.value.Value;
@@ -11,7 +10,6 @@ import org.vertx.java.core.json.JsonObject;
 /**
  * @author Samuel Grenier
  */
-@AllArgsConstructor
 public class SetMethod extends Method {
 
     @NonNull
@@ -23,9 +21,17 @@ public class SetMethod extends Method {
      */
     private final String specialPath;
 
+    public SetMethod(Node node,
+                        String specialPath,
+                        JsonObject request) {
+        super(request);
+        this.specialPath = specialPath;
+        this.node = node;
+    }
+
     @Override
-    public JsonArray invoke(JsonObject request) {
-        Object obj = request.getField("value");
+    public JsonArray invoke() {
+        Object obj = getRequest().getField("value");
 
         Value value;
         if (obj instanceof Number) {
