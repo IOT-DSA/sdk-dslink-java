@@ -12,6 +12,7 @@ import org.dsa.iot.dslink.events.ConnectedToServerEvent;
 import org.dsa.iot.dslink.node.value.Value;
 
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -20,7 +21,14 @@ import java.util.concurrent.TimeUnit;
 public class Main {
 
     private final MBassador<Event> bus = EventBusFactory.create();
-    private final ScheduledThreadPoolExecutor pool = new ScheduledThreadPoolExecutor(1);
+    private final ScheduledThreadPoolExecutor pool = new ScheduledThreadPoolExecutor(1, new ThreadFactory() {
+        @Override
+        public Thread newThread(Runnable runnable) {
+            val thread = new Thread(runnable);
+            thread.setDaemon(true);
+            return thread;
+        }
+    });
     private DSLink link;
     
     public static void main(String[] args) {
