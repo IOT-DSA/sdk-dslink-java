@@ -5,7 +5,7 @@ import net.engio.mbassy.bus.MBassador;
 import net.engio.mbassy.listener.Handler;
 import org.dsa.iot.core.event.Event;
 import org.dsa.iot.core.event.EventBusFactory;
-import org.dsa.iot.dslink.DSLink;
+import org.dsa.iot.dslink.DSLinkFactory;
 import org.dsa.iot.dslink.connection.ConnectionType;
 import org.dsa.iot.dslink.events.ConnectedToServerEvent;
 import org.dsa.iot.dslink.node.value.Value;
@@ -27,7 +27,7 @@ public class Main {
         val url = "http://localhost:8080/conn";
         val type = ConnectionType.WS;
         val dsId = "responder";
-        val link = DSLink.generate(bus, url, type, dsId);
+        val link = DSLinkFactory.create().generate(bus, url, type, dsId);
 
         val manager = link.getNodeManager();
         val parent = manager.createRootNode("test");

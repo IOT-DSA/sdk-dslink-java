@@ -9,6 +9,7 @@ import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonObject;
 
 /**
+ * Posted on incoming requests from clients.
  * @author Samuel Grenier
  */
 @RequiredArgsConstructor

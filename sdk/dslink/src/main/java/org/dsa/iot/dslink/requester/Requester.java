@@ -13,8 +13,8 @@ import org.dsa.iot.dslink.util.StreamState;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -23,12 +23,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Requester extends Linkable {
 
     private final AtomicInteger gid;
-    private final Map<Client, Integer> gidMap;
+    private final Map<Client, Map<Integer, Integer>> gidMap;
     
     public Requester(MBassador<Event> bus) {
         super(bus);
         gid = new AtomicInteger();
-        gidMap = new WeakHashMap<>();
+        gidMap = new HashMap<>(); // TODO: test with weak hash map
     }
 
     public int sendRequest(@NonNull Client client,
@@ -36,7 +36,8 @@ public class Requester extends Linkable {
         ensureConnected();
 
         val obj = new JsonObject();
-        obj.putNumber("rid", client.getRequestTracker().track(req));
+        val rid = client.getRequestTracker().track(req);
+        obj.putNumber("rid", rid);
         obj.putString("method", req.getName());
         req.addJsonValues(obj);
 
@@ -45,7 +46,12 @@ public class Requester extends Linkable {
         
         int id = gid.getAndIncrement();
         synchronized (this) {
-            gidMap.put(client, id);
+            Map<Integer, Integer> map = gidMap.get(client);
+            if (map == null) {
+                map = new HashMap<>();
+                gidMap.put(client, map);
+            }
+            map.put(rid, id);
         }
 
         val top = new JsonObject();
@@ -65,38 +71,21 @@ public class Requester extends Linkable {
             Request request = client.getRequestTracker().getRequest(rid);
             String name = request.getName();
             Response<?> resp;
+            int gid = -1;
             if (rid != 0) {
                 // Response
                 String state = o.getString("state");
-                if (StreamState.CLOSED.jsonName.equals(state)) {
-                    client.getRequestTracker().untrack(rid);
+                synchronized (this) {
+                    val map = gidMap.get(client);
+                    if (StreamState.CLOSED.jsonName.equals(state)) {
+                        client.getRequestTracker().untrack(rid);
+                        gid = map.remove(rid);
+                    } else {
+                        gid = map.get(rid);
+                    }
                 }
 
-                switch (name) {
-                    case "list":
-                        resp = new ListResponse((ListRequest) request, getManager());
-                        break;
-                    case "set":
-                        resp = new SetResponse((SetRequest) request);
-                        break;
-                    case "remove":
-                        resp = new RemoveResponse((RemoveRequest) request);
-                        break;
-                    case "invoke":
-                        resp = new InvokeResponse((InvokeRequest) request);
-                        break;
-                    case "subscribe":
-                        resp = new SubscribeResponse((SubscribeRequest) request);
-                        break;
-                    case "unsubscribe":
-                        resp = new UnsubscribeResponse((UnsubscribeRequest) request);
-                        break;
-                    case "close":
-                        resp = new CloseResponse((CloseRequest) request);
-                        break;
-                    default:
-                        throw new RuntimeException("Unknown method");
-                }
+                resp = getResponse(gid, request);
                 resp.populate(o.getArray("updates"));
             } else {
                 // Subscription update
@@ -105,10 +94,30 @@ public class Requester extends Linkable {
                 resp.populate(o.getArray("updates"));
             }
             synchronized (this) {
-                val gid = gidMap.get(client);
                 val ev = new ResponseEvent(client, gid, rid, name, resp);
                 getBus().publish(ev);
             }
+        }
+    }
+    
+    public Response<?> getResponse(int gid, Request req) {
+        switch (req.getName()) {
+            case "list":
+                return new ListResponse((ListRequest) req, getManager());
+            case "set":
+                return new SetResponse((SetRequest) req);
+            case "remove":
+                return new RemoveResponse((RemoveRequest) req);
+            case "invoke":
+                return new InvokeResponse((InvokeRequest) req);
+            case "subscribe":
+                return new SubscribeResponse((SubscribeRequest) req);
+            case "unsubscribe":
+                return new UnsubscribeResponse((UnsubscribeRequest) req);
+            case "close":
+                return new CloseResponse((CloseRequest) req);
+            default:
+                throw new RuntimeException("Unknown method");
         }
     }
 }

@@ -4,7 +4,7 @@ import lombok.SneakyThrows;
 import lombok.val;
 import org.dsa.iot.broker.Broker;
 import org.dsa.iot.core.event.EventBusFactory;
-import org.dsa.iot.dslink.DSLink;
+import org.dsa.iot.dslink.DSLinkFactory;
 import org.dsa.iot.dslink.connection.ConnectionType;
 import org.dsa.iot.dslink.connection.connector.server.connectors.WebServerConnector;
 import org.dsa.iot.dslink.connection.handshake.HandshakeClient;
@@ -27,7 +27,8 @@ public class Main {
     public static void setup() {
         val bus = EventBusFactory.create();
         val client = HandshakeClient.generate("broker", "_", true, true);
-        val link = DSLink.generate(bus, new WebServerConnector(bus, client));
+        val conn = new WebServerConnector(bus, client);
+        val link = DSLinkFactory.create().generate(bus, conn);
         broker = new Broker(bus, link);
         port = getRandomPort();
         broker.listen(port);
@@ -44,7 +45,7 @@ public class Main {
         val bus = EventBusFactory.create();
         val url = "http://localhost:" + port + "/conn";
 
-        val link = DSLink.generate(bus, url, ConnectionType.WS, "dslink");
+        val link = DSLinkFactory.create().generate(bus, url, ConnectionType.WS, "dslink");
         link.connect();
         while (link.isConnecting()) {
             Thread.sleep(100);

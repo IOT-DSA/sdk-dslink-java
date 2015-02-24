@@ -1,11 +1,13 @@
 package org.dsa.iot.requester;
 
+import lombok.SneakyThrows;
 import lombok.val;
 import net.engio.mbassy.bus.MBassador;
 import net.engio.mbassy.listener.Handler;
 import org.dsa.iot.core.event.Event;
 import org.dsa.iot.core.event.EventBusFactory;
 import org.dsa.iot.dslink.DSLink;
+import org.dsa.iot.dslink.DSLinkFactory;
 import org.dsa.iot.dslink.connection.ConnectionType;
 import org.dsa.iot.dslink.events.ConnectedToServerEvent;
 import org.dsa.iot.dslink.events.ResponseEvent;
@@ -30,17 +32,19 @@ public class Main {
         m.run();
     }
 
+    @SneakyThrows
     private void run() {
         val url = "http://localhost:8080/conn";
         val type = ConnectionType.WS;
         val dsId = "requester";
-        link = DSLink.generate(bus, url, type, dsId, true, false);
+        link = DSLinkFactory.create().generate(bus, url, type, dsId, true, false);
         link.connect();
         link.sleep();
+        // TODO: it seems responder children display after multiple restarts of the requester
     }
 
     @Handler
-    public void onConnected(ConnectedToServerEvent event) {
+    public synchronized void onConnected(ConnectedToServerEvent event) {
         System.out.println("--------------");
         System.out.println("Connected!");
         ListRequest request = new ListRequest("/");
@@ -49,7 +53,7 @@ public class Main {
     }
 
     @Handler
-    public void onResponse(ResponseEvent event) {
+    public synchronized void onResponse(ResponseEvent event) {
         System.out.println("--------------");
         System.out.println("Received response: " + event.getName());
         val resp = (ListResponse) event.getResponse();

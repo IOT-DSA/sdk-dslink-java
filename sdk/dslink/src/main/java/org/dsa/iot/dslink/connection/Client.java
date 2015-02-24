@@ -10,7 +10,7 @@ import org.vertx.java.core.json.JsonObject;
 public interface Client {
     
     boolean write(JsonObject obj);
-    
+
     RequestTracker getRequestTracker();
     
     ResponseTracker getResponseTracker();
