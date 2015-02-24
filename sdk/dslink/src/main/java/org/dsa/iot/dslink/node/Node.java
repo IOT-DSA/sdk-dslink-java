@@ -6,9 +6,9 @@ import lombok.Setter;
 import lombok.val;
 import net.engio.mbassy.bus.MBassador;
 import org.dsa.iot.core.StringUtils;
+import org.dsa.iot.core.event.Event;
 import org.dsa.iot.dslink.connection.Client;
 import org.dsa.iot.dslink.events.ClosedStreamEvent;
-import org.dsa.iot.core.event.Event;
 import org.dsa.iot.dslink.node.exceptions.DuplicateException;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.responder.Responder;
@@ -136,7 +136,7 @@ public class Node {
     }
 
     public synchronized void setValue(Value value, boolean update) {
-        if (!(value == null || this.value == null || value.equals(this.value))) {
+        if (!(value == null || value.equals(this.value))) {
             this.value = value;
             this.value.setImmutable();
             if (update)

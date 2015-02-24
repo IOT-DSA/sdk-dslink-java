@@ -19,7 +19,7 @@ public abstract class Response<T extends Request> {
     /**
      * Handles the data returned from the response. The response
      * object should then be populated with its values.
-     * @param o Parsed updates
+     * @param array Parsed updates
      */
-    public abstract void populate(JsonArray o);
+    public abstract void populate(JsonArray array);
 }

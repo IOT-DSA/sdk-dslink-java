@@ -5,10 +5,14 @@ import net.engio.mbassy.bus.MBassador;
 import net.engio.mbassy.listener.Handler;
 import org.dsa.iot.core.event.Event;
 import org.dsa.iot.core.event.EventBusFactory;
+import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.DSLinkFactory;
 import org.dsa.iot.dslink.connection.ConnectionType;
 import org.dsa.iot.dslink.events.ConnectedToServerEvent;
 import org.dsa.iot.dslink.node.value.Value;
+
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Samuel Grenier
@@ -16,7 +20,9 @@ import org.dsa.iot.dslink.node.value.Value;
 public class Main {
 
     private final MBassador<Event> bus = EventBusFactory.create();
-
+    private final ScheduledThreadPoolExecutor pool = new ScheduledThreadPoolExecutor(1);
+    private DSLink link;
+    
     public static void main(String[] args) {
         Main m = new Main();
         m.bus.subscribe(m);
@@ -27,7 +33,7 @@ public class Main {
         val url = "http://localhost:8080/conn";
         val type = ConnectionType.WS;
         val dsId = "responder";
-        val link = DSLinkFactory.create().generate(bus, url, type, dsId);
+        link = DSLinkFactory.create().generate(bus, url, type, dsId);
 
         val manager = link.getNodeManager();
         val parent = manager.createRootNode("test");
@@ -40,6 +46,23 @@ public class Main {
         b.setConfiguration("test", new Value("Hello there"));
         b.setValue(new Value(2));
 
+        pool.scheduleWithFixedDelay(new Runnable() {
+            @Override
+            public void run() {
+                val manager = link.getNodeManager();
+                val tuple = manager.getNode("test/incremental", true);
+                val node = tuple.getNode();
+                Value value = node.getValue();
+                if (value == null) {
+                    value = new Value(0);
+                } else {
+                    value = new Value(value.getInteger() + 1);
+                }
+                node.setValue(value);
+                System.out.println("New incremental value: " + value.getInteger());
+            }
+        }, 0, 3, TimeUnit.SECONDS);
+        
         link.connect();
         link.sleep();
     }

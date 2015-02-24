@@ -4,9 +4,9 @@ import lombok.Getter;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.value.Value;
-import org.dsa.iot.dslink.requester.requests.SubscribeRequest;
 import org.dsa.iot.dslink.node.value.ValueStatus;
 import org.dsa.iot.dslink.node.value.ValueUtils;
+import org.dsa.iot.dslink.requester.requests.SubscribeRequest;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
@@ -35,8 +35,8 @@ public class SubscriptionResponse extends Response<SubscribeRequest> {
     }
 
     @Override
-    public void populate(JsonArray o) {
-        for (Object obj : o) {
+    public void populate(JsonArray array) {
+        for (Object obj : array) {
             if (obj instanceof JsonArray) {
                 JsonArray json = (JsonArray) obj;
                 path = json.get(0);

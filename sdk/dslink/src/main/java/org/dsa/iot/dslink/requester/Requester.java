@@ -101,9 +101,10 @@ public class Requester extends Linkable {
     }
     
     public Response<?> getResponse(int gid, Request req) {
+        val man = getManager();
         switch (req.getName()) {
             case "list":
-                return new ListResponse((ListRequest) req, getManager());
+                return new ListResponse((ListRequest) req, man);
             case "set":
                 return new SetResponse((SetRequest) req);
             case "remove":
@@ -111,7 +112,7 @@ public class Requester extends Linkable {
             case "invoke":
                 return new InvokeResponse((InvokeRequest) req);
             case "subscribe":
-                return new SubscribeResponse((SubscribeRequest) req);
+                return new SubscriptionResponse((SubscribeRequest) req, man);
             case "unsubscribe":
                 return new UnsubscribeResponse((UnsubscribeRequest) req);
             case "close":
