@@ -1,7 +1,6 @@
 package org.dsa.iot.dslink.node.value;
 
 import lombok.NonNull;
-import org.dsa.iot.dslink.node.value.Value;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
@@ -10,7 +9,7 @@ import org.vertx.java.core.json.JsonObject;
  */
 public class ValueUtils {
 
-    private static final String ERROR_MSG = "Unhandled value type";
+    private static final String ERROR_MSG = "Unhandled value type: ";
 
     public static Value toValue(@NonNull Object o) {
         Value val;
@@ -21,7 +20,7 @@ public class ValueUtils {
         } else if (o instanceof String) {
             val = new Value((String) o);
         } else {
-            throw new RuntimeException(ERROR_MSG);
+            throw new RuntimeException(ERROR_MSG + o.getClass().getName());
         }
         return val;
     }
@@ -39,7 +38,7 @@ public class ValueUtils {
                 array.addString(value.getString());
                 break;
             default:
-                throw new RuntimeException(ERROR_MSG);
+                throw new RuntimeException(ERROR_MSG + value.getType());
         }
     }
 
@@ -57,7 +56,7 @@ public class ValueUtils {
                 object.putString(name, value.getString());
                 break;
             default:
-                throw new RuntimeException(ERROR_MSG);
+                throw new RuntimeException(ERROR_MSG + value.getType());
         }
     }
 }
