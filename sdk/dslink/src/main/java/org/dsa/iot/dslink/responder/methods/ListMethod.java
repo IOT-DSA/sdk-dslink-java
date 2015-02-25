@@ -73,7 +73,7 @@ public class ListMethod extends Method {
     }
 
     public static JsonArray getChildUpdate(Node node, boolean removed) {
-        JsonArray array = new JsonArray();
+        val array = new JsonArray();
         array.addString(node.getName());
 
         JsonObject obj = new JsonObject();
@@ -82,9 +82,16 @@ public class ListMethod extends Method {
             iterateAndAdd(obj, "@", node.getAttributes());
         }
         
+        { // Action information
+            val action = node.getAction();
+            if (action != null) {
+                action.toJson(obj);
+            }
+        }
+        
         { // Internal information
             obj.putString("$is", node.getConfiguration("is").getString());
-
+            
             String name = node.getDisplayName();
             if (name != null) {
                 obj.putString("$name", name);

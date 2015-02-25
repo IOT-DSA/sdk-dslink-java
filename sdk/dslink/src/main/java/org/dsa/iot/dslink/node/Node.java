@@ -12,10 +12,9 @@ import org.dsa.iot.dslink.events.ClosedStreamEvent;
 import org.dsa.iot.dslink.node.exceptions.DuplicateException;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.responder.Responder;
+import org.dsa.iot.dslink.responder.action.Action;
 import org.dsa.iot.dslink.responder.methods.ListMethod;
-import org.dsa.iot.dslink.util.Permission;
 import org.dsa.iot.dslink.util.StreamState;
-import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
@@ -47,16 +46,7 @@ public class Node {
     private String displayName;
     private Value value;
 
-    /**
-     * Null means the node is not invokable.
-     */
-    @Getter
-    @Setter
-    private Permission invokable;
-
-    @Getter
-    @Setter
-    private Handler<Void> invocationHandler;
+    @Getter @Setter private Action action;
 
     /**
      * Whether the node is currently subscribed to or not

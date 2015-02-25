@@ -9,7 +9,9 @@ import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.dsa.iot.dslink.requester.requests.ListRequest;
+import org.dsa.iot.dslink.responder.action.Action;
 import org.dsa.iot.dslink.util.Permission;
+import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
@@ -83,7 +85,13 @@ public class ListResponse extends Response<ListRequest> {
 
             val invokable = childData.getString("$invokable");
             if (invokable != null) {
-                child.setInvokable(Permission.toEnum(invokable));
+                val perm = Permission.toEnum(invokable);
+                child.setAction(new Action(perm, new Handler<JsonObject>() {
+                    @Override
+                    public void handle(JsonObject event) {
+                        throw new UnsupportedOperationException();
+                    }
+                }));
             }
 
             String interfaces = childData.getString("$interface");

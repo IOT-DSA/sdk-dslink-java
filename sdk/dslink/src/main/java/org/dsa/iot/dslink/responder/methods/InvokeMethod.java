@@ -1,9 +1,9 @@
 package org.dsa.iot.dslink.responder.methods;
 
 import lombok.NonNull;
+import lombok.val;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.util.StreamState;
-import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
@@ -22,9 +22,9 @@ public class InvokeMethod extends Method {
 
     @Override
     public JsonArray invoke() {
-        if (node.getInvokable() != null) {
-            Handler<Void> handler = node.getInvocationHandler();
-            handler.handle(null);
+        val handler = node.getAction();
+        if (handler != null && handler.hasPermission()) {
+            handler.invoke(getRequest());
         } else {
             throw new RuntimeException("Not invokable");
         }
