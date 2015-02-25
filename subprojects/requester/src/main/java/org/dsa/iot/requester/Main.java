@@ -84,7 +84,7 @@ public class Main {
         if (map != null) {
             for (Map.Entry<String, Value> conf : map.entrySet()) {
                 String a = conf.getKey();
-                String v = conf.getValue().toString();
+                String v = conf.getValue().toDebugString();
                 if (indent) {
                     System.out.print("      ");
                 }

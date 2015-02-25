@@ -2,6 +2,8 @@ package org.dsa.iot.dslink.node.value;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import org.vertx.java.core.json.JsonArray;
+import org.vertx.java.core.json.JsonObject;
 
 /**
  * @author Samuel Grenier
@@ -16,6 +18,8 @@ public class Value {
     private Integer integer;
     private Boolean bool;
     private String string;
+    private JsonObject map;
+    private JsonArray array;
 
     public Value(Integer i) {
         set(i);
@@ -28,25 +32,52 @@ public class Value {
     public Value(String s) {
         set(s);
     }
+    
+    public Value(JsonObject o) {
+        set(o);
+    }
+    
+    public Value(JsonArray a) {
+        set(a);
+    }
 
     public void set(Integer i) {
-        set(ValueType.NUMBER, i, null, null);
+        set(ValueType.NUMBER, i, null, null, null, null);
     }
 
     public void set(Boolean b) {
-        set(ValueType.BOOL, null, b, null);
+        set(ValueType.BOOL, null, b, null, null, null);
     }
 
     public void set(String s) {
-        set(ValueType.STRING, null, null, s);
+        set(ValueType.STRING, null, null, s, null, null);
     }
+    
+    public void set(JsonArray array) {
+        set(ValueType.ARRAY, null, null, null, array, null);
+    } 
 
-    private void set(ValueType type, Integer i, Boolean b, String s) {
+    public void set(JsonObject object) {
+        set(ValueType.MAP, null, null, null, null, object);
+    }
+    
+    private void set(ValueType type, Integer i, Boolean b, String s,
+                     JsonArray a, JsonObject o) {
         checkImmutable();
         this.type = type;
         this.integer = i;
         this.bool = b;
         this.string = s;
+        this.array = a != null ? a.copy() : null;
+        this.map = o != null ? o.copy() : null;
+    }
+
+    public JsonObject getMap() {
+        return map.copy();
+    }
+    
+    public JsonArray getArray() {
+        return array.copy();
     }
 
     public void setImmutable() {
@@ -69,7 +100,18 @@ public class Value {
             case STRING:
                 return string;
             default:
-                throw new RuntimeException("Unknown type");
+                throw new RuntimeException("Unhandled type: " + type);
+        }
+    }
+    
+    public String toDebugString() {
+        switch (type) {
+            case MAP:
+                return map.encode();
+            case ARRAY:
+                return array.encode();
+            default:
+                return toString();
         }
     }
 }

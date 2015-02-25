@@ -5,7 +5,12 @@ package org.dsa.iot.dslink.node.value;
  */
 public enum ValueType {
 
+    /* Json values */
     NUMBER,
     STRING,
-    BOOL
+    BOOL,
+    
+    /* Internal values */
+    MAP,
+    ARRAY
 }

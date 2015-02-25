@@ -47,16 +47,15 @@ public class ListResponse extends Response<ListRequest> {
         String name = nodeData.get(0);
         Object v = nodeData.get(1);
 
-        Value value = null;
-        if (!(v instanceof JsonObject)) {
-            value = ValueUtils.toValue(v);
-        }
+        Value value;
         char start = name.charAt(0);
         if (start == '$') {
             name = name.substring(1);
+            value = ValueUtils.toValue(v);
             node.setConfiguration(name, value);
         } else if (start == '@') {
             name = name.substring(1);
+            value = ValueUtils.toValue(v);
             node.setAttribute(name, value);
         } else {
             // Child node
