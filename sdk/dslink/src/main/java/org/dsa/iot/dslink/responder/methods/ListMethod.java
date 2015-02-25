@@ -1,6 +1,7 @@
 package org.dsa.iot.dslink.responder.methods;
 
 import lombok.NonNull;
+import lombok.val;
 import org.dsa.iot.dslink.connection.Client;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.value.Value;
@@ -75,8 +76,13 @@ public class ListMethod extends Method {
         JsonArray array = new JsonArray();
         array.addString(node.getName());
 
-        {
-            JsonObject obj = new JsonObject();
+        JsonObject obj = new JsonObject();
+        { // API information
+            iterateAndAdd(obj, "$", node.getConfigurations());
+            iterateAndAdd(obj, "@", node.getAttributes());
+        }
+        
+        { // Internal information
             obj.putString("$is", node.getConfiguration("is").getString());
 
             String name = node.getDisplayName();
@@ -102,5 +108,17 @@ public class ListMethod extends Method {
             array.addObject(obj);
         }
         return array;
+    }
+    
+    private static void iterateAndAdd(@NonNull JsonObject obj,
+                               @NonNull String prefix,
+                               Map<String, Value> valueMap) {
+        if (valueMap != null) {
+            for (Map.Entry<String, Value> entry : valueMap.entrySet()) {
+                val name = entry.getKey();
+                val value = entry.getValue();
+                ValueUtils.toJson(obj, prefix + name, value);
+            }
+        }
     }
 }

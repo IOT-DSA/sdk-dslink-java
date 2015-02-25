@@ -29,6 +29,8 @@ public class SubscriptionManager {
     //private final List<JsonObject> updates = new ArrayList<>();
 
     public void update(List<Node> nodes) {
+        if (nodes == null)
+            return;
         List<JsonElement> list = new ArrayList<>(nodes.size());
         for (Node node : nodes) {
             list.add(update(node, false));
@@ -41,6 +43,8 @@ public class SubscriptionManager {
     }
     
     private synchronized JsonElement update(Node node, boolean send) {
+        if (node == null)
+            return null;
         JsonArray array = new JsonArray();
         array.addString(node.getPath());
 

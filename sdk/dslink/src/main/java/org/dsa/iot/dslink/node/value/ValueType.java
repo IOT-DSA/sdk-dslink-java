@@ -12,5 +12,9 @@ public enum ValueType {
     
     /* Internal values */
     MAP,
-    ARRAY
+    ARRAY;
+    
+    public String toJsonString() {
+        return this.toString().toLowerCase();
+    }
 }

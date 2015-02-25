@@ -10,6 +10,7 @@ import org.dsa.iot.dslink.DSLinkFactory;
 import org.dsa.iot.dslink.connection.ConnectionType;
 import org.dsa.iot.dslink.events.ConnectedToServerEvent;
 import org.dsa.iot.dslink.node.value.Value;
+import org.dsa.iot.dslink.node.value.ValueType;
 
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
@@ -54,12 +55,12 @@ public class Main {
         b.setConfiguration("test", new Value("Hello there"));
         b.setValue(new Value(2));
 
+        val tuple = manager.getNode("test/incremental", true);
+        final val node = tuple.getNode();
+        node.setConfiguration("type", new Value(ValueType.NUMBER.toJsonString()));
         pool.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
-                val manager = link.getNodeManager();
-                val tuple = manager.getNode("test/incremental", true);
-                val node = tuple.getNode();
                 Value value = node.getValue();
                 if (value == null) {
                     value = new Value(0);
