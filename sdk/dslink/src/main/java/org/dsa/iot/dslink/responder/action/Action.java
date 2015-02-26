@@ -53,6 +53,7 @@ public class Action {
             val obj = new JsonObject();
             obj.putString("name", param.getName());
             obj.putString("type", param.getType().toJsonString());
+            array.add(obj);
         }
         return array;
     }
