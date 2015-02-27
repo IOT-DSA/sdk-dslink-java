@@ -13,51 +13,32 @@ import org.dsa.iot.dslink.util.StreamState;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-
 /**
  * @author Samuel Grenier
  */
 public class Requester extends Linkable {
-
-    private final AtomicInteger gid;
-    private final Map<Client, Map<Integer, Integer>> gidMap;
     
     public Requester(MBassador<Event> bus) {
         super(bus);
-        gid = new AtomicInteger();
-        gidMap = new HashMap<>(); // TODO: test with weak hash map
     }
 
-    public int sendRequest(@NonNull Client client,
+    public void sendRequest(@NonNull Client client,
                             @NonNull Request req) {
         ensureConnected();
 
         val obj = new JsonObject();
-        val rid = client.getRequestTracker().track(req);
-        obj.putNumber("rid", rid);
-        obj.putString("method", req.getName());
-        req.addJsonValues(obj);
-
+        {
+            val rid = client.getRequestTracker().track(req);
+            obj.putNumber("rid", rid);
+            obj.putString("method", req.getName());
+            req.addJsonValues(obj);
+        }
+        
+        val top = new JsonObject();
         val requests = new JsonArray();
         requests.add(obj);
-
-        int id = gid.getAndIncrement();
-        synchronized (this) {
-            Map<Integer, Integer> map = gidMap.get(client);
-            if (map == null) {
-                map = new HashMap<>();
-                gidMap.put(client, map);
-            }
-            map.put(rid, id);
-        }
-
-        val top = new JsonObject();
         top.putArray("requests", requests);
         client.write(top);
-        return id;
     }
 
     @Override
@@ -70,20 +51,12 @@ public class Requester extends Linkable {
             val rid = o.getNumber("rid").intValue();
             val request = client.getRequestTracker().getRequest(rid);
             Response<?> resp;
-            int gid = -1;
             if (rid != 0) {
                 // Response
                 val state = o.getString("state");
-                synchronized (this) {
-                    val map = gidMap.get(client);
-                    if (StreamState.CLOSED.jsonName.equals(state)) {
-                        client.getRequestTracker().untrack(rid);
-                        gid = map.remove(rid);
-                    } else {
-                        gid = map.get(rid);
-                    }
+                if (StreamState.CLOSED.jsonName.equals(state)) {
+                    client.getRequestTracker().untrack(rid);
                 }
-
                 resp = getResponse(request);
                 resp.populate(o.getArray("updates"));
             } else {
@@ -94,7 +67,7 @@ public class Requester extends Linkable {
             }
             synchronized (this) {
                 val name = request.getName();
-                val ev = new ResponseEvent(client, gid, rid, name, resp);
+                val ev = new ResponseEvent(client, rid, name, resp);
                 getBus().publish(ev);
             }
         }

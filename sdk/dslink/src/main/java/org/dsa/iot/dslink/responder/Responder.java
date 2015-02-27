@@ -31,34 +31,19 @@ public class Responder extends Linkable {
      */
     @Override
     @SuppressWarnings("unchecked")
-    public synchronized void parse(final Client client, final JsonArray requests) {
+    public synchronized void parse(Client client, JsonArray requests) {
         val it = requests.iterator();
+        val responses = new JsonArray();
         for (JsonObject obj; it.hasNext();) {
             obj = (JsonObject) it.next();
-            final JsonObject o = obj;
-            
-            final Number rid = o.getNumber("rid");
-            final String method = o.getString("method");
-            if (rid == null) {
-                continue;
-            } else if (method == null) {
-                val resp = new JsonObject();
-                handleInvocationError(resp, "Missing method field", null);
-                
-                val responses = new JsonArray();
-                responses.addElement(resp);
-                val top = new JsonObject();
-                top.putElement("responses", responses);
-                client.write(top);
-                continue;
-            }
-            
-            val event = new RequestEvent(client, o,
-                                            rid.intValue(),
-                                            method);
-            getBus().publish(event);
-            handleRequest(client, rid.intValue(), method, o);
+            val out = new JsonObject();
+            handleRequest(client, obj, out);
+            responses.add(out);
         }
+        
+        val top = new JsonObject();
+        top.putElement("responses", responses);
+        client.write(top);
     }
 
     public void closeStream(Client client, int rid) {
@@ -79,14 +64,21 @@ public class Responder extends Linkable {
         }
     }
     
-    protected void handleRequest(Client client, int rid,
-                                 String sMethod, JsonObject obj) {
-        val resp = new JsonObject();
+    public synchronized void handleRequest(Client client,
+                                           JsonObject obj,
+                                           JsonObject out) {
+        val nRid = obj.getNumber("rid");
+        val sMethod = obj.getString("method");
+        if (!validateBasics(nRid, sMethod, out)) {
+            return;
+        }
+        
+        val rid = nRid.intValue();
         boolean error = false;
         Method method = null;
         try {
             val path = obj.getString("path");
-            resp.putNumber("rid", rid);
+            out.putNumber("rid", rid);
 
             NodeStringTuple node = null;
             if (path != null) {
@@ -102,28 +94,28 @@ public class Responder extends Linkable {
             }
             if (state != StreamState.INITIALIZED) {
                 // This is a first response, default value is initialized if omitted
-                resp.putString("stream", state.jsonName);
+                out.putString("stream", state.jsonName);
             }
             if (state == StreamState.OPEN
                     || state == StreamState.INITIALIZED) {
                 client.getResponseTracker().track(rid);
             }
             if (updates != null && updates.size() > 0) {
-                resp.putElement("updates", updates);
+                out.putElement("updates", updates);
             }
         } catch (Exception e) {
             error = true;
-            handleInvocationError(resp, e);
+            handleInvocationError(out, e);
         } finally {
-            val responses = new JsonArray();
-            responses.addElement(resp);
-            val top = new JsonObject();
-            top.putElement("responses", responses);
-            client.write(top);
             if (method != null && !error) {
                 method.postSent();
             }
         }
+
+        val event = new RequestEvent(client, obj,
+                                                rid,
+                                                sMethod);
+        getBus().publish(event);
     }
 
     protected Method getMethod(@NonNull JsonObject obj,
@@ -171,5 +163,15 @@ public class Responder extends Linkable {
             error.putString("detail", detail);
         }
         resp.putElement("error", error);
+    }
+    
+    private boolean validateBasics(Number rid, String method, JsonObject out) {
+        if (rid == null) {
+            return false;
+        } else if (method == null) {
+            handleInvocationError(out, "Missing method field", null);
+            return false;
+        }
+        return true;
     }
 }

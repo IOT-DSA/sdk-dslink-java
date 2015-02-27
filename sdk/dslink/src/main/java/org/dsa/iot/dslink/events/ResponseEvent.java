@@ -16,7 +16,6 @@ import org.dsa.iot.dslink.requester.responses.Response;
 public class ResponseEvent extends Event {
 
     @NonNull private final Client client;
-    private final int gid;
     private final int rid;
     @NonNull private final String name;
     @NonNull private final Response<?> response;
