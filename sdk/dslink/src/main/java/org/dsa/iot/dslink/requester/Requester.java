@@ -43,7 +43,7 @@ public class Requester extends Linkable {
 
         val requests = new JsonArray();
         requests.add(obj);
-        
+
         int id = gid.getAndIncrement();
         synchronized (this) {
             Map<Integer, Integer> map = gidMap.get(client);
@@ -67,14 +67,13 @@ public class Requester extends Linkable {
         for (JsonObject o; it.hasNext();) {
             o = (JsonObject) it.next();
 
-            int rid = o.getNumber("rid").intValue();
-            Request request = client.getRequestTracker().getRequest(rid);
-            String name = request.getName();
+            val rid = o.getNumber("rid").intValue();
+            val request = client.getRequestTracker().getRequest(rid);
             Response<?> resp;
             int gid = -1;
             if (rid != 0) {
                 // Response
-                String state = o.getString("state");
+                val state = o.getString("state");
                 synchronized (this) {
                     val map = gidMap.get(client);
                     if (StreamState.CLOSED.jsonName.equals(state)) {
@@ -85,22 +84,23 @@ public class Requester extends Linkable {
                     }
                 }
 
-                resp = getResponse(gid, request);
+                resp = getResponse(request);
                 resp.populate(o.getArray("updates"));
             } else {
                 // Subscription update
-                SubscribeRequest req = (SubscribeRequest) request;
+                val req = (SubscribeRequest) request;
                 resp = new SubscriptionResponse(req, getManager());
                 resp.populate(o.getArray("updates"));
             }
             synchronized (this) {
+                val name = request.getName();
                 val ev = new ResponseEvent(client, gid, rid, name, resp);
                 getBus().publish(ev);
             }
         }
     }
     
-    public Response<?> getResponse(int gid, Request req) {
+    public Response<?> getResponse(Request req) {
         val man = getManager();
         switch (req.getName()) {
             case "list":
