@@ -33,11 +33,12 @@ import org.vertx.java.core.json.JsonObject;
 public class RandomNumberGeneratorResponder {
 
 	private static AtomicInteger counter = new AtomicInteger(0);
+	private static final Random random = new Random();
 
 	public static void main(String[] args) {
 		// Create executor
-		ScheduledThreadPoolExecutor pool = new ScheduledThreadPoolExecutor(1,
-				new ThreadFactory() {
+		final ScheduledThreadPoolExecutor pool = new ScheduledThreadPoolExecutor(
+				1, new ThreadFactory() {
 					@Override
 					public Thread newThread(Runnable runnable) {
 						Thread thread = new Thread(runnable);
@@ -59,7 +60,7 @@ public class RandomNumberGeneratorResponder {
 
 		// Create parent Node
 		NodeManager manager = link.getNodeManager();
-		Node parent = manager.createRootNode("test");
+		final Node parent = manager.createRootNode("test");
 
 		// Create Action for parent Node
 		Node actionNode = parent.createChild("generate");
@@ -115,7 +116,7 @@ public class RandomNumberGeneratorResponder {
 	}
 
 	private static void startPool(ScheduledThreadPoolExecutor pool,
-			Node parent, int time, TimeUnit timeUnit) {
+			final Node parent, int time, TimeUnit timeUnit) {
 		pool.scheduleWithFixedDelay(new Runnable() {
 			@Override
 			public void run() {
@@ -127,7 +128,7 @@ public class RandomNumberGeneratorResponder {
 						if (value == null) {
 							value = new Value(0);
 						} else {
-							value = new Value(new Random().nextInt());
+							value = new Value(random.nextInt());
 						}
 						node.setValue(value);
 					}
