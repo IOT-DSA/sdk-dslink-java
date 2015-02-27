@@ -7,4 +7,6 @@ include 'subprojects/requester'
 include 'subprojects/responder'
 include 'subprojects/broker'
 
+include 'subprojects/dslinks/rng'
+
 rootProject.name = 'sdk-dslink-java'
