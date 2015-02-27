@@ -3,6 +3,7 @@ package org.dsa.iot.tests;
 import lombok.SneakyThrows;
 import lombok.val;
 import org.dsa.iot.broker.Broker;
+import org.dsa.iot.broker.backend.BrokerLink;
 import org.dsa.iot.core.event.EventBusFactory;
 import org.dsa.iot.dslink.DSLinkFactory;
 import org.dsa.iot.dslink.connection.ConnectionType;
@@ -28,8 +29,8 @@ public class Main {
         val bus = EventBusFactory.create();
         val client = HandshakeClient.generate("broker", "_", true, true);
         val conn = new WebServerConnector(bus, client);
-        val link = DSLinkFactory.create().generate(bus, conn);
-        broker = new Broker(bus, link);
+        val link = BrokerLink.create(bus, conn);
+        broker = new Broker(link);
         port = getRandomPort();
         broker.listen(port);
     }

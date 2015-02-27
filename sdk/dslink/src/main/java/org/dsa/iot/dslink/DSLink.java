@@ -5,6 +5,7 @@ import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
 import net.engio.mbassy.bus.MBassador;
+import net.engio.mbassy.listener.Handler;
 import org.dsa.iot.core.event.Event;
 import org.dsa.iot.dslink.connection.ClientConnector;
 import org.dsa.iot.dslink.connection.ServerConnector;
@@ -31,7 +32,7 @@ public class DSLink {
     @Getter
     private final Responder responder;
 
-    DSLink(MBassador<Event> bus,
+    protected DSLink(MBassador<Event> bus,
                     ClientConnector clientConn,
                     ServerConnector serverConn,
                     Requester req,
@@ -115,7 +116,7 @@ public class DSLink {
         }
     }
 
-    @net.engio.mbassy.listener.Handler
+    @Handler
     public void jsonHandler(IncomingDataEvent event) {
         try {
             val data = event.getData();

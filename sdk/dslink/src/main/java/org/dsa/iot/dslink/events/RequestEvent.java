@@ -12,27 +12,13 @@ import org.vertx.java.core.json.JsonObject;
  * Posted on incoming requests from clients.
  * @author Samuel Grenier
  */
+@Getter
 @RequiredArgsConstructor
 public class RequestEvent extends Event {
 
-    @Getter @NonNull private final Client client;
-    @Getter @NonNull private final JsonObject request;
+    @NonNull private final Client client;
+    @NonNull private final JsonObject request;
     
-    @Getter private final int rid;
-    @Getter private final String method;
-    
-    @NonNull private final Handler<Void> handler;
-    private boolean locked = false;
-    private boolean called = false;
-    
-    public synchronized void call() {
-        if (!(called || locked)) {
-            called = true;
-            handler.handle(null);
-        }
-    }
-    
-    public synchronized void setLocked(boolean locked) {
-        this.locked = locked;
-    }
+    private final int rid;
+    private final String method;
 }
