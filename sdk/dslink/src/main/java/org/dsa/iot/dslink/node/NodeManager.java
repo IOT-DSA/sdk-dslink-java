@@ -1,14 +1,15 @@
 package org.dsa.iot.dslink.node;
 
+import java.util.Map;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
 import net.engio.mbassy.bus.MBassador;
+
 import org.dsa.iot.core.StringUtils;
 import org.dsa.iot.core.event.Event;
 import org.dsa.iot.dslink.node.exceptions.NoSuchPathException;
-
-import java.util.Map;
 
 /**
  * Handles nodes based on paths.
@@ -41,7 +42,6 @@ public class NodeManager {
 
     public Node addRootNode(Node node) {
         superRoot.addChild(node);
-        node.init();
         return node;
     }
 
