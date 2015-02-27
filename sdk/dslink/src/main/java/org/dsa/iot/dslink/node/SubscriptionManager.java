@@ -1,19 +1,20 @@
 package org.dsa.iot.dslink.node;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
+
 import org.dsa.iot.dslink.connection.ClientConnector;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonElement;
 import org.vertx.java.core.json.JsonObject;
-
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 
 /**
  * @author Samuel Grenier
@@ -80,7 +81,13 @@ public class SubscriptionManager {
         }
 
         obj.putArray("updates", updates);
-
-        connector.write(obj);
+        
+        JsonArray array = new JsonArray();
+        array.add(obj);
+        
+        JsonObject response = new JsonObject();
+        response.putArray("responses", array);
+        
+        connector.write(response);
     }
 }

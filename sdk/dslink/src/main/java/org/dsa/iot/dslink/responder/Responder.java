@@ -1,22 +1,29 @@
 package org.dsa.iot.dslink.responder;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 import lombok.NonNull;
 import lombok.val;
 import net.engio.mbassy.bus.MBassador;
+
 import org.dsa.iot.core.event.Event;
 import org.dsa.iot.dslink.connection.Client;
 import org.dsa.iot.dslink.events.RequestEvent;
-import org.dsa.iot.dslink.responder.methods.*;
+import org.dsa.iot.dslink.node.NodeManager.NodeStringTuple;
+import org.dsa.iot.dslink.responder.methods.CloseMethod;
+import org.dsa.iot.dslink.responder.methods.InvokeMethod;
+import org.dsa.iot.dslink.responder.methods.ListMethod;
+import org.dsa.iot.dslink.responder.methods.Method;
+import org.dsa.iot.dslink.responder.methods.RemoveMethod;
+import org.dsa.iot.dslink.responder.methods.SetMethod;
+import org.dsa.iot.dslink.responder.methods.SubscribeMethod;
+import org.dsa.iot.dslink.responder.methods.UnsubscribeMethod;
 import org.dsa.iot.dslink.util.Linkable;
 import org.dsa.iot.dslink.util.StreamState;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
-
-import java.io.PrintWriter;
-import java.io.StringWriter;
-
-import static org.dsa.iot.dslink.node.NodeManager.NodeStringTuple;
 
 /**
  * @author Samuel Grenier
@@ -98,7 +105,13 @@ public class Responder extends Linkable {
                         responses.addElement(resp);
                         val top = new JsonObject();
                         top.putElement("responses", responses);
+                        
+						long startTime = System.currentTimeMillis();
+						
                         client.write(top);
+                        long stopTime = System.currentTimeMillis();
+						long elapsedTime = stopTime - startTime;
+						System.out.println("Socket time " + elapsedTime);
                         if (method != null && !error) {
                             method.postSent();
                         }
