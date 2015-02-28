@@ -14,4 +14,6 @@ public interface Client {
     RequestTracker getRequestTracker();
     
     ResponseTracker getResponseTracker();
+    
+    String getDsId();
 }

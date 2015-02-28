@@ -1,12 +1,14 @@
 package org.dsa.iot.dslink.connection;
 
-import lombok.*;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import net.engio.mbassy.bus.MBassador;
 import org.bouncycastle.jcajce.provider.digest.SHA256;
 import org.dsa.iot.core.URLInfo;
+import org.dsa.iot.core.event.Event;
 import org.dsa.iot.dslink.connection.connector.client.WebSocketConnector;
 import org.dsa.iot.dslink.connection.handshake.HandshakePair;
-import org.dsa.iot.core.event.Event;
 import org.dsa.iot.dslink.requester.RequestTracker;
 import org.dsa.iot.dslink.responder.ResponseTracker;
 import org.vertx.java.core.buffer.Buffer;
@@ -44,6 +46,11 @@ public abstract class ClientConnector implements Client {
 
     public abstract boolean isConnected();
 
+    @Override
+    public final String getDsId() {
+        return pair.getServer().getDsId();
+    }
+    
     /**
      * @return A full path with an attached query string
      */
