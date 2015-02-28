@@ -44,6 +44,7 @@ public class Responder extends Linkable {
         val top = new JsonObject();
         top.putElement("responses", responses);
         client.write(top);
+        System.out.println(client.getDsId() + " => " + top.encode());
     }
 
     public void closeStream(Client client, int rid) {

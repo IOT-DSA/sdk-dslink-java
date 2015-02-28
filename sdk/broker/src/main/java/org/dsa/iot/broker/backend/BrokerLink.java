@@ -44,6 +44,7 @@ public class BrokerLink extends DSLink {
         val dsId = client.getDsId();
         connections.createChild(dsId);
         connMap.put(dsId, client);
+        System.out.println("Client connected: " + dsId);
     }
 
     @Handler
@@ -66,6 +67,7 @@ public class BrokerLink extends DSLink {
     private void handleRequests(Client client, JsonArray array) {
         if (array == null)
             return;
+        System.out.println("Requests: " + client.getDsId() + " <= " + array.encode());
         // TODO: redirect everything under /conns
         getResponder().parse(client, array);
     }
@@ -73,6 +75,7 @@ public class BrokerLink extends DSLink {
     private void handleResponses(Client client, JsonArray array) {
         if (array == null)
             return;
+        System.out.println("Responses: " + client.getDsId() + " <= " + array.encode());
         getRequester().parse(client, array);
     }
     

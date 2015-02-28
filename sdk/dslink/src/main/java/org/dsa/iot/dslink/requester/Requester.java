@@ -39,6 +39,7 @@ public class Requester extends Linkable {
         requests.add(obj);
         top.putArray("requests", requests);
         client.write(top);
+        System.out.println(client.getDsId() + " => " + top.encode());
     }
 
     @Override
