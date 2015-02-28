@@ -1,11 +1,7 @@
 package org.dsa.iot.dslink.responder.methods;
 
-import java.util.List;
-import java.util.Map;
-
 import lombok.NonNull;
 import lombok.val;
-
 import org.dsa.iot.dslink.connection.Client;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.value.Value;
@@ -14,6 +10,9 @@ import org.dsa.iot.dslink.responder.Responder;
 import org.dsa.iot.dslink.util.StreamState;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Samuel Grenier
@@ -46,7 +45,6 @@ public class ListMethod extends Method {
 	}
 
 	private JsonArray getResponse() {
-		long startTime = System.currentTimeMillis();
 		JsonArray array = new JsonArray();
 		writeParentData(array, "$", parent.getConfigurations());
 		writeParentData(array, "@", parent.getAttributes());
@@ -57,9 +55,6 @@ public class ListMethod extends Method {
 				array.addArray(getChildUpdate(node, false));
 			}
 		}
-		long stopTime = System.currentTimeMillis();
-		long elapsedTime = stopTime - startTime;
-		System.out.println("Serealization time " + elapsedTime);
 		return array;
 	}
 

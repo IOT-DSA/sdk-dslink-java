@@ -1,15 +1,14 @@
 package org.dsa.iot.dslink.node;
 
-import java.util.Map;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
 import net.engio.mbassy.bus.MBassador;
-
 import org.dsa.iot.core.StringUtils;
 import org.dsa.iot.core.event.Event;
 import org.dsa.iot.dslink.node.exceptions.NoSuchPathException;
+
+import java.util.Map;
 
 /**
  * Handles nodes based on paths.
@@ -57,13 +56,9 @@ public class NodeManager {
     }
 
     public NodeStringTuple getNode(String path, boolean create) {
-        if (path == null || path.isEmpty())
-            throw new IllegalArgumentException("path");
-        else if ("/".equals(path))
+        if ("/".equals(path))
             return new NodeStringTuple(superRoot, null);
-        else if (path.startsWith("/"))
-            path = path.substring(1);
-        String[] parts = path.split("/");
+        String[] parts = splitPath(path);
         Node current = superRoot.getChild(parts[0]);
         if (create && current == null) {
             StringUtils.checkNodeName(parts[0]);
@@ -86,6 +81,32 @@ public class NodeManager {
         if (current == null)
             throw new NoSuchPathException(path);
         return new NodeStringTuple(current, null);
+    }
+
+    public static String[] splitPath(String path) {
+        return normalizePath(path).split("/");
+    }
+
+    public static String normalizePath(String path) {
+        return normalizePath(path, false);
+    }
+
+    public static String normalizePath(String path, boolean leading) {
+        if (path == null || path.isEmpty())
+            throw new IllegalArgumentException("path");
+        else if ("/".equals(path))
+            return path;
+
+        // Examine leading character
+        if (!leading && path.startsWith("/"))
+            path = path.substring(1);
+        else if (leading && !path.startsWith("/"))
+            path = "/" + path;
+
+        // Remove ending character
+        if (path.endsWith("/"))
+            path = path.substring(0, path.length() - 1);
+        return path;
     }
 
     @Getter
