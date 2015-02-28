@@ -15,6 +15,7 @@ import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.requester.Requester;
 import org.dsa.iot.dslink.responder.Responder;
 import org.vertx.java.core.json.JsonArray;
+import org.vertx.java.core.json.JsonObject;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -69,14 +70,31 @@ public class BrokerLink extends DSLink {
             return;
         System.out.println("Requests: " + client.getDsId() + " <= " + array.encode());
         // TODO: redirect everything under /conns
-        getResponder().parse(client, array);
+
+        val it = array.iterator();
+        val responses = new JsonArray();
+        for (JsonObject obj; it.hasNext();) {
+            obj = (JsonObject) it.next();
+            val out = new JsonObject();
+            getResponder().handleRequest(client, obj, out);
+            responses.add(out);
+        }
+
+        val top = new JsonObject();
+        top.putElement("responses", responses);
+        client.write(top);
+        System.out.println(client.getDsId() + " => " + top.encode());
     }
 
     private void handleResponses(Client client, JsonArray array) {
         if (array == null)
             return;
         System.out.println("Responses: " + client.getDsId() + " <= " + array.encode());
-        getRequester().parse(client, array);
+        val it = array.iterator();
+        for (JsonObject o; it.hasNext();) {
+            o = (JsonObject) it.next();
+            getRequester().handleResponse(client, o);
+        }
     }
     
     public static BrokerLink create(MBassador<Event> bus,

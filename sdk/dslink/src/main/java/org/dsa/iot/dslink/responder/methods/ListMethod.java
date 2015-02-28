@@ -52,7 +52,10 @@ public class ListMethod extends Method {
 		Map<String, Node> children = parent.getChildren();
 		if (children != null) {
 			for (Node node : children.values()) {
-				array.addArray(getChildUpdate(node, false));
+				if (!(parent.getPath().equals("/conns")
+                        && node.getName().equals(client.getDsId()))) {
+                    array.addArray(getChildUpdate(node, false));
+                }
 			}
 		}
 		return array;

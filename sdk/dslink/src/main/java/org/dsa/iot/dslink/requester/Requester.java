@@ -48,29 +48,31 @@ public class Requester extends Linkable {
         val it = responses.iterator();
         for (JsonObject o; it.hasNext();) {
             o = (JsonObject) it.next();
-
-            val rid = o.getNumber("rid").intValue();
-            val request = client.getRequestTracker().getRequest(rid);
-            Response<?> resp;
-            if (rid != 0) {
-                // Response
-                val state = o.getString("state");
-                if (StreamState.CLOSED.jsonName.equals(state)) {
-                    client.getRequestTracker().untrack(rid);
-                }
-                resp = getResponse(request);
-                resp.populate(o.getArray("updates"));
-            } else {
-                // Subscription update
-                val req = (SubscribeRequest) request;
-                resp = new SubscriptionResponse(req, getManager());
-                resp.populate(o.getArray("updates"));
+            handleResponse(client, o);
+        }
+    }
+    
+    public void handleResponse(Client client, JsonObject obj) {
+        val rid = obj.getNumber("rid").intValue();
+        val request = client.getRequestTracker().getRequest(rid);
+        Response<?> resp;
+        if (rid != 0) {
+            // Response
+            val state = obj.getString("state");
+            if (StreamState.CLOSED.jsonName.equals(state)) {
+                client.getRequestTracker().untrack(rid);
             }
-            synchronized (this) {
-                val name = request.getName();
-                val ev = new ResponseEvent(client, rid, name, resp);
-                getBus().publish(ev);
-            }
+            resp = getResponse(request);
+        } else {
+            // Subscription update
+            val req = (SubscribeRequest) request;
+            resp = new SubscriptionResponse(req, getManager());
+        }
+        resp.populate(obj.getArray("updates"));
+        synchronized (this) {
+            val name = request.getName();
+            val ev = new ResponseEvent(client, rid, name, resp);
+            getBus().publish(ev);
         }
     }
     
