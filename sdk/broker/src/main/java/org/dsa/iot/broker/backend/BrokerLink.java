@@ -90,7 +90,8 @@ public class BrokerLink extends DSLink {
                         val request = requester.getRequest(obj);
                         if (request != null) {
                             // TODO: track the RID and Request to the responder map
-                            requester.sendRequest(responder, request, false);
+                            // TODO: disable auto tracking upon implementation completion
+                            requester.sendRequest(responder, request, true);
                         }
                     }
                 }
