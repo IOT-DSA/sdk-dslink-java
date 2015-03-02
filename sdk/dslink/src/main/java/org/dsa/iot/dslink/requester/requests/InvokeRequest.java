@@ -13,7 +13,6 @@ public class InvokeRequest extends Request {
     @NonNull
     private final String path;
 
-    @NonNull
     private final JsonObject params;
 
     @Override
@@ -24,6 +23,8 @@ public class InvokeRequest extends Request {
     @Override
     public void addJsonValues(JsonObject obj) {
         obj.putString("path", path);
-        obj.putObject("params", params);
+        if (params != null) {
+            obj.putObject("params", params);
+        }
     }
 }

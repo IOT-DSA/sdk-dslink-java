@@ -13,6 +13,10 @@ public class RequestTracker {
     private final Map<Integer, Request> reqs = new HashMap<>();
     private int currentID = 0;
 
+    public synchronized int getNextID() {
+        return ++currentID;
+    }
+    
     public synchronized int track(Request req) {
         reqs.put(++currentID, req);
         return currentID;
