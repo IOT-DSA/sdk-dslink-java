@@ -90,7 +90,6 @@ public class Requester extends Linkable {
     }
     
     public Request getRequest(JsonObject obj) {
-        val man = getManager();
         val name = obj.getString("method");
         if (name == null)
             return null;
