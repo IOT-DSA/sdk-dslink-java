@@ -1,8 +1,11 @@
 package org.dsa.iot.dslink.responder.methods;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import lombok.NonNull;
 import lombok.val;
-import org.dsa.iot.core.Pair;
+
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.exceptions.NoSuchPathException;
@@ -10,20 +13,16 @@ import org.dsa.iot.dslink.util.StreamState;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
-import java.util.ArrayList;
-import java.util.List;
-
-
 /**
  * @author Samuel Grenier
  */
 public class SubscribeMethod extends Method {
 
-    @NonNull private final NodeManager manager;
+    @NonNull
+    private final NodeManager manager;
     private List<Node> nodes;
 
-    public SubscribeMethod(NodeManager manager,
-                            JsonObject request) {
+    public SubscribeMethod(NodeManager manager, JsonObject request) {
         super(request);
         this.manager = manager;
     }
@@ -38,11 +37,13 @@ public class SubscribeMethod extends Method {
         setState(StreamState.CLOSED);
         return null;
     }
-    
+
     @Override
     public void postSent() {
         val subs = manager.getSubManager();
-        subs.update(nodes);
+        if (subs != null) {
+            subs.update(nodes);
+        }
     }
 
     @SuppressWarnings("unchecked")
