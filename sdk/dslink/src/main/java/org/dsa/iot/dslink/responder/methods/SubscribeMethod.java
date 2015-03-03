@@ -2,6 +2,7 @@ package org.dsa.iot.dslink.responder.methods;
 
 import lombok.NonNull;
 import lombok.val;
+import org.dsa.iot.core.Pair;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.exceptions.NoSuchPathException;
@@ -48,10 +49,10 @@ public class SubscribeMethod extends Method {
     protected List<Node> getPaths(JsonArray array) {
         List<Node> subscriptions = new ArrayList<>();
         for (String s : (List<String>) array.toList()) {
-            NodeManager.NodeStringTuple tuple = manager.getNode(s);
+            val tuple = manager.getNode(s);
             if (tuple == null)
                 throw new NoSuchPathException(s);
-            subscriptions.add(tuple.getNode());
+            subscriptions.add(tuple.getKey());
         }
         return subscriptions;
     }

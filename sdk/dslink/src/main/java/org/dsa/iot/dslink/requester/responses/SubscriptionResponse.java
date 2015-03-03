@@ -1,6 +1,7 @@
 package org.dsa.iot.dslink.requester.responses;
 
 import lombok.Getter;
+import org.dsa.iot.core.Pair;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.value.Value;
@@ -58,9 +59,9 @@ public class SubscriptionResponse extends Response<SubscribeRequest> {
                 throw new RuntimeException("Unhandled update type");
             }
 
-            NodeManager.NodeStringTuple tuple = manager.getNode(path, true);
-            Node node = tuple.getNode();
-            String data = tuple.getString();
+            Pair<Node, String> tuple = manager.getNode(path, true);
+            Node node = tuple.getKey();
+            String data = tuple.getValue();
             if (data != null) {
                 if (data.startsWith("$")) { // configuration
                     data = data.substring(1);
@@ -70,7 +71,7 @@ public class SubscriptionResponse extends Response<SubscribeRequest> {
                     node.setAttribute(data, value);
                 }
             } else {
-                tuple.getNode().setValue(value);
+                node.setValue(value);
             }
         }
     }

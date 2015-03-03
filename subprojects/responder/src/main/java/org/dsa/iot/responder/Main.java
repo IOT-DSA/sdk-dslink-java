@@ -56,7 +56,7 @@ public class Main {
         b.setValue(new Value(2));
 
         val tuple = manager.getNode("test/incremental", true);
-        final val node = tuple.getNode();
+        final val node = tuple.getKey();
         node.setConfiguration("type", new Value(ValueType.NUMBER.toJsonString()));
         pool.scheduleWithFixedDelay(new Runnable() {
             @Override

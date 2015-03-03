@@ -3,6 +3,7 @@ package org.dsa.iot.broker.backend;
 import lombok.val;
 import net.engio.mbassy.bus.MBassador;
 import net.engio.mbassy.listener.Handler;
+import org.dsa.iot.core.Pair;
 import org.dsa.iot.core.StringUtils;
 import org.dsa.iot.core.event.Event;
 import org.dsa.iot.dslink.DSLink;
@@ -15,6 +16,7 @@ import org.dsa.iot.dslink.events.IncomingDataEvent;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.requester.Requester;
+import org.dsa.iot.dslink.requester.requests.Request;
 import org.dsa.iot.dslink.responder.Responder;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
@@ -27,7 +29,8 @@ import java.util.Map;
  */
 public class BrokerLink extends DSLink {
 
-    private final Map<String, ServerClient> connMap = new HashMap<>(); // TODO: weak value references
+    private final Map<String, ServerClient> connMap = new HashMap<>();
+    private final Map<Request, Pair<Client, JsonObject>> reqMap = new HashMap<>();
 
     private final Node connections;
     
@@ -83,15 +86,19 @@ public class BrokerLink extends DSLink {
                 if (("/" + parts[0]).equals(connections.getPath())) {
                     val responder = connMap.get(parts[1]);
                     if (responder.isResponder()) {
-                        obj.removeField("path");
-                        obj.putString("path", "/" + StringUtils.join(2, parts));
+                        val newObj = obj.copy();
+                        newObj.removeField("path");
+                        newObj.putString("path", "/" + StringUtils.join(2, "/", parts));
 
                         val requester = getRequester();
-                        val request = requester.getRequest(obj);
+                        val request = requester.getRequest(newObj);
                         if (request != null) {
-                            // TODO: track the RID and Request to the responder map
-                            // TODO: disable auto tracking upon implementation completion
-                            requester.sendRequest(responder, request, true);
+                            int rid = requester.sendRequest(responder, request, false);
+                            val track = requester.getRequest(obj);
+                            responder.getRequestTracker().track(rid, track);
+                            synchronized (this) {
+                                reqMap.put(track, new Pair<>(client, obj));
+                            }
                         }
                     }
                 }
@@ -104,7 +111,7 @@ public class BrokerLink extends DSLink {
 
         if (responses.size() > 0) {
             val top = new JsonObject();
-            top.putElement("responses", responses);
+            top.putArray("responses", responses);
             client.write(top);
             System.out.println(client.getDsId() + " => " + top.encode());
         }
@@ -117,8 +124,23 @@ public class BrokerLink extends DSLink {
         val it = array.iterator();
         for (JsonObject o; it.hasNext();) {
             o = (JsonObject) it.next();
-            // TODO: handle requests under /conns
-            getRequester().handleResponse(client, o);
+            val resp = getRequester().handleResponse(client, o);
+            val pair = reqMap.remove(resp.getRequest());
+            if (pair != null) {
+                val out = new JsonObject();
+                
+                val reqClient = pair.getKey();
+                val orig = pair.getValue();
+                getResponder().handleRequest(reqClient, orig, out);
+                
+                val responses = new JsonArray();
+                responses.addObject(out);
+                
+                val top = new JsonObject();
+                top.putArray("responses", responses);
+                reqClient.write(top);
+                System.out.println(reqClient.getDsId() + " => " + top.encode());
+            }
         }
     }
     

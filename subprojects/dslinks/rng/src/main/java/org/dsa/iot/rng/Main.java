@@ -99,7 +99,7 @@ public class Main {
 
         // Create variable
         val tuple = manager.getNode("test/random_generated_" + counter, true);
-        val node = tuple.getNode();
+        val node = tuple.getKey();
         node.setConfiguration("type",
                 new Value(ValueType.NUMBER.toJsonString()));
 

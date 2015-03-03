@@ -65,7 +65,8 @@ public class Requester extends Linkable {
         }
     }
     
-    public void handleResponse(Client client, JsonObject obj) {
+    public Response<?> handleResponse(Client client,
+                               JsonObject obj) {
         val rid = obj.getNumber("rid").intValue();
         val request = client.getRequestTracker().getRequest(rid);
         Response<?> resp;
@@ -87,6 +88,7 @@ public class Requester extends Linkable {
             val ev = new ResponseEvent(client, rid, name, resp);
             getBus().publish(ev);
         }
+        return resp;
     }
     
     public Request getRequest(JsonObject obj) {

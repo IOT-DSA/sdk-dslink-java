@@ -3,9 +3,11 @@ package org.dsa.iot.dslink.responder;
 import lombok.NonNull;
 import lombok.val;
 import net.engio.mbassy.bus.MBassador;
+import org.dsa.iot.core.Pair;
 import org.dsa.iot.core.event.Event;
 import org.dsa.iot.dslink.connection.Client;
 import org.dsa.iot.dslink.events.RequestEvent;
+import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.responder.methods.*;
 import org.dsa.iot.dslink.util.Linkable;
 import org.dsa.iot.dslink.util.StreamState;
@@ -14,8 +16,6 @@ import org.vertx.java.core.json.JsonObject;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-
-import static org.dsa.iot.dslink.node.NodeManager.NodeStringTuple;
 
 /**
  * @author Samuel Grenier
@@ -81,7 +81,7 @@ public class Responder extends Linkable {
             val path = obj.getString("path");
             out.putNumber("rid", rid);
 
-            NodeStringTuple node = null;
+            Pair<Node, String> node = null;
             if (path != null) {
                 node = getManager().getNode(path);
             }
@@ -123,16 +123,16 @@ public class Responder extends Linkable {
                                 @NonNull Client client,
                                 @NonNull String name,
                                 int rid,
-                                NodeStringTuple tuple) {
+                                Pair<Node, String> tuple) {
         switch (name) {
             case "list":
-                return new ListMethod(this, client, tuple.getNode(), rid, obj);
+                return new ListMethod(this, client, tuple.getKey(), rid, obj);
             case "set":
-                return new SetMethod(tuple.getNode(), tuple.getString(), obj);
+                return new SetMethod(tuple.getKey(), tuple.getValue(), obj);
             case "remove":
-                return new RemoveMethod(tuple.getNode(), tuple.getString(), obj);
+                return new RemoveMethod(tuple.getKey(), tuple.getValue(), obj);
             case "invoke":
-                return new InvokeMethod(tuple.getNode(), obj);
+                return new InvokeMethod(tuple.getKey(), obj);
             case "subscribe":
                 return new SubscribeMethod(getManager(), obj);
             case "unsubscribe":

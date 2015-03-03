@@ -12,14 +12,26 @@ public class StringUtils {
         ".", "/", "\\", "?", "%", "*", ":", "|", "<", ">"
     };
     
-    public static String join(int start, @NonNull String[] parts) {
+    public static String join(int start, String[] parts) {
         return join(start, parts.length, parts);
     }
+
+    public static String join(int start, String delimiter, String[] parts) {
+        return join(start, parts.length, delimiter, parts);
+    }
     
-    public static String join(int start, int end, @NonNull String[] parts) {
+    public static String join(int start, int end, String[] parts) {
+        return join(start, end, null, parts);
+    }
+
+    public static String join(int start, int end, String delimiter,
+                                                @NonNull String[] parts) {
         val builder = new StringBuilder();
         for (int i = start; i < end; i++) {
             builder.append(parts[i]);
+            if (delimiter != null && i < (end - 1)) {
+                builder.append(delimiter);
+            }
         }
         return builder.toString();
     }

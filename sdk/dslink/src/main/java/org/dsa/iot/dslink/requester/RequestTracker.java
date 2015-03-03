@@ -1,5 +1,6 @@
 package org.dsa.iot.dslink.requester;
 
+import org.dsa.iot.dslink.node.exceptions.DuplicateException;
 import org.dsa.iot.dslink.requester.requests.Request;
 
 import java.util.HashMap;
@@ -18,8 +19,15 @@ public class RequestTracker {
     }
     
     public synchronized int track(Request req) {
-        reqs.put(++currentID, req);
-        return currentID;
+        return track(++currentID, req);
+    }
+    
+    public synchronized int track(int rid, Request req) {
+        if (reqs.containsKey(rid))
+            throw new DuplicateException("request");
+        else
+            reqs.put(rid, req);
+        return rid;
     }
 
     public synchronized void untrack(int id) {

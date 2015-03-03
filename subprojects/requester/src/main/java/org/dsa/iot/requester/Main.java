@@ -58,7 +58,7 @@ public class Main {
         System.out.println("Received response: " + event.getName());
         val resp = (ListResponse) event.getResponse();
         val manager = resp.getManager();
-        val node = manager.getNode(resp.getPath()).getNode();
+        val node = manager.getNode(resp.getPath()).getKey();
         System.out.println("Path: " + resp.getPath());
         printValueMap(node.getAttributes(), "Attribute", false);
         printValueMap(node.getConfigurations(), "Configuration", false);

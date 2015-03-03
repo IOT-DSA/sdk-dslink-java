@@ -34,7 +34,7 @@ public class ListResponse extends Response<ListRequest> {
     @Override
     public void populate(JsonArray array) {
         path = getRequest().getPath();
-        Node node = manager.getNode(path, true).getNode();
+        Node node = manager.getNode(path, true).getKey();
         iterate(node, array);
     }
     

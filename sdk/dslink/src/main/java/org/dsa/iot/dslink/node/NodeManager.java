@@ -1,9 +1,8 @@
 package org.dsa.iot.dslink.node;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NonNull;
 import net.engio.mbassy.bus.MBassador;
+import org.dsa.iot.core.Pair;
 import org.dsa.iot.core.StringUtils;
 import org.dsa.iot.core.event.Event;
 import org.dsa.iot.dslink.node.exceptions.NoSuchPathException;
@@ -45,19 +44,19 @@ public class NodeManager {
     }
 
     public Map<String, Node> getChildren(String path) {
-        NodeStringTuple child = getNode(path);
+        Pair<Node, String> child = getNode(path);
         if (child == null)
             throw new NoSuchPathException(path);
-        return child.getNode().getChildren();
+        return child.getKey().getChildren();
     }
 
-    public NodeStringTuple getNode(String path) {
+    public Pair<Node, String> getNode(String path) {
         return getNode(path, false);
     }
 
-    public NodeStringTuple getNode(String path, boolean create) {
+    public Pair<Node, String> getNode(String path, boolean create) {
         if ("/".equals(path))
-            return new NodeStringTuple(superRoot, null);
+            return new Pair<>(superRoot, null, false);
         String[] parts = splitPath(path);
         Node current = superRoot.getChild(parts[0]);
         if (create && current == null) {
@@ -68,7 +67,7 @@ public class NodeManager {
             if (current == null) {
                 break;
             } else if (i + 1 == parts.length && StringUtils.isAttribOrConf(parts[i])) {
-                return new NodeStringTuple(current, parts[i]);
+                return new Pair<>(current, parts[i], false);
             } else {
                 Node temp = current.getChild(parts[i]);
                 if (create && temp == null) {
@@ -80,7 +79,7 @@ public class NodeManager {
         }
         if (current == null)
             throw new NoSuchPathException(path);
-        return new NodeStringTuple(current, null);
+        return new Pair<>(current, null, false);
     }
 
     public static String[] splitPath(String path) {
@@ -107,23 +106,5 @@ public class NodeManager {
         if (path.endsWith("/"))
             path = path.substring(0, path.length() - 1);
         return path;
-    }
-
-    @Getter
-    @AllArgsConstructor
-    public static class NodeStringTuple {
-
-        /**
-         * Node is always populated
-         */
-        @NonNull
-        private final Node node;
-
-        /**
-         * Only populated if the path is a reference to an attribute or
-         * configuration.
-         */
-        private final String string;
-
     }
 }
