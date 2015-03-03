@@ -1,6 +1,5 @@
 package org.dsa.iot.dslink.node;
 
-import lombok.Getter;
 import net.engio.mbassy.bus.MBassador;
 import org.dsa.iot.core.Pair;
 import org.dsa.iot.core.StringUtils;
@@ -15,18 +14,14 @@ import java.util.Map;
  */
 public class NodeManager {
 
-    @Getter
-    private final SubscriptionManager subManager;
-
     private final MBassador<Event> bus;
 
     // Fake root to provide a listing on "/"
     private final Node superRoot;
 
-    public NodeManager(MBassador<Event> bus, SubscriptionManager subManager) {
+    public NodeManager(MBassador<Event> bus) {
         this.bus = bus;
-        this.subManager = subManager;
-        this.superRoot = new Node(bus, subManager, null, "") {
+        this.superRoot = new Node(bus, null, "") {
             @Override
             protected boolean isRootNode() {
                 return true;
@@ -35,7 +30,7 @@ public class NodeManager {
     }
 
     public Node createRootNode(String name) {
-        return addRootNode(new Node(bus, subManager, null, name));
+        return addRootNode(new Node(bus, null, name));
     }
 
     public Node addRootNode(Node node) {

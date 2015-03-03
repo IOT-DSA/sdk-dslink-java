@@ -11,7 +11,6 @@ import org.dsa.iot.dslink.connection.ClientConnector;
 import org.dsa.iot.dslink.connection.ServerConnector;
 import org.dsa.iot.dslink.events.IncomingDataEvent;
 import org.dsa.iot.dslink.node.NodeManager;
-import org.dsa.iot.dslink.node.SubscriptionManager;
 import org.dsa.iot.dslink.requester.Requester;
 import org.dsa.iot.dslink.responder.Responder;
 
@@ -44,10 +43,7 @@ public class DSLink {
         this.responder = resp;
         bus.subscribe(this);
 
-        SubscriptionManager subManager = null;
-        if (clientConn != null)
-            subManager = new SubscriptionManager(clientConn);
-        NodeManager common = new NodeManager(bus, subManager);
+        NodeManager common = new NodeManager(bus);
         if (requester != null)
             requester.setConnector(clientConn, serverConn, common);
         if (responder != null)

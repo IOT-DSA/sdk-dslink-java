@@ -26,7 +26,6 @@ import java.util.*;
  */
 public class Node {
 
-    private final SubscriptionManager manager;
     private final WeakReference<Node> parent;
 
     private Map<String, Node> children;
@@ -60,10 +59,8 @@ public class Node {
      * @param parent The parent of this node, or null if a root node
      * @param name The name of this node
      */
-    public Node(MBassador<Event> bus, SubscriptionManager manager,
-                                        Node parent, @NonNull String name) {
+    public Node(MBassador<Event> bus, Node parent, @NonNull String name) {
         this.bus = bus;
-        this.manager = manager;
         this.parent = new WeakReference<>(parent);
         this.name = name;
         this.childrenSubs = new WeakHashMap<>();
@@ -168,7 +165,7 @@ public class Node {
     }
 
     public Node createChild(String name) {
-        return addChild(new Node(bus, manager, this, name));
+        return addChild(new Node(bus, this, name));
     }
 
     public synchronized Node addChild(@NonNull Node node) {
@@ -218,9 +215,7 @@ public class Node {
     }
 
     private void update() {
-        if (manager != null && isSubscribed()) {
-            manager.update(this);
-        }
+        // TODO: subscriptions
     }
     
     public synchronized void subscribeToChildren(@NonNull Client client,

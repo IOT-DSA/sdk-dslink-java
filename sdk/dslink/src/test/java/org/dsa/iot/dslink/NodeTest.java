@@ -19,7 +19,7 @@ public class NodeTest {
 
     @Test
     public void nodeAdditions() {
-        NodeManager manager = new NodeManager(bus, null);
+        NodeManager manager = new NodeManager(bus);
         Node nodeA = manager.createRootNode("A");
 
         Assert.assertNotNull(manager.getNode("A"));
@@ -73,14 +73,14 @@ public class NodeTest {
 
     @Test
     public void nodeRemovals() {
-        NodeManager manager = new NodeManager(bus, null);
+        NodeManager manager = new NodeManager(bus);
         Node a = manager.createRootNode("A");
 
         a.createChild("A_A");
         a.createChild("A_B");
 
         a.removeChild("A_A");
-        a.removeChild(new Node(bus, null, null, "A_B"));
+        a.removeChild(new Node(bus, null, "A_B"));
 
         Assert.assertNotNull(manager.getNode("/A"));
 
@@ -110,7 +110,7 @@ public class NodeTest {
 
     @Test
     public void children() {
-        NodeManager manager = new NodeManager(bus, null);
+        NodeManager manager = new NodeManager(bus);
         Node a = manager.createRootNode("A");
         a.createChild("A_A");
         a.createChild("A_B");
@@ -125,21 +125,21 @@ public class NodeTest {
 
     @Test
     public void pathBuilding() {
-        Node node = new Node(bus, null, null, "A");
+        Node node = new Node(bus, null, "A");
         node = node.createChild("A_B").createChild("B_A");
         Assert.assertEquals("/A/A_B/B_A", node.getPath());
     }
 
     @Test(expected = DuplicateException.class)
     public void duplicateRootNodes() {
-        NodeManager manager = new NodeManager(bus, null);
+        NodeManager manager = new NodeManager(bus);
         manager.createRootNode("A");
         manager.createRootNode("A");
     }
 
     @Test
     public void illegalPathInput() {
-        NodeManager manager = new NodeManager(bus, null);
+        NodeManager manager = new NodeManager(bus);
 
         boolean emptyPath = false;
         boolean nullPath = false;
@@ -162,6 +162,6 @@ public class NodeTest {
 
     @Test(expected = NoSuchPathException.class)
     public void noSuchPath() {
-        new NodeManager(bus, null).getChildren("nothing");
+        new NodeManager(bus).getChildren("nothing");
     }
 }

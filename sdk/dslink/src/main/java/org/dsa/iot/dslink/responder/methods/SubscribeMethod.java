@@ -1,17 +1,16 @@
 package org.dsa.iot.dslink.responder.methods;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import lombok.NonNull;
 import lombok.val;
-
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.exceptions.NoSuchPathException;
 import org.dsa.iot.dslink.util.StreamState;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Samuel Grenier
@@ -40,10 +39,7 @@ public class SubscribeMethod extends Method {
 
     @Override
     public void postSent() {
-        val subs = manager.getSubManager();
-        if (subs != null) {
-            subs.update(nodes);
-        }
+        // TODO: send initial subscription update
     }
 
     @SuppressWarnings("unchecked")
