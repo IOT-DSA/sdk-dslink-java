@@ -1,13 +1,8 @@
 package org.dsa.iot.responder;
 
 import lombok.val;
-import net.engio.mbassy.bus.MBassador;
 import net.engio.mbassy.listener.Handler;
-import org.dsa.iot.core.event.Event;
-import org.dsa.iot.core.event.EventBusFactory;
-import org.dsa.iot.dslink.DSLink;
-import org.dsa.iot.dslink.DSLinkFactory;
-import org.dsa.iot.dslink.connection.ConnectionType;
+import org.dsa.iot.dslink.client.ArgManager;
 import org.dsa.iot.dslink.events.ConnectedToServerEvent;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
@@ -21,7 +16,6 @@ import java.util.concurrent.TimeUnit;
  */
 public class Main {
 
-    private final MBassador<Event> bus = EventBusFactory.create();
     private final ScheduledThreadPoolExecutor pool = new ScheduledThreadPoolExecutor(1, new ThreadFactory() {
         @Override
         public Thread newThread(Runnable runnable) {
@@ -30,19 +24,11 @@ public class Main {
             return thread;
         }
     });
-    private DSLink link;
-    
-    public static void main(String[] args) {
-        Main m = new Main();
-        m.bus.subscribe(m);
-        m.run();
-    }
 
-    private void run() {
-        val url = "http://localhost:8080/conn";
-        val type = ConnectionType.WS;
-        val dsId = "responder";
-        link = DSLinkFactory.create().generate(bus, url, type, dsId);
+    public static void main(String[] args) {
+        val main = new Main();
+        val link = ArgManager.generate(args, "responder");
+        link.getBus().subscribe(main);
 
         val manager = link.getNodeManager();
         val parent = manager.createRootNode("test");
@@ -58,7 +44,7 @@ public class Main {
         val tuple = manager.getNode("test/incremental", true);
         final val node = tuple.getKey();
         node.setConfiguration("type", new Value(ValueType.NUMBER.toJsonString()));
-        pool.scheduleWithFixedDelay(new Runnable() {
+        main.pool.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
                 Value value = node.getValue();
@@ -71,7 +57,7 @@ public class Main {
                 System.out.println("New incremental value: " + value.getInteger());
             }
         }, 0, 3, TimeUnit.SECONDS);
-        
+
         link.connect();
         link.sleep();
     }

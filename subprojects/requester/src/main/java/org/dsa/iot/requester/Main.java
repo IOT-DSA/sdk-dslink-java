@@ -2,13 +2,9 @@ package org.dsa.iot.requester;
 
 import lombok.SneakyThrows;
 import lombok.val;
-import net.engio.mbassy.bus.MBassador;
 import net.engio.mbassy.listener.Handler;
-import org.dsa.iot.core.event.Event;
-import org.dsa.iot.core.event.EventBusFactory;
 import org.dsa.iot.dslink.DSLink;
-import org.dsa.iot.dslink.DSLinkFactory;
-import org.dsa.iot.dslink.connection.ConnectionType;
+import org.dsa.iot.dslink.client.ArgManager;
 import org.dsa.iot.dslink.events.ConnectedToServerEvent;
 import org.dsa.iot.dslink.events.ResponseEvent;
 import org.dsa.iot.dslink.node.Node;
@@ -23,24 +19,19 @@ import java.util.Map;
  */
 public class Main {
 
-    private final MBassador<Event> bus = EventBusFactory.create();
     private DSLink link;
 
     public static void main(String[] args) {
         Main m = new Main();
-        m.bus.subscribe(m);
-        m.run();
+        m.run(args);
     }
 
     @SneakyThrows
-    private void run() {
-        val url = "http://localhost:8080/conn";
-        val type = ConnectionType.WS;
-        val dsId = "requester";
-        link = DSLinkFactory.create().generate(bus, url, type, dsId, true, false);
+    private void run(String[] args) {
+        link = ArgManager.generate(args, "requester", true, false);
+        link.getBus().subscribe(this);
         link.connect();
         link.sleep();
-        // TODO: it seems responder children display after multiple restarts of the requester
     }
 
     @Handler

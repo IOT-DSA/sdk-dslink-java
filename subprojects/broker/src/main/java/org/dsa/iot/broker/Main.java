@@ -22,6 +22,7 @@ public class Main {
     public static void main(String[] args) {
         boolean client = false;
         if (args.length > 0 && "-client".equals(args[0])) {
+            // TODO: switch to the arg manager
             client = true;
         }
 

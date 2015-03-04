@@ -2,9 +2,7 @@ package org.dsa.iot.rng;
 
 import lombok.val;
 import net.engio.mbassy.listener.Handler;
-import org.dsa.iot.core.event.EventBusFactory;
-import org.dsa.iot.dslink.DSLinkFactory;
-import org.dsa.iot.dslink.connection.ConnectionType;
+import org.dsa.iot.dslink.client.ArgManager;
 import org.dsa.iot.dslink.events.ConnectedToServerEvent;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.value.Value;
@@ -41,17 +39,12 @@ public class Main {
             }
         });
 
-        // Create bus
-        val bus = EventBusFactory.create();
-        val generator = new Main();
-        bus.subscribe(generator);
-
         // DSLink creation
-        val url = "http://localhost:8080/conn";
-        val factory = DSLinkFactory.create();
-        val type = ConnectionType.WS;
-        val name = "rng";
-        val link = factory.generate(bus, url, type, name);
+        val link = ArgManager.generate(args, "rng");
+
+        // Create bus
+        val generator = new Main();
+        link.getBus().subscribe(generator);
 
         // Create parent Node
         val manager = link.getNodeManager();
