@@ -109,7 +109,7 @@ public class DSLinkFactory {
     }
 
     public DSLink generate(@NonNull MBassador<Event> master,
-                                  @NonNull ServerConnector connector) {
+                            @NonNull ServerConnector connector) {
         return generate(master, null,
                 connector,
                 new Requester(master),
