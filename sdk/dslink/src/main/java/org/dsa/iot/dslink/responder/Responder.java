@@ -134,9 +134,9 @@ public class Responder extends Linkable {
             case "invoke":
                 return new InvokeMethod(tuple.getKey(), obj);
             case "subscribe":
-                return new SubscribeMethod(getManager(), obj);
+                return new SubscribeMethod(client, getManager(), obj);
             case "unsubscribe":
-                return new UnsubscribeMethod(getManager(), obj);
+                return new UnsubscribeMethod(client, getManager(), obj);
             case "close":
                 return new CloseMethod(getBus(),
                                         client,

@@ -33,6 +33,7 @@ public class Node {
     private Map<String, Value> configurations;
     private List<String> interfaces;
     private Map<Client, Integer> childrenSubs;
+    private Map<Client, Subscription> subs;
     
     private final MBassador<Event> bus;
 
@@ -46,13 +47,6 @@ public class Node {
     private Value value;
 
     @Getter @Setter private Action action;
-
-    /**
-     * Whether the node is currently subscribed to or not
-     */
-    @Getter
-    @Setter
-    private boolean subscribed;
     
     /**
      * @param bus Event bus to publish events to
@@ -214,8 +208,25 @@ public class Node {
         return children != null ? children.get(name) : null;
     }
 
-    private void update() {
-        // TODO: subscriptions
+    private synchronized void update() {
+        if (subs != null) {
+            for (Subscription sub : subs.values()) {
+                sub.update(this);
+            }
+        }
+    }
+    
+    public synchronized void subscribe(@NonNull Subscription sub) {
+        val client = sub.getClient();
+        if (subs == null)
+            subs = new HashMap<>();
+        else if (subs.containsKey(client))
+            throw new DuplicateException("Client already subscribed");
+        subs.put(client, sub);
+    }
+    
+    public synchronized void unsubscribe(@NonNull Client client) {
+        subs.remove(client);
     }
     
     public synchronized void subscribeToChildren(@NonNull Client client,
