@@ -32,7 +32,7 @@ public class Main {
         val link = BrokerLink.create(bus, conn);
         broker = new Broker(link);
         port = getRandomPort();
-        broker.listen(port);
+        broker.listenAndConnect(port);
     }
 
     @AfterClass

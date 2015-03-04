@@ -133,8 +133,12 @@ public class DSLink {
         }
     }
 
+    public boolean hasClientConnector() {
+        return clientConnector != null;
+    }
+
     private void checkConnected() {
-        if (clientConnector == null) {
+        if (!hasClientConnector()) {
             throw new IllegalStateException("No client connector implementation provided");
         } else if (clientConnector.isConnected()) {
             throw new IllegalStateException("Already connected");

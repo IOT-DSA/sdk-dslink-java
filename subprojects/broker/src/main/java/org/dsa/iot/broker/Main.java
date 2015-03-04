@@ -14,7 +14,7 @@ public class Main {
         val conn = new WebServerConnector(bus, hc);
         val link = BrokerLink.create(bus, conn);
         Broker broker = new Broker(link);
-        broker.listen();
+        broker.listenAndConnect();
         broker.sleep();
     }
 }

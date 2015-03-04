@@ -8,6 +8,7 @@ import org.dsa.iot.core.StringUtils;
 import org.dsa.iot.core.event.Event;
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.connection.Client;
+import org.dsa.iot.dslink.connection.ClientConnector;
 import org.dsa.iot.dslink.connection.ServerConnector;
 import org.dsa.iot.dslink.connection.connector.server.ServerClient;
 import org.dsa.iot.dslink.events.AsyncExceptionEvent;
@@ -36,9 +37,11 @@ public class BrokerLink extends DSLink {
 
     private final Node connections;
     
-    BrokerLink(MBassador<Event> bus, ServerConnector conn,
-               Requester req, Responder resp) {
-        super(bus, null, conn, req, resp);
+    BrokerLink(MBassador<Event> bus,
+                ClientConnector clientConn,
+                ServerConnector serverConn,
+                Requester req, Responder resp) {
+        super(bus, clientConn, serverConn, req, resp);
         
         val man = getNodeManager();
         connections = man.createRootNode("conns");
@@ -204,11 +207,17 @@ public class BrokerLink extends DSLink {
             
         }
     }
-    
+
     public static BrokerLink create(MBassador<Event> bus,
-                                    ServerConnector serverConn) {
+                                    ServerConnector server) {
+        return create(bus, server, null);
+    }
+
+    public static BrokerLink create(MBassador<Event> bus,
+                                    ServerConnector server,
+                                    ClientConnector client) {
         val requester = new Requester(bus);
         val responder = new Responder(bus);
-        return new BrokerLink(bus, serverConn, requester, responder);
+        return new BrokerLink(bus, client, server, requester, responder);
     }
 }

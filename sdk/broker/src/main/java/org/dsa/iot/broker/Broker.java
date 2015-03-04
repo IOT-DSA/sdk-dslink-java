@@ -14,14 +14,24 @@ public class Broker {
         this.link = link;
     }
 
-    public void listen() {
-        // TODO: Setup configurable ports
-        listen(8080);
+    public void listenAndConnect() {
+        listenAndConnect(true);
     }
 
-    public void listen(int port) {
+    public void listenAndConnect(int port) {
+        listenAndConnect(port, true);
+    }
+
+    public void listenAndConnect(boolean sslVerify) {
+        listenAndConnect(8080, sslVerify);
+    }
+
+    public void listenAndConnect(int port, boolean sslVerify) {
         System.out.println("Listening on port " + port);
         link.listen(port);
+        if (link.hasClientConnector()) {
+            link.connect(sslVerify);
+        }
     }
 
     public void stop() {
