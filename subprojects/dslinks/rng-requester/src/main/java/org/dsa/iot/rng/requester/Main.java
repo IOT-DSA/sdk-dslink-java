@@ -1,17 +1,10 @@
 package org.dsa.iot.rng.requester;
 
-import java.util.Map;
-
-import net.engio.mbassy.bus.MBassador;
 import net.engio.mbassy.listener.Filter;
 import net.engio.mbassy.listener.Handler;
-
-import org.dsa.iot.core.event.Event;
-import org.dsa.iot.core.event.EventBusFactory;
 import org.dsa.iot.dslink.DSLink;
-import org.dsa.iot.dslink.DSLinkFactory;
+import org.dsa.iot.dslink.client.ArgManager;
 import org.dsa.iot.dslink.connection.Client;
-import org.dsa.iot.dslink.connection.ConnectionType;
 import org.dsa.iot.dslink.events.ConnectedToServerEvent;
 import org.dsa.iot.dslink.events.ResponseEvent;
 import org.dsa.iot.dslink.node.Node;
@@ -24,6 +17,8 @@ import org.dsa.iot.dslink.requester.responses.SubscriptionResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map;
+
 /**
  * @author pshvets
  *
@@ -34,17 +29,8 @@ public class Main {
 
     public static void main(String[] args) {
         Main m = new Main();
-
-        MBassador<Event> bus = EventBusFactory.create();
-        bus.subscribe(m);
-
-        // Port of broker to be connected
-        String url = "http://localhost:8080/conn";
-
-        DSLinkFactory factory = DSLinkFactory.create();
-
-        link = factory.generate(bus, url, ConnectionType.WS, "requester", true,
-                false);
+        link = ArgManager.generate(args, "requester", true, false);
+        link.getBus().subscribe(m);
 
         link.connect();
         link.sleep();
