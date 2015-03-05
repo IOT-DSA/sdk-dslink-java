@@ -78,6 +78,7 @@ public class Subscription {
         response.putArray("responses", array);
 
         client.write(response);
+        System.out.println(client.getDsId() + " => " + response.encode());
     }
     
 }

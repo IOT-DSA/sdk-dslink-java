@@ -21,7 +21,7 @@ public class UnsubscribeRequest extends Request {
 
     @Override
     public String getName() {
-        return "subscribe";
+        return "unsubscribe";
     }
 
     @Override

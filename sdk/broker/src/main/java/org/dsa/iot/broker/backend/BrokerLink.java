@@ -16,9 +16,11 @@ import org.dsa.iot.dslink.events.ClientConnectedEvent;
 import org.dsa.iot.dslink.events.IncomingDataEvent;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
+import org.dsa.iot.dslink.node.Subscription;
 import org.dsa.iot.dslink.requester.Requester;
 import org.dsa.iot.dslink.requester.requests.Request;
 import org.dsa.iot.dslink.requester.requests.SubscribeRequest;
+import org.dsa.iot.dslink.requester.requests.UnsubscribeRequest;
 import org.dsa.iot.dslink.responder.Responder;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonElement;
@@ -84,7 +86,7 @@ public class BrokerLink extends DSLink {
         for (JsonObject obj; it.hasNext();) {
             obj = (JsonObject) it.next();
             if (!handledPathRequest(client, obj)) {
-                handleSubscriptionRequest(obj);
+                handleSubscriptionRequest(client, obj);
                 val out = new JsonObject();
                 getResponder().handleRequest(client, obj, out);
                 responses.add(out);
@@ -99,9 +101,10 @@ public class BrokerLink extends DSLink {
         }
     }
     
-    private void handleSubscriptionRequest(JsonObject obj) {
+    private void handleSubscriptionRequest(Client client, JsonObject obj) {
+        val method = obj.getString("method");
         val paths = obj.getArray("paths");
-        if (paths == null)
+        if (paths == null || method == null)
             return;
 
         val iter = paths.iterator();
@@ -114,9 +117,20 @@ public class BrokerLink extends DSLink {
                 iter.remove();
                 val newPath = "/" + StringUtils.join(2, "/", parts);
                 val responder = connMap.get(parts[1]);
+
                 if (responder.isResponder()) {
-                    val subReq = new SubscribeRequest(newPath);
-                    getRequester().sendRequest(responder, subReq);
+                    val node = getNodeManager().getNode(path).getKey();
+                    Request request = null;
+                    if ("subscribe".equals(method)) {
+                        request = new SubscribeRequest(newPath);
+                        node.subscribe(new Subscription(client));
+                    } else if ("unsubscribe".equals(method)) {
+                        request = new UnsubscribeRequest(newPath);
+                        node.unsubscribe(client);
+                    }
+                    if (request != null) {
+                        getRequester().sendRequest(responder, request);
+                    }
                 }
             }
         }
@@ -169,9 +183,7 @@ public class BrokerLink extends DSLink {
                         val update = element.asArray();
                         val newUpdate = new JsonArray();
                         String path = update.get(0);
-                        val normal = NodeManager.normalizePath(path, true);
-                        
-                        newUpdate.addString(connections.getPath() + normal);
+                        newUpdate.addString(buildPath(client, path));
                         newUpdate.add(update.get(1));
                         newUpdate.add(update.get(2));
                         
@@ -179,14 +191,14 @@ public class BrokerLink extends DSLink {
                     } else if (element.isObject()) {
                         val update = element.asObject();
                         val path = update.getString("path");
-                        val normal = NodeManager.normalizePath(path, true);
                         update.removeField("path");
-                        update.putString("path", connections.getPath() + normal);
+                        update.putString("path", buildPath(client, path));
                         newUpdates.addObject(update);
                     }
                 }
+                o.putArray("updates", newUpdates);
             }
-            
+
             val resp = getRequester().handleResponse(client, o);
             val pair = reqMap.remove(resp.getRequest());
             if (pair != null) {
@@ -206,6 +218,14 @@ public class BrokerLink extends DSLink {
             }
             
         }
+    }
+
+    private String buildPath(Client client, String path) {
+        StringBuilder builder = new StringBuilder(connections.getPath());
+        builder.append("/");
+        builder.append(client.getDsId());
+        builder.append(NodeManager.normalizePath(path, true));
+        return builder.toString();
     }
 
     public static BrokerLink create(MBassador<Event> bus,
