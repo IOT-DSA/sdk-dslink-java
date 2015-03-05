@@ -1,7 +1,8 @@
 package org.dsa.iot.rng.requester;
 
 import net.engio.mbassy.listener.IMessageFilter;
-import net.engio.mbassy.listener.MessageHandler;
+import net.engio.mbassy.subscription.SubscriptionContext;
+
 import org.dsa.iot.dslink.events.ResponseEvent;
 import org.dsa.iot.dslink.requester.responses.ListResponse;
 import org.dsa.iot.dslink.requester.responses.SubscriptionResponse;
@@ -15,17 +16,19 @@ import org.dsa.iot.dslink.requester.responses.SubscriptionResponse;
 public class RngRequesterFilter {
 
     public final static class SubscriptionResponseFilter implements
-                                                IMessageFilter<ResponseEvent> {
+            IMessageFilter<ResponseEvent> {
         @Override
-        public boolean accepts(ResponseEvent message, MessageHandler handler) {
+        public boolean accepts(ResponseEvent message,
+                SubscriptionContext context) {
             return message.getResponse() instanceof SubscriptionResponse;
         }
     }
 
     public final static class ListResponseFilter implements
-                                                IMessageFilter<ResponseEvent> {
+            IMessageFilter<ResponseEvent> {
         @Override
-        public boolean accepts(ResponseEvent message, MessageHandler handler) {
+        public boolean accepts(ResponseEvent message,
+                SubscriptionContext context) {
             return message.getResponse() instanceof ListResponse;
         }
     }
