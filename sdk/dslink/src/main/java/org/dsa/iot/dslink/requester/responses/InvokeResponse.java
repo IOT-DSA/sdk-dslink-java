@@ -1,9 +1,10 @@
 package org.dsa.iot.dslink.requester.responses;
 
 import lombok.Getter;
+
 import org.dsa.iot.dslink.node.value.Value;
-import org.dsa.iot.dslink.requester.requests.InvokeRequest;
 import org.dsa.iot.dslink.node.value.ValueUtils;
+import org.dsa.iot.dslink.requester.requests.InvokeRequest;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
@@ -22,6 +23,6 @@ public class InvokeResponse extends Response<InvokeRequest> {
     @Override
     public void populate(JsonArray o) {
         JsonObject obj = o.get(0);
-        value = ValueUtils.toValue(obj.getField("result"));
+        value = ValueUtils.toValue(obj);
     }
 }

@@ -1,6 +1,10 @@
 package org.dsa.iot.dslink.requester.responses;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import lombok.Getter;
+
 import org.dsa.iot.core.Pair;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
@@ -29,8 +33,9 @@ public class SubscriptionResponse extends Response<SubscribeRequest> {
     private Number max;
     private Number min;
 
-    public SubscriptionResponse(SubscribeRequest request,
-                                NodeManager manager) {
+    private List<Node> nodeList = new ArrayList<Node>();
+
+    public SubscriptionResponse(SubscribeRequest request, NodeManager manager) {
         super(request);
         this.manager = manager;
     }
@@ -73,6 +78,8 @@ public class SubscriptionResponse extends Response<SubscribeRequest> {
             } else {
                 node.setValue(value);
             }
+
+            nodeList.add(node);
         }
     }
 }

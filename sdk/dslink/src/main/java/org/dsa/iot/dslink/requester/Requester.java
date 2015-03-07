@@ -81,12 +81,14 @@ public class Requester extends Linkable {
         val rid = obj.getNumber("rid").intValue();
         val request = client.getRequestTracker().getRequest(rid);
         Response<?> resp;
+        boolean isPublish = true;
         String name;
         if (rid != 0) {
             // Response
-            val state = obj.getString("state");
+            val state = obj.getString("stream");
             if (StreamState.CLOSED.jsonName.equals(state)) {
                 client.getRequestTracker().untrack(rid);
+                isPublish = false;
             }
             resp = getResponse(request);
             name = request.getName();
@@ -96,13 +98,15 @@ public class Requester extends Linkable {
             resp = new SubscriptionResponse(req, getManager());
             name = req.getName();
         }
-        JsonArray populate = obj.getArray("updates");
-        if (populate != null) {
-            resp.populate(obj.getArray("updates"));
-        }
-        synchronized (this) {
-            val ev = new ResponseEvent(client, rid, name, resp);
-            getBus().publish(ev);
+        if (isPublish) {
+            JsonArray populate = obj.getArray("updates");
+            if (populate != null) {
+                resp.populate(obj.getArray("updates"));
+            }
+            synchronized (this) {
+                val ev = new ResponseEvent(client, rid, name, resp);
+                getBus().publish(ev);
+            }
         }
         return resp;
     }

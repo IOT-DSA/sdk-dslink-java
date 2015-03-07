@@ -2,6 +2,7 @@ package org.dsa.iot.dslink.node.value;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
@@ -32,11 +33,11 @@ public class Value {
     public Value(String s) {
         set(s);
     }
-    
+
     public Value(JsonObject o) {
         set(o);
     }
-    
+
     public Value(JsonArray a) {
         set(a);
     }
@@ -52,17 +53,17 @@ public class Value {
     public void set(String s) {
         set(ValueType.STRING, null, null, s, null, null);
     }
-    
+
     public void set(JsonArray array) {
         set(ValueType.ARRAY, null, null, null, array, null);
-    } 
+    }
 
     public void set(JsonObject object) {
         set(ValueType.MAP, null, null, null, null, object);
     }
-    
+
     private void set(ValueType type, Integer i, Boolean b, String s,
-                     JsonArray a, JsonObject o) {
+            JsonArray a, JsonObject o) {
         checkImmutable();
         this.type = type;
         this.integer = i;
@@ -73,11 +74,11 @@ public class Value {
     }
 
     public JsonObject getMap() {
-        return map.copy();
+        return map == null ? null : map.copy();
     }
-    
+
     public JsonArray getArray() {
-        return array.copy();
+        return array == null ? null : array.copy();
     }
 
     public void setImmutable() {
@@ -86,32 +87,33 @@ public class Value {
 
     private void checkImmutable() {
         if (isImmutable()) {
-            throw new IllegalStateException("Attempting to modify immutable value");
+            throw new IllegalStateException(
+                    "Attempting to modify immutable value");
         }
     }
 
     @Override
     public String toString() {
         switch (type) {
-            case NUMBER:
-                return integer.toString();
-            case BOOL:
-                return bool.toString();
-            case STRING:
-                return string;
-            default:
-                throw new RuntimeException("Unhandled type: " + type);
+        case NUMBER:
+            return integer.toString();
+        case BOOL:
+            return bool.toString();
+        case STRING:
+            return string;
+        default:
+            throw new RuntimeException("Unhandled type: " + type);
         }
     }
-    
+
     public String toDebugString() {
         switch (type) {
-            case MAP:
-                return map.encode();
-            case ARRAY:
-                return array.encode();
-            default:
-                return toString();
+        case MAP:
+            return map.encode();
+        case ARRAY:
+            return array.encode();
+        default:
+            return toString();
         }
     }
 }

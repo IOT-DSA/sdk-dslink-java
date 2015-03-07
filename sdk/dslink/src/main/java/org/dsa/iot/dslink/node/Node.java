@@ -1,10 +1,18 @@
 package org.dsa.iot.dslink.node;
 
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.WeakHashMap;
+
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.val;
 import net.engio.mbassy.bus.MBassador;
+
 import org.dsa.iot.core.StringUtils;
 import org.dsa.iot.core.event.Event;
 import org.dsa.iot.dslink.connection.Client;
@@ -18,14 +26,11 @@ import org.dsa.iot.dslink.util.StreamState;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
-import java.lang.ref.WeakReference;
-import java.util.*;
-
 /**
  * @author Samuel Grenier
  */
 public class Node {
-
+    @Getter
     private final WeakReference<Node> parent;
 
     private Map<String, Node> children;
@@ -34,7 +39,7 @@ public class Node {
     private List<String> interfaces;
     private Map<Client, Integer> childrenSubs;
     private Map<Client, Subscription> subs;
-    
+
     private final MBassador<Event> bus;
 
     @Getter
@@ -46,12 +51,17 @@ public class Node {
     private String displayName;
     private Value value;
 
-    @Getter @Setter private Action action;
-    
+    @Getter
+    @Setter
+    private Action action;
+
     /**
-     * @param bus Event bus to publish events to
-     * @param parent The parent of this node, or null if a root node
-     * @param name The name of this node
+     * @param bus
+     *            Event bus to publish events to
+     * @param parent
+     *            The parent of this node, or null if a root node
+     * @param name
+     *            The name of this node
      */
     public Node(MBassador<Event> bus, Node parent, @NonNull String name) {
         this.bus = bus;
@@ -215,7 +225,7 @@ public class Node {
             }
         }
     }
-    
+
     public synchronized void subscribe(@NonNull Subscription sub) {
         val client = sub.getClient();
         if (subs == null)
@@ -224,20 +234,19 @@ public class Node {
             throw new DuplicateException("Client already subscribed");
         subs.put(client, sub);
     }
-    
+
     public synchronized void unsubscribe(@NonNull Client client) {
         subs.remove(client);
     }
-    
+
     public synchronized void subscribeToChildren(@NonNull Client client,
-                                                  @NonNull Responder responder,
-                                                  int rid) {
+            @NonNull Responder responder, int rid) {
         unsubscribeFromChildren(client, responder);
         childrenSubs.put(client, rid);
     }
-    
+
     public synchronized void unsubscribeFromChildren(@NonNull Client client,
-                                                     @NonNull Responder responder) {
+            @NonNull Responder responder) {
         Integer rid = childrenSubs.remove(client);
         if (rid != null) {
             responder.closeStream(client, rid);
@@ -245,7 +254,7 @@ public class Node {
     }
 
     private synchronized void notifyChildrenHandlers(@NonNull Node n,
-                                                     boolean removed) {
+            boolean removed) {
         val iterator = childrenSubs.entrySet().iterator();
         while (iterator.hasNext()) {
             val entry = iterator.next();
@@ -269,7 +278,7 @@ public class Node {
             }
         }
     }
-    
+
     @net.engio.mbassy.listener.Handler
     public synchronized void closedStream(ClosedStreamEvent event) {
         val client = event.getClient();

@@ -4,6 +4,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
+
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.value.Value;
@@ -37,14 +38,14 @@ public class ListResponse extends Response<ListRequest> {
         Node node = manager.getNode(path, true).getKey();
         iterate(node, array);
     }
-    
+
     protected void iterate(Node node, JsonArray array) {
         for (Object obj : array) {
             JsonArray nodeData = (JsonArray) obj;
             update(node, nodeData);
         }
     }
-    
+
     protected void update(Node node, JsonArray nodeData) {
         String name = nodeData.get(0);
         Object v = nodeData.get(1);
@@ -101,6 +102,11 @@ public class ListResponse extends Response<ListRequest> {
                 for (String i : split) {
                     child.addInterface(i);
                 }
+            }
+
+            String type = childData.getString("$type");
+            if (type != null) {
+                child.setConfiguration("type", new Value(type));
             }
         }
     }
