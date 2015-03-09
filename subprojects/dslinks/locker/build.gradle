@@ -1,0 +1,8 @@
+apply plugin: 'application'
+
+version = '0.0.1-SNAPSHOT'
+mainClassName = 'org.dsa.iot.locker.Main'
+
+dependencies {
+    compile project(':sdk/dslink')
+}
