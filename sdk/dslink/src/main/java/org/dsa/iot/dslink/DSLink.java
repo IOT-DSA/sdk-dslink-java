@@ -106,6 +106,7 @@ public class DSLink {
      * stopped.
      */
     @SneakyThrows
+    @SuppressWarnings("SleepWhileInLoop")
     public void sleep() {
         while (isConnecting() || isConnected() || isListening()) {
             Thread.sleep(500);
