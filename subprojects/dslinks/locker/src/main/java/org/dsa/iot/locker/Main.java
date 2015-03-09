@@ -144,31 +144,34 @@ public class Main {
                 LOG.info("Value: {}", node.getValue().toDebugString());
 
                 Node parent = node.getParent().get();
-                Map<String, Node> nodes = parent.getChildren();
-                if (nodes != null) {
-                    for (Map.Entry<String, Node> entry : nodes.entrySet()) {
-                        Node child = entry.getValue();
+                if (parent != null) {
+                    Map<String, Node> nodes = parent.getChildren();
+                    if (nodes != null) {
+                        for (Map.Entry<String, Node> entry : nodes.entrySet()) {
+                            Node child = entry.getValue();
 
-                        // Node that has an Action
-                        if (child.getAction() != null) {
-                            count.decrementAndGet();
-                            Boolean value = node.getValue().getBool();
-                            // Broker support "open" and "close" actions
-                            // All locker can be opened from application, but
-                            // only "locker2" can be closed from JAVA
-                            // application
-                            if (value == true
-                                    && !parent.getName().equals("locker2")) {
-                                LOG.info("By contract from Broker only locker2 can be closed by application.");
-                                LOG.info("locker1 and locker3 can oly be opend");
-                            } else {
-                                JsonObject object = new JsonObject();
-                                object.putBoolean("value", !value);
-                                LOG.info("Invoked: path:{}, value is:{}",
-                                        child.getPath(), !value);
-                                sendRequestTo(new InvokeRequest(
-                                        child.getPath(), object),
-                                        event.getClient());
+                            // Node that has an Action
+                            if (child.getAction() != null) {
+                                count.decrementAndGet();
+                                Boolean value = node.getValue().getBool();
+                                // Broker support "open" and "close" actions
+                                // All locker can be opened from application,
+                                // but
+                                // only "locker2" can be closed from JAVA
+                                // application
+                                if (value == true
+                                        && !parent.getName().equals("locker2")) {
+                                    LOG.info("By contract from Broker only locker2 can be closed by application.");
+                                    LOG.info("locker1 and locker3 can oly be opend");
+                                } else {
+                                    JsonObject object = new JsonObject();
+                                    object.putBoolean("value", !value);
+                                    LOG.info("Invoked: path:{}, value is:{}",
+                                            child.getPath(), !value);
+                                    sendRequestTo(
+                                            new InvokeRequest(child.getPath(),
+                                                    object), event.getClient());
+                                }
                             }
                         }
                     }
