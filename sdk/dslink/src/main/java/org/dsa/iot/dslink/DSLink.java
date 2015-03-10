@@ -72,7 +72,9 @@ public class DSLink {
         final Path backup = Paths.get("data.json.bak");
         { // Deserialize the data
             if (Files.exists(path)) {
-                // TODO: deserialize
+                val string = new String(Files.readAllBytes(path), "UTF-8");
+                val enc = new JsonObject(string);
+                deserializeChildren(enc, "/");
             } else if (Files.exists(backup)) {
                 Files.copy(backup, path);
             }
@@ -95,7 +97,7 @@ public class DSLink {
 
                             val manager = getNodeManager();
                             val root = new JsonObject();
-                            iterateChildren(root, manager.getNode("/").getKey());
+                            serializeChildren(root, manager.getNode("/").getKey(), false);
                             Files.write(path, root.encodePrettily().getBytes("UTF-8"));
                             Files.deleteIfExists(backup);
                         } catch (Exception e) {
@@ -196,17 +198,66 @@ public class DSLink {
         return clientConnector != null;
     }
 
-    private void iterateChildren(JsonObject out, Node parent) {
-        val data = new JsonObject();
+    private void deserializeChildren(JsonObject in, @NonNull String path) {
+        val map = in.toMap();
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            val name = entry.getKey();
+            val data = entry.getValue();
+            val node = getNodeManager().getNode(path, true).getKey();
 
-        { // Value
-            val value = parent.getValue();
-            if (value != null) {
-                ValueUtils.toJson(data, "?value", value);
+            if (name.equals("?value")) {
+                node.setValue(ValueUtils.toValue(data), false);
+            } else if (name.startsWith("$")) {
+                val newName = name.substring(1);
+                node.setConfiguration(newName, ValueUtils.toValue(data));
+            } else if (name.startsWith("@")) {
+                val newName = name.substring(1);
+                node.setAttribute(newName, ValueUtils.toValue(data));
+            } else {
+                @SuppressWarnings("unchecked")
+                val newObj = new JsonObject((Map<String, Object>) data);
+                deserializeChildren(newObj, node.getPath() + "/" + name);
             }
         }
+    }
 
-        { // Configurations
+    /*
+    private void deserializeChildren(JsonObject in, @NonNull String path) {
+        val map = in.toMap();
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            val name = entry.getKey();
+            val obj = entry.getValue();
+            val node = getNodeManager().getNode(path, true).getKey();
+
+            if (name.equals("?value")) {
+                node.setValue(ValueUtils.toValue(obj), false);
+            } else if (name.startsWith("$")) {
+                val newName = name.substring(1);
+                node.setConfiguration(newName, ValueUtils.toValue(obj));
+            } else if (name.startsWith("@")) {
+                val newName = name.substring(1);
+                node.setAttribute(newName, ValueUtils.toValue(obj));
+            } else {
+                System.out.println("Dealing with " + node.getPath() + "/" + name);
+                deserializeChildren(new JsonObject((Map<String, Object>) obj), node.getPath() + "/" + name);
+            }
+        }
+    }
+    */
+
+    private void serializeChildren(JsonObject out,
+                                   Node parent,
+                                   boolean includeSelf) {
+        val data = new JsonObject();
+
+        if (includeSelf) {
+            // Value
+            val nodeVal = parent.getValue();
+            if (nodeVal != null) {
+                ValueUtils.toJson(data, "?value", nodeVal);
+            }
+
+            // Configurations
             val confs = parent.getConfigurations();
             if (confs != null) {
                 for (Map.Entry<String, Value> conf : confs.entrySet()) {
@@ -215,9 +266,8 @@ public class DSLink {
                     ValueUtils.toJson(data, "$" + name, value);
                 }
             }
-        }
 
-        { // Attributes
+            // Attributes
             val attribs = parent.getAttributes();
             if (attribs != null) {
                 for (Map.Entry<String, Value> attr : attribs.entrySet()) {
@@ -226,25 +276,21 @@ public class DSLink {
                     ValueUtils.toJson(data, "@" + name, value);
                 }
             }
+
+            out.putObject(parent.getName(), data);
         }
 
-        { // Action
-            val act = parent.getAction();
-            if (act != null) {
-                act.toJson(data);
-            }
-        }
-
-        { // Children
-            val children = parent.getChildren();
-            if (children != null) {
-                for (Node n : children.values()) {
-                    iterateChildren(data, n);
+        // Children
+        val children = parent.getChildren();
+        if (children != null) {
+            for (Node n : children.values()) {
+                if (includeSelf) {
+                    serializeChildren(data, n, true);
+                } else {
+                    serializeChildren(out, n, true);
                 }
             }
         }
-
-        out.putObject(parent.getName(), data);
     }
 
     private void checkConnected() {

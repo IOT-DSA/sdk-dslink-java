@@ -45,7 +45,7 @@ public class StringUtils {
         checkEmpty(name);
         if (contains(name, BANNED_CHARS)
                 || name.startsWith("@") || name.startsWith("$"))
-            throw new IllegalArgumentException("invalid name");
+            throw new IllegalArgumentException("invalid name: " + name);
     }
 
     public static boolean isAttribOrConf(@NonNull String name) {

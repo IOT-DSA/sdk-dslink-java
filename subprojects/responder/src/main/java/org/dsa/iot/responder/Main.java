@@ -31,13 +31,13 @@ public class Main {
         link.getBus().subscribe(main);
 
         val manager = link.getNodeManager();
-        val parent = manager.createRootNode("test");
+        manager.getNode("/test", true).getKey();
 
-        val a = parent.createChild("A");
+        val a = manager.getNode("/test/A", true).getKey();
         a.setConfiguration("test", new Value("Hello world"));
         a.setValue(new Value(1));
 
-        val b = parent.createChild("B");
+        val b = manager.getNode("/test/B", true).getKey();
         b.setConfiguration("test", new Value("Hello there"));
         b.setValue(new Value(2));
 
