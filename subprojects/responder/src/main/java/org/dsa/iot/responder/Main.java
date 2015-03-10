@@ -27,7 +27,7 @@ public class Main {
 
     public static void main(String[] args) {
         val main = new Main();
-        val link = ArgManager.generate(args, "responder");
+        val link = ArgManager.generateResponder(args, "responder");
         link.getBus().subscribe(main);
 
         val manager = link.getNodeManager();

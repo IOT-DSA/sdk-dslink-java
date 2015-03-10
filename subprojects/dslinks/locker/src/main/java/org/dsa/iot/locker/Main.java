@@ -31,7 +31,7 @@ import org.vertx.java.core.json.JsonObject;
  *
  */
 public class Main {
-    private final static Logger LOG = LoggerFactory.getLogger(Main.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Main.class);
     private static DSLink link;
 
     /**
@@ -41,7 +41,7 @@ public class Main {
 
     public static void main(String[] args) {
         Main m = new Main();
-        link = ArgManager.generate(args, "requester", true, false);
+        link = ArgManager.generateRequester(args, "requester");
         link.getBus().subscribe(m);
 
         link.connect();
