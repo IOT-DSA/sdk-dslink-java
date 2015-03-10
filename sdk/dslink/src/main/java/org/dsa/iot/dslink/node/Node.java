@@ -202,6 +202,19 @@ public class Node {
         return n;
     }
 
+    public synchronized void clearChildren() {
+        if (children == null)
+            return;
+
+        val it = children.values().iterator();
+        while (it.hasNext()) {
+            val node = it.next();
+            node.deInit();
+            notifyChildrenHandlers(node, true);
+            it.remove();
+        }
+    }
+
     public synchronized void clearInterfaces() {
         if (interfaces != null)
             interfaces.clear();
@@ -246,13 +259,13 @@ public class Node {
     }
 
     public synchronized void subscribeToChildren(@NonNull Client client,
-            @NonNull Responder responder, int rid) {
+                                        @NonNull Responder responder, int rid) {
         unsubscribeFromChildren(client, responder);
         childrenSubs.put(client, rid);
     }
 
     public synchronized void unsubscribeFromChildren(@NonNull Client client,
-            @NonNull Responder responder) {
+                                                @NonNull Responder responder) {
         Integer rid = childrenSubs.remove(client);
         if (rid != null) {
             responder.closeStream(client, rid);
@@ -260,7 +273,7 @@ public class Node {
     }
 
     private synchronized void notifyChildrenHandlers(@NonNull Node n,
-            boolean removed) {
+                                                        boolean removed) {
         val iterator = childrenSubs.entrySet().iterator();
         while (iterator.hasNext()) {
             val entry = iterator.next();
