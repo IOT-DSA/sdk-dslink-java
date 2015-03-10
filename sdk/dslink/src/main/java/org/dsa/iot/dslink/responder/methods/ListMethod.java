@@ -93,13 +93,6 @@ public class ListMethod extends Method {
 		}
 
 		{ // Internal information
-			obj.putString("$is", node.getConfiguration("is").getString());
-
-			String name = node.getDisplayName();
-			if (name != null) {
-				obj.putString("$name", name);
-			}
-
 			List<String> interfaces = node.getInterfaces();
 			StringBuilder builder = new StringBuilder();
 			if (interfaces != null) {

@@ -110,7 +110,13 @@ public class Node {
     }
 
     public synchronized Map<String, Value> getConfigurations() {
-        return configurations != null ? new HashMap<>(configurations) : null;
+        val copy = configurations != null ? new HashMap<>(configurations) : null;
+        if (copy != null) {
+            if (getDisplayName() != null) {
+                copy.put("$name", new Value(getDisplayName()));
+            }
+        }
+        return copy;
     }
 
     public synchronized void setDisplayName(String name) {

@@ -51,6 +51,11 @@ public class BrokerLink extends DSLink {
         man.createRootNode("quarantine"); // TODO: Zone management
     }
 
+    @Override
+    protected void init() {
+
+    }
+
     @Handler
     public void onConnected(ClientConnectedEvent event) {
         val client = event.getClient();
@@ -61,6 +66,7 @@ public class BrokerLink extends DSLink {
     }
 
     @Handler
+    @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
     public void error(AsyncExceptionEvent event) {
         event.getThrowable().printStackTrace();
     }
@@ -220,6 +226,7 @@ public class BrokerLink extends DSLink {
         }
     }
 
+    @SuppressWarnings("StringBufferReplaceableByString")
     private String buildPath(Client client, String path) {
         StringBuilder builder = new StringBuilder(connections.getPath());
         builder.append("/");
