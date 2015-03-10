@@ -48,11 +48,33 @@ public class ArgManager {
         return ret != null ? ret : def;
     }
 
-    public static DSLink generate(String[] args, String dsId) {
+    /**
+     * Generates Responder DSLink
+     * 
+     * @param args
+     *            command line arguments
+     * @param dsId
+     *            name of {@link DSLink}
+     * @return
+     */
+    public static DSLink generateResponder(String[] args, String dsId) {
         return generate(args, dsId, false, true);
     }
 
-    public static DSLink generate(String[] args, String dsId,
+    /**
+     * Generates Requester DSLink
+     * 
+     * @param args
+     *            command line arguments
+     * @param dsId
+     *            name of {@link DSLink}
+     * @return
+     */
+    public static DSLink generateRequester(String[] args, String dsId) {
+        return generate(args, dsId, true, false);
+    }
+
+    private static DSLink generate(String[] args, String dsId,
             boolean isRequester, boolean isResponder) {
         val manager = new ArgManager(args);
         manager.parse();
@@ -60,7 +82,7 @@ public class ArgManager {
         val bus = EventBusFactory.create();
         val url = manager.getArgument("url", "http://localhost:8080/conn");
         val type = ConnectionType.WS;
-        val fact = DSLinkFactory.create();
-        return fact.generate(bus, url, type, dsId, isRequester, isResponder);
+        val factory = DSLinkFactory.create();
+        return factory.generate(bus, url, type, dsId, isRequester, isResponder);
     }
 }

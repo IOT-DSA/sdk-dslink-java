@@ -1,7 +1,15 @@
 package org.dsa.iot.rng;
 
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import lombok.val;
 import net.engio.mbassy.listener.Handler;
+
 import org.dsa.iot.dslink.client.ArgManager;
 import org.dsa.iot.dslink.events.ConnectedToServerEvent;
 import org.dsa.iot.dslink.node.Node;
@@ -12,15 +20,8 @@ import org.dsa.iot.dslink.responder.action.Parameter;
 import org.dsa.iot.dslink.util.Permission;
 import org.vertx.java.core.json.JsonObject;
 
-import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
 /**
- * @author pshvets 
+ * @author pshvets
  */
 public class Main {
 
@@ -29,18 +30,18 @@ public class Main {
 
     public static void main(String[] args) {
         // Create executor
-        final val pool = new ScheduledThreadPoolExecutor(
-                4, new ThreadFactory() {
-            @Override
-            public Thread newThread(Runnable runnable) {
-                val thread = new Thread(runnable);
-                thread.setDaemon(true);
-                return thread;
-            }
-        });
+        final val pool = new ScheduledThreadPoolExecutor(4,
+                new ThreadFactory() {
+                    @Override
+                    public Thread newThread(Runnable runnable) {
+                        val thread = new Thread(runnable);
+                        thread.setDaemon(true);
+                        return thread;
+                    }
+                });
 
         // DSLink creation
-        val link = ArgManager.generate(args, "rng");
+        val link = ArgManager.generateResponder(args, "rng");
 
         // Create bus
         val generator = new Main();
@@ -103,7 +104,7 @@ public class Main {
     }
 
     private static void startPool(ScheduledThreadPoolExecutor pool,
-                                  final Node parent, int time, TimeUnit timeUnit) {
+            final Node parent, int time, TimeUnit timeUnit) {
         pool.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
@@ -129,5 +130,5 @@ public class Main {
     public void onConnected(ConnectedToServerEvent event) {
         System.out.println("RandomNumberGenerator is started");
     }
-    
+
 }

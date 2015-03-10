@@ -8,10 +8,9 @@ import lombok.val;
  */
 public class StringUtils {
 
-    private static final String[] BANNED_CHARS = new String[] {
-        ".", "/", "\\", "?", "%", "*", ":", "|", "<", ">"
-    };
-    
+    private static final String[] BANNED_CHARS = new String[] { ".", "/", "\\",
+            "?", "%", "*", ":", "|", "<", ">" };
+
     public static String join(int start, String[] parts) {
         return join(start, parts.length, parts);
     }
@@ -19,13 +18,13 @@ public class StringUtils {
     public static String join(int start, String delimiter, String[] parts) {
         return join(start, parts.length, delimiter, parts);
     }
-    
+
     public static String join(int start, int end, String[] parts) {
         return join(start, end, null, parts);
     }
 
     public static String join(int start, int end, String delimiter,
-                                                @NonNull String[] parts) {
+            @NonNull String[] parts) {
         val builder = new StringBuilder();
         for (int i = start; i < end; i++) {
             builder.append(parts[i]);
@@ -43,8 +42,8 @@ public class StringUtils {
 
     public static void checkNodeName(@NonNull String name) {
         checkEmpty(name);
-        if (contains(name, BANNED_CHARS)
-                || name.startsWith("@") || name.startsWith("$"))
+        if (contains(name, BANNED_CHARS) || name.startsWith("@")
+                || name.startsWith("$"))
             throw new IllegalArgumentException("invalid name");
     }
 
@@ -58,5 +57,9 @@ public class StringUtils {
                 return true;
         }
         return false;
+    }
+
+    public static boolean isNullOrEmpty(String s) {
+        return s == null || s.isEmpty();
     }
 }

@@ -1,8 +1,11 @@
 package org.dsa.iot.requester;
 
+import java.util.Map;
+
 import lombok.SneakyThrows;
 import lombok.val;
 import net.engio.mbassy.listener.Handler;
+
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.client.ArgManager;
 import org.dsa.iot.dslink.events.ConnectedToServerEvent;
@@ -11,8 +14,6 @@ import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.requester.requests.ListRequest;
 import org.dsa.iot.dslink.requester.responses.ListResponse;
-
-import java.util.Map;
 
 /**
  * @author Samuel Grenier
@@ -28,7 +29,7 @@ public class Main {
 
     @SneakyThrows
     private void run(String[] args) {
-        link = ArgManager.generate(args, "requester", true, false);
+        link = ArgManager.generateRequester(args, "requester");
         link.getBus().subscribe(this);
         link.connect();
         link.sleep();
@@ -71,7 +72,8 @@ public class Main {
         }
     }
 
-    private void printValueMap(Map<String, Value> map, String name, boolean indent) {
+    private void printValueMap(Map<String, Value> map, String name,
+            boolean indent) {
         if (map != null) {
             for (Map.Entry<String, Value> conf : map.entrySet()) {
                 String a = conf.getKey();
