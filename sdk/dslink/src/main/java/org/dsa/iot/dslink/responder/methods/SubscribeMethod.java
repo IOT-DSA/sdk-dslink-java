@@ -2,6 +2,7 @@ package org.dsa.iot.dslink.responder.methods;
 
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.SneakyThrows;
 import lombok.val;
 import org.dsa.iot.dslink.connection.Client;
 import org.dsa.iot.dslink.node.Node;
@@ -34,6 +35,7 @@ public class SubscribeMethod extends Method {
     }
 
     @Override
+    @SneakyThrows
     public JsonArray invoke() {
         nodes = getPaths(getRequest().getArray("paths"));
         for (Node n : nodes.keySet()) {

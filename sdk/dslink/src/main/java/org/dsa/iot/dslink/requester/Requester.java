@@ -1,6 +1,7 @@
 package org.dsa.iot.dslink.requester;
 
 import lombok.NonNull;
+import lombok.SneakyThrows;
 import lombok.val;
 import net.engio.mbassy.bus.MBassador;
 
@@ -42,6 +43,7 @@ public class Requester extends Linkable {
         return sendRequest(client, req, true);
     }
 
+    @SneakyThrows
     public int sendRequest(@NonNull Client client, @NonNull Request req,
             boolean autoTrack) {
         ensureConnected();

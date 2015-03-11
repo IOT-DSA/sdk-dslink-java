@@ -1,9 +1,11 @@
 package org.dsa.iot.dslink.node;
 
+import lombok.SneakyThrows;
 import net.engio.mbassy.bus.MBassador;
 import org.dsa.iot.core.Pair;
 import org.dsa.iot.core.StringUtils;
 import org.dsa.iot.core.event.Event;
+import org.dsa.iot.dslink.node.exceptions.DuplicateException;
 import org.dsa.iot.dslink.node.exceptions.NoSuchPathException;
 
 import java.util.Map;
@@ -29,11 +31,11 @@ public class NodeManager {
         };
     }
 
-    public Node createRootNode(String name) {
+    public Node createRootNode(String name) throws DuplicateException {
         return addRootNode(new Node(bus, null, name));
     }
 
-    public Node addRootNode(Node node) {
+    public Node addRootNode(Node node) throws DuplicateException {
         superRoot.addChild(node);
         return node;
     }
@@ -49,6 +51,7 @@ public class NodeManager {
         return getNode(path, false);
     }
 
+    @SneakyThrows
     public Pair<Node, String> getNode(String path, boolean create) {
         if ("/".equals(path))
             return new Pair<>(superRoot, null, false);

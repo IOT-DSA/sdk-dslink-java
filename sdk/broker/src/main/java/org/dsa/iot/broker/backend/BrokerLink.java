@@ -1,5 +1,6 @@
 package org.dsa.iot.broker.backend;
 
+import lombok.SneakyThrows;
 import lombok.val;
 import net.engio.mbassy.bus.MBassador;
 import net.engio.mbassy.listener.Handler;
@@ -38,7 +39,8 @@ public class BrokerLink extends DSLink {
     private final Map<Request, Pair<Client, JsonObject>> reqMap = new HashMap<>();
 
     private final Node connections;
-    
+
+    @SneakyThrows
     BrokerLink(MBassador<Event> bus,
                 ClientConnector clientConn,
                 ServerConnector serverConn,
@@ -57,6 +59,7 @@ public class BrokerLink extends DSLink {
     }
 
     @Handler
+    @SneakyThrows
     public void onConnected(ClientConnectedEvent event) {
         val client = event.getClient();
         val dsId = client.getDsId();
@@ -106,7 +109,8 @@ public class BrokerLink extends DSLink {
             System.out.println(client.getDsId() + " => " + top.encode());
         }
     }
-    
+
+    @SneakyThrows
     private void handleSubscriptionRequest(Client client, JsonObject obj) {
         val method = obj.getString("method");
         val paths = obj.getArray("paths");
@@ -141,7 +145,8 @@ public class BrokerLink extends DSLink {
             }
         }
     }
-    
+
+    @SneakyThrows
     private boolean handledPathRequest(Client client, JsonObject obj) {
         val path = obj.getString("path");
         String[] parts;

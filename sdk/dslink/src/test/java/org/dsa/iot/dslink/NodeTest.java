@@ -1,5 +1,6 @@
 package org.dsa.iot.dslink;
 
+import lombok.SneakyThrows;
 import net.engio.mbassy.bus.MBassador;
 import org.dsa.iot.core.event.Event;
 import org.dsa.iot.core.event.EventBusFactory;
@@ -18,6 +19,7 @@ public class NodeTest {
     private final MBassador<Event> bus = EventBusFactory.create();
 
     @Test
+    @SneakyThrows
     public void nodeAdditions() {
         NodeManager manager = new NodeManager(bus);
         Node nodeA = manager.createRootNode("A");
@@ -72,6 +74,7 @@ public class NodeTest {
     }
 
     @Test
+    @SneakyThrows
     public void nodeRemovals() {
         NodeManager manager = new NodeManager(bus);
         Node a = manager.createRootNode("A");
@@ -109,6 +112,7 @@ public class NodeTest {
     }
 
     @Test
+    @SneakyThrows
     public void children() {
         NodeManager manager = new NodeManager(bus);
         Node a = manager.createRootNode("A");
@@ -124,12 +128,14 @@ public class NodeTest {
     }
 
     @Test
+    @SneakyThrows
     public void pathBuilding() {
         Node node = new Node(bus, null, "A");
         node = node.createChild("A_B").createChild("B_A");
         Assert.assertEquals("/A/A_B/B_A", node.getPath());
     }
 
+    @SneakyThrows
     @Test(expected = DuplicateException.class)
     public void duplicateRootNodes() {
         NodeManager manager = new NodeManager(bus);

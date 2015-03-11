@@ -7,6 +7,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import lombok.SneakyThrows;
 import lombok.val;
 import net.engio.mbassy.listener.Handler;
 
@@ -49,15 +50,16 @@ public class Main {
 
         // Create parent Node
         val manager = link.getNodeManager();
-        final val parent = manager.createRootNode("test");
+        final val parent = manager.getNode("test", true).getKey();
 
         // Create Action for parent Node
-        val actionNode = parent.createChild("generate");
+        val actionNode = manager.getNode(parent.getPath() + "/generate", true).getKey();
         // Handler when "invoke" is called
         val action = new Action(Permission.READ,
                 new org.vertx.java.core.Handler<JsonObject>() {
 
                     @Override
+                    @SneakyThrows
                     public void handle(JsonObject event) {
                         if (event == null) {
                             return;

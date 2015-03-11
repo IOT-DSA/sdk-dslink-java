@@ -18,11 +18,12 @@ public class RequestTracker {
         return ++currentID;
     }
     
-    public synchronized int track(Request req) {
+    public synchronized int track(Request req) throws DuplicateException {
         return track(++currentID, req);
     }
     
-    public synchronized int track(int rid, Request req) {
+    public synchronized int track(int rid, Request req)
+                                    throws DuplicateException {
         if (reqs.containsKey(rid))
             throw new DuplicateException("request");
         else

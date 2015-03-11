@@ -174,11 +174,12 @@ public class Node {
             interfaces.add(name);
     }
 
-    public Node createChild(String name) {
+    public Node createChild(String name) throws DuplicateException {
         return addChild(new Node(bus, this, name));
     }
 
-    public synchronized Node addChild(@NonNull Node node) {
+    public synchronized Node addChild(@NonNull Node node)
+                                                    throws DuplicateException {
         if (children == null)
             children = new HashMap<>();
         else if (children.containsKey(node.name))
@@ -245,7 +246,8 @@ public class Node {
         }
     }
 
-    public synchronized void subscribe(@NonNull Subscription sub) {
+    public synchronized void subscribe(@NonNull Subscription sub)
+                                            throws DuplicateException {
         val client = sub.getClient();
         if (subs == null)
             subs = new HashMap<>();

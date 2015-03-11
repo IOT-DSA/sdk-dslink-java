@@ -1,9 +1,6 @@
 package org.dsa.iot.dslink.requester.responses;
 
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.val;
+import lombok.*;
 
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
@@ -46,6 +43,7 @@ public class ListResponse extends Response<ListRequest> {
         }
     }
 
+    @SneakyThrows
     protected void update(Node node, JsonArray nodeData) {
         String name = nodeData.get(0);
         Object v = nodeData.get(1);

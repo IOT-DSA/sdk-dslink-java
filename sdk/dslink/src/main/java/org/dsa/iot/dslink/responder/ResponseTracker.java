@@ -16,7 +16,7 @@ public class ResponseTracker {
         return reqs.contains(id);
     }
 
-    public synchronized int track(int id) {
+    public synchronized int track(int id) throws DuplicateException {
         if (reqs.contains(id))
             throw new DuplicateException("ID already being tracked");
         reqs.add(id);
