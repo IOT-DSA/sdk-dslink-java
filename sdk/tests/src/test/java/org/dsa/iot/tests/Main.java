@@ -46,7 +46,7 @@ public class Main {
         val bus = EventBusFactory.create();
         val url = "http://localhost:" + port + "/conn";
 
-        val link = DSLinkFactory.create().generate(bus, url, ConnectionType.WS, "dslink");
+        val link = DSLinkFactory.create(bus).generate(url, ConnectionType.WS, "dslink");
         link.connect();
         while (link.isConnecting()) {
             Thread.sleep(100);

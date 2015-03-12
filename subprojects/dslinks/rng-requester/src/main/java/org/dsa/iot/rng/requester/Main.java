@@ -2,9 +2,11 @@ package org.dsa.iot.rng.requester;
 
 import java.util.Map;
 
+import lombok.val;
 import net.engio.mbassy.listener.Filter;
 import net.engio.mbassy.listener.Handler;
 
+import org.dsa.iot.core.event.EventBusFactory;
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.client.ArgManager;
 import org.dsa.iot.dslink.connection.Client;
@@ -30,8 +32,9 @@ public class Main {
 
     public static void main(String[] args) {
         Main m = new Main();
-        link = ArgManager.generateRequester(args, "requester");
-        link.getBus().subscribe(m);
+        val bus = EventBusFactory.create();
+        bus.subscribe(m);
+        link = ArgManager.generateRequester(args, bus, "requester");
 
         link.connect();
         link.sleep();

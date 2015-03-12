@@ -6,6 +6,7 @@ import lombok.SneakyThrows;
 import lombok.val;
 import net.engio.mbassy.listener.Handler;
 
+import org.dsa.iot.core.event.EventBusFactory;
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.client.ArgManager;
 import org.dsa.iot.dslink.events.ConnectedToServerEvent;
@@ -29,8 +30,9 @@ public class Main {
 
     @SneakyThrows
     private void run(String[] args) {
-        link = ArgManager.generateRequester(args, "requester");
-        link.getBus().subscribe(this);
+        val bus = EventBusFactory.create();
+        bus.subscribe(this);
+        link = ArgManager.generateRequester(args, bus, "requester");
         link.connect();
         link.sleep();
     }

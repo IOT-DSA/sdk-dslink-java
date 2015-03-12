@@ -2,6 +2,7 @@ package org.dsa.iot.responder;
 
 import lombok.val;
 import net.engio.mbassy.listener.Handler;
+import org.dsa.iot.core.event.EventBusFactory;
 import org.dsa.iot.dslink.client.ArgManager;
 import org.dsa.iot.dslink.events.ConnectedToServerEvent;
 import org.dsa.iot.dslink.node.value.Value;
@@ -27,8 +28,9 @@ public class Main {
 
     public static void main(String[] args) {
         val main = new Main();
-        val link = ArgManager.generateResponder(args, "responder");
-        link.getBus().subscribe(main);
+        val bus = EventBusFactory.create();
+        bus.subscribe(main);
+        val link = ArgManager.generateResponder(args, bus, "responder");
 
         val manager = link.getNodeManager();
         manager.getNode("/test", true).getKey();

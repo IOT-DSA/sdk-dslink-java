@@ -6,6 +6,8 @@ import java.util.Map;
 import lombok.NonNull;
 import lombok.val;
 
+import net.engio.mbassy.bus.MBassador;
+import org.dsa.iot.core.event.Event;
 import org.dsa.iot.core.event.EventBusFactory;
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.DSLinkFactory;
@@ -57,8 +59,8 @@ public class ArgManager {
      *            name of {@link DSLink}
      * @return
      */
-    public static DSLink generateResponder(String[] args, String dsId) {
-        return generate(args, dsId, false, true);
+    public static DSLink generateResponder(String[] args, MBassador<Event> bus, String dsId) {
+        return generate(args, bus, dsId, false, true);
     }
 
     /**
@@ -70,19 +72,18 @@ public class ArgManager {
      *            name of {@link DSLink}
      * @return
      */
-    public static DSLink generateRequester(String[] args, String dsId) {
-        return generate(args, dsId, true, false);
+    public static DSLink generateRequester(String[] args, MBassador<Event> bus, String dsId) {
+        return generate(args, bus, dsId, true, false);
     }
 
-    private static DSLink generate(String[] args, String dsId,
-            boolean isRequester, boolean isResponder) {
+    private static DSLink generate(String[] args, MBassador<Event> bus, String dsId,
+                                            boolean isRequester, boolean isResponder) {
         val manager = new ArgManager(args);
         manager.parse();
 
-        val bus = EventBusFactory.create();
         val url = manager.getArgument("url", "http://localhost:8080/conn");
         val type = ConnectionType.WS;
-        val factory = DSLinkFactory.create();
-        return factory.generate(bus, url, type, dsId, isRequester, isResponder);
+        val factory = DSLinkFactory.create(bus);
+        return factory.generate(url, type, dsId, isRequester, isResponder);
     }
 }

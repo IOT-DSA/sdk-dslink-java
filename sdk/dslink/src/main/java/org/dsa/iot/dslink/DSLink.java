@@ -10,6 +10,7 @@ import org.dsa.iot.core.event.Event;
 import org.dsa.iot.dslink.connection.ClientConnector;
 import org.dsa.iot.dslink.connection.ServerConnector;
 import org.dsa.iot.dslink.events.IncomingDataEvent;
+import org.dsa.iot.dslink.events.InitializationEvent;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.value.Value;
@@ -70,8 +71,10 @@ public class DSLink {
     @SneakyThrows
     protected void init() {
         if (responder == null) {
+            bus.publish(new InitializationEvent(this, null));
             return;
         }
+        bus.publish(new InitializationEvent(this, getActionRegistry()));
 
         final Path path = Paths.get("data.json");
         final Path backup = Paths.get("data.json.bak");
@@ -212,6 +215,8 @@ public class DSLink {
 
             if (name.equals("?value")) {
                 node.setValue(ValueUtils.toValue(data), false);
+            } else if (name.equals("?function")) {
+                node.setAction((String) data);
             } else if (name.startsWith("$")) {
                 val newName = name.substring(1);
                 node.setConfiguration(newName, ValueUtils.toValue(data));
@@ -226,30 +231,6 @@ public class DSLink {
         }
     }
 
-    /*
-    private void deserializeChildren(JsonObject in, @NonNull String path) {
-        val map = in.toMap();
-        for (Map.Entry<String, Object> entry : map.entrySet()) {
-            val name = entry.getKey();
-            val obj = entry.getValue();
-            val node = getNodeManager().getNode(path, true).getKey();
-
-            if (name.equals("?value")) {
-                node.setValue(ValueUtils.toValue(obj), false);
-            } else if (name.startsWith("$")) {
-                val newName = name.substring(1);
-                node.setConfiguration(newName, ValueUtils.toValue(obj));
-            } else if (name.startsWith("@")) {
-                val newName = name.substring(1);
-                node.setAttribute(newName, ValueUtils.toValue(obj));
-            } else {
-                System.out.println("Dealing with " + node.getPath() + "/" + name);
-                deserializeChildren(new JsonObject((Map<String, Object>) obj), node.getPath() + "/" + name);
-            }
-        }
-    }
-    */
-
     private void serializeChildren(JsonObject out,
                                    Node parent,
                                    boolean includeSelf) {
@@ -260,6 +241,12 @@ public class DSLink {
             val nodeVal = parent.getValue();
             if (nodeVal != null) {
                 ValueUtils.toJson(data, "?value", nodeVal);
+            }
+
+            // Action
+            val action = parent.getAction();
+            if (action != null) {
+                data.putString("?function", action.getName());
             }
 
             // Configurations

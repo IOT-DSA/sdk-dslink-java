@@ -11,8 +11,12 @@ import lombok.SneakyThrows;
 import lombok.val;
 import net.engio.mbassy.listener.Handler;
 
+import net.engio.mbassy.listener.Listener;
+import net.engio.mbassy.listener.References;
+import org.dsa.iot.core.event.EventBusFactory;
 import org.dsa.iot.dslink.client.ArgManager;
 import org.dsa.iot.dslink.events.ConnectedToServerEvent;
+import org.dsa.iot.dslink.events.InitializationEvent;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
@@ -24,14 +28,18 @@ import org.vertx.java.core.json.JsonObject;
 /**
  * @author pshvets
  */
+@Listener(references = References.Strong)
 public class Main {
 
     private static AtomicInteger counter = new AtomicInteger(0);
     private static final Random random = new Random();
 
+    private static ScheduledThreadPoolExecutor pool;
+    private static Node parent;
+
     public static void main(String[] args) {
         // Create executor
-        final val pool = new ScheduledThreadPoolExecutor(4,
+        pool = new ScheduledThreadPoolExecutor(4,
                 new ThreadFactory() {
                     @Override
                     public Thread newThread(Runnable runnable) {
@@ -42,18 +50,54 @@ public class Main {
                 });
 
         // DSLink creation
-        val link = ArgManager.generateResponder(args, "rng");
-
-        // Create bus
-        val generator = new Main();
-        link.getBus().subscribe(generator);
+        val bus = EventBusFactory.create();
+        bus.subscribe(new Main());
+        val link = ArgManager.generateResponder(args, bus, "rng");
 
         // Create parent Node
         val manager = link.getNodeManager();
-        final val parent = manager.getNode("test", true).getKey();
+        parent = manager.getNode("test", true).getKey();
 
         // Create Action for parent Node
         val actionNode = manager.getNode(parent.getPath() + "/generate", true).getKey();
+        actionNode.setAction("rng_creator");
+
+        // Create variable
+        val tuple = manager.getNode("test/random_generated_" + counter, true);
+        val node = tuple.getKey();
+        node.setConfiguration("type",
+                new Value(ValueType.NUMBER.toJsonString()));
+
+        startPool(pool, parent, 300, TimeUnit.MILLISECONDS);
+        link.connect();
+        link.sleep();
+    }
+
+    private static void startPool(ScheduledThreadPoolExecutor pool,
+            final Node parent, int time, TimeUnit timeUnit) {
+        pool.scheduleWithFixedDelay(new Runnable() {
+            @Override
+            public void run() {
+
+                Map<String, Node> children = parent.getChildren();
+                if (children != null) {
+                    for (Node node : children.values()) {
+                        Value value = node.getValue();
+                        if (value == null) {
+                            value = new Value(0);
+                        } else {
+                            value = new Value(random.nextInt());
+                        }
+                        node.setValue(value);
+                    }
+                }
+
+            }
+        }, 0, time, timeUnit);
+    }
+
+    @Handler
+    public void onInitialization(InitializationEvent event) {
         // Handler when "invoke" is called
         val action = new Action("rng_creator", Permission.READ,
                 new org.vertx.java.core.Handler<JsonObject>() {
@@ -91,42 +135,7 @@ public class Main {
                 });
         action.addParameter(new Parameter("numbers", ValueType.NUMBER, null));
         action.addParameter(new Parameter("time", ValueType.NUMBER, null));
-        link.getActionRegistry().add(action);
-        actionNode.setAction("rng_creator");
-
-        // Create variable
-        val tuple = manager.getNode("test/random_generated_" + counter, true);
-        val node = tuple.getKey();
-        node.setConfiguration("type",
-                new Value(ValueType.NUMBER.toJsonString()));
-
-        startPool(pool, parent, 300, TimeUnit.MILLISECONDS);
-
-        link.connect();
-        link.sleep();
-    }
-
-    private static void startPool(ScheduledThreadPoolExecutor pool,
-            final Node parent, int time, TimeUnit timeUnit) {
-        pool.scheduleWithFixedDelay(new Runnable() {
-            @Override
-            public void run() {
-
-                Map<String, Node> children = parent.getChildren();
-                if (children != null) {
-                    for (Node node : children.values()) {
-                        Value value = node.getValue();
-                        if (value == null) {
-                            value = new Value(0);
-                        } else {
-                            value = new Value(random.nextInt());
-                        }
-                        node.setValue(value);
-                    }
-                }
-
-            }
-        }, 0, time, timeUnit);
+        event.getActionRegistry().add(action);
     }
 
     @Handler

@@ -21,50 +21,48 @@ import java.util.concurrent.CountDownLatch;
  */
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class DSLinkFactory {
-    
-    public static DSLinkFactory create() {
-        return new DSLinkFactory();
+
+    private final MBassador<Event> bus;
+
+    public static DSLinkFactory create(MBassador<Event> bus) {
+        return new DSLinkFactory(bus);
     }
     
-    public DSLink generate(MBassador<Event> master,
-                                  String url,
+    public DSLink generate(String url,
                                   ConnectionType type,
                                   String dsId) {
-        return generate(master, url, type, dsId, "default");
+        return generate(url, type, dsId, "default");
     }
 
     /**
      * Defaults to generating a responder only dslink.
      */
-    public DSLink generate(MBassador<Event> master,
-                                  String url,
+    public DSLink generate(String url,
                                   ConnectionType type,
                                   String dsId,
                                   String zone) {
-        return generate(master, url, type, dsId, zone, false, true);
+        return generate(url, type, dsId, zone, false, true);
     }
 
-    public DSLink generate(MBassador<Event> master,
-                                  String url,
+    public DSLink generate(String url,
                                   ConnectionType type,
                                   String dsId,
                                   boolean isRequester,
                                   boolean isResponder) {
-        return generate(master, url, type, dsId, "default",
+        return generate(url, type, dsId, "default",
                 isRequester, isResponder);
     }
 
-    public DSLink generate(MBassador<Event> master,
-                                  String url,
+    public DSLink generate(String url,
                                   ConnectionType type,
                                   String dsId,
                                   String zone,
                                   boolean isRequester,
                                   boolean isResponder) {
-        val requester = isRequester ? new Requester(master) : null;
-        val responder = isResponder ? new Responder(master) : null;
+        val requester = isRequester ? new Requester(bus) : null;
+        val responder = isResponder ? new Responder(bus) : null;
 
-        return generate(master, url, type, dsId, zone,
+        return generate(url, type, dsId, zone,
                 requester, responder);
     }
 
@@ -78,8 +76,7 @@ public class DSLinkFactory {
      * @return DSLink object on success, otherwise null
      */
     @SneakyThrows
-    public DSLink generate(@NonNull final MBassador<Event> master,
-                                  @NonNull final String url,
+    public DSLink generate(@NonNull final String url,
                                   @NonNull final ConnectionType type,
                                   @NonNull final String dsId,
                                   @NonNull final String zone,
@@ -91,7 +88,7 @@ public class DSLinkFactory {
 
         final CountDownLatch latch = new CountDownLatch(1);
         final HandshakeCont server = new HandshakeCont();
-        HandshakeServer.perform(master, url, client, new Handler<AsyncResult<HandshakeServer>>() {
+        HandshakeServer.perform(bus, url, client, new Handler<AsyncResult<HandshakeServer>>() {
             @Override
             public void handle(AsyncResult<HandshakeServer> event) {
                 server.setServer(event);
@@ -104,8 +101,8 @@ public class DSLinkFactory {
         }
 
         val pair = new HandshakePair(client, server.getServer().result());
-        val conn = ClientConnector.create(master, url, pair, type);
-        return new DSLink(master, conn, null, requester, responder);
+        val conn = ClientConnector.create(bus, url, pair, type);
+        return new DSLink(bus, conn, null, requester, responder);
     }
 
     public DSLink generate(@NonNull MBassador<Event> master,
