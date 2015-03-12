@@ -215,7 +215,7 @@ public class DSLink {
 
             if (name.equals("?value")) {
                 node.setValue(ValueUtils.toValue(data), false);
-            } else if (name.equals("?function")) {
+            } else if (name.equals("$function")) {
                 node.setAction((String) data);
             } else if (name.startsWith("$")) {
                 val newName = name.substring(1);
@@ -246,7 +246,7 @@ public class DSLink {
             // Action
             val action = parent.getAction();
             if (action != null) {
-                data.putString("?function", action.getName());
+                data.putString("$function", action.getName());
             }
 
             // Configurations
