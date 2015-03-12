@@ -18,7 +18,7 @@ public class EventBusFactory {
         config.addFeature(Feature.AsynchronousHandlerInvocation.Default());
         config.addFeature(Feature.AsynchronousMessageDispatch.Default());
 
-        val logger = new IPublicationErrorHandler.ConsoleLogger();
+        val logger = new IPublicationErrorHandler.ConsoleLogger(true);
         config.setProperty(Properties.Handler.PublicationError, logger);
 
         return new MBassador<>(config);
