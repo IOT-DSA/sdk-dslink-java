@@ -55,7 +55,7 @@ public class Main {
         // Create Action for parent Node
         val actionNode = manager.getNode(parent.getPath() + "/generate", true).getKey();
         // Handler when "invoke" is called
-        val action = new Action(Permission.READ,
+        val action = new Action("rng_creator", Permission.READ,
                 new org.vertx.java.core.Handler<JsonObject>() {
 
                     @Override
@@ -91,7 +91,8 @@ public class Main {
                 });
         action.addParameter(new Parameter("numbers", ValueType.NUMBER, null));
         action.addParameter(new Parameter("time", ValueType.NUMBER, null));
-        actionNode.setAction(action);
+        link.getActionRegistry().add(action);
+        actionNode.setAction("rng_creator");
 
         // Create variable
         val tuple = manager.getNode("test/random_generated_" + counter, true);

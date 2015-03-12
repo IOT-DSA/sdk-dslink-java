@@ -1,5 +1,6 @@
 package org.dsa.iot.dslink.node;
 
+import lombok.NonNull;
 import lombok.SneakyThrows;
 import net.engio.mbassy.bus.MBassador;
 import org.dsa.iot.core.Pair;
@@ -7,6 +8,7 @@ import org.dsa.iot.core.StringUtils;
 import org.dsa.iot.core.event.Event;
 import org.dsa.iot.dslink.node.exceptions.DuplicateException;
 import org.dsa.iot.dslink.node.exceptions.NoSuchPathException;
+import org.dsa.iot.dslink.responder.action.ActionRegistry;
 
 import java.util.Map;
 
@@ -17,13 +19,15 @@ import java.util.Map;
 public class NodeManager {
 
     private final MBassador<Event> bus;
+    @NonNull private final ActionRegistry registry;
 
     // Fake root to provide a listing on "/"
     private final Node superRoot;
 
-    public NodeManager(MBassador<Event> bus) {
+    public NodeManager(MBassador<Event> bus, ActionRegistry registry) {
         this.bus = bus;
-        this.superRoot = new Node(bus, null, "") {
+        this.registry = registry;
+        this.superRoot = new Node(bus, null, "", registry) {
             @Override
             protected boolean isRootNode() {
                 return true;
@@ -32,7 +36,7 @@ public class NodeManager {
     }
 
     public Node createRootNode(String name) throws DuplicateException {
-        return addRootNode(new Node(bus, null, name));
+        return addRootNode(new Node(bus, null, name, registry));
     }
 
     public Node addRootNode(Node node) throws DuplicateException {

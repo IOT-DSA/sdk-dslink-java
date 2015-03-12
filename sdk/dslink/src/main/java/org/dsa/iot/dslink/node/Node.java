@@ -21,6 +21,7 @@ import org.dsa.iot.dslink.node.exceptions.DuplicateException;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.responder.Responder;
 import org.dsa.iot.dslink.responder.action.Action;
+import org.dsa.iot.dslink.responder.action.ActionRegistry;
 import org.dsa.iot.dslink.responder.methods.ListMethod;
 import org.dsa.iot.dslink.util.StreamState;
 import org.vertx.java.core.json.JsonArray;
@@ -32,6 +33,8 @@ import org.vertx.java.core.json.JsonObject;
 public class Node {
     @Getter
     private final WeakReference<Node> parent;
+
+    private final ActionRegistry registry;
 
     private Map<String, Node> children;
     private Map<String, Value> attributes;
@@ -52,7 +55,6 @@ public class Node {
     private Value value;
 
     @Getter
-    @Setter
     private Action action;
 
     /**
@@ -63,11 +65,15 @@ public class Node {
      * @param name
      *            The name of this node
      */
-    public Node(MBassador<Event> bus, Node parent, @NonNull String name) {
+    public Node(MBassador<Event> bus,
+                Node parent,
+                @NonNull String name,
+                @NonNull ActionRegistry registry) {
         this.bus = bus;
         this.parent = new WeakReference<>(parent);
         this.name = name;
         this.childrenSubs = new WeakHashMap<>();
+        this.registry = registry;
         if (isRootNode()) {
             path = name;
         } else {
@@ -87,6 +93,19 @@ public class Node {
         if (bus != null) {
             bus.unsubscribe(this);
         }
+    }
+
+    public void setAction(String name) {
+        action = registry.get(name);
+    }
+
+    /**
+     * Bypasses the action registry, may not be serialization safe. Caution is
+     * to be taken before calling.
+     * @param action
+     */
+    public void forceSetAction(Action action) {
+        this.action = action;
     }
 
     public synchronized String getDisplayName() {
@@ -175,7 +194,7 @@ public class Node {
     }
 
     public Node createChild(String name) throws DuplicateException {
-        return addChild(new Node(bus, this, name));
+        return addChild(new Node(bus, this, name, registry));
     }
 
     public synchronized Node addChild(@NonNull Node node)

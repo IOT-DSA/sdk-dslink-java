@@ -1,5 +1,6 @@
 package org.dsa.iot.dslink.responder.action;
 
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
@@ -19,7 +20,8 @@ public class Action {
     
     private final List<Parameter> params = new ArrayList<>();
     private final List<Parameter> results = new ArrayList<>();
-    
+
+    @Getter private final String name;
     @NonNull private final Permission permission;
     @NonNull private final Handler<JsonObject> handler;
 

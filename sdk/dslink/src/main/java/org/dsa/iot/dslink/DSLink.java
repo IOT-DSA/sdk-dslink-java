@@ -16,6 +16,7 @@ import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.dsa.iot.dslink.requester.Requester;
 import org.dsa.iot.dslink.responder.Responder;
+import org.dsa.iot.dslink.responder.action.ActionRegistry;
 import org.vertx.java.core.json.JsonObject;
 
 import java.nio.file.Files;
@@ -32,6 +33,9 @@ public class DSLink {
 
     @Getter
     private final MBassador<Event> bus;
+
+    @Getter
+    private final ActionRegistry actionRegistry;
 
     private final ClientConnector clientConnector;
     private final ServerConnector serverConnector;
@@ -52,9 +56,10 @@ public class DSLink {
         this.serverConnector = serverConn;
         this.requester = req;
         this.responder = resp;
+        this.actionRegistry = new ActionRegistry();
         bus.subscribe(this);
 
-        NodeManager common = new NodeManager(bus);
+        NodeManager common = new NodeManager(bus, actionRegistry);
         if (requester != null)
             requester.setConnector(clientConn, serverConn, common);
         if (responder != null)
