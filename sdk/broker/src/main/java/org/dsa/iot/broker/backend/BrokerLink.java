@@ -15,6 +15,7 @@ import org.dsa.iot.dslink.connection.connector.server.ServerClient;
 import org.dsa.iot.dslink.events.AsyncExceptionEvent;
 import org.dsa.iot.dslink.events.ClientConnectedEvent;
 import org.dsa.iot.dslink.events.IncomingDataEvent;
+import org.dsa.iot.dslink.events.InitializationEvent;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.Subscription;
@@ -55,7 +56,7 @@ public class BrokerLink extends DSLink {
 
     @Override
     protected void init() {
-
+        getBus().publish(new InitializationEvent(this, null));
     }
 
     @Handler
