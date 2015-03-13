@@ -68,6 +68,11 @@ public class Action {
         @NonNull private final JsonObject obj;
 
         /**
+         * Updates returned from the list response
+         */
+        @Setter private JsonArray updates = null;
+
+        /**
          * Stream state can be set to prevent a closing stream after invocation.
          * The default state is to immediately close the invocation response.
          */

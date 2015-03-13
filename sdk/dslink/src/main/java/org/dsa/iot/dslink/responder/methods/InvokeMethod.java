@@ -31,6 +31,6 @@ public class InvokeMethod extends Method {
             throw new RuntimeException("Not invokable");
         }
         setState(container.getState());
-        return null;
+        return container.getUpdates();
     }
 }
