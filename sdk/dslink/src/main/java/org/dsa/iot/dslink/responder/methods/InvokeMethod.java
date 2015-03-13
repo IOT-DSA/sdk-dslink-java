@@ -3,9 +3,10 @@ package org.dsa.iot.dslink.responder.methods;
 import lombok.NonNull;
 import lombok.val;
 import org.dsa.iot.dslink.node.Node;
-import org.dsa.iot.dslink.util.StreamState;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
+
+import static org.dsa.iot.dslink.responder.action.Action.Container;
 
 /**
  * @author Samuel Grenier
@@ -23,12 +24,13 @@ public class InvokeMethod extends Method {
     @Override
     public JsonArray invoke() {
         val handler = node.getAction();
+        val container = new Container(getRequest());
         if (handler != null && handler.hasPermission()) {
-            handler.invoke(getRequest());
+            handler.invoke(container);
         } else {
             throw new RuntimeException("Not invokable");
         }
-        setState(StreamState.CLOSED);
+        setState(container.getState());
         return null;
     }
 }

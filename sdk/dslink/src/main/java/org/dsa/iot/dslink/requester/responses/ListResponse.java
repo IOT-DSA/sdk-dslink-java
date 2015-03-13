@@ -85,9 +85,9 @@ public class ListResponse extends Response<ListRequest> {
             val invokable = childData.getString("$invokable");
             if (invokable != null) {
                 val perm = Permission.toEnum(invokable);
-                child.forceSetAction(new Action(null, perm, new Handler<JsonObject>() {
+                child.forceSetAction(new Action(null, perm, new Handler<Action.Container>() {
                     @Override
-                    public void handle(JsonObject event) {
+                    public void handle(Action.Container event) {
                         throw new UnsupportedOperationException();
                     }
                 }));

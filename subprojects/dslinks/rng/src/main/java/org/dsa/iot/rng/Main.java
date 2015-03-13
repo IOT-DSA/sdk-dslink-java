@@ -100,18 +100,19 @@ public class Main {
     public void onInitialization(InitializationEvent event) {
         // Handler when "invoke" is called
         val action = new Action("rng_creator", Permission.READ,
-                new org.vertx.java.core.Handler<JsonObject>() {
+                new org.vertx.java.core.Handler<Action.Container>() {
 
                     @Override
                     @SneakyThrows
-                    public void handle(JsonObject event) {
-                        if (event == null) {
+                    public void handle(Action.Container event) {
+                        val obj = event.getObj();
+                        if (obj == null) {
                             return;
                         }
                         // to measure execution time
                         long startTime = System.currentTimeMillis();
 
-                        JsonObject params = event.getValue("params");
+                        JsonObject params = obj.getValue("params");
                         Integer numberOfNodes = params.getInteger("numbers");
                         Integer time = params.getInteger("time");
 

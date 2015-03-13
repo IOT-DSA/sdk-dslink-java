@@ -33,7 +33,7 @@ public class SubscriptionResponse extends Response<SubscribeRequest> {
     private Number max;
     private Number min;
 
-    private List<Node> nodeList = new ArrayList<Node>();
+    private List<Node> nodeList = new ArrayList<>();
 
     public SubscriptionResponse(SubscribeRequest request, NodeManager manager) {
         super(request);

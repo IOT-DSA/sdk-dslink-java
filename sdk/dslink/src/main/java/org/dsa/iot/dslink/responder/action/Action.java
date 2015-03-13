@@ -1,10 +1,8 @@
 package org.dsa.iot.dslink.responder.action;
 
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.val;
+import lombok.*;
 import org.dsa.iot.dslink.util.Permission;
+import org.dsa.iot.dslink.util.StreamState;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
@@ -23,7 +21,7 @@ public class Action {
 
     @Getter private final String name;
     @NonNull private final Permission permission;
-    @NonNull private final Handler<JsonObject> handler;
+    @NonNull private final Handler<Container> handler;
 
     public void addParameter(Parameter parameter) {
         params.add(parameter);
@@ -33,9 +31,9 @@ public class Action {
         results.add(parameter);
     }
     
-    public void invoke(JsonObject obj) {
+    public void invoke(Container container) {
         if (!hasPermission()) return;
-        handler.handle(obj);
+        handler.handle(container);
     }
     
     public boolean hasPermission() {
@@ -58,5 +56,21 @@ public class Action {
             array.add(obj);
         }
         return array;
+    }
+
+    @Getter
+    @RequiredArgsConstructor
+    public static class Container {
+
+        /**
+         * Data object to act upon for the invocation.
+         */
+        @NonNull private final JsonObject obj;
+
+        /**
+         * Stream state can be set to prevent a closing stream after invocation.
+         * The default state is to immediately close the invocation response.
+         */
+        @NonNull @Setter private StreamState state = StreamState.CLOSED;
     }
 }
