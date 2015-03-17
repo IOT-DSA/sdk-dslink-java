@@ -1,303 +1,131 @@
 package org.dsa.iot.dslink;
 
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.val;
-import net.engio.mbassy.bus.MBassador;
-import net.engio.mbassy.listener.Handler;
-import org.dsa.iot.core.event.Event;
-import org.dsa.iot.dslink.connection.ClientConnector;
-import org.dsa.iot.dslink.connection.ServerConnector;
-import org.dsa.iot.dslink.events.IncomingDataEvent;
-import org.dsa.iot.dslink.events.InitializationEvent;
-import org.dsa.iot.dslink.node.Node;
+import org.dsa.iot.dslink.connection.NetworkClient;
+import org.dsa.iot.dslink.connection.Endpoint;
+import org.dsa.iot.dslink.connection.RemoteEndpoint;
 import org.dsa.iot.dslink.node.NodeManager;
-import org.dsa.iot.dslink.node.value.Value;
-import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.dsa.iot.dslink.requester.Requester;
-import org.dsa.iot.dslink.responder.Responder;
-import org.dsa.iot.dslink.responder.action.ActionRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.vertx.java.core.Handler;
+import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
-
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author Samuel Grenier
  */
 public class DSLink {
 
-    @Getter
-    private final MBassador<Event> bus;
+    private static final Logger LOGGER = LoggerFactory.getLogger(DSLink.class);
 
-    @Getter
-    private final ActionRegistry actionRegistry;
+    private final Endpoint endpoint;
+    private final DSLinkHandler handler;
+    private final NodeManager nodeManager;
+    private NetworkClient client;
 
-    private final ClientConnector clientConnector;
-    private final ServerConnector serverConnector;
-
-    @Getter
-    private final Requester requester;
-
-    @Getter
-    private final Responder responder;
-
-    protected DSLink(MBassador<Event> bus,
-                    ClientConnector clientConn,
-                    ServerConnector serverConn,
-                    Requester req,
-                    Responder resp) {
-        this.bus = bus;
-        this.clientConnector = clientConn;
-        this.serverConnector = serverConn;
-        this.requester = req;
-        this.responder = resp;
-        this.actionRegistry = new ActionRegistry();
-        bus.subscribe(this);
-
-        NodeManager common = new NodeManager(bus, actionRegistry);
-        if (requester != null)
-            requester.setConnector(clientConn, serverConn, common);
-        if (responder != null)
-            responder.setConnector(clientConn, serverConn, common);
-        init();
-    }
-
-    @SneakyThrows
-    protected void init() {
-        if (responder == null) {
-            bus.publish(new InitializationEvent(this, null));
-            return;
-        }
-        bus.publish(new InitializationEvent(this, getActionRegistry()));
-
-        final Path path = Paths.get("data.json");
-        final Path backup = Paths.get("data.json.bak");
-        { // Deserialize the data
-            if (Files.exists(path)) {
-                val string = new String(Files.readAllBytes(path), "UTF-8");
-                val enc = new JsonObject(string);
-                deserializeChildren(enc, "/");
-            } else if (Files.exists(backup)) {
-                Files.copy(backup, path);
-            }
-            Files.deleteIfExists(backup);
-        }
-
-        { // Start save thread
-            val thread = new Thread(new Runnable() {
-                @Override
-                @SuppressWarnings("InfiniteLoopStatement")
-                public void run() {
-                    while (true) {
-                        try {
-                            TimeUnit.SECONDS.sleep(5);
-                            if (Files.exists(path)) {
-                                val copyOpt = StandardCopyOption.REPLACE_EXISTING;
-                                Files.copy(path, backup, copyOpt);
-                                Files.delete(path);
-                            }
-
-                            val manager = getNodeManager();
-                            val root = new JsonObject();
-                            serializeChildren(root, manager.getNode("/").getKey(), false);
-                            Files.write(path, root.encodePrettily().getBytes("UTF-8"));
-                            Files.deleteIfExists(backup);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
+    /**
+     * @param endpoint Connection endpoint
+     * @param manager Node manager
+     * @param handler Link handler
+     */
+    protected DSLink(Endpoint endpoint,
+                     NodeManager manager,
+                     DSLinkHandler handler) {
+        if (endpoint == null)
+            throw new NullPointerException("endpoint");
+        else if (manager == null)
+            throw new NullPointerException("manager");
+        else if (handler == null)
+            throw new NullPointerException("handler");
+        this.endpoint = endpoint;
+        this.nodeManager = manager;
+        this.handler = handler;
+        endpoint.setClientConnectedHandler(new Handler<NetworkClient>() {
+            @Override
+            public synchronized void handle(NetworkClient event) {
+                if (client != null) {
+                    // Will only happen in a server side endpoint
+                    LOGGER.warn("Client already configured");
+                    event.close();
+                } else {
+                    client = event;
+                    defaultDataHandler();
+                    DSLink.this.handler.onConnected(DSLink.this);
                 }
-            });
-            thread.setDaemon(true);
-            thread.start();
-        }
-    }
-
-    public boolean isListening() {
-        return serverConnector != null && serverConnector.isListening();
-    }
-
-    public void listen(int port) {
-        listen(port, "0.0.0.0");
-    }
-
-    public void listen(int port, @NonNull String bindAddr) {
-        // TODO: SSL support
-        checkListening();
-        serverConnector.start(port, bindAddr);
-    }
-
-    public void stopListening() {
-        serverConnector.stop();
-    }
-
-    public boolean isConnecting() {
-        return clientConnector != null && clientConnector.isConnecting();
-    }
-
-    public boolean isConnected() {
-        return clientConnector != null && clientConnector.isConnected();
-    }
-
-    public void connect() {
-        connect(true);
-    }
-
-    public void connect(boolean sslVerify) {
-        checkConnected();
-        clientConnector.connect(sslVerify);
-    }
-
-    public void disconnect() {
-        if (clientConnector.isConnected()) {
-            clientConnector.disconnect();
-        }
-    }
-
-    public NodeManager getNodeManager() {
-        if (requester != null)
-            return requester.getManager();
-        else if (responder != null)
-            return responder.getManager();
-        else
-            return null;
+            }
+        });
     }
 
     /**
-     * Blocks the thread until the link is disconnected or the server is
-     * stopped.
+     * @see RemoteEndpoint#activate()
      */
-    @SneakyThrows
-    @SuppressWarnings("SleepWhileInLoop")
+    public void start() {
+        endpoint.activate();
+    }
+
+    /**
+     * @see RemoteEndpoint#deactivate()
+     */
+    public void stop() {
+        endpoint.deactivate();
+    }
+
+    /**
+     * @return Requester of the singleton client
+     */
+    public Requester getRequester() {
+        return client.getRequester();
+    }
+
+    /**
+     * @return Node manager of the link.
+     */
+    public NodeManager getNodeManager() {
+        return nodeManager;
+    }
+
+    /**
+     * Blocks the thread indefinitely while the endpoint is active or connected
+     * to a host. This will automatically unblock when the endpoint becomes
+     * inactive or disconnects, allowing the thread to proceed execution. Typical
+     * usage is to call {@code sleep} in the main thread to prevent the application
+     * from terminating abnormally.
+     */
     public void sleep() {
-        while (isConnecting() || isConnected() || isListening()) {
-            Thread.sleep(500);
-        }
-    }
-
-    @Handler
-    public void jsonHandler(IncomingDataEvent event) {
         try {
-            val data = event.getData();
-            if (responder != null) {
-                val array = data.getArray("requests");
-                if (array != null) {
-                    responder.parse(event.getClient(), array);
-                }
+            while (endpoint.isBecomingActive() || endpoint.isActive()) {
+                Thread.sleep(500);
             }
-            if (requester != null) {
-                val array = data.getArray("responses");
-                if (array != null) {
-                    requester.parse(event.getClient(), array);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 
-    public boolean hasClientConnector() {
-        return clientConnector != null;
-    }
-
-    private void deserializeChildren(JsonObject in, @NonNull String path) {
-        val map = in.toMap();
-        for (Map.Entry<String, Object> entry : map.entrySet()) {
-            val name = entry.getKey();
-            val data = entry.getValue();
-            val node = getNodeManager().getNode(path, true).getKey();
-
-            if (name.equals("?value")) {
-                node.setValue(ValueUtils.toValue(data), false);
-            } else if (name.equals("$function")) {
-                node.setAction((String) data);
-            } else if (name.startsWith("$")) {
-                val newName = name.substring(1);
-                node.setConfiguration(newName, ValueUtils.toValue(data));
-            } else if (name.startsWith("@")) {
-                val newName = name.substring(1);
-                node.setAttribute(newName, ValueUtils.toValue(data));
-            } else {
-                @SuppressWarnings("unchecked")
-                val newObj = new JsonObject((Map<String, Object>) data);
-                deserializeChildren(newObj, node.getPath() + "/" + name);
-            }
-        }
-    }
-
-    private void serializeChildren(JsonObject out,
-                                   Node parent,
-                                   boolean includeSelf) {
-        val data = new JsonObject();
-
-        if (includeSelf) {
-            // Value
-            val nodeVal = parent.getValue();
-            if (nodeVal != null) {
-                ValueUtils.toJson(data, "?value", nodeVal);
-            }
-
-            // Action
-            val action = parent.getAction();
-            if (action != null) {
-                data.putString("$function", action.getName());
-            }
-
-            // Configurations
-            val confs = parent.getConfigurations();
-            if (confs != null) {
-                for (Map.Entry<String, Value> conf : confs.entrySet()) {
-                    val name = conf.getKey();
-                    val value = conf.getValue();
-                    ValueUtils.toJson(data, "$" + name, value);
+    /**
+     * Sets the default data handler to the remote endpoint.
+     */
+    protected void defaultDataHandler() {
+        client.setDataHandler(new Handler<JsonObject>() {
+            @Override
+            public void handle(JsonObject event) {
+                Requester requester = client.getRequester();
+                if (requester != null) {
+                    JsonArray array = event.getArray("responses");
+                    if (array != null) {
+                        handleResponses(requester, array);
+                    }
                 }
             }
-
-            // Attributes
-            val attribs = parent.getAttributes();
-            if (attribs != null) {
-                for (Map.Entry<String, Value> attr : attribs.entrySet()) {
-                    val name = attr.getKey();
-                    val value = attr.getValue();
-                    ValueUtils.toJson(data, "@" + name, value);
-                }
-            }
-
-            out.putObject(parent.getName(), data);
-        }
-
-        // Children
-        val children = parent.getChildren();
-        if (children != null) {
-            for (Node n : children.values()) {
-                if (includeSelf) {
-                    serializeChildren(data, n, true);
-                } else {
-                    serializeChildren(out, n, true);
-                }
-            }
-        }
+        });
     }
 
-    private void checkConnected() {
-        if (!hasClientConnector()) {
-            throw new IllegalStateException("No client connector implementation provided");
-        } else if (clientConnector.isConnected()) {
-            throw new IllegalStateException("Already connected");
-        }
-    }
-
-    private void checkListening() {
-        if (serverConnector == null) {
-            throw new IllegalStateException("No server connector implementation provided");
-        } else if (serverConnector.isListening()) {
-            throw new IllegalStateException("Already listening");
+    /**
+     * @param requester Requester of the client
+     * @param array Array of responses
+     */
+    protected void handleResponses(Requester requester, JsonArray array) {
+        for (Object object : array) {
+            requester.parseResponse((JsonObject) object);
         }
     }
 }

@@ -1,22 +1,11 @@
 package org.dsa.iot.dslink.connection;
 
 /**
+ * Connection type used in a configuration
  * @author Samuel Grenier
  */
 public enum ConnectionType {
 
-    /**
-     * Connects to the server using a raw socket connection.
-     */
-    SOCKET,
+    WEB_SOCKET
 
-    /**
-     * Connects to the server constantly using http in a polling loop.
-     */
-    HTTP,
-
-    /**
-     * Connects to the server using websockets, similar to sockets
-     */
-    WS
 }

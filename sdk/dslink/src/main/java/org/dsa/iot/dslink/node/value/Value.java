@@ -1,29 +1,25 @@
 package org.dsa.iot.dslink.node.value;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 /**
+ * Common class for handling values
  * @author Samuel Grenier
  */
-@Getter
-@EqualsAndHashCode(exclude = "immutable")
 public class Value {
 
     private boolean immutable;
     private ValueType type;
 
-    private Integer integer;
+    private Number number;
     private Boolean bool;
     private String string;
     private JsonObject map;
     private JsonArray array;
 
-    public Value(Integer i) {
-        set(i);
+    public Value(Number n) {
+        set(n);
     }
 
     public Value(Boolean b) {
@@ -42,8 +38,8 @@ public class Value {
         set(a);
     }
 
-    public void set(Integer i) {
-        set(ValueType.NUMBER, i, null, null, null, null);
+    public void set(Number n) {
+        set(ValueType.NUMBER, n, null, null, null, null);
     }
 
     public void set(Boolean b) {
@@ -62,15 +58,31 @@ public class Value {
         set(ValueType.MAP, null, null, null, null, object);
     }
 
-    private void set(ValueType type, Integer i, Boolean b, String s,
-            JsonArray a, JsonObject o) {
+    private void set(ValueType type, Number n, Boolean b, String s,
+                                            JsonArray a, JsonObject o) {
         checkImmutable();
         this.type = type;
-        this.integer = i;
+        this.number = n;
         this.bool = b;
         this.string = s;
         this.array = a != null ? a.copy() : null;
         this.map = o != null ? o.copy() : null;
+    }
+
+    public ValueType getType() {
+        return type;
+    }
+
+    public Boolean getBool() {
+        return bool;
+    }
+
+    public Number getNumber() {
+        return number;
+    }
+
+    public String getString() {
+        return string;
     }
 
     public JsonObject getMap() {
@@ -85,10 +97,14 @@ public class Value {
         immutable = true;
     }
 
+    public boolean isImmutable() {
+        return immutable;
+    }
+
     private void checkImmutable() {
         if (isImmutable()) {
-            throw new IllegalStateException(
-                    "Attempting to modify immutable value");
+            String err = "Attempting to modify immutable value";
+            throw new IllegalStateException(err);
         }
     }
 
@@ -96,7 +112,7 @@ public class Value {
     public String toString() {
         switch (type) {
         case NUMBER:
-            return integer.toString();
+            return number.toString();
         case BOOL:
             return bool.toString();
         case STRING:
@@ -108,12 +124,12 @@ public class Value {
 
     public String toDebugString() {
         switch (type) {
-        case MAP:
-            return map.encode();
-        case ARRAY:
-            return array.encode();
-        default:
-            return toString();
+            case MAP:
+                return map.encode();
+            case ARRAY:
+                return array.encode();
+            default:
+                return toString();
         }
     }
 }

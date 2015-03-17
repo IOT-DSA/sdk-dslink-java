@@ -2,6 +2,7 @@ subprojects {
     apply plugin: 'findbugs'
     apply plugin: 'java'
 
+    version = '0.0.1-SNAPSHOT'
     sourceCompatibility = 1.7
     targetCompatibility = 1.7
 
@@ -11,10 +12,8 @@ subprojects {
 
     dependencies {
         compile 'io.vertx:vertx-core:2.1.5'
-        compile 'org.projectlombok:lombok:1.14.+'
         compile 'org.bouncycastle:bcprov-jdk15on:1.51'
-        compile 'org.slf4j:slf4j-simple:1.7.9'
-        compile 'net.engio:mbassador:1.2.1'
+        compile 'ch.qos.logback:logback-classic:1.1.+'
 
         testCompile 'junit:junit:4.+'
     }
@@ -24,11 +23,5 @@ subprojects {
             xml.enabled = false
             html.enabled = true
         }
-    }
-}
-
-configure([project(':sdk/dslink'), project(':sdk/broker')]) {
-    dependencies {
-        compile project(':sdk/core')
     }
 }

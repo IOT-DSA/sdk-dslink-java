@@ -1,192 +1,98 @@
 package org.dsa.iot.dslink.requester;
 
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.val;
-import net.engio.mbassy.bus.MBassador;
-
-import org.dsa.iot.core.event.Event;
-import org.dsa.iot.dslink.connection.Client;
-import org.dsa.iot.dslink.events.ResponseEvent;
-import org.dsa.iot.dslink.node.value.ValueUtils;
-import org.dsa.iot.dslink.requester.requests.CloseRequest;
-import org.dsa.iot.dslink.requester.requests.InvokeRequest;
-import org.dsa.iot.dslink.requester.requests.ListRequest;
-import org.dsa.iot.dslink.requester.requests.RemoveRequest;
-import org.dsa.iot.dslink.requester.requests.Request;
-import org.dsa.iot.dslink.requester.requests.SetRequest;
-import org.dsa.iot.dslink.requester.requests.SubscribeRequest;
-import org.dsa.iot.dslink.requester.requests.UnsubscribeRequest;
-import org.dsa.iot.dslink.requester.responses.CloseResponse;
-import org.dsa.iot.dslink.requester.responses.InvokeResponse;
-import org.dsa.iot.dslink.requester.responses.ListResponse;
-import org.dsa.iot.dslink.requester.responses.RemoveResponse;
-import org.dsa.iot.dslink.requester.responses.Response;
-import org.dsa.iot.dslink.requester.responses.SetResponse;
-import org.dsa.iot.dslink.requester.responses.SubscriptionResponse;
-import org.dsa.iot.dslink.requester.responses.UnsubscribeResponse;
-import org.dsa.iot.dslink.util.Linkable;
+import org.dsa.iot.dslink.DSLinkHandler;
+import org.dsa.iot.dslink.connection.RemoteEndpoint;
+import org.dsa.iot.dslink.methods.Request;
+import org.dsa.iot.dslink.methods.Response;
+import org.dsa.iot.dslink.methods.requests.ListRequest;
+import org.dsa.iot.dslink.methods.responses.ListResponse;
+import org.dsa.iot.dslink.node.Node;
+import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.util.StreamState;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
  * @author Samuel Grenier
  */
-public class Requester extends Linkable {
+public class Requester {
 
-    public Requester(MBassador<Event> bus) {
-        super(bus);
+    private final Map<Integer, Request> reqs = new ConcurrentHashMap<>();
+    private final NodeManager nodeManager;
+    private final DSLinkHandler handler;
+
+    private RemoteEndpoint endpoint;
+
+    /**
+     * Current request ID to send to the endpoint
+     */
+    private final AtomicInteger currentReqID = new AtomicInteger();
+
+    public Requester(NodeManager manager, DSLinkHandler handler) {
+        if (manager == null)
+            throw new NullPointerException("manager");
+        else if (handler == null)
+            throw new NullPointerException("handler");
+        this.nodeManager = manager;
+        this.handler = handler;
     }
 
-    public int sendRequest(Client client, Request req) {
-        return sendRequest(client, req, true);
+    /**
+     * Sets the endpoint that requester sends requests to. Must be set
+     * before sending any requests
+     * @param endpoint Endpoint to set.
+     */
+    public void setRemoteEndpoint(RemoteEndpoint endpoint) {
+        if (endpoint == null)
+            throw new NullPointerException("endpoint");
+        this.endpoint = endpoint;
     }
 
-    @SneakyThrows
-    public int sendRequest(@NonNull Client client, @NonNull Request req,
-            boolean autoTrack) {
-        ensureConnected();
-
-        val obj = new JsonObject();
-        int rid;
+    public void sendRequest(Request request) {
+        JsonObject obj = new JsonObject();
+        request.addJsonValues(obj);
         {
-            if (autoTrack) {
-                rid = client.getRequestTracker().track(req);
-            } else {
-                rid = client.getRequestTracker().getNextID();
-            }
+            int rid = currentReqID.incrementAndGet();
             obj.putNumber("rid", rid);
-            obj.putString("method", req.getName());
-            req.addJsonValues(obj);
+            reqs.put(rid, request);
         }
+        obj.putString("method", request.getName());
 
-        val top = new JsonObject();
-        val requests = new JsonArray();
-        requests.add(obj);
+        JsonObject top = new JsonObject();
+        JsonArray requests = new JsonArray();
+        requests.addObject(obj);
         top.putArray("requests", requests);
-        client.write(top);
-        System.out.println(client.getDsId() + " => " + top.encode());
-        return rid;
+        endpoint.write(top);
     }
 
-    @Override
-    public void parse(Client client, JsonArray responses) {
-        val it = responses.iterator();
-        for (JsonObject o; it.hasNext();) {
-            o = (JsonObject) it.next();
-            handleResponse(client, o);
+    public void parseResponse(JsonObject in) {
+        Integer rid = in.getInteger("rid");
+        Request request = reqs.get(rid);
+        String method = request.getName();
+        Response response;
+        switch (method) {
+            case "list":
+                ListRequest req = (ListRequest) request;
+                Node node = nodeManager.getNode(req.getPath(), true);
+                response = new ListResponse(rid, node);
+                break;
+            default:
+                throw new RuntimeException("Unsupported method: " + method);
         }
-    }
 
-    public Response<?> handleResponse(Client client, JsonObject obj) {
-        val rid = obj.getNumber("rid").intValue();
-        val request = client.getRequestTracker().getRequest(rid);
-        Response<?> resp;
-        boolean isPublish = true;
-        String name;
-        if (rid != 0) {
-            // Response
-            val state = obj.getString("stream");
-            if (StreamState.CLOSED.jsonName.equals(state)) {
-                client.getRequestTracker().untrack(rid);
-                isPublish = false;
-            }
-            resp = getResponse(request);
-            name = request.getName();
-        } else {
-            // Subscription update
-            SubscribeRequest req = new SubscribeRequest("/");
-            resp = new SubscriptionResponse(req, getManager());
-            name = req.getName();
+        String streamState = in.getString("stream");
+        if (StreamState.CLOSED.getJsonName().equals(streamState)) {
+            reqs.remove(rid);
         }
-        if (isPublish) {
-            JsonArray populate = obj.getArray("updates");
-            if (populate != null) {
-                resp.populate(obj.getArray("updates"));
-            }
-            synchronized (this) {
-                val ev = new ResponseEvent(client, rid, name, resp);
-                getBus().publish(ev);
-            }
-        }
-        return resp;
-    }
 
-    public Request getRequest(JsonObject obj) {
-        val name = obj.getString("method");
-        if (name == null)
-            return null;
-        switch (name) {
-        case "list":
-            String path = obj.getString("path");
-            if (path == null)
-                return null;
-            return new ListRequest(path);
-        case "set":
-            path = obj.getString("path");
-            Object value = obj.getField("value");
-            if (path == null || value == null)
-                return null;
-            return new SetRequest(path, ValueUtils.toValue(value));
-        case "remove":
-            path = obj.getString("path");
-            if (path == null)
-                return null;
-            return new RemoveRequest(path);
-        case "invoke":
-            path = obj.getString("path");
-            val params = obj.getObject("params");
-            if (path == null)
-                return null;
-            return new InvokeRequest(path, params);
-        case "subscribe":
-            JsonArray paths = obj.getArray("paths");
-            if (paths == null)
-                return null;
-            String[] built = new String[paths.size()];
-            for (int i = 0; i < paths.size(); i++) {
-                built[i] = paths.get(i);
-            }
-            return new SubscribeRequest(built);
-        case "unsubscribe":
-            paths = obj.getArray("paths");
-            if (paths == null)
-                return null;
-            built = new String[paths.size()];
-            for (int i = 0; i < paths.size(); i++) {
-                built[i] = paths.get(i);
-            }
-            return new UnsubscribeRequest(built);
-        case "close":
-            val rid = obj.getNumber("rid");
-            if (rid == null)
-                return null;
-            return new CloseRequest(rid.intValue());
-        default:
-            return null;
+        JsonArray updates = in.getArray("updates");
+        if (updates != null) {
+            response.populate(in.getArray("updates"));
         }
-    }
-
-    public Response<?> getResponse(Request req) {
-        val man = getManager();
-        switch (req.getName()) {
-        case "list":
-            return new ListResponse((ListRequest) req, man);
-        case "set":
-            return new SetResponse((SetRequest) req);
-        case "remove":
-            return new RemoveResponse((RemoveRequest) req);
-        case "invoke":
-            return new InvokeResponse((InvokeRequest) req);
-        case "subscribe":
-            return new SubscriptionResponse((SubscribeRequest) req, man);
-        case "unsubscribe":
-            return new UnsubscribeResponse((UnsubscribeRequest) req);
-        case "close":
-            return new CloseResponse((CloseRequest) req);
-        default:
-            throw new RuntimeException("Unknown method");
-        }
+        handler.onResponse(request, response);
     }
 }

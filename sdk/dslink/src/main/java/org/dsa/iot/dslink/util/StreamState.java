@@ -8,9 +8,13 @@ public enum StreamState {
     OPEN("open"),
     CLOSED("closed");
 
-    public final String jsonName;
+    private final String jsonName;
 
     private StreamState(String jsonName) {
         this.jsonName = jsonName;
+    }
+
+    public String getJsonName() {
+        return jsonName;
     }
 }

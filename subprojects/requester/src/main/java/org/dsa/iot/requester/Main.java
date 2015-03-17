@@ -1,90 +1,99 @@
 package org.dsa.iot.requester;
 
+import ch.qos.logback.classic.Level;
+import org.dsa.iot.dslink.DSLink;
+import org.dsa.iot.dslink.DSLinkFactory;
+import org.dsa.iot.dslink.DSLinkHandler;
+import org.dsa.iot.dslink.connection.ConnectionType;
+import org.dsa.iot.dslink.handshake.LocalKeys;
+import org.dsa.iot.dslink.methods.Request;
+import org.dsa.iot.dslink.methods.Response;
+import org.dsa.iot.dslink.methods.requests.ListRequest;
+import org.dsa.iot.dslink.node.Node;
+import org.dsa.iot.dslink.node.NodeManager;
+import org.dsa.iot.dslink.node.value.Value;
+import org.dsa.iot.dslink.util.Configuration;
+import org.dsa.iot.dslink.util.LogLevel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Map;
 
-import lombok.SneakyThrows;
-import lombok.val;
-import net.engio.mbassy.listener.Handler;
-
-import org.dsa.iot.core.event.EventBusFactory;
-import org.dsa.iot.dslink.DSLink;
-import org.dsa.iot.dslink.client.ArgManager;
-import org.dsa.iot.dslink.events.ConnectedToServerEvent;
-import org.dsa.iot.dslink.events.ResponseEvent;
-import org.dsa.iot.dslink.node.Node;
-import org.dsa.iot.dslink.node.value.Value;
-import org.dsa.iot.dslink.requester.requests.ListRequest;
-import org.dsa.iot.dslink.requester.responses.ListResponse;
-
 /**
+ * Responder simply lists everything from the "/" root.
  * @author Samuel Grenier
  */
-public class Main {
+public class Main extends DSLinkHandler {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
     private DSLink link;
 
-    public static void main(String[] args) {
-        Main m = new Main();
-        m.run(args);
+    public Main(Configuration configuration) {
+        super(configuration);
     }
 
-    @SneakyThrows
-    private void run(String[] args) {
-        val bus = EventBusFactory.create();
-        bus.subscribe(this);
-        link = ArgManager.generateRequester(args, bus, "requester");
-        link.connect();
-        link.sleep();
-    }
-
-    @Handler
-    public synchronized void onConnected(ConnectedToServerEvent event) {
-        System.out.println("--------------");
-        System.out.println("Connected!");
+    @Override
+    public synchronized void onConnected(DSLink link) {
+        this.link = link;
+        LOGGER.info("--------------");
+        LOGGER.info("Connected!");
         ListRequest request = new ListRequest("/");
-        link.getRequester().sendRequest(event.getClient(), request);
-        System.out.println("Sent data");
+        link.getRequester().sendRequest(request);
+        LOGGER.info("Sent data");
     }
 
-    @Handler
-    public synchronized void onResponse(ResponseEvent event) {
-        System.out.println("--------------");
-        System.out.println("Received response: " + event.getName());
-        val resp = (ListResponse) event.getResponse();
-        val manager = resp.getManager();
-        val node = manager.getNode(resp.getPath()).getKey();
-        System.out.println("Path: " + resp.getPath());
+    public synchronized void onResponse(Request request, Response response) {
+        LOGGER.info("--------------");
+        LOGGER.info("Received response: " + request.getName());
+        ListRequest req = (ListRequest) request;
+        NodeManager manager = link.getNodeManager();
+        Node node = manager.getNode(req.getPath());
+        LOGGER.info("Path: " + req.getPath());
         printValueMap(node.getAttributes(), "Attribute", false);
         printValueMap(node.getConfigurations(), "Configuration", false);
-        val nodes = node.getChildren();
+        Map<String, Node> nodes = node.getChildren();
         if (nodes != null) {
-            System.out.println("Children: ");
+            LOGGER.info("Children: ");
             for (Map.Entry<String, Node> entry : nodes.entrySet()) {
                 String name = entry.getKey();
                 Node child = entry.getValue();
-                System.out.println("    Name: " + name);
+                LOGGER.info("    Name: " + name);
 
                 printValueMap(child.getAttributes(), "Attribute", true);
                 printValueMap(child.getConfigurations(), "Configuration", true);
 
-                // List children
-                val req = new ListRequest(child.getPath());
-                link.getRequester().sendRequest(event.getClient(), req);
+                ListRequest newReq = new ListRequest(child.getPath());
+                link.getRequester().sendRequest(newReq);
             }
         }
     }
 
     private void printValueMap(Map<String, Value> map, String name,
-            boolean indent) {
+                               boolean indent) {
         if (map != null) {
             for (Map.Entry<String, Value> conf : map.entrySet()) {
                 String a = conf.getKey();
                 String v = conf.getValue().toDebugString();
                 if (indent) {
-                    System.out.print("      ");
+                    LOGGER.info("      ");
                 }
-                System.out.println(name + ": " + a + " => " + v);
+                LOGGER.info(name + ": " + a + " => " + v);
             }
         }
+    }
+
+    public static void main(String[] args) {
+        LogLevel.setLevel(Level.INFO);
+        Configuration config = new Configuration();
+        config.setDsId("requester");
+        config.setKeys(LocalKeys.generate());
+        config.setConnectionType(ConnectionType.WEB_SOCKET);
+        config.setAuthEndpoint("http://localhost:8080/conn");
+        config.setRequester(true);
+
+        Main main = new Main(config);
+        DSLink link = DSLinkFactory.generate(main);
+        link.start();
+        link.sleep();
     }
 }
