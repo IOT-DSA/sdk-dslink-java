@@ -45,8 +45,7 @@ public class Main extends DSLinkHandler {
     public synchronized void onListResponse(ListRequest req, ListResponse resp) {
         LOGGER.info("--------------");
         LOGGER.info("Received response: " + req.getName());
-        NodeManager manager = link.getNodeManager();
-        Node node = manager.getNode(req.getPath());
+        Node node = resp.getNode();
         LOGGER.info("Path: " + req.getPath());
         printValueMap(node.getAttributes(), "Attribute", false);
         printValueMap(node.getConfigurations(), "Configuration", false);

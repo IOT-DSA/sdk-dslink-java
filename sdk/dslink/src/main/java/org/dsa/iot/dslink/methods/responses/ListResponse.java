@@ -28,6 +28,13 @@ public class ListResponse implements Response {
         this.node = node;
     }
 
+    /**
+     * @return Node the response corresponds to.
+     */
+    public Node getNode() {
+        return node;
+    }
+
     @Override
     public int getRid() {
         return rid;

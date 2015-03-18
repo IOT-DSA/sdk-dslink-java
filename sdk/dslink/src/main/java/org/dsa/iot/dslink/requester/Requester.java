@@ -23,7 +23,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Requester {
 
     private final Map<Integer, Request> reqs = new ConcurrentHashMap<>();
-    private final NodeManager nodeManager;
     private final DSLinkHandler handler;
 
     private RemoteEndpoint endpoint;
@@ -35,15 +34,11 @@ public class Requester {
 
     /**
      * Constructs a requester
-     * @param manager Manager to handle requests/responses
      * @param handler Handler for callbacks and data handling
      */
-    public Requester(NodeManager manager, DSLinkHandler handler) {
-        if (manager == null)
-            throw new NullPointerException("manager");
-        else if (handler == null)
+    public Requester(DSLinkHandler handler) {
+        if (handler == null)
             throw new NullPointerException("handler");
-        this.nodeManager = manager;
         this.handler = handler;
     }
 
@@ -87,10 +82,11 @@ public class Requester {
         Integer rid = in.getInteger("rid");
         Request request = reqs.get(rid);
         String method = request.getName();
+        NodeManager temp = new NodeManager();
         switch (method) {
             case "list":
                 ListRequest req = (ListRequest) request;
-                Node node = nodeManager.getNode(req.getPath(), true);
+                Node node = temp.getNode(req.getPath(), true);
                 ListResponse resp = new ListResponse(rid, node);
                 populateResponse(resp, in);
                 handler.onListResponse(req, resp);

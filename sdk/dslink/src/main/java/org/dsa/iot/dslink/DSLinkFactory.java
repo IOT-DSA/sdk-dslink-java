@@ -47,7 +47,7 @@ public class DSLinkFactory {
             case WEB_SOCKET:
                 RemoteHandshake rh = RemoteHandshake.generate(lh, endpoint);
                 rep = new WebSocketConnector();
-                rep.setRequester(new Requester(manager, handler));
+                rep.setRequester(new Requester(handler));
                 rep.setEndpoint(endpoint);
                 rep.setLocalHandshake(lh);
                 rep.setRemoteHandshake(rh);
