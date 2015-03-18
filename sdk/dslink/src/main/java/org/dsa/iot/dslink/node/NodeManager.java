@@ -33,7 +33,9 @@ public class NodeManager {
     }
 
     public Node getNode(String path, boolean create) {
-        if ("/".equals(path))
+        if (path == null)
+            throw new NullPointerException("path");
+        else if ("/".equals(path))
             return superRoot;
         String[] parts = splitPath(path);
         Node current = superRoot.getChild(parts[0]);

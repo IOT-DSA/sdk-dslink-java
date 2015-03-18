@@ -214,4 +214,47 @@ public class Value {
                 return toString();
         }
     }
+
+    @Override
+    public boolean equals(Object o) {
+        boolean equal = false;
+        if (o instanceof Value) {
+            Value value = (Value) o;
+            if (value.type.equals(getType())) {
+                switch (type) {
+                    case NUMBER:
+                        equal = objectEquals(number, value.number);
+                        break;
+                    case STRING:
+                        equal = objectEquals(string, value.string);
+                        break;
+                    case BOOL:
+                        equal = objectEquals(bool, value.bool);
+                        break;
+                    case MAP:
+                        equal = objectEquals(map, value.map);
+                        break;
+                    case ARRAY:
+                        equal = objectEquals(array, value.array);
+                        break;
+                }
+            }
+        }
+        return equal;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getType().hashCode();
+        result = 31 * result + (getNumber() != null ? getNumber().hashCode() : 0);
+        result = 31 * result + (getBool() != null ? getBool().hashCode() : 0);
+        result = 31 * result + (getString() != null ? getString().hashCode() : 0);
+        result = 31 * result + (getMap() != null ? getMap().hashCode() : 0);
+        result = 31 * result + (getArray() != null ? getArray().hashCode() : 0);
+        return result;
+    }
+
+    private boolean objectEquals(Object a, Object b) {
+        return (a == null && b == null) || (a != null && a.equals(b));
+    }
 }
