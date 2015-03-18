@@ -4,6 +4,7 @@ import ch.qos.logback.classic.Level;
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.DSLinkFactory;
 import org.dsa.iot.dslink.DSLinkHandler;
+import org.dsa.iot.dslink.DSLinkProvider;
 import org.dsa.iot.dslink.connection.ConnectionType;
 import org.dsa.iot.dslink.handshake.LocalKeys;
 import org.dsa.iot.dslink.methods.requests.ListRequest;
@@ -90,7 +91,7 @@ public class Main extends DSLinkHandler {
         config.setRequester(true);
 
         Main main = new Main(config);
-        DSLink link = DSLinkFactory.generate(main);
+        DSLinkProvider link = DSLinkFactory.generate(main);
         link.start();
         link.sleep();
     }

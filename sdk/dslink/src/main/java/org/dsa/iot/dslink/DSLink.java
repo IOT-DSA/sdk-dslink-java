@@ -1,12 +1,8 @@
 package org.dsa.iot.dslink;
 
-import org.dsa.iot.dslink.connection.Endpoint;
 import org.dsa.iot.dslink.connection.NetworkClient;
-import org.dsa.iot.dslink.connection.RemoteEndpoint;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.requester.Requester;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
@@ -16,62 +12,25 @@ import org.vertx.java.core.json.JsonObject;
  */
 public class DSLink {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DSLink.class);
-
-    private final Endpoint endpoint;
-    private final DSLinkHandler handler;
     private final NodeManager nodeManager;
     private NetworkClient client;
 
     /**
-     * @param endpoint Connection endpoint
+     * @param client Initialized client
      * @param manager  Node manager
-     * @param handler  Link handler
      */
-    protected DSLink(Endpoint endpoint,
-                     NodeManager manager,
-                     DSLinkHandler handler) {
-        if (endpoint == null)
-            throw new NullPointerException("endpoint");
+    protected DSLink(NetworkClient client,
+                     NodeManager manager) {
+        if (client == null)
+            throw new NullPointerException("client");
         else if (manager == null)
             throw new NullPointerException("manager");
-        else if (handler == null)
-            throw new NullPointerException("handler");
-        this.endpoint = endpoint;
+        this.client = client;
         this.nodeManager = manager;
-        this.handler = handler;
-        endpoint.setClientConnectedHandler(new Handler<NetworkClient>() {
-            @Override
-            public synchronized void handle(NetworkClient event) {
-                if (client != null) {
-                    // Will only happen in a server side endpoint
-                    LOGGER.warn("Client already configured");
-                    event.close();
-                } else {
-                    client = event;
-                    defaultDataHandler();
-                    DSLink.this.handler.onConnected(DSLink.this);
-                }
-            }
-        });
     }
 
     /**
-     * @see RemoteEndpoint#activate()
-     */
-    public void start() {
-        endpoint.activate();
-    }
-
-    /**
-     * @see RemoteEndpoint#deactivate()
-     */
-    public void stop() {
-        endpoint.deactivate();
-    }
-
-    /**
-     * @return Requester of the singleton client
+     * @return Requester of the singleton client, can be null
      */
     public Requester getRequester() {
         return client.getRequester();
@@ -85,26 +44,9 @@ public class DSLink {
     }
 
     /**
-     * Blocks the thread indefinitely while the endpoint is active or connected
-     * to a host. This will automatically unblock when the endpoint becomes
-     * inactive or disconnects, allowing the thread to proceed execution. Typical
-     * usage is to call {@code sleep} in the main thread to prevent the application
-     * from terminating abnormally.
-     */
-    public void sleep() {
-        try {
-            while (endpoint.isBecomingActive() || endpoint.isActive()) {
-                Thread.sleep(500);
-            }
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    /**
      * Sets the default data handler to the remote endpoint.
      */
-    protected void defaultDataHandler() {
+    public void setDefaultDataHandler() {
         client.setDataHandler(new Handler<JsonObject>() {
             @Override
             public void handle(JsonObject event) {

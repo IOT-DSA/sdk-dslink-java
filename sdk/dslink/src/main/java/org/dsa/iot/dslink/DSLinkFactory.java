@@ -23,9 +23,10 @@ public class DSLinkFactory {
      * based on the configuration.
      *
      * @param handler DSLink handler
-     * @return A DSLink that can manage the connection state
+     * @return A DSLink provider that handles when a connection is successful
+     *         or a client connected to the server.
      */
-    public static DSLink generate(DSLinkHandler handler) {
+    public static DSLinkProvider generate(DSLinkHandler handler) {
         Configuration config;
         if (handler == null)
             throw new NullPointerException("handler");
@@ -39,7 +40,6 @@ public class DSLinkFactory {
         }
         config.validate();
 
-        final NodeManager manager = new NodeManager();
         URLInfo endpoint = config.getAuthEndpoint();
         LocalHandshake lh = new LocalHandshake(config);
 
@@ -58,6 +58,8 @@ public class DSLinkFactory {
                 throw new RuntimeException("Unhandled connection type: " + type.name());
         }
 
-        return new DSLink(rep, manager, handler);
+        DSLinkProvider provider = new DSLinkProvider(rep, handler);
+        provider.setDefaultEndpointHandler();
+        return provider;
     }
 }
