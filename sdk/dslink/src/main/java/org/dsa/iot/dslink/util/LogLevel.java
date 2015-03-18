@@ -10,9 +10,13 @@ import org.slf4j.LoggerFactory;
  */
 public class LogLevel {
 
+    /**
+     * Sets the global logging level
+     * @param level Level to set
+     */
     public static void setLevel(Level level) {
         Logger log = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
-        log.setLevel(Level.INFO);
+        log.setLevel(level);
     }
 
 }
