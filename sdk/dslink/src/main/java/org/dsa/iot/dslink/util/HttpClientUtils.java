@@ -21,6 +21,7 @@ public class HttpClientUtils {
     public static HttpClient configure(URLInfo url) {
         Vertx vertx = VertxFactory.newVertx();
         HttpClient client = vertx.createHttpClient();
+        client.setMaxWebSocketFrameSize(Integer.MAX_VALUE);
         client.setPort(url.port);
         client.setHost(url.host);
         if (url.secure) {
