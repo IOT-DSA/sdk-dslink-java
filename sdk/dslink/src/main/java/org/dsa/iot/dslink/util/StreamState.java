@@ -10,7 +10,7 @@ public enum StreamState {
 
     private final String jsonName;
 
-    private StreamState(String jsonName) {
+    StreamState(String jsonName) {
         this.jsonName = jsonName;
     }
 

@@ -7,6 +7,7 @@ import org.dsa.iot.dslink.util.Configuration;
 /**
  * Top level API for handling the configuration of nodes and responses to
  * requests.
+ *
  * @author Samuel Grenier
  */
 public abstract class DSLinkHandler {
@@ -15,6 +16,7 @@ public abstract class DSLinkHandler {
 
     /**
      * Sets up a listener for the DSLink.
+     *
      * @param configuration Configuration of the link
      */
     public DSLinkHandler(Configuration configuration) {
@@ -37,7 +39,8 @@ public abstract class DSLinkHandler {
 
     /**
      * Handles an incoming list response.
-     * @param request Original sent request.
+     *
+     * @param request  Original sent request.
      * @param response Received response from the endpoint.
      */
     public void onListResponse(ListRequest request, ListResponse response) {

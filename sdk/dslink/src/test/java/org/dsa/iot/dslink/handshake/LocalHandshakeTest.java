@@ -8,6 +8,7 @@ import org.vertx.java.core.json.JsonObject;
 
 /**
  * Tests the local handshake json information
+ *
  * @author Samuel Grenier
  */
 public class LocalHandshakeTest {

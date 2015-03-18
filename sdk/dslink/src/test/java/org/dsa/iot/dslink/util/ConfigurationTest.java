@@ -6,6 +6,7 @@ import org.junit.Test;
 
 /**
  * Tests the configuration and its validation schemes.
+ *
  * @author Samuel Grenier
  */
 public class ConfigurationTest {

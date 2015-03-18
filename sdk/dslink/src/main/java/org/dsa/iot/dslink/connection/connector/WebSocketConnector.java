@@ -17,6 +17,7 @@ import java.io.UnsupportedEncodingException;
 
 /**
  * Handles connecting to web socket servers.
+ *
  * @author Samuel Grenier
  */
 public class WebSocketConnector extends RemoteEndpoint {

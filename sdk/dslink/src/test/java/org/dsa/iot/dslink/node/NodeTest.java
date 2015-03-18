@@ -5,6 +5,7 @@ import org.junit.Test;
 
 /**
  * Tests the node API.
+ *
  * @author Samuel Grenier
  */
 public class NodeTest {

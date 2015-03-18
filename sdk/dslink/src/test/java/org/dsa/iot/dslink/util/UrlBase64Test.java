@@ -5,6 +5,7 @@ import org.junit.Test;
 
 /**
  * URL base64 encoding tests.
+ *
  * @author Samuel Grenier
  */
 public class UrlBase64Test {

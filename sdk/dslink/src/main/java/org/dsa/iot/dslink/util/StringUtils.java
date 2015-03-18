@@ -2,13 +2,14 @@ package org.dsa.iot.dslink.util;
 
 /**
  * String utilities for manipulating strings
+ *
  * @author Samuel Grenier
  */
 public class StringUtils {
 
     /**
      * @param string String to check
-     * @param chars Characters to look for
+     * @param chars  Characters to look for
      * @return Whether the string contains any of the designated characters.
      */
     public static boolean contains(String string, String[] chars) {

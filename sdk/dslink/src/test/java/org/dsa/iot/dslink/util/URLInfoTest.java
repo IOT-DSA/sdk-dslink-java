@@ -5,6 +5,7 @@ import org.junit.Test;
 
 /**
  * Tests the URL information parser.
+ *
  * @author Samuel Grenier
  */
 public class URLInfoTest {
@@ -14,7 +15,7 @@ public class URLInfoTest {
      */
     @Test
     public void urlParser() {
-        URLInfo[] info = new URLInfo[] {
+        URLInfo[] info = new URLInfo[]{
                 URLInfo.parse("https://localhost"),
                 URLInfo.parse("https://localhost/"),
                 URLInfo.parse("https://localhost:443"),

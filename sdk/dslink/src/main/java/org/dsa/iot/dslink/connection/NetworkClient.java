@@ -7,12 +7,14 @@ import org.vertx.java.core.json.JsonObject;
 /**
  * Handles writing and closing connections. Can be used for clients connected
  * to servers and remote endpoint connections.
+ *
  * @author Samuel Grenier
  */
 public interface NetworkClient {
 
     /**
      * Writes the object to the remote endpoint.
+     *
      * @param object Object to write
      */
     void write(JsonObject object);
@@ -24,6 +26,7 @@ public interface NetworkClient {
 
     /**
      * Sets the handler used for managing incoming data from the endpoint.
+     *
      * @param handler Handler to set
      */
     void setDataHandler(Handler<JsonObject> handler);

@@ -2,6 +2,7 @@ package org.dsa.iot.dslink.connection;
 
 /**
  * Endpoint for managing servers.
+ *
  * @author Samuel Grenier
  */
 public abstract class LocalEndpoint implements Endpoint {
@@ -15,6 +16,7 @@ public abstract class LocalEndpoint implements Endpoint {
 
     /**
      * Sets the bind address the server will bind to.
+     *
      * @param bindAddress Bind address
      */
     public void setBindAddress(String bindAddress) {
@@ -47,6 +49,7 @@ public abstract class LocalEndpoint implements Endpoint {
     /**
      * If {@code ssl} is {@code true} then a key store path must be set as well
      * to properly configure the SSL handler.
+     *
      * @param ssl Whether to enable SSL or not in the server.
      */
     public void setSSL(boolean ssl) {
@@ -78,6 +81,7 @@ public abstract class LocalEndpoint implements Endpoint {
 
     /**
      * Only needs to be set if the key store has a password.
+     *
      * @param password Password for the key store
      */
     public void setKeyStorePassword(String password) {

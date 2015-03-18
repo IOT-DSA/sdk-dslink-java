@@ -2,6 +2,7 @@ package org.dsa.iot.dslink.node.value;
 
 /**
  * Status of the value
+ *
  * @author Samuel Grenier
  */
 public enum ValueStatus {

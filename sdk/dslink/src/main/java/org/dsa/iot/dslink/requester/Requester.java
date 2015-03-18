@@ -18,6 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Handles incoming responses and outgoing requests.
+ *
  * @author Samuel Grenier
  */
 public class Requester {
@@ -34,6 +35,7 @@ public class Requester {
 
     /**
      * Constructs a requester
+     *
      * @param handler Handler for callbacks and data handling
      */
     public Requester(DSLinkHandler handler) {
@@ -45,6 +47,7 @@ public class Requester {
     /**
      * Sets the endpoint that requester sends requests to. Must be set
      * before sending any requests
+     *
      * @param endpoint Endpoint to set.
      */
     public void setRemoteEndpoint(RemoteEndpoint endpoint) {
@@ -55,6 +58,7 @@ public class Requester {
 
     /**
      * Sends a request to the endpoint.
+     *
      * @param request Request to send to the endpoint
      */
     public void sendRequest(Request request) {
@@ -76,6 +80,7 @@ public class Requester {
 
     /**
      * Parses a response that came from an endpoint.
+     *
      * @param in Parses an incoming response
      */
     public void parseResponse(JsonObject in) {

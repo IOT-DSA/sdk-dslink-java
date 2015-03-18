@@ -47,7 +47,7 @@ public class RemoteKeyTest {
         b = RemoteKey.normalize(b);
         Assert.assertEquals(32, b.length);
 
-        b = new byte[] {1, 2, 3};
+        b = new byte[]{1, 2, 3};
         b = RemoteKey.normalize(b);
         Assert.assertEquals(1, b[29]);
         Assert.assertEquals(2, b[30]);

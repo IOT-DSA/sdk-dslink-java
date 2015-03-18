@@ -6,6 +6,7 @@ import java.util.Map;
 
 /**
  * Handles nodes based on paths.
+ *
  * @author Samuel Grenier
  */
 public class NodeManager {

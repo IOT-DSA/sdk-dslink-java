@@ -2,6 +2,7 @@ package org.dsa.iot.dslink.util;
 
 /**
  * URL information parsed from a string.
+ *
  * @author Samuel Grenier
  */
 public class URLInfo {
@@ -15,11 +16,12 @@ public class URLInfo {
 
     /**
      * Populates the URL information object
+     *
      * @param protocol Protocol of the URL
-     * @param host Host of the URL
-     * @param port Port of the URL (or default if none provided)
-     * @param path Path of the URL
-     * @param secure Whether the URL connects over a secure channel or not
+     * @param host     Host of the URL
+     * @param port     Port of the URL (or default if none provided)
+     * @param path     Path of the URL
+     * @param secure   Whether the URL connects over a secure channel or not
      */
     private URLInfo(String protocol, String host,
                     int port, String path, boolean secure) {
@@ -33,6 +35,7 @@ public class URLInfo {
     /**
      * This is effective only if {@link #secure} is {@code true}. When
      * an outgoing connection is being made, it must obey this property.
+     *
      * @param trust Whether to trust all certificates or not.
      */
     public void setTrustAllCertificates(boolean trust) {
@@ -42,6 +45,7 @@ public class URLInfo {
     /**
      * This is effective only if {@link #secure} is {@code true}. When an
      * outgoing connection is being made, it must obey this property.
+     *
      * @return Whether to trust all certificates or not.
      */
     public boolean getTrustAllCertificates() {
@@ -50,6 +54,7 @@ public class URLInfo {
 
     /**
      * Parses the URL into an object with its separated components.
+     *
      * @param url URL to parse
      * @return The parsed URL ready for data consumption
      */
@@ -58,7 +63,7 @@ public class URLInfo {
     }
 
     /**
-     * @param url URL to parse
+     * @param url            URL to parse
      * @param secureOverride Set to null to use default security detection
      * @return An information object about a URL.
      */
@@ -105,10 +110,9 @@ public class URLInfo {
     }
 
     /**
-     *
      * @param scheme Scheme to test
      * @return Whether the scheme/protocol is supposed to be over SSL or not by
-     *         default.
+     * default.
      */
     public static boolean getDefaultProtocolSecurity(String scheme) {
         if (scheme == null)
@@ -118,6 +122,7 @@ public class URLInfo {
 
     /**
      * Gets the default port of a specified protocol URI scheme.
+     *
      * @param scheme Scheme to get the default port of.
      * @return Default port of the scheme, or -1 if unsupported.
      */

@@ -6,6 +6,7 @@ import org.junit.Test;
 
 /**
  * Tests the node manager.
+ *
  * @author Samuel Grenier
  */
 public class NodeManagerTest {

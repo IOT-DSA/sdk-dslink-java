@@ -22,6 +22,7 @@ import java.util.Arrays;
 
 /**
  * Manages a local key ring.
+ *
  * @author Samuel Grenier
  */
 public class LocalKeys {
@@ -39,8 +40,9 @@ public class LocalKeys {
 
     /**
      * Populates a local key ring with a key pair.
+     *
      * @param privKey Private key
-     * @param pubKey Public key
+     * @param pubKey  Public key
      */
     LocalKeys(BCECPrivateKey privKey, BCECPublicKey pubKey) {
         this.privateKey = privKey;
@@ -64,6 +66,7 @@ public class LocalKeys {
     /**
      * The key is first sent through a SHA256 hash which is then encoded into
      * base64.
+     *
      * @return Hashed key
      */
     public String encodedHashPublicKey() {
@@ -78,6 +81,7 @@ public class LocalKeys {
 
     /**
      * Encodes the Q of the public key. The encoding is uncompressed.
+     *
      * @return base64 encoded public key Q
      */
     public String encodedPublicKey() {
@@ -91,6 +95,7 @@ public class LocalKeys {
     /**
      * Serializes the public and private keys in a standard form. The format is
      * base64 encoded D and base64 encoded Q separated by a space.
+     *
      * @return Standard serialized key pair
      */
     public String serialize() {
@@ -108,6 +113,7 @@ public class LocalKeys {
 
     /**
      * Computes a hash code value for this object.
+     *
      * @return A hash code value.
      */
     @Override
@@ -122,6 +128,7 @@ public class LocalKeys {
 
     /**
      * Checks whether the keys are the same or not
+     *
      * @param o Object to test
      * @return Whether the objects are equal
      */
@@ -142,6 +149,7 @@ public class LocalKeys {
 
     /**
      * Generates a key pair as necessary to perform a handshake.
+     *
      * @return Generated keys
      */
     public static LocalKeys generate() {
@@ -162,6 +170,7 @@ public class LocalKeys {
 
     /**
      * Deserializes the serialized data into usable keys.
+     *
      * @param serialized Serialized data in standard form.
      * @return The deserialized keys.
      */
@@ -194,6 +203,7 @@ public class LocalKeys {
 
     /**
      * Gets the parameters of the curve type.
+     *
      * @return domain parameters
      */
     private static ECDomainParameters getParams() {

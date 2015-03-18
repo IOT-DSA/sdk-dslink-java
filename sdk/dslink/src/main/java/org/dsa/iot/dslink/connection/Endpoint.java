@@ -4,6 +4,7 @@ import org.vertx.java.core.Handler;
 
 /**
  * Common endpoint API
+ *
  * @author Samuel Grenier
  */
 public interface Endpoint {
@@ -11,6 +12,7 @@ public interface Endpoint {
     /**
      * Handler is called when a client is connected to the internal server, or
      * the link has connected to a remote endpoint.
+     *
      * @param handler Connected client handler
      */
     void setClientConnectedHandler(Handler<NetworkClient> handler);

@@ -4,12 +4,14 @@ import java.io.UnsupportedEncodingException;
 
 /**
  * Handles base64 encodings. All encodings are UTF-8.
+ *
  * @author Samuel Grenier
  */
 public class UrlBase64 {
 
     /**
      * Encodes a string and outputs an encoded string.
+     *
      * @param data String must be UTF-8 compatible
      * @return Base64 encoded string in UTF-8.
      */
@@ -24,6 +26,7 @@ public class UrlBase64 {
     /**
      * Encodes the following data into a UTF-8 string encoding for
      * base64. The padding is explicitly removed.
+     *
      * @param data Array of data to encode.
      * @return A UTF-8 encoded base64 string.
      */
@@ -38,6 +41,7 @@ public class UrlBase64 {
 
     /**
      * The provided encoded data must be UTF-8 compatible.
+     *
      * @param encoded Encoded data in UTF-8
      * @return Decoded information
      */
@@ -53,6 +57,7 @@ public class UrlBase64 {
 
     /**
      * Decodes an encoded string into a decoded string.
+     *
      * @param encoded Encoded data in UTF-8
      * @return Decoded information in a UTF-8 string
      */
@@ -66,7 +71,6 @@ public class UrlBase64 {
     }
 
     /**
-     *
      * @param encoded Encoded data to remove the padding from.
      * @return Padding free base64 encoded string.
      */
@@ -79,6 +83,7 @@ public class UrlBase64 {
 
     /**
      * Must be UTF-8 compatible.
+     *
      * @param encoded Adds padding to the encoding.
      * @return Padded base64 encoding.
      */
@@ -92,6 +97,7 @@ public class UrlBase64 {
 
     /**
      * Shortcut reference to the bouncy castle base64 encoder.
+     *
      * @param data Data to encode
      * @return An array of the encoded data
      */
@@ -101,6 +107,7 @@ public class UrlBase64 {
 
     /**
      * Shortcut reference to the bouncy castle base4 decoder.
+     *
      * @param data Data to decode. Must contain padding.
      * @return An array of the decoded data.
      */

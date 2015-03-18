@@ -6,12 +6,14 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Utility for setting the default log level for all loggers.
+ *
  * @author Samuel Grenier
  */
 public class LogLevel {
 
     /**
      * Sets the global logging level
+     *
      * @param level Level to set
      */
     public static void setLevel(Level level) {

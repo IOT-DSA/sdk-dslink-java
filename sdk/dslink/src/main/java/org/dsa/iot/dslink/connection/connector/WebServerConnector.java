@@ -1,7 +1,7 @@
 package org.dsa.iot.dslink.connection.connector;
 
-import org.dsa.iot.dslink.connection.NetworkClient;
 import org.dsa.iot.dslink.connection.LocalEndpoint;
+import org.dsa.iot.dslink.connection.NetworkClient;
 import org.vertx.java.core.Handler;
 
 /**

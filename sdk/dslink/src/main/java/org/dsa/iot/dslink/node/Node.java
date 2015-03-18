@@ -10,12 +10,13 @@ import java.util.Map;
 
 /**
  * Contains information about a node and its data.
+ *
  * @author Samuel Grenier
  */
 public class Node {
 
-    private static final String[] BANNED_CHARS = new String[] {
-        ".", "/", "\\", "?", "%", "*", ":", "|", "<", ">", "$", "@"
+    private static final String[] BANNED_CHARS = new String[]{
+            ".", "/", "\\", "?", "%", "*", ":", "|", "<", ">", "$", "@"
     };
 
     private final WeakReference<Node> parent;
@@ -30,7 +31,8 @@ public class Node {
 
     /**
      * Constructs a node object.
-     * @param name Name of the node
+     *
+     * @param name   Name of the node
      * @param parent Parent of this node
      */
     public Node(String name, Node parent) {
@@ -97,6 +99,7 @@ public class Node {
      * The child will be created if the node doesn't exist. If the child
      * already exists then it will be returned and no new node will be
      * created. This can be used as a special getter.
+     *
      * @param name Name of the node
      * @return The node
      */
@@ -139,7 +142,8 @@ public class Node {
      * The name will be checked for validity. Certain names that are set
      * through other APIs cannot be set here, otherwise it will throw an
      * exception.
-     * @param name Name of the configuration
+     *
+     * @param name  Name of the configuration
      * @param value Value to set
      * @return The previous configuration value, if any
      * @see Action
@@ -174,7 +178,7 @@ public class Node {
     }
 
     /**
-     * @param name Name of the attribute
+     * @param name  Name of the attribute
      * @param value Value to set
      * @return The previous attribute value, if any
      */
@@ -197,6 +201,7 @@ public class Node {
 
     /**
      * Sets the action of the node
+     *
      * @param action Action to set
      */
     public synchronized void setAction(Action action) {
@@ -206,6 +211,7 @@ public class Node {
     /**
      * Checks the string and then returns it. An exception is thrown if the
      * name is invalid in any way.
+     *
      * @param name Name to check
      * @return Name
      */

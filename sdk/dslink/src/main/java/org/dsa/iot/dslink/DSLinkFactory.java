@@ -13,6 +13,7 @@ import org.dsa.iot.dslink.util.URLInfo;
 
 /**
  * Factory for generating {@link DSLink} objects.
+ *
  * @author Samuel Grenier
  */
 public class DSLinkFactory {
@@ -20,6 +21,7 @@ public class DSLinkFactory {
     /**
      * Generates a DSLink that provides a fully managed state automatically
      * based on the configuration.
+     *
      * @param handler DSLink handler
      * @return A DSLink that can manage the connection state
      */

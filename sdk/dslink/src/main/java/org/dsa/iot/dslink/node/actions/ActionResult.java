@@ -6,6 +6,7 @@ import org.vertx.java.core.json.JsonObject;
 
 /**
  * The results from an invoked action that are set here.
+ *
  * @author Samuel Grenier
  */
 public class ActionResult {
@@ -29,6 +30,7 @@ public class ActionResult {
     /**
      * Creates an action result that is ready to be invoked and populated
      * with results.
+     *
      * @param in Incoming JSON data.
      */
     public ActionResult(JsonObject in) {
@@ -53,6 +55,7 @@ public class ActionResult {
 
     /**
      * Set the stream state to open as needed
+     *
      * @return Stream state as a result of the invocation.
      */
     public StreamState getStreamState() {
@@ -61,6 +64,7 @@ public class ActionResult {
 
     /**
      * By default, the state is set to closed unless set.
+     *
      * @param state Sets the stream state of the action invocation.
      */
     public void setStreamState(StreamState state) {

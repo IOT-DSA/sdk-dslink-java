@@ -5,6 +5,7 @@ import org.vertx.java.core.json.JsonObject;
 
 /**
  * Utilities for manipulating values.
+ *
  * @author Samuel Grenier
  */
 public class ValueUtils {
@@ -62,9 +63,10 @@ public class ValueUtils {
     /**
      * Inserts the name and value pair into the object after converting
      * the value to be json compatible.
+     *
      * @param object JSON object to modify
-     * @param name Name to put into the object
-     * @param value Value to put into the object
+     * @param name   Name to put into the object
+     * @param value  Value to put into the object
      */
     public static void toJson(JsonObject object, String name, Value value) {
         if (object == null)

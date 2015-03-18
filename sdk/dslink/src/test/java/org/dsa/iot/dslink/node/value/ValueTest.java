@@ -6,6 +6,7 @@ import org.vertx.java.core.json.JsonArray;
 
 /**
  * Tests the value API.
+ *
  * @author Samuel Grenier
  */
 public class ValueTest {

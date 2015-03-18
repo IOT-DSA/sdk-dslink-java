@@ -5,6 +5,7 @@ import org.junit.Test;
 
 /**
  * Tests key serialization, deserialization, and generation.
+ *
  * @author Samuel Grenier
  */
 public class LocalKeysTest {

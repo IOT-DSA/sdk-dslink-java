@@ -1,7 +1,7 @@
 package org.dsa.iot.dslink;
 
-import org.dsa.iot.dslink.connection.NetworkClient;
 import org.dsa.iot.dslink.connection.Endpoint;
+import org.dsa.iot.dslink.connection.NetworkClient;
 import org.dsa.iot.dslink.connection.RemoteEndpoint;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.requester.Requester;
@@ -25,8 +25,8 @@ public class DSLink {
 
     /**
      * @param endpoint Connection endpoint
-     * @param manager Node manager
-     * @param handler Link handler
+     * @param manager  Node manager
+     * @param handler  Link handler
      */
     protected DSLink(Endpoint endpoint,
                      NodeManager manager,
@@ -121,7 +121,7 @@ public class DSLink {
 
     /**
      * @param requester Requester of the client
-     * @param array Array of responses
+     * @param array     Array of responses
      */
     protected void handleResponses(Requester requester, JsonArray array) {
         for (Object object : array) {

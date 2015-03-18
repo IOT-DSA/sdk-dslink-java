@@ -15,6 +15,7 @@ import java.util.concurrent.CountDownLatch;
 
 /**
  * Handshake information retrieved from the server.
+ *
  * @author Samuel Grenier
  */
 // TODO: unit test against a server
@@ -31,8 +32,9 @@ public class RemoteHandshake {
 
     /**
      * Populates the handshake with data from the server.
+     *
      * @param keys Local client keys necessary to create the remote key.
-     * @param in JSON object retrieved from the server.
+     * @param in   JSON object retrieved from the server.
      */
     public RemoteHandshake(LocalKeys keys, JsonObject in) {
         String tempKey = in.getString("tempKey");
@@ -103,7 +105,7 @@ public class RemoteHandshake {
 
     /**
      * @return The update interval which determines the delay before sending
-     *         an update in the subscription stream.
+     * an update in the subscription stream.
      */
     public int getUpdateInterval() {
         return updateInterval;
@@ -114,7 +116,8 @@ public class RemoteHandshake {
      * endpoint. Once the handshake is complete, a populated handshake
      * is returned. This enables the DSLink to connect to the data
      * endpoint of the server.
-     * @param lh Handshake information
+     *
+     * @param lh  Handshake information
      * @param url URL for the authentication endpoint
      * @return Remote handshake information
      */

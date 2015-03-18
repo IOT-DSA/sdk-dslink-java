@@ -10,6 +10,7 @@ import java.util.List;
 
 /**
  * Action API for handling invocations, parameters, and results.
+ *
  * @author Samuel Grenier
  */
 public class Action {
@@ -22,9 +23,9 @@ public class Action {
     private final Handler<ActionResult> handler;
 
     /**
-     * @param name Name of the action
+     * @param name       Name of the action
      * @param permission Minimum required permission to invoke
-     * @param handler Handler for invocation
+     * @param handler    Handler for invocation
      */
     public Action(String name, Permission permission, Handler<ActionResult> handler) {
         if (name == null)
@@ -54,6 +55,7 @@ public class Action {
 
     /**
      * Invokes the action.
+     *
      * @param result Result to populate as a result of invocation
      */
     public void invoke(ActionResult result) {
@@ -70,6 +72,7 @@ public class Action {
 
     /**
      * Converts the action to JSON and adds it to the designated JSON object.
+     *
      * @param obj Object to alternate.
      */
     public void toJson(JsonObject obj) {
@@ -81,6 +84,7 @@ public class Action {
 
     /**
      * Converts all the parameters to JSON consumable format.
+     *
      * @param p List of parameters
      * @return JSON array of parameters converted to JSON values.
      */

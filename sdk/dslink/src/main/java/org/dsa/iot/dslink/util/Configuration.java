@@ -5,6 +5,7 @@ import org.dsa.iot.dslink.handshake.LocalKeys;
 
 /**
  * Holds the configuration of a DSLink.
+ *
  * @author Samuel Grenier
  */
 public class Configuration {
@@ -19,6 +20,7 @@ public class Configuration {
 
     /**
      * Example endpoint: http://localhost:8080/conn
+     *
      * @param endpoint Authentication endpoint.
      * @see URLInfo#parse
      * @see #setAuthEndpoint(URLInfo)
@@ -30,6 +32,7 @@ public class Configuration {
     /**
      * Sets the authentication endpoint used to make a connection for
      * performing a handshake.
+     *
      * @param endpoint Authentication endpoint
      */
     public void setAuthEndpoint(URLInfo endpoint) {
@@ -39,6 +42,7 @@ public class Configuration {
     /**
      * Gets the authentication endpoint used to make a connection for
      * performing a handshake.
+     *
      * @return Authentication endpoint
      */
     public URLInfo getAuthEndpoint() {
@@ -49,6 +53,7 @@ public class Configuration {
      * Sets the serialized keys. A deserialization will be performed when
      * setting these keys. If the serialized keys are not set, then one will
      * be automatically generated.
+     *
      * @param serializedKeys Serialized keys to set
      * @see LocalKeys#deserialize(String)
      */
@@ -60,6 +65,7 @@ public class Configuration {
 
     /**
      * Sets the local keys. These keys are used in the handshake.
+     *
      * @param keys Keys to set
      * @see LocalKeys
      */
@@ -79,6 +85,7 @@ public class Configuration {
     /**
      * Sets the designated connection type. This is used for connecting to
      * a data endpoint after the handshake is complete.
+     *
      * @param type Type of connection
      */
     public void setConnectionType(ConnectionType type) {
@@ -89,6 +96,7 @@ public class Configuration {
 
     /**
      * Designated connection type used when connecting to data endpoint.
+     *
      * @return Connection type to be used
      */
     public ConnectionType getConnectionType() {
@@ -98,6 +106,7 @@ public class Configuration {
     /**
      * Do not set the ID with the public key hash. It will be automatically
      * appended during the handshake setup.
+     *
      * @param dsId ID to set
      */
     public void setDsId(String dsId) {
@@ -111,6 +120,7 @@ public class Configuration {
     /**
      * Gets the raw ID of this DSLink. The public key hash has not been
      * appended to it.
+     *
      * @return DsID
      */
     public String getDsId() {
@@ -121,6 +131,7 @@ public class Configuration {
      * This variable is only effective when the broker needs to approve of this
      * DSLink. When approved, the broker will take you out of this zone and
      * place the link in a normal designated area.
+     *
      * @param zone Zone the broker should place this DSLink in.
      */
     public void setZone(String zone) {

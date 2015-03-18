@@ -9,7 +9,6 @@ import org.dsa.iot.dslink.handshake.LocalKeys;
 import org.dsa.iot.dslink.methods.requests.ListRequest;
 import org.dsa.iot.dslink.methods.responses.ListResponse;
 import org.dsa.iot.dslink.node.Node;
-import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.util.Configuration;
 import org.dsa.iot.dslink.util.LogLevel;
@@ -20,6 +19,7 @@ import java.util.Map;
 
 /**
  * Responder simply lists everything from the "/" root.
+ *
  * @author Samuel Grenier
  */
 public class Main extends DSLinkHandler {

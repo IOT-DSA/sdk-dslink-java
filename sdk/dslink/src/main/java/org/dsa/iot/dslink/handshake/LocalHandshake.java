@@ -5,6 +5,7 @@ import org.vertx.java.core.json.JsonObject;
 
 /**
  * Holds the necessary information to perform a handshake to a remote server.
+ *
  * @author Samuel Grenier
  */
 public class LocalHandshake {
@@ -18,6 +19,7 @@ public class LocalHandshake {
 
     /**
      * Populates the handshake with the designated configuration.
+     *
      * @param config Configuration of the DSLink.
      */
     public LocalHandshake(Configuration config) {
@@ -42,6 +44,7 @@ public class LocalHandshake {
     /**
      * Gets the ID of the DSLink including the encoded hash key. This is
      * necessary in order to post to the server as a query parameter.
+     *
      * @return ID of the DSLink.
      */
     public String getDsId() {
@@ -50,6 +53,7 @@ public class LocalHandshake {
 
     /**
      * Encodes the handshake to be sent to the authentication server.
+     *
      * @return JSON object ready to send to the server.
      */
     public JsonObject toJson() {

@@ -6,6 +6,7 @@ import org.vertx.java.core.json.JsonObject;
 /**
  * Common class for handling values. It is always recommended to check the type
  * before using a getter.
+ *
  * @author Samuel Grenier
  */
 public class Value {
@@ -21,6 +22,7 @@ public class Value {
 
     /**
      * Creates a value with an initial type of a number.
+     *
      * @param n Number to set
      */
     public Value(Number n) {
@@ -29,6 +31,7 @@ public class Value {
 
     /**
      * Creates a value with an initial type of a boolean.
+     *
      * @param b Boolean to set
      */
     public Value(Boolean b) {
@@ -37,6 +40,7 @@ public class Value {
 
     /**
      * Creates a value with an initial type of a string.
+     *
      * @param s String to set
      */
     public Value(String s) {
@@ -45,6 +49,7 @@ public class Value {
 
     /**
      * Creates a value with an initial type of a JSON object.
+     *
      * @param o JSON object to set
      */
     public Value(JsonObject o) {
@@ -53,6 +58,7 @@ public class Value {
 
     /**
      * Creates a value with an initial type of a JSON object.
+     *
      * @param a JSON array to set
      */
     public Value(JsonArray a) {
@@ -98,15 +104,16 @@ public class Value {
      * Sets the value to the new value and type. However immutability is
      * checked. If this value is declared as immutable, an exception will be
      * thrown.
+     *
      * @param type New type for the value
-     * @param n Number to set, or null
-     * @param b Boolean to set, or null
-     * @param s String to set, or null
-     * @param a JSON array to set, or null
-     * @param o JSON object to set, or null
+     * @param n    Number to set, or null
+     * @param b    Boolean to set, or null
+     * @param s    String to set, or null
+     * @param a    JSON array to set, or null
+     * @param o    JSON object to set, or null
      */
     private void set(ValueType type, Number n, Boolean b, String s,
-                                            JsonArray a, JsonObject o) {
+                     JsonArray a, JsonObject o) {
         checkImmutable();
         this.type = type;
         this.number = n;
@@ -119,6 +126,7 @@ public class Value {
     /**
      * Getting the type will allow you use to use the recommended getter
      * that this value is used for.
+     *
      * @return Type of the value
      */
     public ValueType getType() {
@@ -189,19 +197,20 @@ public class Value {
     @Override
     public String toString() {
         switch (type) {
-        case NUMBER:
-            return number.toString();
-        case BOOL:
-            return bool.toString();
-        case STRING:
-            return string;
-        default:
-            throw new RuntimeException("Unhandled type: " + type);
+            case NUMBER:
+                return number.toString();
+            case BOOL:
+                return bool.toString();
+            case STRING:
+                return string;
+            default:
+                throw new RuntimeException("Unhandled type: " + type);
         }
     }
 
     /**
      * Used for printing out values to the console.
+     *
      * @return Printable string
      */
     public String toDebugString() {

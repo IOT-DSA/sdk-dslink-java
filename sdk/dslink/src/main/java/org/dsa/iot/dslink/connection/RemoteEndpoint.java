@@ -6,6 +6,7 @@ import org.dsa.iot.dslink.util.URLInfo;
 
 /**
  * Common interface for handling remote endpoints.
+ *
  * @author Samuel Grenier
  */
 public abstract class RemoteEndpoint implements NetworkClient, Endpoint {

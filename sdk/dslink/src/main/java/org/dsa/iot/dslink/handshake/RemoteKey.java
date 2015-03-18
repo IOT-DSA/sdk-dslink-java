@@ -9,6 +9,7 @@ import java.math.BigInteger;
 
 /**
  * Handles remote keys. The shared secret will be decrypted here.
+ *
  * @author Samuel Grenier
  */
 public class RemoteKey {
@@ -17,6 +18,7 @@ public class RemoteKey {
 
     /**
      * Populates the remote key with encryption data from the server.
+     *
      * @param sharedSecret Shared secret retrieved from the server
      */
     private RemoteKey(byte[] sharedSecret) {
@@ -25,6 +27,7 @@ public class RemoteKey {
 
     /**
      * Retrieves the decrypted shared secret.
+     *
      * @return shared secret
      */
     public byte[] getSharedSecret() {
@@ -32,7 +35,7 @@ public class RemoteKey {
     }
 
     /**
-     * @param keys Local keys necessary for the decryption
+     * @param keys    Local keys necessary for the decryption
      * @param tempKey Temporary key received from the server
      * @return A remote key.
      */
@@ -50,6 +53,7 @@ public class RemoteKey {
 
     /**
      * Ensures the shared secret is always 32 bytes in length.
+     *
      * @param sharedSecret Shared secret to normalize
      * @return Normalized shared secret
      */
