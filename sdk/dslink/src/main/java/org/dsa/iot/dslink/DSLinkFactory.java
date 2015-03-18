@@ -12,6 +12,7 @@ import org.dsa.iot.dslink.util.Configuration;
 import org.dsa.iot.dslink.util.URLInfo;
 
 /**
+ * Factory for generating {@link DSLink} objects.
  * @author Samuel Grenier
  */
 public class DSLinkFactory {

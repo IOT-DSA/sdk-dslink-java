@@ -1,11 +1,9 @@
 package org.dsa.iot.dslink.connection.connector;
 
 import org.bouncycastle.jcajce.provider.digest.SHA256;
-import org.dsa.iot.dslink.DSLinkHandler;
 import org.dsa.iot.dslink.connection.NetworkClient;
 import org.dsa.iot.dslink.connection.RemoteEndpoint;
 import org.dsa.iot.dslink.handshake.RemoteHandshake;
-import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.requester.Requester;
 import org.dsa.iot.dslink.util.HttpClientUtils;
 import org.dsa.iot.dslink.util.UrlBase64;

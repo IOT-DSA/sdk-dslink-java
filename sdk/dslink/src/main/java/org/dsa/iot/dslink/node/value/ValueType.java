@@ -1,7 +1,9 @@
 package org.dsa.iot.dslink.node.value;
 
 /**
+ * Type of the value
  * @author Samuel Grenier
+ * @see Value
  */
 public enum ValueType {
 
@@ -12,9 +14,5 @@ public enum ValueType {
     
     /* Internal values */
     MAP,
-    ARRAY;
-    
-    public String toJsonString() {
-        return this.toString().toLowerCase();
-    }
+    ARRAY
 }

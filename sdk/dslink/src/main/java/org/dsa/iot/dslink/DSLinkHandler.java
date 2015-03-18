@@ -1,7 +1,5 @@
 package org.dsa.iot.dslink;
 
-import org.dsa.iot.dslink.methods.Request;
-import org.dsa.iot.dslink.methods.Response;
 import org.dsa.iot.dslink.methods.requests.ListRequest;
 import org.dsa.iot.dslink.methods.responses.ListResponse;
 import org.dsa.iot.dslink.util.Configuration;
