@@ -32,13 +32,14 @@ public interface NetworkClient {
     void setDataHandler(Handler<JsonObject> handler);
 
     /**
-     * @return The requester of the client
+     * @return The requester the client is using.
      */
     Requester getRequester();
 
     /**
      * Sets the requester of the client for which it can perform requests
      * on the client.
+     * @param requester Requester that the client will use.
      */
     void setRequester(Requester requester);
 }
