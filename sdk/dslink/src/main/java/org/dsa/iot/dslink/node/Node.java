@@ -1,5 +1,6 @@
 package org.dsa.iot.dslink.node;
 
+import org.dsa.iot.dslink.node.actions.Action;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.util.StringUtils;
 
@@ -25,6 +26,7 @@ public class Node {
     private Map<String, Node> children;
     private Map<String, Value> configs;
     private Map<String, Value> attribs;
+    private Action action;
 
     /**
      * Constructs a node object.
@@ -134,9 +136,13 @@ public class Node {
     }
 
     /**
+     * The name will be checked for validity. Certain names that are set
+     * through other APIs cannot be set here, otherwise it will throw an
+     * exception.
      * @param name Name of the configuration
      * @param value Value to set
      * @return The previous configuration value, if any
+     * @see Action
      */
     public synchronized Value setConfig(String name, Value value) {
         name = checkName(name);
@@ -144,6 +150,10 @@ public class Node {
             throw new NullPointerException("value");
         } else if (configs == null) {
             configs = new HashMap<>();
+        }
+        if ("params".equals(name) || "columns".equals(name)) {
+            String err = "Use the action API to set parameters and columns";
+            throw new IllegalArgumentException(err);
         }
         return configs.put(name, value);
     }
@@ -176,6 +186,21 @@ public class Node {
             attribs = new HashMap<>();
         }
         return attribs.put(name, value);
+    }
+
+    /**
+     * @return Action this node can invoke
+     */
+    public synchronized Action getAction() {
+        return action;
+    }
+
+    /**
+     * Sets the action of the node
+     * @param action Action to set
+     */
+    public synchronized void setAction(Action action) {
+        this.action = action;
     }
 
     /**

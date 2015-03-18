@@ -17,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
+ * Handles incoming responses and outgoing requests.
  * @author Samuel Grenier
  */
 public class Requester {
@@ -32,6 +33,11 @@ public class Requester {
      */
     private final AtomicInteger currentReqID = new AtomicInteger();
 
+    /**
+     * Constructs a requester
+     * @param manager Manager to handle requests/responses
+     * @param handler Handler for callbacks and data handling
+     */
     public Requester(NodeManager manager, DSLinkHandler handler) {
         if (manager == null)
             throw new NullPointerException("manager");
@@ -52,6 +58,10 @@ public class Requester {
         this.endpoint = endpoint;
     }
 
+    /**
+     * Sends a request to the endpoint.
+     * @param request Request to send to the endpoint
+     */
     public void sendRequest(Request request) {
         JsonObject obj = new JsonObject();
         request.addJsonValues(obj);
@@ -69,6 +79,10 @@ public class Requester {
         endpoint.write(top);
     }
 
+    /**
+     * Parses a response that came from an endpoint.
+     * @param in Parses an incoming response
+     */
     public void parseResponse(JsonObject in) {
         Integer rid = in.getInteger("rid");
         Request request = reqs.get(rid);

@@ -2,8 +2,12 @@ package org.dsa.iot.dslink.methods.responses;
 
 import org.dsa.iot.dslink.methods.Response;
 import org.dsa.iot.dslink.node.Node;
+import org.dsa.iot.dslink.node.actions.Action;
+import org.dsa.iot.dslink.node.actions.ActionResult;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueUtils;
+import org.dsa.iot.dslink.util.Permission;
+import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
@@ -79,7 +83,16 @@ public class ListResponse implements Response {
                 child.setConfig("type", new Value(type));
             }
 
-            // TODO: populate actions
+            String invokable = childData.getString("$invokable");
+            if (invokable != null) {
+                Permission perm = Permission.toEnum(invokable);
+                child.setAction(new Action("", perm, new Handler<ActionResult>() {
+                    @Override
+                    public void handle(ActionResult event) {
+                        throw new UnsupportedOperationException();
+                    }
+                }));
+            }
         }
     }
 }

@@ -14,5 +14,12 @@ public enum ValueType {
     
     /* Internal values */
     MAP,
-    ARRAY
+    ARRAY;
+
+    /**
+     * @return Type of value that is suitable for JSON consumption.
+     */
+    public String toJsonString() {
+        return this.name().toLowerCase();
+    }
 }

@@ -6,8 +6,6 @@ import org.dsa.iot.dslink.DSLinkFactory;
 import org.dsa.iot.dslink.DSLinkHandler;
 import org.dsa.iot.dslink.connection.ConnectionType;
 import org.dsa.iot.dslink.handshake.LocalKeys;
-import org.dsa.iot.dslink.methods.Request;
-import org.dsa.iot.dslink.methods.Response;
 import org.dsa.iot.dslink.methods.requests.ListRequest;
 import org.dsa.iot.dslink.methods.responses.ListResponse;
 import org.dsa.iot.dslink.node.Node;
