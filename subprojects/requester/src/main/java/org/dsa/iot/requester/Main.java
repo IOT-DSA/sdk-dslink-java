@@ -42,6 +42,7 @@ public class Main extends DSLinkHandler {
         LOGGER.info("Sent data");
     }
 
+    @Override
     public synchronized void onResponse(Request request, Response response) {
         LOGGER.info("--------------");
         LOGGER.info("Received response: " + request.getName());
