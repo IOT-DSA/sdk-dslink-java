@@ -9,6 +9,7 @@ import org.dsa.iot.dslink.handshake.LocalKeys;
 import org.dsa.iot.dslink.methods.Request;
 import org.dsa.iot.dslink.methods.Response;
 import org.dsa.iot.dslink.methods.requests.ListRequest;
+import org.dsa.iot.dslink.methods.responses.ListResponse;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.value.Value;
@@ -43,10 +44,9 @@ public class Main extends DSLinkHandler {
     }
 
     @Override
-    public synchronized void onResponse(Request request, Response response) {
+    public synchronized void onListResponse(ListRequest req, ListResponse resp) {
         LOGGER.info("--------------");
-        LOGGER.info("Received response: " + request.getName());
-        ListRequest req = (ListRequest) request;
+        LOGGER.info("Received response: " + req.getName());
         NodeManager manager = link.getNodeManager();
         Node node = manager.getNode(req.getPath());
         LOGGER.info("Path: " + req.getPath());

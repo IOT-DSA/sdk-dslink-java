@@ -73,12 +73,13 @@ public class Requester {
         Integer rid = in.getInteger("rid");
         Request request = reqs.get(rid);
         String method = request.getName();
-        Response response;
         switch (method) {
             case "list":
                 ListRequest req = (ListRequest) request;
                 Node node = nodeManager.getNode(req.getPath(), true);
-                response = new ListResponse(rid, node);
+                ListResponse resp = new ListResponse(rid, node);
+                populateResponse(resp, in);
+                handler.onListResponse(req, resp);
                 break;
             default:
                 throw new RuntimeException("Unsupported method: " + method);
@@ -88,11 +89,12 @@ public class Requester {
         if (StreamState.CLOSED.getJsonName().equals(streamState)) {
             reqs.remove(rid);
         }
+    }
 
-        JsonArray updates = in.getArray("updates");
+    private void populateResponse(Response resp, JsonObject obj) {
+        JsonArray updates = obj.getArray("updates");
         if (updates != null) {
-            response.populate(in.getArray("updates"));
+            resp.populate(updates);
         }
-        handler.onResponse(request, response);
     }
 }

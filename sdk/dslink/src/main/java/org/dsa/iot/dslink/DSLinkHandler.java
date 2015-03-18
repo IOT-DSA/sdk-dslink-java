@@ -2,6 +2,8 @@ package org.dsa.iot.dslink;
 
 import org.dsa.iot.dslink.methods.Request;
 import org.dsa.iot.dslink.methods.Response;
+import org.dsa.iot.dslink.methods.requests.ListRequest;
+import org.dsa.iot.dslink.methods.responses.ListResponse;
 import org.dsa.iot.dslink.util.Configuration;
 
 /**
@@ -36,10 +38,10 @@ public abstract class DSLinkHandler {
     public abstract void onConnected(DSLink link);
 
     /**
-     * Response event after sending a request.
+     * Handles an incoming list response.
      * @param request Original sent request.
      * @param response Received response from the endpoint.
      */
-    public void onResponse(Request request, Response response) {
+    public void onListResponse(ListRequest request, ListResponse response) {
     }
 }
