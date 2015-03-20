@@ -1,7 +1,7 @@
 package org.dsa.iot.dslink.connection;
 
-import org.dsa.iot.dslink.requester.Requester;
 import org.vertx.java.core.Handler;
+import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 /**
@@ -25,21 +25,26 @@ public interface NetworkClient {
     void close();
 
     /**
-     * Sets the handler used for managing incoming data from the endpoint.
+     * Sets the handler used for managing incoming requests from the endpoint.
      *
-     * @param handler Handler to set
+     * @param handler Handler to set with an array of requests.
      */
-    void setDataHandler(Handler<JsonObject> handler);
+    void setRequestDataHandler(Handler<JsonArray> handler);
 
     /**
-     * @return The requester the client is using.
+     * Sets the handler used for managing incoming responses from the endpoint.
+     *
+     * @param handler Handler to set with an array of responses
      */
-    Requester getRequester();
+    void setResponseDataHandler(Handler<JsonArray> handler);
 
     /**
-     * Sets the requester of the client for which it can perform requests
-     * on the client.
-     * @param requester Requester that the client will use.
+     * @return Whether this client is a requester or not.
      */
-    void setRequester(Requester requester);
+    boolean isRequester();
+
+    /**
+     * @return Whether this client is a responder or not.
+     */
+    boolean isResponder();
 }

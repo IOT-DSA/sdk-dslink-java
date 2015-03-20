@@ -6,8 +6,6 @@ import org.dsa.iot.dslink.connection.connector.WebSocketConnector;
 import org.dsa.iot.dslink.handshake.LocalHandshake;
 import org.dsa.iot.dslink.handshake.LocalKeys;
 import org.dsa.iot.dslink.handshake.RemoteHandshake;
-import org.dsa.iot.dslink.node.NodeManager;
-import org.dsa.iot.dslink.requester.Requester;
 import org.dsa.iot.dslink.util.Configuration;
 import org.dsa.iot.dslink.util.URLInfo;
 
@@ -49,7 +47,6 @@ public class DSLinkFactory {
             case WEB_SOCKET:
                 RemoteHandshake rh = RemoteHandshake.generate(lh, endpoint);
                 rep = new WebSocketConnector();
-                rep.setRequester(new Requester(handler));
                 rep.setEndpoint(endpoint);
                 rep.setLocalHandshake(lh);
                 rep.setRemoteHandshake(rh);

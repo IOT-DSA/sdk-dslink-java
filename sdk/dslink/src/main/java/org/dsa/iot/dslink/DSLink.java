@@ -13,27 +13,39 @@ import org.vertx.java.core.json.JsonObject;
 public class DSLink {
 
     private final NodeManager nodeManager;
+    private final Requester requester;
     private NetworkClient client;
 
     /**
-     * @param client Initialized client
-     * @param manager  Node manager
+     * @param handler DSLink handler
+     * @param client Initialized client endpoint
      */
-    protected DSLink(NetworkClient client,
-                     NodeManager manager) {
+    protected DSLink(DSLinkHandler handler,
+                     NetworkClient client) {
         if (client == null)
             throw new NullPointerException("client");
-        else if (manager == null)
-            throw new NullPointerException("manager");
         this.client = client;
-        this.nodeManager = manager;
+        this.nodeManager = new NodeManager();
+        if (client.isRequester()) {
+            requester = new Requester(handler);
+            requester.setDSLink(this);
+        } else {
+            requester = null;
+        }
+    }
+
+    /**
+     * @return The network client to write data to.
+     */
+    public NetworkClient getClient() {
+        return client;
     }
 
     /**
      * @return Requester of the singleton client, can be null
      */
     public Requester getRequester() {
-        return client.getRequester();
+        return requester;
     }
 
     /**
@@ -46,28 +58,19 @@ public class DSLink {
     /**
      * Sets the default data handler to the remote endpoint.
      */
-    public void setDefaultDataHandler() {
-        client.setDataHandler(new Handler<JsonObject>() {
-            @Override
-            public void handle(JsonObject event) {
-                Requester requester = client.getRequester();
-                if (requester != null) {
-                    JsonArray array = event.getArray("responses");
-                    if (array != null) {
-                        handleResponses(requester, array);
+    public void setDefaultDataHandlers() {
+        if (client.isRequester()) {
+            client.setResponseDataHandler(new Handler<JsonArray>() {
+                @Override
+                public void handle(JsonArray event) {
+                    for (Object object : event) {
+                        JsonObject json = (JsonObject) object;
+                        requester.parseResponse(json);
                     }
                 }
-            }
-        });
-    }
-
-    /**
-     * @param requester Requester of the client
-     * @param array     Array of responses
-     */
-    protected void handleResponses(Requester requester, JsonArray array) {
-        for (Object object : array) {
-            requester.parseResponse((JsonObject) object);
+            });
+        } else if (client.isResponder()) {
+            throw new UnsupportedOperationException("responder");
         }
     }
 }

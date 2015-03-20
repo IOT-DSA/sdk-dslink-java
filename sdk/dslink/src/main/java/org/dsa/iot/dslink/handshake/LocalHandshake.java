@@ -52,6 +52,20 @@ public class LocalHandshake {
     }
 
     /**
+     * @return Whether the client wants to be a requester or not.
+     */
+    public boolean isRequester() {
+        return isRequester;
+    }
+
+    /**
+     * @return Whether the client wants to be a responder or not.
+     */
+    public boolean isResponder() {
+        return isResponder;
+    }
+
+    /**
      * Encodes the handshake to be sent to the authentication server.
      *
      * @return JSON object ready to send to the server.

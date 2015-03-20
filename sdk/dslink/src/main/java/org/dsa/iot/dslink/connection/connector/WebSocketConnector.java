@@ -4,13 +4,13 @@ import org.bouncycastle.jcajce.provider.digest.SHA256;
 import org.dsa.iot.dslink.connection.NetworkClient;
 import org.dsa.iot.dslink.connection.RemoteEndpoint;
 import org.dsa.iot.dslink.handshake.RemoteHandshake;
-import org.dsa.iot.dslink.requester.Requester;
 import org.dsa.iot.dslink.util.HttpClientUtils;
 import org.dsa.iot.dslink.util.UrlBase64;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.http.HttpClient;
 import org.vertx.java.core.http.WebSocket;
+import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 import java.io.UnsupportedEncodingException;
@@ -22,10 +22,9 @@ import java.io.UnsupportedEncodingException;
  */
 public class WebSocketConnector extends RemoteEndpoint {
 
-    private Requester requester;
-
     private WebSocket webSocket;
-    private Handler<JsonObject> jsonHandler;
+    private Handler<JsonArray> requestHandler;
+    private Handler<JsonArray> responseHandler;
     private Handler<NetworkClient> clientHandler;
 
     private boolean isBecomingActive = false;
@@ -77,10 +76,20 @@ public class WebSocketConnector extends RemoteEndpoint {
                 event.dataHandler(new Handler<Buffer>() {
                     @Override
                     public void handle(Buffer event) {
-                        Handler<JsonObject> handler = jsonHandler;
-                        if (handler != null) {
-                            String string = event.toString("UTF-8");
-                            handler.handle(new JsonObject(string));
+                        Handler<JsonArray> reqHandler = requestHandler;
+                        Handler<JsonArray> respHandler = responseHandler;
+
+                        String string = event.toString("UTF-8");
+                        JsonObject obj = new JsonObject(string);
+
+                        JsonArray requests = obj.getArray("requests");
+                        if (!(reqHandler == null || requests == null)) {
+                            reqHandler.handle(requests);
+                        }
+
+                        JsonArray responses = obj.getArray("responses");
+                        if (!(respHandler == null || responses == null)) {
+                            respHandler.handle(responses);
                         }
                     }
                 });
@@ -113,19 +122,34 @@ public class WebSocketConnector extends RemoteEndpoint {
     }
 
     @Override
-    public void setRequester(Requester requester) {
-        this.requester = requester;
-        requester.setRemoteEndpoint(this);
-    }
-
-    @Override
     public void setClientConnectedHandler(Handler<NetworkClient> handler) {
         this.clientHandler = handler;
     }
 
     @Override
-    public void setDataHandler(Handler<JsonObject> handler) {
-        this.jsonHandler = handler;
+    public void setRequestDataHandler(Handler<JsonArray> handler) {
+        if (!isResponder()) {
+            throw new RuntimeException("This client is not a responder");
+        }
+        this.requestHandler = handler;
+    }
+
+    @Override
+    public void setResponseDataHandler(Handler<JsonArray> handler) {
+        if (!isRequester()) {
+            throw new RuntimeException("This client is not a requester");
+        }
+        this.responseHandler = handler;
+    }
+
+    @Override
+    public boolean isRequester() {
+        return getLocalHandshake().isRequester();
+    }
+
+    @Override
+    public boolean isResponder() {
+        return getLocalHandshake().isResponder();
     }
 
     @Override
@@ -136,10 +160,5 @@ public class WebSocketConnector extends RemoteEndpoint {
     @Override
     public boolean isActive() {
         return isActive;
-    }
-
-    @Override
-    public Requester getRequester() {
-        return requester;
     }
 }

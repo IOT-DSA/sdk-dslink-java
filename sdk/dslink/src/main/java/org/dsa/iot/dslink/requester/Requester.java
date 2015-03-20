@@ -1,9 +1,8 @@
 package org.dsa.iot.dslink.requester;
 
+import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.DSLinkHandler;
-import org.dsa.iot.dslink.connection.RemoteEndpoint;
 import org.dsa.iot.dslink.methods.Request;
-import org.dsa.iot.dslink.methods.Response;
 import org.dsa.iot.dslink.methods.requests.ListRequest;
 import org.dsa.iot.dslink.methods.responses.ListResponse;
 import org.dsa.iot.dslink.node.Node;
@@ -12,6 +11,7 @@ import org.dsa.iot.dslink.util.StreamState;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
+import java.lang.ref.WeakReference;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -26,10 +26,10 @@ public class Requester {
     private final Map<Integer, Request> reqs = new ConcurrentHashMap<>();
     private final DSLinkHandler handler;
 
-    private RemoteEndpoint endpoint;
+    private WeakReference<DSLink> link;
 
     /**
-     * Current request ID to send to the endpoint
+     * Current request ID to send to the client
      */
     private final AtomicInteger currentReqID = new AtomicInteger();
 
@@ -45,23 +45,32 @@ public class Requester {
     }
 
     /**
-     * Sets the endpoint that requester sends requests to. Must be set
-     * before sending any requests
-     *
-     * @param endpoint Endpoint to set.
+     * The DSLink object is used for the client and node manager.
+     * @param link The link to set.
      */
-    public void setRemoteEndpoint(RemoteEndpoint endpoint) {
-        if (endpoint == null)
-            throw new NullPointerException("endpoint");
-        this.endpoint = endpoint;
+    public void setDSLink(DSLink link) {
+        if (link == null)
+            throw new NullPointerException("link");
+        this.link = new WeakReference<>(link);
     }
 
     /**
-     * Sends a request to the endpoint.
+     * @return A reference to the dslink, can be null
+     */
+    public DSLink getDSLink() {
+        return link.get();
+    }
+
+    /**
+     * Sends a request to the client.
      *
-     * @param request Request to send to the endpoint
+     * @param request Request to send to the client
      */
     public void sendRequest(Request request) {
+        DSLink link = getDSLink();
+        if (link == null) {
+            return;
+        }
         JsonObject obj = new JsonObject();
         request.addJsonValues(obj);
         {
@@ -75,23 +84,27 @@ public class Requester {
         JsonArray requests = new JsonArray();
         requests.addObject(obj);
         top.putArray("requests", requests);
-        endpoint.write(top);
+        link.getClient().write(top);
     }
 
     /**
-     * Parses a response that came from an endpoint.
+     * Parses a response that came from an client.
      *
      * @param in Parses an incoming response
      */
     public void parseResponse(JsonObject in) {
+        DSLink link = getDSLink();
+        if (link == null) {
+            return;
+        }
         Integer rid = in.getInteger("rid");
         Request request = reqs.get(rid);
         String method = request.getName();
-        NodeManager temp = new NodeManager();
+        NodeManager manager = link.getNodeManager();
         switch (method) {
             case "list":
                 ListRequest req = (ListRequest) request;
-                Node node = temp.getNode(req.getPath(), true);
+                Node node = manager.getNode(req.getPath(), true);
                 ListResponse resp = new ListResponse(rid, node);
                 resp.populate(in);
                 handler.onListResponse(req, resp);

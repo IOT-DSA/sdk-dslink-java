@@ -3,7 +3,6 @@ package org.dsa.iot.dslink;
 import org.dsa.iot.dslink.connection.Endpoint;
 import org.dsa.iot.dslink.connection.NetworkClient;
 import org.dsa.iot.dslink.connection.RemoteEndpoint;
-import org.dsa.iot.dslink.node.NodeManager;
 import org.vertx.java.core.Handler;
 
 /**
@@ -27,16 +26,22 @@ public class DSLinkProvider {
     /**
      * Sets the default endpoint handler. Override if a custom DSLink
      * implementation needs to be provided.
-     * @see DSLinkHandler#onConnected
+     * @see DSLinkHandler#onRequesterConnected
+     * @see DSLinkHandler#onResponderConnected
      */
     public void setDefaultEndpointHandler() {
         endpoint.setClientConnectedHandler(new Handler<NetworkClient>() {
             @Override
             public synchronized void handle(NetworkClient event) {
-                NodeManager manager = new NodeManager();
-                DSLink link = new DSLink(event, manager);
-                link.setDefaultDataHandler();
-                handler.onConnected(link);
+                if (event.isRequester()) {
+                    DSLink link = new DSLink(handler, event);
+                    link.setDefaultDataHandlers();
+                    handler.onRequesterConnected(link);
+                } else if (event.isResponder()) {
+                    DSLink link = new DSLink(handler, event);
+                    link.setDefaultDataHandlers();
+                    handler.onResponderConnected(link);
+                }
             }
         });
     }
