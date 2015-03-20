@@ -41,9 +41,12 @@ public class ListResponse implements Response {
     }
 
     @Override
-    public void populate(JsonArray in) {
-        for (Object obj : in) {
-            update((JsonArray) obj);
+    public void populate(JsonObject in) {
+        JsonArray updates = in.getArray("updates");
+        if (updates != null) {
+            for (Object obj : updates) {
+                update((JsonArray) obj);
+            }
         }
     }
 

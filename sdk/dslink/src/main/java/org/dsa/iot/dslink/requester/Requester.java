@@ -93,7 +93,7 @@ public class Requester {
                 ListRequest req = (ListRequest) request;
                 Node node = temp.getNode(req.getPath(), true);
                 ListResponse resp = new ListResponse(rid, node);
-                populateResponse(resp, in);
+                resp.populate(in);
                 handler.onListResponse(req, resp);
                 break;
             default:
@@ -103,13 +103,6 @@ public class Requester {
         String streamState = in.getString("stream");
         if (StreamState.CLOSED.getJsonName().equals(streamState)) {
             reqs.remove(rid);
-        }
-    }
-
-    private void populateResponse(Response resp, JsonObject obj) {
-        JsonArray updates = obj.getArray("updates");
-        if (updates != null) {
-            resp.populate(updates);
         }
     }
 }

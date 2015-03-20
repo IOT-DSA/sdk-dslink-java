@@ -1,6 +1,6 @@
 package org.dsa.iot.dslink.methods;
 
-import org.vertx.java.core.json.JsonArray;
+import org.vertx.java.core.json.JsonObject;
 
 /**
  * Generic response API
@@ -19,5 +19,5 @@ public interface Response {
      *
      * @param in Incoming data from remote endpoint
      */
-    void populate(JsonArray in);
+    void populate(JsonObject in);
 }
