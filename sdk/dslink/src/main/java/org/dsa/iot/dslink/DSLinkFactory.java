@@ -40,6 +40,42 @@ public class DSLinkFactory {
     }
 
     /**
+     * Creates a DSLink provider. The provider will automatically connect
+     * and block.
+     *
+     * @param name Name of the link, prepended in the DsId.
+     * @param args Arguments to parse
+     * @param handler DSLink handler
+     */
+    public static void startResponder(String name,
+                                      String[] args,
+                                      DSLinkHandler handler) {
+        DSLinkProvider provider = generateResponder(name, args, handler);
+        if (provider != null) {
+            provider.start();
+            provider.sleep();
+        }
+    }
+
+    /**
+     * Creates a DSLink provider based on the arguments passed into main. The
+     * link handler does not need to set the keys or the authentication
+     * endpoint.
+     *
+     * @param name Name of the link, prepended in the DsId.
+     * @param args Arguments to parse
+     * @param handler DSLink handler
+     * @return A link provider or null if the args have a help parameter
+     *         passed in.
+     */
+    @SuppressWarnings("ConstantConditions")
+    public static DSLinkProvider generateResponder(String name,
+                                                   String[] args,
+                                                   DSLinkHandler handler) {
+        return generate(name, args, handler, false, true);
+    }
+
+    /**
      * Creates a DSLink provider based on the arguments passed into main. The
      * link handler does not need to set the keys or the authentication
      * endpoint.
@@ -54,10 +90,31 @@ public class DSLinkFactory {
     public static DSLinkProvider generateRequester(String name,
                                                     String[] args,
                                                     DSLinkHandler handler) {
+        return generate(name, args, handler, true, false);
+    }
+
+    /**
+     * Creates a DSLink provider based on the arguments passed into main. The
+     * link handler does not need to set the keys or the authentication
+     * endpoint.
+     *
+     * @param name Name of the link, prepended in the DsId.
+     * @param args Arguments to parse
+     * @param handler DSLink handler
+     * @return A link provider or null if the args have a help parameter
+     *         passed in.
+     */
+    @SuppressWarnings("ConstantConditions")
+    public static DSLinkProvider generate(String name,
+                                            String[] args,
+                                            DSLinkHandler handler,
+                                            boolean requester,
+                                            boolean responder) {
         Configuration defaults = new Configuration();
         defaults.setDsId(name);
         defaults.setConnectionType(ConnectionType.WEB_SOCKET);
-        defaults.setRequester(true);
+        defaults.setRequester(requester);
+        defaults.setResponder(responder);
 
         Arguments parsed = Arguments.parse(args);
         if (parsed == null) {
