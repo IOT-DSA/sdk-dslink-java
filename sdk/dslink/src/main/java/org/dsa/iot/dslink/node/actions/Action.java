@@ -1,6 +1,6 @@
 package org.dsa.iot.dslink.node.actions;
 
-import org.dsa.iot.dslink.util.Permission;
+import org.dsa.iot.dslink.node.Permission;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;

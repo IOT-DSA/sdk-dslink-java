@@ -1,6 +1,7 @@
-package org.dsa.iot.dslink.util;
+package org.dsa.iot.dslink.node;
 
 /**
+ * Handles various permission levels
  * @author Samuel Grenier
  */
 public enum Permission {
@@ -16,10 +17,20 @@ public enum Permission {
         this.jsonName = jsonName;
     }
 
+    /**
+     * @return JSON ready name of the permission
+     */
     public String getJsonName() {
         return jsonName;
     }
 
+    /**
+     * Converts a string permission received from an endpoint back into a
+     * permission enumeration.
+     *
+     * @param perm Permission string to convert.
+     * @return Converted string into an enumeration.
+     */
     public static Permission toEnum(String perm) {
         switch (perm) {
             case "none":

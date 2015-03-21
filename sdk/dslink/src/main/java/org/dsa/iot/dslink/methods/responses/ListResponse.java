@@ -2,11 +2,11 @@ package org.dsa.iot.dslink.methods.responses;
 
 import org.dsa.iot.dslink.methods.Response;
 import org.dsa.iot.dslink.node.Node;
+import org.dsa.iot.dslink.node.Permission;
 import org.dsa.iot.dslink.node.actions.Action;
 import org.dsa.iot.dslink.node.actions.ActionResult;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueUtils;
-import org.dsa.iot.dslink.util.Permission;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
