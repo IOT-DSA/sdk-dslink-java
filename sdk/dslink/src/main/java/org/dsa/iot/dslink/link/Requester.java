@@ -1,4 +1,4 @@
-package org.dsa.iot.dslink.requester;
+package org.dsa.iot.dslink.link;
 
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.DSLinkHandler;
@@ -11,7 +11,6 @@ import org.dsa.iot.dslink.util.StreamState;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
-import java.lang.ref.WeakReference;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -21,12 +20,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * @author Samuel Grenier
  */
-public class Requester {
+public class Requester extends Linkable {
 
     private final Map<Integer, Request> reqs = new ConcurrentHashMap<>();
-    private final DSLinkHandler handler;
-
-    private WeakReference<DSLink> link;
 
     /**
      * Current request ID to send to the client
@@ -39,26 +35,7 @@ public class Requester {
      * @param handler Handler for callbacks and data handling
      */
     public Requester(DSLinkHandler handler) {
-        if (handler == null)
-            throw new NullPointerException("handler");
-        this.handler = handler;
-    }
-
-    /**
-     * The DSLink object is used for the client and node manager.
-     * @param link The link to set.
-     */
-    public void setDSLink(DSLink link) {
-        if (link == null)
-            throw new NullPointerException("link");
-        this.link = new WeakReference<>(link);
-    }
-
-    /**
-     * @return A reference to the dslink, can be null
-     */
-    public DSLink getDSLink() {
-        return link.get();
+        super(handler);
     }
 
     /**
@@ -87,12 +64,8 @@ public class Requester {
         link.getClient().write(top);
     }
 
-    /**
-     * Parses a response that came from an client.
-     *
-     * @param in Parses an incoming response
-     */
-    public void parseResponse(JsonObject in) {
+    @Override
+    public void parse(JsonObject in) {
         DSLink link = getDSLink();
         if (link == null) {
             return;
@@ -107,7 +80,7 @@ public class Requester {
                 Node node = manager.getNode(req.getPath(), true);
                 ListResponse resp = new ListResponse(rid, node);
                 resp.populate(in);
-                handler.onListResponse(req, resp);
+                getHandler().onListResponse(req, resp);
                 break;
             default:
                 throw new RuntimeException("Unsupported method: " + method);

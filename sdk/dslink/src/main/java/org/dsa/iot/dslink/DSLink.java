@@ -1,8 +1,9 @@
 package org.dsa.iot.dslink;
 
 import org.dsa.iot.dslink.connection.NetworkClient;
+import org.dsa.iot.dslink.link.Requester;
+import org.dsa.iot.dslink.link.Responder;
 import org.dsa.iot.dslink.node.NodeManager;
-import org.dsa.iot.dslink.requester.Requester;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
@@ -14,6 +15,7 @@ public class DSLink {
 
     private final NodeManager nodeManager;
     private final Requester requester;
+    private final Responder responder;
     private NetworkClient client;
 
     /**
@@ -28,9 +30,15 @@ public class DSLink {
         this.nodeManager = new NodeManager();
         if (client.isRequester()) {
             requester = new Requester(handler);
+            responder = null;
             requester.setDSLink(this);
+        } else if (client.isResponder()) {
+            requester = null;
+            responder = new Responder(handler);
+            responder.setDSLink(this);
         } else {
             requester = null;
+            responder = null;
         }
     }
 
@@ -65,12 +73,20 @@ public class DSLink {
                 public void handle(JsonArray event) {
                     for (Object object : event) {
                         JsonObject json = (JsonObject) object;
-                        requester.parseResponse(json);
+                        requester.parse(json);
                     }
                 }
             });
         } else if (client.isResponder()) {
-            throw new UnsupportedOperationException("responder");
+            client.setRequestDataHandler(new Handler<JsonArray>() {
+                @Override
+                public void handle(JsonArray event) {
+                    for (Object object : event) {
+                        JsonObject json = (JsonObject) object;
+                        responder.parse(json);
+                    }
+                }
+            });
         }
     }
 }
