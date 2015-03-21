@@ -6,8 +6,13 @@ import org.dsa.iot.dslink.connection.connector.WebSocketConnector;
 import org.dsa.iot.dslink.handshake.LocalHandshake;
 import org.dsa.iot.dslink.handshake.LocalKeys;
 import org.dsa.iot.dslink.handshake.RemoteHandshake;
+import org.dsa.iot.dslink.util.Arguments;
 import org.dsa.iot.dslink.util.Configuration;
+import org.dsa.iot.dslink.util.LogLevel;
 import org.dsa.iot.dslink.util.URLInfo;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Factory for generating {@link DSLink} objects.
@@ -15,6 +20,59 @@ import org.dsa.iot.dslink.util.URLInfo;
  * @author Samuel Grenier
  */
 public class DSLinkFactory {
+
+    /**
+     * Creates a DSLink provider. The provider will automatically connect
+     * and block.
+     *
+     * @param name Name of the link, prepended in the DsId.
+     * @param args Arguments to parse
+     * @param handler DSLink handler
+     */
+    public static void startRequester(String name,
+                                        String[] args,
+                                        DSLinkHandler handler) {
+        DSLinkProvider provider = generateRequester(name, args, handler);
+        if (provider != null) {
+            provider.start();
+            provider.sleep();
+        }
+    }
+
+    /**
+     * Creates a DSLink provider based on the arguments passed into main. The
+     * link handler does not need to set the keys or the authentication
+     * endpoint.
+     *
+     * @param name Name of the link, prepended in the DsId.
+     * @param args Arguments to parse
+     * @param handler DSLink handler
+     * @return A link provider or null if the args have a help parameter
+     *         passed in.
+     */
+    @SuppressWarnings("ConstantConditions")
+    public static DSLinkProvider generateRequester(String name,
+                                                    String[] args,
+                                                    DSLinkHandler handler) {
+        Configuration defaults = new Configuration();
+        defaults.setDsId(name);
+        defaults.setConnectionType(ConnectionType.WEB_SOCKET);
+        defaults.setRequester(true);
+
+        Arguments parsed = Arguments.parse(args);
+        if (parsed == null) {
+            return null;
+        }
+
+        LogLevel.setLevel(parsed.getLogLevel());
+        defaults.setAuthEndpoint(parsed.getBrokerHost());
+
+        Path loc = Paths.get(parsed.getKeyPath());
+        defaults.setKeys(LocalKeys.getFromFileSystem(loc));
+
+        handler.setConfig(defaults);
+        return generate(handler);
+    }
 
     /**
      * Generates a DSLink that provides a fully managed state automatically
@@ -29,7 +87,7 @@ public class DSLinkFactory {
         if (handler == null)
             throw new NullPointerException("handler");
         else if ((config = handler.getConfig()) == null)
-            throw new NullPointerException("handler configuration");
+            throw new NullPointerException("handler configuration not set");
 
         LocalKeys keys = config.getKeys();
         if (keys == null) {

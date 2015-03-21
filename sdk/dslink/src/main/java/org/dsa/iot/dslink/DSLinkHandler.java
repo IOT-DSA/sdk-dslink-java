@@ -15,14 +15,14 @@ import org.dsa.iot.dslink.util.Configuration;
  */
 public abstract class DSLinkHandler {
 
-    private final Configuration configuration;
+    private Configuration configuration;
 
     /**
-     * Sets up a listener for the DSLink.
+     * Sets the configuration of the handler.
      *
      * @param configuration Configuration of the link
      */
-    public DSLinkHandler(Configuration configuration) {
+    public void setConfig(Configuration configuration) {
         if (configuration == null)
             throw new NullPointerException("configuration");
         this.configuration = configuration;

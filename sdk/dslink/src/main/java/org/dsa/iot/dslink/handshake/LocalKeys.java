@@ -11,13 +11,18 @@ import org.bouncycastle.jcajce.provider.asymmetric.ec.KeyPairGeneratorSpi;
 import org.bouncycastle.jcajce.provider.config.ProviderConfiguration;
 import org.bouncycastle.jcajce.provider.digest.SHA256;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.jce.spec.ECNamedCurveSpec;
 import org.bouncycastle.math.ec.ECCurve;
 import org.bouncycastle.math.ec.ECPoint;
 import org.dsa.iot.dslink.util.UrlBase64;
 
+import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.KeyPair;
 import java.security.spec.ECGenParameterSpec;
+import java.security.spec.ECParameterSpec;
 import java.util.Arrays;
 
 /**
@@ -148,6 +153,30 @@ public class LocalKeys {
     }
 
     /**
+     * Retrieves and deserializes local keys from the file system. If the file
+     * doesn't exist then keys will be generated and stored at the designated
+     * path.
+     *
+     * @param path Path of the keys
+     * @return Keys
+     */
+    public static LocalKeys getFromFileSystem(Path path) {
+        try {
+            if (!Files.exists(path)) {
+                LocalKeys generated = generate();
+                Files.write(path, generated.serialize().getBytes("UTF-8"));
+                return generated;
+            } else {
+                byte[] bytes = Files.readAllBytes(path);
+                String serialized = new String(bytes, "UTF-8");
+                return deserialize(serialized);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
      * Generates a key pair as necessary to perform a handshake.
      *
      * @return Generated keys
@@ -187,16 +216,17 @@ public class LocalKeys {
         ECDomainParameters params = getParams();
         ProviderConfiguration conf = BouncyCastleProvider.CONFIGURATION;
 
-        // Decode D
-        BigInteger D = new BigInteger(UrlBase64.decode(split[0]));
-        ECPrivateKeyParameters privParams = new ECPrivateKeyParameters(D, params);
-        BCECPrivateKey privKey = new BCECPrivateKey(EC_CURVE, privParams, conf);
-
         // Decode Q
         byte[] decodedQ = UrlBase64.decode(split[1]);
         ECPoint point = params.getCurve().decodePoint(decodedQ);
         ECPublicKeyParameters pubParams = new ECPublicKeyParameters(point, params);
         BCECPublicKey pubKey = new BCECPublicKey(EC_CURVE, pubParams, conf);
+
+        // Decode D
+        BigInteger D = new BigInteger(UrlBase64.decode(split[0]));
+        ECPrivateKeyParameters privParams = new ECPrivateKeyParameters(D, params);
+        ECParameterSpec spec = getParamSpec();
+        BCECPrivateKey privKey = new BCECPrivateKey(EC_CURVE, privParams, pubKey, spec, conf);
 
         return new LocalKeys(privKey, pubKey);
     }
@@ -214,5 +244,20 @@ public class LocalKeys {
         BigInteger h = ecp.getH();
         byte[] s = ecp.getSeed();
         return new ECDomainParameters(curve, g, n, h, s);
+    }
+
+    /**
+     * Gets the parameter spec of the algorithm.
+     *
+     * @return Parameter spec
+     */
+    private static ECParameterSpec getParamSpec() {
+        ECDomainParameters params = getParams();
+        ECCurve curve = params.getCurve();
+        ECPoint g = params.getG();
+        BigInteger n = params.getN();
+        BigInteger h = params.getH();
+        byte[] s = params.getSeed();
+        return new ECNamedCurveSpec(EC_CURVE, curve, g, n, h, s);
     }
 }

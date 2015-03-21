@@ -1,18 +1,12 @@
 package org.dsa.iot.requester;
 
-import ch.qos.logback.classic.Level;
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.DSLinkFactory;
 import org.dsa.iot.dslink.DSLinkHandler;
-import org.dsa.iot.dslink.DSLinkProvider;
-import org.dsa.iot.dslink.connection.ConnectionType;
-import org.dsa.iot.dslink.handshake.LocalKeys;
 import org.dsa.iot.dslink.methods.requests.ListRequest;
 import org.dsa.iot.dslink.methods.responses.ListResponse;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.value.Value;
-import org.dsa.iot.dslink.util.Configuration;
-import org.dsa.iot.dslink.util.LogLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,10 +21,6 @@ public class Main extends DSLinkHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
     private DSLink link;
-
-    public Main(Configuration configuration) {
-        super(configuration);
-    }
 
     @Override
     public synchronized void onRequesterConnected(DSLink link) {
@@ -82,17 +72,6 @@ public class Main extends DSLinkHandler {
     }
 
     public static void main(String[] args) {
-        LogLevel.setLevel(Level.INFO);
-        Configuration config = new Configuration();
-        config.setDsId("requester");
-        config.setKeys(LocalKeys.generate());
-        config.setConnectionType(ConnectionType.WEB_SOCKET);
-        config.setAuthEndpoint("http://localhost:8080/conn");
-        config.setRequester(true);
-
-        Main main = new Main(config);
-        DSLinkProvider link = DSLinkFactory.generate(main);
-        link.start();
-        link.sleep();
+        DSLinkFactory.startRequester("requester", args, new Main());
     }
 }

@@ -11,6 +11,31 @@ import org.slf4j.LoggerFactory;
  */
 public class LogLevel {
 
+    public static void setLevel(String level) {
+        if (level == null)
+            throw new NullPointerException("level");
+        level = level.toLowerCase();
+        switch (level) {
+            case "none":
+                setLevel(Level.OFF);
+                break;
+            case "error":
+                setLevel(Level.ERROR);
+                break;
+            case "warn":
+                setLevel(Level.WARN);
+                break;
+            case "info":
+                setLevel(Level.INFO);
+                break;
+            case "debug":
+                setLevel(Level.DEBUG);
+                break;
+            default:
+                throw new RuntimeException("Unknown log level: " + level);
+        }
+    }
+
     /**
      * Sets the global logging level
      *
