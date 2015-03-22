@@ -64,7 +64,11 @@ public class Requester extends Linkable {
         link.getClient().write(top);
     }
 
-    @Override
+    /**
+     * Handles incoming responses.
+     *
+     * @param in Incoming response.
+     */
     public void parse(JsonObject in) {
         DSLink link = getDSLink();
         if (link == null) {

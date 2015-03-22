@@ -4,6 +4,8 @@ import org.dsa.iot.dslink.DSLinkHandler;
 import org.vertx.java.core.json.JsonObject;
 
 /**
+ * Handles incoming requests and outgoing responses.
+ *
  * @author Samuel Grenier
  */
 public class Responder extends Linkable {
@@ -12,8 +14,13 @@ public class Responder extends Linkable {
         super(handler);
     }
 
-    @Override
-    public void parse(JsonObject in) {
+    /**
+     * Handles incoming requests
+     *
+     * @param in Incoming request
+     * @return Outgoing response
+     */
+    public JsonObject parse(JsonObject in) {
         throw new UnsupportedOperationException();
     }
 

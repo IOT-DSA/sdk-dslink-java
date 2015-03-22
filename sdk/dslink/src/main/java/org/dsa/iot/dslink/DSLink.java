@@ -4,9 +4,13 @@ import org.dsa.iot.dslink.connection.NetworkClient;
 import org.dsa.iot.dslink.link.Requester;
 import org.dsa.iot.dslink.link.Responder;
 import org.dsa.iot.dslink.node.NodeManager;
+import org.dsa.iot.dslink.util.StreamState;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
+
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 /**
  * @author Samuel Grenier
@@ -81,10 +85,34 @@ public class DSLink {
             client.setRequestDataHandler(new Handler<JsonArray>() {
                 @Override
                 public void handle(JsonArray event) {
+                    JsonArray responses = new JsonArray();
                     for (Object object : event) {
                         JsonObject json = (JsonObject) object;
-                        responder.parse(json);
+                        try {
+                            JsonObject resp = responder.parse(json);
+                            responses.addObject(resp);
+                        } catch (Exception e) {
+                            JsonObject resp = new JsonObject();
+                            Integer rid = json.getInteger("rid");
+                            if (rid != null) {
+                                resp.putNumber("rid", rid);
+                            }
+                            resp.putString("stream", StreamState.CLOSED.getJsonName());
+
+                            JsonObject err = new JsonObject();
+                            resp.putString("msg", e.getMessage());
+                            { // Build stack trace
+                                StringWriter writer = new StringWriter();
+                                e.printStackTrace(new PrintWriter(writer));
+                                resp.putString("detail", writer.toString());
+                            }
+                            resp.putObject("error", err);
+                        }
                     }
+
+                    JsonObject top = new JsonObject();
+                    top.putArray("responses", responses);
+                    client.write(top);
                 }
             });
         }
