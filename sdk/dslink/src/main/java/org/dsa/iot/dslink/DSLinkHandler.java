@@ -1,5 +1,6 @@
 package org.dsa.iot.dslink;
 
+import org.dsa.iot.dslink.node.actions.ActionRegistry;
 import org.dsa.iot.dslink.util.Configuration;
 
 /**
@@ -13,6 +14,7 @@ import org.dsa.iot.dslink.util.Configuration;
  */
 public abstract class DSLinkHandler {
 
+    private final ActionRegistry registry = new ActionRegistry();
     private Configuration configuration;
 
     /**
@@ -31,6 +33,30 @@ public abstract class DSLinkHandler {
      */
     public Configuration getConfig() {
         return configuration;
+    }
+
+    /**
+     * @return Shared action registry on all links.
+     */
+    public ActionRegistry getActionRegistry() {
+        return registry;
+    }
+
+    /**
+     * Pre initializes the handler. If this link is a responder any actions
+     * must be populated here.
+     */
+    public void preInit() {
+    }
+
+    /**
+     * Initializes the link after it connects. The link can then have any
+     * nodes populated and its actions set.
+     *
+     * @param link Link to initialize
+     */
+    @SuppressWarnings("UnusedParameters")
+    public void init(DSLink link) {
     }
 
     /**

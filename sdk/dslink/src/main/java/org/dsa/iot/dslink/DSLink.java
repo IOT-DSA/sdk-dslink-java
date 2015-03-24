@@ -20,7 +20,7 @@ import java.io.StringWriter;
 public class DSLink {
 
     private final SubscriptionManager manager = new SubscriptionManager(this);
-    private final ActionRegistry registry = new ActionRegistry();
+    private final ActionRegistry registry;
     private final NodeManager nodeManager;
     private final Requester requester;
     private final Responder responder;
@@ -29,12 +29,15 @@ public class DSLink {
     /**
      * @param handler DSLink handler
      * @param client Initialized client endpoint
+     * @param registry Action registry to use in the link
      */
     protected DSLink(DSLinkHandler handler,
-                     NetworkClient client) {
+                     NetworkClient client,
+                     ActionRegistry registry) {
         if (client == null)
             throw new NullPointerException("client");
         this.client = client;
+        this.registry = registry;
 
         if (client.isRequester()) {
             requester = new Requester(handler);

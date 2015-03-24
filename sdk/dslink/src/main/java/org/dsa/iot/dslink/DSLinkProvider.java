@@ -3,6 +3,8 @@ package org.dsa.iot.dslink;
 import org.dsa.iot.dslink.connection.Endpoint;
 import org.dsa.iot.dslink.connection.NetworkClient;
 import org.dsa.iot.dslink.connection.RemoteEndpoint;
+import org.dsa.iot.dslink.node.actions.Action;
+import org.dsa.iot.dslink.node.actions.ActionRegistry;
 import org.vertx.java.core.Handler;
 
 /**
@@ -21,6 +23,7 @@ public class DSLinkProvider {
             throw new NullPointerException("handler");
         this.endpoint = endpoint;
         this.handler = handler;
+        handler.preInit();
     }
 
     /**
@@ -33,14 +36,20 @@ public class DSLinkProvider {
         endpoint.setClientConnectedHandler(new Handler<NetworkClient>() {
             @Override
             public synchronized void handle(NetworkClient event) {
+                DSLink link = null;
                 if (event.isRequester()) {
-                    DSLink link = new DSLink(handler, event);
+                    ActionRegistry registry = new ActionRegistry();
+                    link = new DSLink(handler, event, registry);
                     link.setDefaultDataHandlers();
                     handler.onRequesterConnected(link);
                 } else if (event.isResponder()) {
-                    DSLink link = new DSLink(handler, event);
+                    ActionRegistry registry = handler.getActionRegistry();
+                    link = new DSLink(handler, event, registry);
                     link.setDefaultDataHandlers();
                     handler.onResponderConnected(link);
+                }
+                if (link != null) {
+                    handler.init(link);
                 }
             }
         });
