@@ -14,7 +14,7 @@ import java.util.*;
  */
 public class Node {
 
-    private static final String[] BANNED_CHARS = new String[]{
+    private static final String[] BANNED_CHARS = new String[] {
             ".", "/", "\\", "?", "%", "*", ":", "|", "<", ">", "$", "@"
     };
 
@@ -38,12 +38,10 @@ public class Node {
      * Constructs a node object.
      *
      * @param name   Name of the node
-     * @param profile Profile of the node
      * @param parent Parent of this node
      * @param manager Subscription manager to post updates to
      */
-    public Node(String name, String profile,
-                Node parent, SubscriptionManager manager) {
+    public Node(String name, Node parent, SubscriptionManager manager) {
         this.parent = new WeakReference<>(parent);
         this.manager = manager;
         if (parent != null) {
@@ -208,7 +206,8 @@ public class Node {
             return children.get(name);
         }
 
-        Node node = new Node(name, profile, this, manager);
+        Node node = new Node(name, this, manager);
+        node.setProfile(profile);
         children.put(name, node);
         if (manager != null) {
             manager.postChildUpdate(this, node, false);

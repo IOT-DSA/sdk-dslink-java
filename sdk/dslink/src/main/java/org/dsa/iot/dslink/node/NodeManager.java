@@ -18,7 +18,8 @@ public class NodeManager {
     private final String defaultProfile;
 
     public NodeManager(SubscriptionManager manager, String defaultProfile) {
-        this.superRoot = new Node(null, defaultProfile, null, manager);
+        this.superRoot = new Node(null, null, manager);
+        superRoot.setProfile(defaultProfile);
         this.defaultProfile = defaultProfile;
     }
 
