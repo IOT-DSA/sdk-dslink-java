@@ -15,10 +15,10 @@ public interface Request {
     String getName();
 
     /**
-     * Add the json values of the specified request to the JSON so it can be
-     * sent to a remote endpoint.
+     * Add the JSON request values of the specified request to the JSON to
+     * send to the responder.
      *
-     * @param out Values to add to
+     * @param out Values to add to.
      */
     void addJsonValues(JsonObject out);
 }

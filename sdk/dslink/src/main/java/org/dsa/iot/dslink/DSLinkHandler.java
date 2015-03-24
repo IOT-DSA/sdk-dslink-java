@@ -1,7 +1,7 @@
 package org.dsa.iot.dslink;
 
-import org.dsa.iot.dslink.methods.requests.ListRequest;
-import org.dsa.iot.dslink.methods.responses.ListResponse;
+import org.dsa.iot.dslink.methods.requests.*;
+import org.dsa.iot.dslink.methods.responses.*;
 import org.dsa.iot.dslink.util.Configuration;
 
 /**
@@ -58,5 +58,60 @@ public abstract class DSLinkHandler {
      * @param response Received response from the endpoint.
      */
     public void onListResponse(ListRequest request, ListResponse response) {
+    }
+
+    /**
+     * Handles an incoming set response.
+     *
+     * @param request Original sent request.
+     * @param response Received response from the endpoint.
+     */
+    public void onSetResponse(SetRequest request, SetResponse response) {
+    }
+
+    /**
+     * Handles an incoming reomve response.
+     *
+     * @param request Original sent request.
+     * @param response Received response from the endpoint.
+     */
+    public void onRemoveResponse(RemoveRequest request, RemoveResponse response) {
+    }
+
+    /**
+     * Handles an incoming close response. {@link CloseResponse#response} will
+     * be {@code null} as the original open request is not tracked.
+     *
+     * @param request Original sent request.
+     * @param response Received response from the endpoint.
+     */
+    public void onCloseResponse(CloseRequest request, CloseResponse response) {
+    }
+
+    /**
+     * Handles an incoming subscribe response.
+     *
+     * @param request Original sent request.
+     * @param response Received response from the endpoint.
+     */
+    public void onSubscribeResponse(SubscribeRequest request, SubscribeResponse response) {
+    }
+
+    /**
+     * Handles an incoming subscribe response.
+     *
+     * @param request Original sent request.
+     * @param response Received response from the endpoint.
+     */
+    public void onUnsubscribeResponse(UnsubscribeRequest request, UnsubscribeResponse response) {
+    }
+
+    /**
+     * Handles an incoming invoke response.
+     *
+     * @param request Original sent request.
+     * @param response Received response from the endpoint.
+     */
+    public void onInvokeResponse(InvokeRequest request, InvokeResponse response) {
     }
 }

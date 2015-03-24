@@ -17,15 +17,14 @@ public class NodeManagerTest {
      */
     @Test
     public void nodeAdditions() {
-        NodeManager manager = new NodeManager();
-        manager.createRootNode("A");
+        NodeManager manager = new NodeManager(null, "node");
+        manager.createRootNode("A", "node");
 
         Assert.assertNotNull(manager.getNode("A"));
         Assert.assertNotNull(manager.getNode("/A"));
         Assert.assertNotNull(manager.getNode("/A/"));
-        Assert.assertNotNull(manager.getNode("/A//"));
 
-        manager.createRootNode("A").createChild("B");
+        manager.createRootNode("A", "node").createChild("B", "node");
         Assert.assertNotNull(manager.getNode("/A/B"));
     }
 
@@ -34,15 +33,21 @@ public class NodeManagerTest {
      */
     @Test(expected = NoSuchPathException.class)
     public void nodeRemovals() {
-        NodeManager manager = new NodeManager();
-        manager.createRootNode("A");
-        manager.getNode("/").removeChild("A");
+        NodeManager manager = new NodeManager(null, "node");
+        manager.createRootNode("A", "node");
+        manager.getNode("/").getNode().removeChild("A");
         manager.getNode("/A");
     }
 
     @Test(expected = NullPointerException.class)
     public void nullPath() {
-        NodeManager manager = new NodeManager();
+        NodeManager manager = new NodeManager(null, "node");
         manager.getNode(null);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void badPath() {
+        NodeManager manager = new NodeManager(null, "node");
+        manager.getNode("/A//");
     }
 }

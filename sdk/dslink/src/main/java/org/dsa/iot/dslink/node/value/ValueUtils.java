@@ -13,6 +13,35 @@ public class ValueUtils {
     private static final String ERROR_MSG = "Unhandled value type: ";
 
     /**
+     * Converts a string type to a value type with a null underlying
+     * value.
+     *
+     * @param type Type to set on the value
+     * @return Type to value
+     */
+    public static Value fromType(String type) {
+        if (type == null) {
+            throw new NullPointerException("type");
+        }
+
+        ValueType switchType = ValueType.toEnum(type);
+        switch (switchType) {
+            case BOOL:
+                return new Value((Boolean) null);
+            case NUMBER:
+                return new Value((Number) null);
+            case STRING:
+                return new Value((String) null);
+            case MAP:
+                return new Value((JsonObject) null);
+            case ARRAY:
+                return new Value((JsonArray) null);
+            default:
+                throw new RuntimeException(ERROR_MSG + switchType);
+        }
+    }
+
+    /**
      * @param object Object to convert
      * @return Converted object instance
      */
@@ -54,6 +83,12 @@ public class ValueUtils {
                 break;
             case STRING:
                 array.addString(value.getString());
+                break;
+            case MAP:
+                array.addObject(value.getMap());
+                break;
+            case ARRAY:
+                array.addArray(value.getArray());
                 break;
             default:
                 throw new RuntimeException(ERROR_MSG + value.getType());

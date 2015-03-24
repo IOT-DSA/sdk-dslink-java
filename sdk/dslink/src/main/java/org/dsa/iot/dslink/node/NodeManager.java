@@ -1,6 +1,8 @@
 package org.dsa.iot.dslink.node;
 
 import org.dsa.iot.dslink.node.exceptions.NoSuchPathException;
+import org.dsa.iot.dslink.util.NodePair;
+import org.dsa.iot.dslink.util.StringUtils;
 
 import java.util.Map;
 
@@ -13,50 +15,57 @@ public class NodeManager {
 
     // Fake root to provide a listing on "/"
     private final Node superRoot;
+    private final String defaultProfile;
 
-    public NodeManager() {
-        this.superRoot = new Node(null, null);
+    public NodeManager(SubscriptionManager manager, String defaultProfile) {
+        this.superRoot = new Node(null, defaultProfile, null, manager);
+        this.defaultProfile = defaultProfile;
     }
 
-    public Node createRootNode(String name) {
-        return superRoot.createChild(name);
+    public Node createRootNode(String name, String profile) {
+        return superRoot.createChild(name, profile);
     }
 
     public Map<String, Node> getChildren(String path) {
-        Node child = getNode(path);
+        Node child = getNode(path).getNode();
         if (child == null)
             throw new NoSuchPathException(path);
         return child.getChildren();
     }
 
-    public Node getNode(String path) {
+    public NodePair getNode(String path) {
         return getNode(path, false);
     }
 
-    public Node getNode(String path, boolean create) {
+    public NodePair getNode(String path, boolean create) {
         if (path == null)
             throw new NullPointerException("path");
         else if ("/".equals(path))
-            return superRoot;
+            return new NodePair(superRoot, null);
         String[] parts = splitPath(path);
+        if (parts.length == 1 && StringUtils.isReference(parts[0])) {
+            return new NodePair(superRoot, parts[0]);
+        }
         Node current = superRoot.getChild(parts[0]);
         if (create && current == null) {
-            current = superRoot.createChild(Node.checkName(parts[0]));
+            current = superRoot.createChild(Node.checkName(parts[0]), defaultProfile);
         }
         for (int i = 1; i < parts.length; i++) {
             if (current == null) {
                 break;
+            } else if (i + 1 == parts.length && StringUtils.isReference(parts[i])) {
+                return new NodePair(current, parts[i]);
             } else {
                 Node temp = current.getChild(parts[i]);
                 if (create && temp == null) {
-                    temp = current.createChild(Node.checkName(parts[i]));
+                    temp = current.createChild(Node.checkName(parts[i]), defaultProfile);
                 }
                 current = temp;
             }
         }
         if (current == null)
             throw new NoSuchPathException(path);
-        return current;
+        return new NodePair(current, null);
     }
 
     public static String[] splitPath(String path) {
@@ -69,7 +78,9 @@ public class NodeManager {
 
     public static String normalizePath(String path, boolean leading) {
         if (path == null || path.isEmpty())
-            throw new IllegalArgumentException("path");
+            throw new IllegalArgumentException("path null or empty");
+        else if (path.contains("//"))
+            throw new IllegalArgumentException("path contains //");
         else if ("/".equals(path))
             return path;
 

@@ -71,6 +71,13 @@ public class Action {
     }
 
     /**
+     * @return Permission level of this action.
+     */
+    public Permission getPermission() {
+        return permission;
+    }
+
+    /**
      * Converts the action to JSON and adds it to the designated JSON object.
      *
      * @param obj Object to alternate.
@@ -83,6 +90,13 @@ public class Action {
     }
 
     /**
+     * @return The columns of the action
+     */
+    public JsonArray getColumns() {
+        return paramsToJson(results);
+    }
+
+    /**
      * Converts all the parameters to JSON consumable format.
      *
      * @param p List of parameters
@@ -90,11 +104,13 @@ public class Action {
      */
     private JsonArray paramsToJson(List<Parameter> p) {
         JsonArray array = new JsonArray();
-        for (Parameter param : p) {
-            JsonObject obj = new JsonObject();
-            obj.putString("name", param.getName());
-            obj.putString("type", param.getType().toJsonString());
-            array.add(obj);
+        if (p != null) {
+            for (Parameter param : p) {
+                JsonObject obj = new JsonObject();
+                obj.putString("name", param.getName());
+                obj.putString("type", param.getType().toJsonString());
+                array.add(obj);
+            }
         }
         return array;
     }
