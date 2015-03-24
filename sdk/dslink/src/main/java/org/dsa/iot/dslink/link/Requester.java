@@ -10,6 +10,7 @@ import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.SubscriptionManager;
 import org.dsa.iot.dslink.util.NodePair;
 import org.dsa.iot.dslink.util.StreamState;
+import org.dsa.iot.dslink.util.SubscriptionValue;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
@@ -40,7 +41,17 @@ public class Requester extends Linkable {
     /**
      * Mapping of path->sid
      */
-    private final Map<String, Integer> subs = new ConcurrentHashMap<>();
+    private final Map<String, Integer> subPaths = new ConcurrentHashMap<>();
+
+    /**
+     * Mapping of sid->path
+     */
+    private final Map<Integer, String> subSids = new ConcurrentHashMap<>();
+
+    /**
+     * Mapping of sid->handler
+     */
+    private final Map<Integer, Handler<SubscriptionValue>> subUpdates = new ConcurrentHashMap<>();
 
     /**
      * Constructs a requester
@@ -52,7 +63,19 @@ public class Requester extends Linkable {
         reqs = new ConcurrentHashMap<>();
     }
 
-    public void subscribe(Set<String> paths, Handler<SubscribeResponse> onResponse) {
+    public Map<String, Integer> getSubscriptionPaths() {
+        return Collections.unmodifiableMap(subPaths);
+    }
+
+    public Map<Integer, String> getSubscriptionIDs() {
+        return Collections.unmodifiableMap(subSids);
+    }
+
+    public Map<Integer, Handler<SubscriptionValue>> getSubscriptionHandlers() {
+        return Collections.unmodifiableMap(subUpdates);
+    }
+
+    public void subscribe(Set<String> paths, Handler<SubscriptionValue> onUpdate) {
         if (paths == null) {
             throw new NullPointerException("paths");
         }
@@ -62,13 +85,21 @@ public class Requester extends Linkable {
         Iterator<String> it = paths.iterator();
         while (min < max) {
             String path = NodeManager.normalizePath(it.next(), true);
-            subs.put(path, min++);
+            subs.put(path, min);
+            Integer prev = subPaths.put(path, min);
+            if (prev != null) {
+                String err = "Path " + path + " already subscribed";
+                throw new RuntimeException(err);
+            }
+            subSids.put(min, path);
+            if (onUpdate != null) {
+                subUpdates.put(min, onUpdate);
+            }
+            min++;
         }
         SubscribeRequest req = new SubscribeRequest(subs);
-        this.subs.putAll(subs);
 
         RequestWrapper wrapper = new RequestWrapper(req);
-        wrapper.setSubHandler(onResponse);
         sendRequest(wrapper, currentReqID.incrementAndGet());
     }
 
@@ -79,9 +110,11 @@ public class Requester extends Linkable {
         List<Integer> subs = new ArrayList<>();
         for (String path : paths) {
             path = NodeManager.normalizePath(path, true);
-            Integer sid = this.subs.remove(path);
+            Integer sid = subPaths.remove(path);
             if (sid != null) {
                 subs.add(sid);
+                subSids.remove(sid);
+                subUpdates.remove(sid);
             }
         }
         UnsubscribeRequest req = new UnsubscribeRequest(subs);
@@ -194,11 +227,16 @@ public class Requester extends Linkable {
         if (link == null) {
             return;
         }
-        Integer rid = in.getInteger("rid");
+        int rid = in.getInteger("rid");
+        NodeManager manager = link.getNodeManager();
+        if (rid == 0) {
+            SubscriptionUpdate update = new SubscriptionUpdate(this);
+            update.populate(in);
+            return;
+        }
         RequestWrapper wrapper = reqs.get(rid);
         Request request = wrapper.getRequest();
         String method = request.getName();
-        NodeManager manager = link.getNodeManager();
 
         final String stream = in.getString("stream");
         boolean closed = StreamState.CLOSED.getJsonName().equals(stream);
@@ -242,9 +280,6 @@ public class Requester extends Linkable {
             case "subscribe":
                 SubscribeResponse subResp = new SubscribeResponse(rid, link);
                 subResp.populate(in);
-                if (wrapper.getSubHandler() != null) {
-                    wrapper.getSubHandler().handle(subResp);
-                }
                 break;
             case "unsubscribe":
                 UnsubscribeResponse unsubResp = new UnsubscribeResponse(rid, link);
@@ -280,7 +315,6 @@ public class Requester extends Linkable {
         private Handler<ListResponse> listHandler;
         private Handler<RemoveResponse> removeHandler;
         private Handler<SetResponse> setHandler;
-        private Handler<SubscribeResponse> subHandler;
         private Handler<UnsubscribeResponse> unsubHandler;
 
         public RequestWrapper(Request request) {
@@ -329,14 +363,6 @@ public class Requester extends Linkable {
 
         public void setSetHandler(Handler<SetResponse> setHandler) {
             this.setHandler = setHandler;
-        }
-
-        public Handler<SubscribeResponse> getSubHandler() {
-            return subHandler;
-        }
-
-        public void setSubHandler(Handler<SubscribeResponse> subHandler) {
-            this.subHandler = subHandler;
         }
 
         public Handler<UnsubscribeResponse> getUnsubHandler() {
