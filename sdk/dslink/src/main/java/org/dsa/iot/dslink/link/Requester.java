@@ -94,11 +94,47 @@ public class Requester extends Linkable {
     }
 
     /**
+     * Sends an invocation request.
+     *
+     * @param request Invocation request.
+     */
+    public void invoke(InvokeRequest request) {
+        sendRequest(request);
+    }
+
+    /**
+     * Sends a list request.
+     *
+     * @param request List request.
+     */
+    public void list(ListRequest request) {
+        sendRequest(request);
+    }
+
+    /**
+     * Sends a set request.
+     *
+     * @param request Set request.
+     */
+    public void set(SetRequest request) {
+        sendRequest(request);
+    }
+
+    /**
+     * Sends a remove request.
+     *
+     * @param request Remove request.
+     */
+    public void remove(RemoveRequest request) {
+        sendRequest(request);
+    }
+
+    /**
      * Sends a request to the client.
      *
      * @param request Request to send to the client
      */
-    public void sendRequest(Request request) {
+    private void sendRequest(Request request) {
         int rid = currentReqID.incrementAndGet();
         sendRequest(request, rid);
     }
@@ -143,6 +179,10 @@ public class Requester extends Linkable {
         Request request = reqs.get(rid);
         String method = request.getName();
         NodeManager manager = link.getNodeManager();
+
+        final String stream = in.getString("stream");
+        boolean closed = StreamState.CLOSED.getJsonName().equals(stream);
+
         switch (method) {
             case "list":
                 ListRequest listRequest = (ListRequest) request;
@@ -195,8 +235,7 @@ public class Requester extends Linkable {
                 throw new RuntimeException("Unsupported method: " + method);
         }
 
-        String streamState = in.getString("stream");
-        if (StreamState.CLOSED.getJsonName().equals(streamState)) {
+        if (closed) {
             reqs.remove(rid);
         }
     }

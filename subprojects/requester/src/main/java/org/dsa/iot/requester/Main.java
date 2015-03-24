@@ -28,7 +28,7 @@ public class Main extends DSLinkHandler {
         LOGGER.info("--------------");
         LOGGER.info("Connected!");
         ListRequest request = new ListRequest("/");
-        link.getRequester().sendRequest(request);
+        link.getRequester().list(request);
         LOGGER.info("Sent data");
     }
 
@@ -52,7 +52,7 @@ public class Main extends DSLinkHandler {
                 printValueMap(child.getConfigurations(), "Configuration", true);
 
                 ListRequest newReq = new ListRequest(child.getPath());
-                link.getRequester().sendRequest(newReq);
+                link.getRequester().list(newReq);
             }
         }
     }
