@@ -1,3 +1,7 @@
+apply plugin: 'application'
+
+mainClassName = 'org.dsa.iot.requester.Main'
+
 dependencies {
     compile project(':sdk/dslink')
 }

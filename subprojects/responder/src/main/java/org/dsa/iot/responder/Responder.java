@@ -1,4 +1,4 @@
-package org.dsa.iot;
+package org.dsa.iot.responder;
 
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.DSLinkFactory;
