@@ -1,5 +1,6 @@
 package org.dsa.iot.dslink.node;
 
+import org.dsa.iot.dslink.link.Linkable;
 import org.dsa.iot.dslink.node.exceptions.NoSuchPathException;
 import org.dsa.iot.dslink.util.NodePair;
 import org.dsa.iot.dslink.util.StringUtils;
@@ -17,8 +18,8 @@ public class NodeManager {
     private final Node superRoot;
     private final String defaultProfile;
 
-    public NodeManager(SubscriptionManager manager, String defaultProfile) {
-        this.superRoot = new Node(null, null, manager);
+    public NodeManager(Linkable link, String defaultProfile) {
+        this.superRoot = new Node(null, null, link);
         superRoot.setProfile(defaultProfile);
         this.defaultProfile = defaultProfile;
     }

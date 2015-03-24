@@ -1,5 +1,6 @@
 package org.dsa.iot.dslink.node;
 
+import org.dsa.iot.dslink.link.Linkable;
 import org.dsa.iot.dslink.node.actions.Action;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.util.StringUtils;
@@ -19,7 +20,7 @@ public class Node {
     };
 
     private final WeakReference<Node> parent;
-    private final SubscriptionManager manager;
+    private final Linkable link;
     private final String path;
     private final String name;
 
@@ -39,11 +40,11 @@ public class Node {
      *
      * @param name   Name of the node
      * @param parent Parent of this node
-     * @param manager Subscription manager to post updates to
+     * @param link Linkable class the node is handled on
      */
-    public Node(String name, Node parent, SubscriptionManager manager) {
+    public Node(String name, Node parent, Linkable link) {
         this.parent = new WeakReference<>(parent);
-        this.manager = manager;
+        this.link = link;
         if (parent != null) {
             this.name = checkName(name);
             this.path = parent.getPath() + "/" + name;
@@ -206,7 +207,12 @@ public class Node {
             return children.get(name);
         }
 
-        Node node = new Node(name, this, manager);
+        SubscriptionManager manager = null;
+        if (link != null) {
+            manager = link.getSubscriptionManager();
+        }
+
+        Node node = new Node(name, this, link);
         node.setProfile(profile);
         children.put(name, node);
         if (manager != null) {
@@ -221,6 +227,10 @@ public class Node {
      */
     public synchronized Node removeChild(String name) {
         Node child = children != null ? children.remove(name) : null;
+        SubscriptionManager manager = null;
+        if (link != null) {
+            manager = link.getSubscriptionManager();
+        }
         if (child != null && manager != null) {
             manager.postChildUpdate(this, child, true);
             manager.removeValueSub(this);
@@ -331,11 +341,36 @@ public class Node {
     }
 
     /**
-     * Sets the action of the node
+     * Sets the action of the node.
      *
-     * @param action Action to set
+     * @param action Action to set. Use {@code null} to remove an action.
      */
-    public synchronized void setAction(Action action) {
+    public synchronized void setAction(String action) {
+        if (action == null) {
+            this.action = null;
+        } else {
+            if (link == null) {
+                throw new RuntimeException("link in node is null, use forceSetAction");
+            }
+            this.action = link.getActionRegistry().getAction(action);
+            if (this.action == null) {
+                throw new RuntimeException(action + " does not exist");
+            }
+        }
+    }
+
+    /**
+     * Forcibly sets an action on a node. Depending on the action registry
+     * configuration, this may not be deserialization safe. Caution is to be
+     * taken when using this method. If an action has the same name but
+     * different permission levels and the action is in the action registry,
+     * it will use the permission level defined in the registry and custom
+     * permission levels will be lost. It is highly recommended to use
+     * {@link #setAction(String)} whenever possible.
+     *
+     * @param action Forced action to set.
+     */
+    public synchronized void forceSetAction(Action action) {
         this.action = action;
     }
 

@@ -81,7 +81,7 @@ public class ListResponse implements Response {
                 node.setInterfaces((String) v);
             } else if ("invokable".equals(name)) {
                 Permission perm = Permission.toEnum((String) v);
-                node.setAction(new Action("", perm, new Handler<ActionResult>() {
+                node.forceSetAction(new Action("", perm, new Handler<ActionResult>() {
                     @Override
                     public void handle(ActionResult event) {
                         throw new UnsupportedOperationException();
@@ -134,7 +134,7 @@ public class ListResponse implements Response {
             String invokable = childData.getString("$invokable");
             if (invokable != null) {
                 Permission perm = Permission.toEnum(invokable);
-                child.setAction(new Action("", perm, new Handler<ActionResult>() {
+                child.forceSetAction(new Action("", perm, new Handler<ActionResult>() {
                     @Override
                     public void handle(ActionResult event) {
                         throw new UnsupportedOperationException();
