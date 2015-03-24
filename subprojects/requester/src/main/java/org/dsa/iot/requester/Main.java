@@ -24,7 +24,7 @@ public class Main extends DSLinkHandler {
     private DSLink link;
 
     @Override
-    public synchronized void onRequesterConnected(DSLink link) {
+    public void onRequesterConnected(DSLink link) {
         this.link = link;
         LOGGER.info("--------------");
         LOGGER.info("Connected!");
