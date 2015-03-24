@@ -10,6 +10,7 @@ import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.SubscriptionManager;
 import org.dsa.iot.dslink.util.NodePair;
 import org.dsa.iot.dslink.util.StreamState;
+import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
@@ -24,7 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class Requester extends Linkable {
 
-    private final Map<Integer, Request> reqs = new ConcurrentHashMap<>();
+    private final Map<Integer, RequestWrapper> reqs;
 
     /**
      * Current request ID to send to the client
@@ -48,9 +49,10 @@ public class Requester extends Linkable {
      */
     public Requester(DSLinkHandler handler) {
         super(handler);
+        reqs = new ConcurrentHashMap<>();
     }
 
-    public void subscribe(Set<String> paths) {
+    public void subscribe(Set<String> paths, Handler<SubscribeResponse> onResponse) {
         if (paths == null) {
             throw new NullPointerException("paths");
         }
@@ -64,10 +66,13 @@ public class Requester extends Linkable {
         }
         SubscribeRequest req = new SubscribeRequest(subs);
         this.subs.putAll(subs);
-        sendRequest(req, currentReqID.incrementAndGet());
+
+        RequestWrapper wrapper = new RequestWrapper(req);
+        wrapper.setSubHandler(onResponse);
+        sendRequest(wrapper, currentReqID.incrementAndGet());
     }
 
-    public void unsubscribe(Set<String> paths) {
+    public void unsubscribe(Set<String> paths, Handler<UnsubscribeResponse> onResponse) {
         if (paths == null) {
             throw new NullPointerException("paths");
         }
@@ -80,7 +85,9 @@ public class Requester extends Linkable {
             }
         }
         UnsubscribeRequest req = new UnsubscribeRequest(subs);
-        sendRequest(req, currentReqID.incrementAndGet());
+        RequestWrapper wrapper = new RequestWrapper(req);
+        wrapper.setUnsubHandler(onResponse);
+        sendRequest(wrapper, currentReqID.incrementAndGet());
     }
 
     /**
@@ -88,9 +95,11 @@ public class Requester extends Linkable {
      *
      * @param rid Stream to close.
      */
-    public void closeStream(int rid) {
+    public void closeStream(int rid, Handler<CloseResponse> onResponse) {
         CloseRequest req = new CloseRequest();
-        sendRequest(req, rid);
+        RequestWrapper wrapper = new RequestWrapper(req);
+        wrapper.setCloseHandler(onResponse);
+        sendRequest(wrapper, rid);
     }
 
     /**
@@ -98,8 +107,10 @@ public class Requester extends Linkable {
      *
      * @param request Invocation request.
      */
-    public void invoke(InvokeRequest request) {
-        sendRequest(request);
+    public void invoke(InvokeRequest request, Handler<InvokeResponse> onResponse) {
+        RequestWrapper wrapper = new RequestWrapper(request);
+        wrapper.setInvokeHandler(onResponse);
+        sendRequest(wrapper);
     }
 
     /**
@@ -107,8 +118,10 @@ public class Requester extends Linkable {
      *
      * @param request List request.
      */
-    public void list(ListRequest request) {
-        sendRequest(request);
+    public void list(ListRequest request, Handler<ListResponse> onResponse) {
+        RequestWrapper wrapper = new RequestWrapper(request);
+        wrapper.setListHandler(onResponse);
+        sendRequest(wrapper);
     }
 
     /**
@@ -116,49 +129,55 @@ public class Requester extends Linkable {
      *
      * @param request Set request.
      */
-    public void set(SetRequest request) {
-        sendRequest(request);
+    public void set(SetRequest request, Handler<SetResponse> onResponse) {
+        RequestWrapper wrapper = new RequestWrapper(request);
+        wrapper.setSetHandler(onResponse);
+        sendRequest(wrapper);
     }
 
     /**
      * Sends a remove request.
      *
      * @param request Remove request.
+     * @param onResponse Called when a response is received.
      */
-    public void remove(RemoveRequest request) {
-        sendRequest(request);
+    public void remove(RemoveRequest request, Handler<RemoveResponse> onResponse) {
+        RequestWrapper wrapper = new RequestWrapper(request);
+        wrapper.setRemoveHandler(onResponse);
+        sendRequest(wrapper);
     }
 
     /**
      * Sends a request to the client.
      *
-     * @param request Request to send to the client
+     * @param wrapper Request to send to the client.
      */
-    private void sendRequest(Request request) {
+    private void sendRequest(RequestWrapper wrapper) {
         int rid = currentReqID.incrementAndGet();
-        sendRequest(request, rid);
+        sendRequest(wrapper, rid);
     }
 
     /**
      * Sends a request to the client with a given request ID.
      *
-     * @param request Request to send to the client
+     * @param wrapper Request to send to the client
      * @param rid Request ID to use
      */
-    private void sendRequest(Request request, int rid) {
-        DSLink link = getDSLink();
+    private void sendRequest(RequestWrapper wrapper, int rid) {
+        final DSLink link = getDSLink();
         if (link == null) {
             return;
         }
+        Request request = wrapper.getRequest();
         JsonObject obj = new JsonObject();
         request.addJsonValues(obj);
         {
             obj.putNumber("rid", rid);
-            reqs.put(rid, request);
+            reqs.put(rid, wrapper);
         }
         obj.putString("method", request.getName());
 
-        JsonObject top = new JsonObject();
+        final JsonObject top = new JsonObject();
         JsonArray requests = new JsonArray();
         requests.addObject(obj);
         top.putArray("requests", requests);
@@ -176,7 +195,8 @@ public class Requester extends Linkable {
             return;
         }
         Integer rid = in.getInteger("rid");
-        Request request = reqs.get(rid);
+        RequestWrapper wrapper = reqs.get(rid);
+        Request request = wrapper.getRequest();
         String method = request.getName();
         NodeManager manager = link.getNodeManager();
 
@@ -190,46 +210,57 @@ public class Requester extends Linkable {
                 SubscriptionManager subs = link.getSubscriptionManager();
                 ListResponse resp = new ListResponse(link, subs, rid, node);
                 resp.populate(in);
-                getHandler().onListResponse(listRequest, resp);
+                if (wrapper.getListHandler() != null) {
+                    wrapper.getListHandler().handle(resp);
+                }
                 break;
             case "set":
                 SetRequest setRequest = (SetRequest) request;
                 NodePair pair = manager.getNode(setRequest.getPath(), true);
                 SetResponse setResponse = new SetResponse(rid, pair);
                 setResponse.populate(in);
-                getHandler().onSetResponse(setRequest, setResponse);
+                if (wrapper.getSetHandler() != null) {
+                    wrapper.getSetHandler().handle(setResponse);
+                }
                 break;
             case "remove":
                 RemoveRequest removeRequest = (RemoveRequest) request;
                 pair = manager.getNode(removeRequest.getPath(), true);
                 RemoveResponse removeResponse = new RemoveResponse(rid, pair);
                 removeResponse.populate(in);
-                getHandler().onRemoveResponse(removeRequest, removeResponse);
+                if (wrapper.getRemoveHandler() != null) {
+                    wrapper.getRemoveHandler().handle(removeResponse);
+                }
                 break;
             case "close":
-                CloseRequest closeRequest = (CloseRequest) request;
                 CloseResponse closeResponse = new CloseResponse(rid, null);
                 closeResponse.populate(in);
-                getHandler().onCloseResponse(closeRequest, closeResponse);
+                if (wrapper.getCloseHandler() != null) {
+                    wrapper.getCloseHandler().handle(closeResponse);
+                }
                 break;
             case "subscribe":
-                SubscribeRequest subReq = (SubscribeRequest) request;
                 SubscribeResponse subResp = new SubscribeResponse(rid, link);
                 subResp.populate(in);
-                getHandler().onSubscribeResponse(subReq, subResp);
+                if (wrapper.getSubHandler() != null) {
+                    wrapper.getSubHandler().handle(subResp);
+                }
                 break;
             case "unsubscribe":
-                UnsubscribeRequest unsubReq = (UnsubscribeRequest) request;
                 UnsubscribeResponse unsubResp = new UnsubscribeResponse(rid, link);
                 unsubResp.populate(in);
-                getHandler().onUnsubscribeResponse(unsubReq, unsubResp);
+                if (wrapper.getUnsubHandler() != null) {
+                    wrapper.getUnsubHandler().handle(unsubResp);
+                }
                 break;
             case "invoke":
                 InvokeRequest inReq = (InvokeRequest) request;
                 node = manager.getNode(inReq.getPath(), true).getNode();
                 InvokeResponse inResp = new InvokeResponse(rid, node);
                 inResp.populate(in);
-                getHandler().onInvokeResponse(inReq, inResp);
+                if (wrapper.getInvokeHandler() != null) {
+                    wrapper.getInvokeHandler().handle(inResp);
+                }
                 break;
             default:
                 throw new RuntimeException("Unsupported method: " + method);
@@ -237,6 +268,83 @@ public class Requester extends Linkable {
 
         if (closed) {
             reqs.remove(rid);
+        }
+    }
+
+    private static class RequestWrapper {
+
+        private final Request request;
+
+        private Handler<CloseResponse> closeHandler;
+        private Handler<InvokeResponse> invokeHandler;
+        private Handler<ListResponse> listHandler;
+        private Handler<RemoveResponse> removeHandler;
+        private Handler<SetResponse> setHandler;
+        private Handler<SubscribeResponse> subHandler;
+        private Handler<UnsubscribeResponse> unsubHandler;
+
+        public RequestWrapper(Request request) {
+            this.request = request;
+        }
+
+        public Request getRequest() {
+            return request;
+        }
+
+        public Handler<CloseResponse> getCloseHandler() {
+            return closeHandler;
+        }
+
+        public void setCloseHandler(Handler<CloseResponse> closeHandler) {
+            this.closeHandler = closeHandler;
+        }
+
+        public Handler<InvokeResponse> getInvokeHandler() {
+            return invokeHandler;
+        }
+
+        public void setInvokeHandler(Handler<InvokeResponse> invokeHandler) {
+            this.invokeHandler = invokeHandler;
+        }
+
+        public Handler<ListResponse> getListHandler() {
+            return listHandler;
+        }
+
+        public void setListHandler(Handler<ListResponse> listHandler) {
+            this.listHandler = listHandler;
+        }
+
+        public Handler<RemoveResponse> getRemoveHandler() {
+            return removeHandler;
+        }
+
+        public void setRemoveHandler(Handler<RemoveResponse> removeHandler) {
+            this.removeHandler = removeHandler;
+        }
+
+        public Handler<SetResponse> getSetHandler() {
+            return setHandler;
+        }
+
+        public void setSetHandler(Handler<SetResponse> setHandler) {
+            this.setHandler = setHandler;
+        }
+
+        public Handler<SubscribeResponse> getSubHandler() {
+            return subHandler;
+        }
+
+        public void setSubHandler(Handler<SubscribeResponse> subHandler) {
+            this.subHandler = subHandler;
+        }
+
+        public Handler<UnsubscribeResponse> getUnsubHandler() {
+            return unsubHandler;
+        }
+
+        public void setUnsubHandler(Handler<UnsubscribeResponse> unsubHandler) {
+            this.unsubHandler = unsubHandler;
         }
     }
 }
