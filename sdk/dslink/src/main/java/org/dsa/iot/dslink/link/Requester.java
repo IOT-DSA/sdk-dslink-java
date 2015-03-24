@@ -189,6 +189,7 @@ public class Requester extends Linkable {
                 node = manager.getNode(inReq.getPath(), true).getNode();
                 InvokeResponse inResp = new InvokeResponse(rid, node);
                 inResp.populate(in);
+                getHandler().onInvokeResponse(inReq, inResp);
                 break;
             default:
                 throw new RuntimeException("Unsupported method: " + method);
