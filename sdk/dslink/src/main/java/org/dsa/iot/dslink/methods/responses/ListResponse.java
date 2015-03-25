@@ -181,11 +181,22 @@ public class ListResponse implements Response {
                 updates.addArray(update);
             }
 
+            // Action
             Action action = node.getAction();
-            if (action != null) {
+            if (action != null && action.hasPermission()) {
                 JsonArray update = new JsonArray();
                 update.addString("$invokable");
                 update.addString(action.getPermission().getJsonName());
+                updates.addArray(update);
+
+                update = new JsonArray();
+                update.addString("$params");
+                update.addArray(action.getParams());
+                updates.addArray(update);
+
+                update = new JsonArray();
+                update.addString("$columns");
+                update.addArray(action.getColumns());
                 updates.addArray(update);
             }
 

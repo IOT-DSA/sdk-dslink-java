@@ -85,15 +85,10 @@ public class Action {
     }
 
     /**
-     * Converts the action to JSON and adds it to the designated JSON object.
-     *
-     * @param obj Object to alternate.
+     * @return Parameters of the action.
      */
-    public void toJson(JsonObject obj) {
-        if (!hasPermission()) return;
-        obj.putString("$invokable", permission.getJsonName());
-        obj.putArray("$params", paramsToJson(params));
-        obj.putArray("$columns", paramsToJson(results));
+    public JsonArray getParams() {
+        return paramsToJson(params);
     }
 
     /**
