@@ -64,7 +64,7 @@ public class RNG extends Node {
             rng.start();
             LOGGER.info("Created RNG child at " + rng.getPath());
 
-            builder = child.createChild("remove");
+            builder = rng.createChild("remove");
             builder.setAction("removeRNG");
             builder.build();
         }
@@ -111,12 +111,14 @@ public class RNG extends Node {
         return new Handler<ActionResult>() {
             @Override
             public void handle(ActionResult event) {
-                Node parent = event.getNode().getParent();
-                if (parent != null) {
-                    Node child = event.getNode().getParent();
-                    RNG rng = (RNG) parent.removeChild(child);
-                    rng.stop();
-                    LOGGER.info("Removed RNG child at " + child.getPath());
+                Node child = event.getNode().getParent();
+                if (child != null) {
+                    Node parent = child.getParent();
+                    if (parent != null) {
+                        RNG rng = (RNG) parent.removeChild(child);
+                        rng.stop();
+                        LOGGER.info("Removed RNG child at " + child.getPath());
+                    }
                 }
             }
         };
