@@ -18,13 +18,13 @@ public class NodeManagerTest {
     @Test
     public void nodeAdditions() {
         NodeManager manager = new NodeManager(null, "node");
-        manager.createRootNode("A", "node");
+        manager.createRootNode("A", "node").build();
 
         Assert.assertNotNull(manager.getNode("A"));
         Assert.assertNotNull(manager.getNode("/A"));
         Assert.assertNotNull(manager.getNode("/A/"));
 
-        manager.createRootNode("A", "node").createChild("B", "node");
+        manager.createRootNode("A").build().createChild("B").build();
         Assert.assertNotNull(manager.getNode("/A/B"));
     }
 

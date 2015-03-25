@@ -25,7 +25,7 @@ public class Replicator {
                 try {
                     for (int i = 0; i < 100; i++) {
                         Thread.sleep(1000);
-                        node.createChild(String.valueOf(i), "node");
+                        node.createChild(String.valueOf(i)).build();
                     }
                 } catch (Exception e) {
                     throw new RuntimeException(e);

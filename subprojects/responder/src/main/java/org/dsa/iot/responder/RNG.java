@@ -1,6 +1,7 @@
 package org.dsa.iot.responder;
 
 import org.dsa.iot.dslink.node.Node;
+import org.dsa.iot.dslink.node.NodeBuilder;
 import org.dsa.iot.dslink.node.actions.ActionResult;
 import org.dsa.iot.dslink.node.value.Value;
 import org.slf4j.Logger;
@@ -48,9 +49,10 @@ public class RNG {
                 node.setAttribute("count", new Value(max));
 
                 for (int i = min; i < max; i++) {
-                    node = node.createChild("rng_" + i, "node");
-                    node.setValue(new Value(0));
-                    node.setAction("removeRNG");
+                    NodeBuilder builder = node.createChild("rng_" + i)
+                            .setValue(new Value(0))
+                            .setAction("removeRNG");
+                    builder.build();
                     LOGGER.info("Created RNG child: rng_" + i);
                     // TODO: dynamically changing numbers
                 }

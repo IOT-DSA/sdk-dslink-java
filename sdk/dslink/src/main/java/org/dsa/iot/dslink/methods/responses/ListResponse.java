@@ -3,6 +3,7 @@ package org.dsa.iot.dslink.methods.responses;
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.methods.Response;
 import org.dsa.iot.dslink.node.Node;
+import org.dsa.iot.dslink.node.NodeBuilder;
 import org.dsa.iot.dslink.node.Permission;
 import org.dsa.iot.dslink.node.SubscriptionManager;
 import org.dsa.iot.dslink.node.actions.Action;
@@ -98,6 +99,7 @@ public class ListResponse implements Response {
             @SuppressWarnings("ConstantConditions")
             JsonObject childData = (JsonObject) v;
             Node child = node.getChild(name);
+            NodeBuilder builder = null;
 
             String change = childData.getString("change");
             if (change != null && "remove".equals(change)) {
@@ -108,38 +110,65 @@ public class ListResponse implements Response {
             }
 
             String is = childData.getString("$is");
-            if (child == null)
-                child = node.createChild(name, is);
+            if (child == null) {
+                builder = node.createChild(name);
+                builder.setProfile(is);
+            }
 
             String mixin = childData.getString("$mixin");
             if (mixin != null) {
-                child.setMixins(mixin);
+                if (builder != null) {
+                    builder.setMixins(mixin);
+                } else {
+                    child.setMixins(mixin);
+                }
             }
 
             String _interface = childData.getString("$interface");
             if (_interface != null) {
-                child.setInterfaces(_interface);
+                if (builder != null) {
+                    builder.setInterfaces(_interface);
+                } else {
+                    child.setInterfaces(_interface);
+                }
             }
 
             String displayName = childData.getString("$name");
             if (displayName != null) {
-                child.setDisplayName(displayName);
+                if (builder != null) {
+                    builder.setDisplayName(displayName);
+                } else {
+                    child.setDisplayName(displayName);
+                }
             }
 
             String type = childData.getString("$type");
             if (type != null) {
-                child.setValue(ValueUtils.fromType(type));
+                if (builder != null) {
+                    builder.setValue(ValueUtils.fromType(type));
+                } else {
+                    child.setValue(ValueUtils.fromType(type));
+                }
             }
 
             String invokable = childData.getString("$invokable");
             if (invokable != null) {
                 Permission perm = Permission.toEnum(invokable);
-                child.forceSetAction(new Action("", perm, new Handler<ActionResult>() {
+                Action action = new Action("", perm, new Handler<ActionResult>() {
                     @Override
                     public void handle(ActionResult event) {
                         throw new UnsupportedOperationException();
                     }
-                }));
+                });
+                if (builder != null) {
+                    builder.getChild().forceSetAction(action);
+                } else {
+                    child.forceSetAction(action);
+                }
+            }
+
+            if (builder != null) {
+                builder.build();
             }
         }
     }

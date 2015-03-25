@@ -201,15 +201,42 @@ public class Node {
     }
 
     /**
-     * The child will be created if the node doesn't exist. If the child
+     * Creates a child. The profile in the child node will be
+     * inherited from the parent.
+     *
+     * @param name Name of the child
+     * @return builder
+     */
+    public NodeBuilder createChild(String name) {
+        return createChild(name, profile);
+    }
+
+    /**
+     * Creates a node builder to allow setting up the node data before
+     * any list subscriptions can be notified.
+     *
+     * @param name Name of the child.
+     * @return builder
+     * @see NodeBuilder#build
+     */
+    public NodeBuilder createChild(String name, String profile) {
+        NodeBuilder b = new NodeBuilder(this, new Node(name, this, link));
+        if (profile != null) {
+            b.setProfile(profile);
+        }
+        return b;
+    }
+
+    /**
+     * The child will be added if the node doesn't exist. If the child
      * already exists then it will be returned and no new node will be
      * created. This can be used as a special getter.
      *
-     * @param name Name of the node
-     * @param profile Profile of the node
+     * @param node Child node to add.
      * @return The node
      */
-    public synchronized Node createChild(String name, String profile) {
+    public synchronized Node addChild(Node node) {
+        String name = node.getName();
         if (children == null) {
             children = new HashMap<>();
         } else if (children.containsKey(name)) {
@@ -221,7 +248,6 @@ public class Node {
             manager = link.getSubscriptionManager();
         }
 
-        Node node = new Node(name, this, link);
         node.setProfile(profile);
         children.put(name, node);
         if (manager != null) {

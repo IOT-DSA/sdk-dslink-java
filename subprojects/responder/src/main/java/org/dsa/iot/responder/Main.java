@@ -3,7 +3,7 @@ package org.dsa.iot.responder;
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.DSLinkFactory;
 import org.dsa.iot.dslink.DSLinkHandler;
-import org.dsa.iot.dslink.node.Node;
+import org.dsa.iot.dslink.node.NodeBuilder;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.Permission;
 import org.dsa.iot.dslink.node.actions.Action;
@@ -37,12 +37,12 @@ public class Main extends DSLinkHandler {
     public void onResponderConnected(DSLink link) {
         NodeManager manager = link.getNodeManager();
 
-        Node node = manager.createRootNode("replicator");
-        Replicator replicator = new Replicator(node);
+        NodeBuilder builder = manager.createRootNode("replicator");
+        Replicator replicator = new Replicator(builder.build());
         replicator.start();
 
-        node = manager.createRootNode("rng");
-        RNG rng = new RNG(node);
+        builder = manager.createRootNode("rng");
+        RNG rng = new RNG(builder.build());
         rng.start();
     }
 

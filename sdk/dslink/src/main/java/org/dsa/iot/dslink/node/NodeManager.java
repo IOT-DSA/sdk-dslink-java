@@ -24,12 +24,14 @@ public class NodeManager {
         this.defaultProfile = defaultProfile;
     }
 
-    public Node createRootNode(String name) {
+    public NodeBuilder createRootNode(String name) {
         return createRootNode(name, defaultProfile);
     }
 
-    public Node createRootNode(String name, String profile) {
-        return superRoot.createChild(name, profile);
+    public NodeBuilder createRootNode(String name, String profile) {
+        NodeBuilder builder = superRoot.createChild(name);
+        builder.setProfile(profile);
+        return builder;
     }
 
     public Map<String, Node> getChildren(String path) {
@@ -54,7 +56,9 @@ public class NodeManager {
         }
         Node current = superRoot.getChild(parts[0]);
         if (create && current == null) {
-            current = superRoot.createChild(Node.checkName(parts[0]), defaultProfile);
+            NodeBuilder b = superRoot.createChild(Node.checkName(parts[0]));
+            b.setProfile(defaultProfile);
+            current = b.build();
         }
         for (int i = 1; i < parts.length; i++) {
             if (current == null) {
@@ -64,7 +68,9 @@ public class NodeManager {
             } else {
                 Node temp = current.getChild(parts[i]);
                 if (create && temp == null) {
-                    temp = current.createChild(Node.checkName(parts[i]), defaultProfile);
+                    NodeBuilder b = current.createChild(Node.checkName(parts[i]));
+                    b.setProfile(defaultProfile);
+                    temp = b.build();
                 }
                 current = temp;
             }

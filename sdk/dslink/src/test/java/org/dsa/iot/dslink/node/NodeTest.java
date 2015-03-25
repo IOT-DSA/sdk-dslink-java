@@ -29,7 +29,7 @@ public class NodeTest {
         Node node = new Node("A", null, null);
         Assert.assertEquals("/A", node.getPath());
 
-        node = node.createChild("A_B", "").createChild("B_A", "");
+        node = node.createChild("A_B").build().createChild("B_A").build();
         Assert.assertEquals("/A/A_B/B_A", node.getPath());
     }
 

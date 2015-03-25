@@ -1,0 +1,81 @@
+package org.dsa.iot.dslink.node;
+
+import org.dsa.iot.dslink.node.value.Value;
+
+/**
+ * @author Samuel Grenier
+ */
+public class NodeBuilder {
+
+    private final Node parent;
+    private final Node child;
+
+    public NodeBuilder(Node parent, Node child) {
+        this.parent = parent;
+        this.child = child;
+    }
+
+    public NodeBuilder setDisplayName(String name) {
+        child.setDisplayName(name);
+        return this;
+    }
+
+    public NodeBuilder setProfile(String profile) {
+        child.setProfile(profile);
+        return this;
+    }
+
+    public NodeBuilder setValue(Value value) {
+        child.setValue(value);
+        return this;
+    }
+
+    public NodeBuilder setAction(String action) {
+        child.setAction(action);
+        return this;
+    }
+
+    public NodeBuilder setConfig(String name, Value value) {
+        child.setConfig(name, value);
+        return this;
+    }
+
+    public NodeBuilder setAttribute(String name, Value value) {
+        child.setAttribute(name, value);
+        return this;
+    }
+
+    public NodeBuilder setMixins(String mixins) {
+        child.setMixins(mixins);
+        return this;
+    }
+
+    public NodeBuilder addMixin(String name) {
+        child.addMixin(name);
+        return this;
+    }
+
+    public NodeBuilder setInterfaces(String interfaces) {
+        child.setInterfaces(interfaces);
+        return this;
+    }
+
+    public NodeBuilder addInterface(String name) {
+        child.addInterface(name);
+        return this;
+    }
+
+    public Node getChild() {
+        return child;
+    }
+
+    /**
+     * The child will then be added to the parent with the set data. Any
+     * subscriptions will then be notified. Note that the parent must not
+     * have the child already added or it will just act as a getter.
+     * @return Child node
+     */
+    public Node build() {
+        return parent.addChild(child);
+    }
+}
