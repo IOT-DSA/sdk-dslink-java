@@ -261,7 +261,11 @@ public class Node {
      * @return The node if it existed.
      */
     public Node removeChild(Node node) {
-        return removeChild(node.getName());
+        if (node != null) {
+            return removeChild(node.getName());
+        } else {
+            return null;
+        }
     }
 
     /**

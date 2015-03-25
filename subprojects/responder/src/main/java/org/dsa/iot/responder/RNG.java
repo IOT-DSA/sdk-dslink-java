@@ -16,15 +16,15 @@ import org.vertx.java.core.json.JsonObject;
 public class RNG {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RNG.class);
-    private final Node node;
 
-    public RNG(Node parent) {
-        node = parent;
-    }
+    public void start(Node parent) {
+        NodeBuilder builder = parent.createChild("rng");
+        builder.setAttribute("count", new Value(0));
+        Node child = builder.build();
 
-    public synchronized void start() {
-        node.setAction("addRNG");
-        node.setAttribute("count", new Value(0));
+        builder = child.createChild("addRNG");
+        builder.setAction("addRNG");
+        builder.build();
     }
 
     public static Handler<ActionResult> getAddHandler() {
@@ -42,18 +42,22 @@ public class RNG {
                     }
                 }
 
-                Node node = event.getNode();
+                Node node = event.getNode().getParent();
                 Value value = node.getAttribute("count");
-                int min = value.getNumber().intValue(); // 1
+                int min = value.getNumber().intValue();
                 int max = min + incrementCount;
                 node.setAttribute("count", new Value(max));
 
                 for (int i = min; i < max; i++) {
                     NodeBuilder builder = node.createChild("rng_" + i)
-                            .setValue(new Value(0))
-                            .setAction("removeRNG");
+                            .setValue(new Value(0));
+                    Node child = builder.build();
+                    LOGGER.info("Created RNG child at " + child.getPath());
+
+                    builder = child.createChild("remove");
+                    builder.setAction("removeRNG");
                     builder.build();
-                    LOGGER.info("Created RNG child: rng_" + i);
+
                     // TODO: dynamically changing numbers
                 }
             }
@@ -66,9 +70,9 @@ public class RNG {
             public void handle(ActionResult event) {
                 Node parent = event.getNode().getParent();
                 if (parent != null) {
-                    Node child = event.getNode();
+                    Node child = event.getNode().getParent();
                     parent.removeChild(child);
-                    LOGGER.info("Removed RNG child: " + child.getName());
+                    LOGGER.info("Removed RNG child at " + child.getPath());
                 }
             }
         };

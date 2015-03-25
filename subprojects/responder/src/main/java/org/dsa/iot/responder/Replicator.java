@@ -8,13 +8,10 @@ import org.dsa.iot.dslink.node.Node;
  */
 public class Replicator {
 
-    private final Node node;
+    private Node node;
 
-    public Replicator(Node parent) {
-        node = parent;
-    }
-
-    public void start() {
+    public void start(Node parent) {
+        node = parent.createChild("replicator").build();
         startThread();
     }
 
