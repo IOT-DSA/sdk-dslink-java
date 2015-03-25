@@ -25,6 +25,7 @@ public class RNG extends Node {
     private static final Logger LOGGER;
     private static final ScheduledThreadPoolExecutor STPE;
     private static final Random RANDOM = new Random();
+    private static final Object LOCK = new Object();
 
     private ScheduledFuture<?> fut;
 
@@ -54,74 +55,85 @@ public class RNG extends Node {
         builder.setAttribute("count", new Value(1));
         Node child = builder.build();
 
-        builder = child.createChild("addRNG");
-        builder.setAction("addRNG");
+        String name = "addRNG";
+        builder = child.createChild(name);
+        builder.setAction(name);
         builder.build();
 
-        { // Pre-inject 1 rng
-            RNG rng = new RNG("rng_1", child, child.getLink());
-            child.addChild(rng);
-            rng.start();
-            LOGGER.info("Created RNG child at " + rng.getPath());
+        name = "removeRNG";
+        builder = child.createChild(name);
+        builder.setAction(name);
+        builder.build();
 
-            builder = rng.createChild("remove");
-            builder.setAction("removeRNG");
-            builder.build();
-        }
+        addRNG("rng_0", child);
     }
 
-    public static Handler<ActionResult> getAddHandler() {
-        return new Handler<ActionResult>() {
+    public static Node addRNG(String name, Node parent) {
+        RNG rng = new RNG(name, parent, parent.getLink());
+        parent.addChild(rng);
+        rng.start();
+        LOGGER.info("Created RNG child at " + rng.getPath());
+        return rng;
+    }
 
-            @Override
-            public void handle(ActionResult event) {
-                int incrementCount = 1;
+    public static class AddHandler implements Handler<ActionResult> {
+        @Override
+        public void handle(ActionResult event) {
+            int incrementCount = 1;
 
-                JsonObject params = event.getJsonIn().getObject("params");
-                if (params != null) {
-                    Integer count = params.getInteger("count");
-                    if (count != null) {
-                        incrementCount = count;
-                    }
+            JsonObject params = event.getJsonIn().getObject("params");
+            if (params != null) {
+                Integer count = params.getInteger("count");
+                if (count != null) {
+                    incrementCount = count;
                 }
+            }
 
-                Node node = event.getNode().getParent();
+            Node node = event.getNode().getParent();
+            synchronized (LOCK) {
                 Value value = node.getAttribute("count");
                 int min = value.getNumber().intValue();
                 int max = min + incrementCount;
                 node.setAttribute("count", new Value(max));
 
                 for (int i = min; i < max; i++) {
-                    RNG child = new RNG("rng_" + i, node, node.getLink());
-                    node.addChild(child);
-                    child.start();
+                    Node child = addRNG("rng_" + i, node);
                     LOGGER.info("Created RNG child at " + child.getPath());
-
-                    NodeBuilder builder = child.createChild("remove");
-                    builder.setAction("removeRNG");
-                    builder.build();
-
-                    // TODO: dynamically changing numbers
                 }
             }
-        };
+        }
     }
 
-    public static Handler<ActionResult> getRemoveHandler() {
-        return new Handler<ActionResult>() {
-            @Override
-            public void handle(ActionResult event) {
-                Node child = event.getNode().getParent();
-                if (child != null) {
-                    Node parent = child.getParent();
-                    if (parent != null) {
-                        RNG rng = (RNG) parent.removeChild(child);
-                        rng.stop();
-                        LOGGER.info("Removed RNG child at " + child.getPath());
-                    }
+    public static class RemoveChildrenHandler implements Handler<ActionResult> {
+
+        @Override
+        public void handle(ActionResult event) {
+            int decrementCount = 1;
+
+            JsonObject params = event.getJsonIn().getObject("params");
+            if (params != null) {
+                Integer count = params.getInteger("count");
+                if (count != null) {
+                    decrementCount = count;
                 }
             }
-        };
+
+            Node node = event.getNode().getParent();
+            synchronized (LOCK) {
+                Value value = node.getAttribute("count");
+                int max = value.getNumber().intValue();
+                int min = max - decrementCount;
+                if (min < 0)
+                    min = 0;
+                node.setAttribute("count", new Value(min));
+
+                for (int i = max; i > min; i--) {
+                    RNG rng = (RNG) node.removeChild("rng_" + (i - 1));
+                    rng.stop();
+                    LOGGER.info("Removed RNG child at " + rng.getPath());
+                }
+            }
+        }
     }
 
     static {

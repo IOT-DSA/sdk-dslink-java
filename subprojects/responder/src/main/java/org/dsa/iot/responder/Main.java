@@ -22,13 +22,14 @@ public class Main extends DSLinkHandler {
         Permission perm = Permission.READ;
 
         {
-            Action action = new Action("addRNG", perm, RNG.getAddHandler());
+            Action action = new Action("addRNG", perm, new RNG.AddHandler());
             action.addParameter(new Parameter("count", ValueType.NUMBER));
             registry.register(action);
         }
 
         {
-            Action action = new Action("removeRNG", perm, RNG.getRemoveHandler());
+            Action action = new Action("removeRNG", perm, new RNG.RemoveChildrenHandler());
+            action.addParameter(new Parameter("count", ValueType.NUMBER));
             registry.register(action);
         }
     }
