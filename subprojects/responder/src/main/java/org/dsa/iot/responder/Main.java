@@ -41,6 +41,7 @@ public class Main extends DSLinkHandler {
 
         Replicator.start(superRoot);
         RNG.start(superRoot);
+        Values.start(superRoot);
     }
 
     public static void main(String[] args) {

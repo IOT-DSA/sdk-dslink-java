@@ -42,6 +42,7 @@ public class SubscriptionManager {
         if (prev != null) {
             throw new NullPointerException("Node " + node.getPath() + " already subscribed");
         }
+        postValueUpdate(node);
     }
 
     /**
