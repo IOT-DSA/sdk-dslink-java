@@ -70,6 +70,13 @@ public class Node {
     }
 
     /**
+     * @return The link this node is attached to.
+     */
+    public Linkable getLink() {
+        return link;
+    }
+
+    /**
      * @return Name of the node
      */
     public String getName() {
@@ -179,6 +186,13 @@ public class Node {
     public synchronized void setValue(Value value) {
         value.setImmutable();
         this.value = value;
+
+        if (link != null) {
+            SubscriptionManager manager = link.getSubscriptionManager();
+            if (manager != null) {
+                manager.postValueUpdate(this);
+            }
+        }
     }
 
     public synchronized Value getValue() {

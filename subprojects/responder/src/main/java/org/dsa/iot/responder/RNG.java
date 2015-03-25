@@ -1,5 +1,6 @@
 package org.dsa.iot.responder;
 
+import org.dsa.iot.dslink.link.Linkable;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeBuilder;
 import org.dsa.iot.dslink.node.actions.ActionResult;
@@ -9,22 +10,64 @@ import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonObject;
 
+import java.util.Random;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+
 /**
  * Creates a random number generator
  * @author Samuel Grenier
  */
-public class RNG {
+public class RNG extends Node {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RNG.class);
+    private static final Logger LOGGER;
+    private static final ScheduledThreadPoolExecutor STPE;
+    private static final Random RANDOM = new Random();
 
-    public void start(Node parent) {
+    private ScheduledFuture<?> fut;
+
+    public RNG(String name, Node parent, Linkable link) {
+        super(name, parent, link);
+    }
+
+    private void start() {
+        fut = STPE.scheduleWithFixedDelay(new Runnable() {
+            @Override
+            public void run() {
+                Value val = new Value(RANDOM.nextInt());
+                setValue(val);
+                LOGGER.info(getPath() + " has new value of " + val.getNumber().intValue());
+            }
+        }, 0, 2, TimeUnit.SECONDS);
+    }
+
+    private void stop() {
+        if (fut != null) {
+            fut.cancel(false);
+        }
+    }
+
+    public static void start(Node parent) {
         NodeBuilder builder = parent.createChild("rng");
-        builder.setAttribute("count", new Value(0));
+        builder.setAttribute("count", new Value(1));
         Node child = builder.build();
 
         builder = child.createChild("addRNG");
         builder.setAction("addRNG");
         builder.build();
+
+        { // Pre-inject 1 rng
+            RNG rng = new RNG("rng_1", child, child.getLink());
+            child.addChild(rng);
+            rng.start();
+            LOGGER.info("Created RNG child at " + rng.getPath());
+
+            builder = child.createChild("remove");
+            builder.setAction("removeRNG");
+            builder.build();
+        }
     }
 
     public static Handler<ActionResult> getAddHandler() {
@@ -49,12 +92,12 @@ public class RNG {
                 node.setAttribute("count", new Value(max));
 
                 for (int i = min; i < max; i++) {
-                    NodeBuilder builder = node.createChild("rng_" + i)
-                            .setValue(new Value(0));
-                    Node child = builder.build();
+                    RNG child = new RNG("rng_" + i, node, node.getLink());
+                    node.addChild(child);
+                    child.start();
                     LOGGER.info("Created RNG child at " + child.getPath());
 
-                    builder = child.createChild("remove");
+                    NodeBuilder builder = child.createChild("remove");
                     builder.setAction("removeRNG");
                     builder.build();
 
@@ -71,10 +114,23 @@ public class RNG {
                 Node parent = event.getNode().getParent();
                 if (parent != null) {
                     Node child = event.getNode().getParent();
-                    parent.removeChild(child);
+                    RNG rng = (RNG) parent.removeChild(child);
+                    rng.stop();
                     LOGGER.info("Removed RNG child at " + child.getPath());
                 }
             }
         };
+    }
+
+    static {
+        LOGGER =  LoggerFactory.getLogger(RNG.class);
+        STPE = new ScheduledThreadPoolExecutor(8, new ThreadFactory() {
+            @Override
+            public Thread newThread(Runnable r) {
+                Thread t = new Thread(r);
+                t.setDaemon(true);
+                return t;
+            }
+        });
     }
 }

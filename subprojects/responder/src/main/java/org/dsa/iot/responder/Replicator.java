@@ -10,9 +10,14 @@ public class Replicator {
 
     private Node node;
 
-    public void start(Node parent) {
-        node = parent.createChild("replicator").build();
-        startThread();
+    private Replicator(Node node) {
+        this.node = node;
+    }
+
+    public static void start(Node parent) {
+        Node node = parent.createChild("replicator").build();
+        Replicator rep = new Replicator(node);
+        rep.startThread();
     }
 
     private void startThread() {

@@ -16,9 +16,6 @@ import org.dsa.iot.dslink.node.value.ValueType;
  */
 public class Main extends DSLinkHandler {
 
-    private final Replicator replicator = new Replicator();
-    private final RNG rng = new RNG();
-
     @Override
     public void preInit() {
         ActionRegistry registry = getActionRegistry();
@@ -41,8 +38,8 @@ public class Main extends DSLinkHandler {
         NodeManager manager = link.getNodeManager();
         Node superRoot = manager.getNode("/").getNode();
 
-        replicator.start(superRoot);
-        rng.start(superRoot);
+        Replicator.start(superRoot);
+        RNG.start(superRoot);
     }
 
     public static void main(String[] args) {
