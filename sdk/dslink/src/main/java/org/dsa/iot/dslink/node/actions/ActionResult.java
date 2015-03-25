@@ -1,5 +1,6 @@
 package org.dsa.iot.dslink.node.actions;
 
+import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.util.StreamState;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
@@ -10,6 +11,11 @@ import org.vertx.java.core.json.JsonObject;
  * @author Samuel Grenier
  */
 public class ActionResult {
+
+    /**
+     * Node this action is modifying
+     */
+    private final Node node;
 
     /**
      * Data object to act upon for the invocation.
@@ -33,10 +39,27 @@ public class ActionResult {
      *
      * @param in Incoming JSON data.
      */
-    public ActionResult(JsonObject in) {
-        if (in == null)
+    public ActionResult(Node node, JsonObject in) {
+        if (node == null)
+            throw new NullPointerException("node");
+        else if (in == null)
             throw new NullPointerException("in");
+        this.node = node;
         this.jsonIn = in;
+    }
+
+    /**
+     * @return Node the action is acting on.
+     */
+    public Node getNode() {
+        return node;
+    }
+
+    /**
+     * @return Original invocation request.
+     */
+    public JsonObject getJsonIn() {
+        return jsonIn;
     }
 
     /**

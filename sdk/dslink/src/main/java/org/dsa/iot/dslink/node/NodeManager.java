@@ -24,6 +24,10 @@ public class NodeManager {
         this.defaultProfile = defaultProfile;
     }
 
+    public Node createRootNode(String name) {
+        return createRootNode(name, defaultProfile);
+    }
+
     public Node createRootNode(String name, String profile) {
         return superRoot.createChild(name, profile);
     }

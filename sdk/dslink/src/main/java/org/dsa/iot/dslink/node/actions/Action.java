@@ -40,6 +40,13 @@ public class Action {
     }
 
     /**
+     * @return Serializable name of the action.
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
      * @param parameter Add a parameter for the invocation
      */
     public void addParameter(Parameter parameter) {

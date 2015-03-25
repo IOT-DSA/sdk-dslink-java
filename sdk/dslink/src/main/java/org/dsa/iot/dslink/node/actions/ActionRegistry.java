@@ -13,10 +13,10 @@ public class ActionRegistry {
     /**
      * Registers an action to the registry.
      *
-     * @param name Name of the action, must be unique.
-     * @param action Action to register
+     * @param action Action to register. Action name must be unique.
      */
-    public void register(String name, Action action) {
+    public void register(Action action) {
+        String name = action.getName();
         Action prev = actions.put(name, action);
         if (prev != null) {
             throw new RuntimeException(name + " has already been registered");

@@ -62,6 +62,14 @@ public class Node {
     }
 
     /**
+     * @return Parent of this node, can be null if the parent was garbage
+     *         collected or there is no parent.
+     */
+    public Node getParent() {
+        return parent.get();
+    }
+
+    /**
      * @return Name of the node
      */
     public String getName() {
@@ -168,11 +176,12 @@ public class Node {
         return interfaces != null ? new HashSet<>(interfaces) : null;
     }
 
-    public void setValue(Value value) {
+    public synchronized void setValue(Value value) {
+        value.setImmutable();
         this.value = value;
     }
 
-    public Value getValue() {
+    public synchronized Value getValue() {
         return value;
     }
 
@@ -222,8 +231,16 @@ public class Node {
     }
 
     /**
-     * @param name Node to remove
-     * @return The node if it existed
+     * @param node Node to remove.
+     * @return The node if it existed.
+     */
+    public Node removeChild(Node node) {
+        return removeChild(node.getName());
+    }
+
+    /**
+     * @param name Node to remove.
+     * @return The node if it existed.
      */
     public synchronized Node removeChild(String name) {
         Node child = children != null ? children.remove(name) : null;
@@ -292,6 +309,7 @@ public class Node {
                         + " for setting these properties";
                 throw new IllegalArgumentException(err);
         }
+        value.setImmutable();
         return configs.put(name, value);
     }
 
@@ -330,6 +348,7 @@ public class Node {
         } else if (attribs == null) {
             attribs = new HashMap<>();
         }
+        value.setImmutable();
         return attribs.put(name, value);
     }
 

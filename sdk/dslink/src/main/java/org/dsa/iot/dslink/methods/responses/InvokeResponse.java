@@ -39,7 +39,7 @@ public class InvokeResponse implements Response {
             throw new RuntimeException("Node not invokable");
         }
 
-        ActionResult results = new ActionResult(in);
+        ActionResult results = new ActionResult(node, in);
         action.invoke(results);
         this.results = results.getUpdates();
 
