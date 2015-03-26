@@ -1,0 +1,14 @@
+apply plugin: 'maven'
+
+repositories {
+    mavenLocal()
+}
+
+install {
+    repositories.mavenInstaller {
+        pom.project {
+            groupId 'org.dsa.iot'
+            artifactId 'dslink'
+        }
+    }
+}
