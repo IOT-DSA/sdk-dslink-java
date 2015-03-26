@@ -7,7 +7,7 @@ repositories {
 install {
     repositories.mavenInstaller {
         pom.project {
-            groupId 'org.dsa.iot'
+            groupId 'org.dsa-iot'
             artifactId 'dslink'
         }
     }
