@@ -37,6 +37,7 @@ public class ActionResult {
      * Creates an action result that is ready to be invoked and populated
      * with results.
      *
+     * @param node The node this action is invoked on.
      * @param in Incoming JSON data.
      */
     public ActionResult(Node node, JsonObject in) {

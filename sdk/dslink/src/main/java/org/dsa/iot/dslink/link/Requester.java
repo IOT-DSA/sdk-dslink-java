@@ -127,6 +127,7 @@ public class Requester extends Linkable {
      * Sends a request to the responder to close the given stream.
      *
      * @param rid Stream to close.
+     * @param onResponse Response.
      */
     public void closeStream(int rid, Handler<CloseResponse> onResponse) {
         CloseRequest req = new CloseRequest();
@@ -139,6 +140,7 @@ public class Requester extends Linkable {
      * Sends an invocation request.
      *
      * @param request Invocation request.
+     * @param onResponse Response.
      */
     public void invoke(InvokeRequest request, Handler<InvokeResponse> onResponse) {
         RequestWrapper wrapper = new RequestWrapper(request);
@@ -150,6 +152,7 @@ public class Requester extends Linkable {
      * Sends a list request.
      *
      * @param request List request.
+     * @param onResponse Response.
      */
     public void list(ListRequest request, Handler<ListResponse> onResponse) {
         RequestWrapper wrapper = new RequestWrapper(request);
@@ -161,6 +164,7 @@ public class Requester extends Linkable {
      * Sends a set request.
      *
      * @param request Set request.
+     * @param onResponse Response.
      */
     public void set(SetRequest request, Handler<SetResponse> onResponse) {
         RequestWrapper wrapper = new RequestWrapper(request);

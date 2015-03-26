@@ -230,6 +230,7 @@ public class Node {
      * any list subscriptions can be notified.
      *
      * @param name Name of the child.
+     * @param profile Profile to set on the child
      * @return builder
      * @see NodeBuilder#build
      */

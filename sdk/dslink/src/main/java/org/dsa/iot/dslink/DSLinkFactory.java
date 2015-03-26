@@ -99,8 +99,10 @@ public class DSLinkFactory {
      * endpoint.
      *
      * @param name Name of the link, prepended in the DsId.
-     * @param args Arguments to parse
-     * @param handler DSLink handler
+     * @param args Arguments to parse.
+     * @param handler DSLink handler.
+     * @param requester Whether the generated link is a requester.
+     * @param responder Whether the generated link is a responder.
      * @return A link provider or null if the args have a help parameter
      *         passed in.
      */

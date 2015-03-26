@@ -14,8 +14,7 @@ public class SubscribeRequest implements Request {
     private final Map<String, Integer> subs;
 
     /**
-     *
-     * @param subs Map of path->sid subscriptions
+     * @param subs Map of path to sid subscriptions
      */
     public SubscribeRequest(Map<String, Integer> subs) {
         if (subs == null) {
