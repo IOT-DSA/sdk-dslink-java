@@ -11,7 +11,7 @@ import org.vertx.java.core.json.JsonObject;
  */
 public class Values {
 
-    public static void start(Node parent) {
+    public static void init(Node parent) {
         NodeBuilder builder = parent.createChild("values");
         parent = builder.build();
 

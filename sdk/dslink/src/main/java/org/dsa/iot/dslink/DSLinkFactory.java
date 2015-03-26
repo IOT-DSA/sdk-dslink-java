@@ -127,6 +127,9 @@ public class DSLinkFactory {
         Path loc = Paths.get(parsed.getKeyPath());
         defaults.setKeys(LocalKeys.getFromFileSystem(loc));
 
+        loc = Paths.get(parsed.getNodesPath());
+        defaults.setSerializationPath(loc);
+
         handler.setConfig(defaults);
         return generate(handler);
     }

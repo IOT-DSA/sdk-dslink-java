@@ -3,6 +3,9 @@ package org.dsa.iot.dslink.node.value;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * Utilities for manipulating values.
  *
@@ -45,6 +48,7 @@ public class ValueUtils {
      * @param object Object to convert
      * @return Converted object instance
      */
+    @SuppressWarnings("unchecked")
     public static Value toValue(Object object) {
         if (object == null)
             throw new NullPointerException("object");
@@ -57,8 +61,12 @@ public class ValueUtils {
             val = new Value((String) object);
         } else if (object instanceof JsonObject) {
             val = new Value((JsonObject) object);
+        } else if (object instanceof Map) {
+            val = new Value(new JsonObject((Map) object));
         } else if (object instanceof JsonArray) {
             val = new Value((JsonArray) object);
+        } else if (object instanceof List) {
+            val = new Value(new JsonArray((List) object));
         } else {
             throw new RuntimeException(ERROR_MSG + object.getClass().getName());
         }

@@ -54,9 +54,9 @@ public class RNG {
         }
     }
 
-    public static void start(Node parent) {
+    public static void init(Node parent) {
         NodeBuilder builder = parent.createChild("rng");
-        builder.setAttribute("count", new Value(1));
+        builder.setAttribute("count", new Value(0));
         Node child = builder.build();
 
         String name = "addRNG";
@@ -69,7 +69,12 @@ public class RNG {
         builder.setAction(name);
         builder.build();
 
-        addRNG("rng_0", child);
+        Map<String, Node> children = child.getChildren();
+        for (Node node : children.values()) {
+            RNG rng = new RNG(node);
+            rng.start();
+            NODES.put(node, rng);
+        }
     }
 
     public static Node addRNG(String name, Node parent) {

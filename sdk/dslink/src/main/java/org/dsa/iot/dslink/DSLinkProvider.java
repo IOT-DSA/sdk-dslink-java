@@ -3,9 +3,12 @@ package org.dsa.iot.dslink;
 import org.dsa.iot.dslink.connection.Endpoint;
 import org.dsa.iot.dslink.connection.NetworkClient;
 import org.dsa.iot.dslink.connection.RemoteEndpoint;
-import org.dsa.iot.dslink.node.actions.Action;
+import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.actions.ActionRegistry;
+import org.dsa.iot.dslink.serializer.SerializationManager;
 import org.vertx.java.core.Handler;
+
+import java.nio.file.Path;
 
 /**
  * Provides DSLinks as soon as a client connects to the server or vice versa.
@@ -45,6 +48,15 @@ public class DSLinkProvider {
                 } else if (event.isResponder()) {
                     ActionRegistry registry = handler.getActionRegistry();
                     link = new DSLink(handler, event, registry);
+
+                    Path path = handler.getConfig().getSerializationPath();
+                    if (path != null) {
+                        NodeManager man = link.getNodeManager();
+                        SerializationManager manager = new SerializationManager(path, man);
+                        manager.deserialize();
+                        manager.start();
+                    }
+
                     link.setDefaultDataHandlers();
                     handler.onResponderConnected(link);
                 }

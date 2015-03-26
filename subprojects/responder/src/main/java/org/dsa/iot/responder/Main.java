@@ -40,8 +40,8 @@ public class Main extends DSLinkHandler {
         Node superRoot = manager.getNode("/").getNode();
 
         Replicator.start(superRoot);
-        RNG.start(superRoot);
-        Values.start(superRoot);
+        RNG.init(superRoot);
+        Values.init(superRoot);
     }
 
     public static void main(String[] args) {

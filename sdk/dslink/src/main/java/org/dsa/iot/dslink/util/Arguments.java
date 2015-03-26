@@ -33,7 +33,7 @@ public class Arguments {
     @Parameter(names = { "--help", "-h" },
                 description = "Displays the help menu",
                 help = true)
-    private boolean help;
+    private boolean help = false;
 
     /**
      * @return Broker host to perform a handshake connection to.
