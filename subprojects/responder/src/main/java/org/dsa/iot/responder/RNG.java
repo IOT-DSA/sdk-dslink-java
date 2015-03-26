@@ -1,6 +1,5 @@
 package org.dsa.iot.responder;
 
-import org.dsa.iot.dslink.link.Linkable;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeBuilder;
 import org.dsa.iot.dslink.node.actions.ActionResult;
@@ -10,6 +9,8 @@ import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonObject;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -20,17 +21,20 @@ import java.util.concurrent.TimeUnit;
  * Creates a random number generator
  * @author Samuel Grenier
  */
-public class RNG extends Node {
+public class RNG {
 
     private static final Logger LOGGER;
     private static final ScheduledThreadPoolExecutor STPE;
+    private static final Map<Node, RNG> NODES;
+
     private static final Random RANDOM = new Random();
     private static final Object LOCK = new Object();
 
+    private final Node node;
     private ScheduledFuture<?> fut;
 
-    public RNG(String name, Node parent, Linkable link) {
-        super(name, parent, link);
+    public RNG(Node node) {
+        this.node = node;
     }
 
     private void start() {
@@ -38,8 +42,8 @@ public class RNG extends Node {
             @Override
             public void run() {
                 Value val = new Value(RANDOM.nextInt());
-                setValue(val);
-                LOGGER.info(getPath() + " has new value of " + val.getNumber().intValue());
+                node.setValue(val);
+                LOGGER.info(node.getPath() + " has new value of " + val.getNumber().intValue());
             }
         }, 0, 2, TimeUnit.SECONDS);
     }
@@ -69,11 +73,16 @@ public class RNG extends Node {
     }
 
     public static Node addRNG(String name, Node parent) {
-        RNG rng = new RNG(name, parent, parent.getLink());
-        parent.addChild(rng);
+        NodeBuilder builder = parent.createChild(name);
+        builder.setValue(new Value(0));
+        Node node = builder.build();
+
+        RNG rng = new RNG(node);
         rng.start();
-        LOGGER.info("Created RNG child at " + rng.getPath());
-        return rng;
+        NODES.put(node, rng);
+
+        LOGGER.info("Created RNG child at " + node.getPath());
+        return node;
     }
 
     public static class AddHandler implements Handler<ActionResult> {
@@ -128,9 +137,10 @@ public class RNG extends Node {
                 node.setAttribute("count", new Value(min));
 
                 for (int i = max; i > min; i--) {
-                    RNG rng = (RNG) node.removeChild("rng_" + (i - 1));
+                    Node child = node.removeChild("rng_" + (i - 1));
+                    RNG rng = NODES.remove(child);
                     rng.stop();
-                    LOGGER.info("Removed RNG child at " + rng.getPath());
+                    LOGGER.info("Removed RNG child at " + child.getPath());
                 }
             }
         }
@@ -138,6 +148,7 @@ public class RNG extends Node {
 
     static {
         LOGGER =  LoggerFactory.getLogger(RNG.class);
+        NODES = new HashMap<>();
         STPE = new ScheduledThreadPoolExecutor(8, new ThreadFactory() {
             @Override
             public Thread newThread(Runnable r) {
