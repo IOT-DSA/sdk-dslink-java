@@ -2,8 +2,13 @@ package org.dsa.iot.responder;
 
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeBuilder;
+import org.dsa.iot.dslink.node.Permission;
+import org.dsa.iot.dslink.node.actions.Action;
+import org.dsa.iot.dslink.node.actions.ActionRegistry;
 import org.dsa.iot.dslink.node.actions.ActionResult;
+import org.dsa.iot.dslink.node.actions.Parameter;
 import org.dsa.iot.dslink.node.value.Value;
+import org.dsa.iot.dslink.node.value.ValueType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
@@ -51,6 +56,21 @@ public class RNG {
     private void stop() {
         if (fut != null) {
             fut.cancel(false);
+        }
+    }
+
+    public static void addActions(ActionRegistry registry) {
+        Permission p = Permission.READ;
+        {
+            Action action = new Action("addRNG", p, new RNG.AddHandler());
+            action.addParameter(new Parameter("count", ValueType.NUMBER));
+            registry.register(action);
+        }
+
+        {
+            Action action = new Action("removeRNG", p, new RNG.RemoveChildrenHandler());
+            action.addParameter(new Parameter("count", ValueType.NUMBER));
+            registry.register(action);
         }
     }
 
