@@ -1,4 +1,12 @@
 language: java
-jdk:
-  - openjdk7
-  - oraclejdk7
+env:
+  global:
+  - secure: Lo4aykrXyhU2c7F93sgPCk2tGVFGD3iSmwTgI741g5sq4JUxpnAfMjZDOEYrwWZwyiEGtfqrCHkMfneN8cs7EHFSQgTuaBlCUyMi8ovLVv60yPW4Hc2ioT1vVaKDbLfCEi3oZHu+g9VtgX4Tg+k+8EWV840vyvspbzWt5hEPitg=
+  - secure: riBP7lqffIIaRx4ofWgv4n6EuVpz85cNUoP2USq5hBeZGCWoLqnxBYcZBTu0+LjPV69B/bnbX64dLXv3FwDXl62n64NDlYyT7IjCzDskiLm+55DbeGLJ0sqs0vc4kI2rQozApYtBFNqVJ/Bp8jE7/PuSa4VBnmMWq6VrhLCUXSw=
+  - secure: kZ33M0+ji7kdmtDH/yMhiQ5RDOipItR3tPWcCCIlRtg47xNGFTY/fqf9zM3QWTvJS82e8k3/umYP1xBehzOzZAmG0RHcAVaonvO4hUgZlkHiyuI5KmVlmsf/FzRFd2uM+QryRsIavemmFMYY1/g+z3U2jCgDud9wU5qg03eMLY8=
+  - secure: gMg5rGY6z+WgpVGtR/wYxqlFKfTVtTbH+0Hl3BRLDuH/BCeqcbkJKBDbtcWCIVpvltOTC412ayAs0Z3RdC6TDt5EeTBJWFoo8FYq7CKEEr1IkUSSeY85BH/3qpsOWi4FNy+8brAGRoa4v5DJSKWz0eZXqUIWDVhO7mHX4dRJPBM=
+  - secure: EzcyUAiWT5kPPCpnIXvzqgHwKnHhny0OetlJIdx2zxlGXrM/ZiwZ5SqamFJ6+JXq/QasTLE0zDFuIBHysDoNSGs/N10fhvH/pWJtBwsq+SRLRKlVurL51nNTnCoDvXHIXPTAYS43CRaO8F+/X1/WOLwrYiapWFlScgdQP0RyI5g=
+  - secure: e3n9yunu62uvWw1F/SAnXF7tMDso4lFu4OiruvKMWXJ0Z/BoSGoVX40UFQ7+VKR13CHU+e/eo4J7/1frHYw8sT2pxiRb8wM/HNE4aW3vrUnwS243sJR5XHXp2kcQMBEWY0b0AcjdFaWOaKsDyjgY3BqvJSkKVThzxtU47st01Sw=
+before_script:
+  - openssl aes-256-cbc -k "$SECRING_PASS" -in 'ci/secring.gpg.enc' -out secring.gpg -d
+script: ./ci/script/build.sh
