@@ -1,5 +1,5 @@
 # sdk-dslink-java
 
-[![Build Status](https://drone.io/github.com/IOT-DSA/sdk-dslink-java/status.png)](https://drone.io/github.com/IOT-DSA/sdk-dslink-java/latest)
+[![Build Status](https://travis-ci.org/IOT-DSA/sdk-dslink-java.svg?branch=master)](https://travis-ci.org/IOT-DSA/sdk-dslink-java)
 
 Java binding for the DSA API.
