@@ -2,11 +2,11 @@ language: java
 env:
   global:
   - LOC=secring.gpg
-  - secure: BUD2WKngzsQizT6blSayYLjMCOwSHmDcDztKdQwm+p24LT27NLeL43bLSHrrrRY4PWIbDCflsCRDCgrVl/wR7sBb48EkSKQtqwB0/60hTpw7pgRKHjqaEp1ni4hHJUGfJ3e/JxagdvJcs6qGODMa6WMxgprQpDN+7AjAO8Iwyfk=
   - secure: uMTg2AkQPDdP9ysoQqggMb54+TxHllJso6/xT9ns1GF55py4c5EwC9Vt4cmHKav3CDQmqztqQP9Baa8uJrHDjTH0KtsTTe8Hzv7YM7Ai+KzKR+eS40LTH/LB5Q7lj2pPwBqjhRfE2Zcnch5D3/qvbg39d6AELHgwczicfYyoZvc=
   - secure: GASJrZV9yjUScysqTm+W3XK5hUOtX1fW7caXqh5Xjwl/bCJYnOdGkKRpQkql7VOEfmG7zFkg3qN/PvUUt6GkmnS5BOmb4fin4AXJQHtMAF9Lel4Tmp3NGIUMtFcIEKMm6UKRv7+LMI2dVMscWaL9YKpaMmp6F+yAjlmuPA93jlk=
   - secure: IcJhZIgMgF/0SNZgE56xMVocntA57RTRiH9YrReu/9FeEyIlHk2si1/bLPgV6ns/oQi7pal34TCjY6Yrs9VqKC6j93rRIouIvTg0/mxV0QHytWXicxbaB8kAmTBjHmePFNlqAl0FpkcHJQ7O5cjy4gvVxxzin2jZP7Gvtw0PbeY=
   - secure: HedklAPTdQAEhwsLhCwGco62/1Hq00nYgB+0MZYaVEb9KVdKxgZUswNidtzXVLha9TTOe3ewTmVjsd+Hs0wyyq6TZh8TUKlVPrJc1wd4wkurCK8JZjqUxBV2EydYmGM7j/CHpci1rcGv3QNQRwf2ZwfAoW5YPObJqqZvwk3GYgg=
+  - secure: TRdfPnDzIw+qDbOwHG8YORMYE3JxUA2T3vQB8TDfdS7EIJk5XEt2m8nqu9/l7GmDybEHe0yY9M+8ZVS+BWnsjcDQQLIxyKPYKJyHbhJNL0iryJfSDFqlhwe4awi45jCVWGCgpemn9+jNtKxKiDnUlmi4RbGAItpDfca6yxH9ICE=
 install: /bin/true
 before_script:
 - openssl aes-256-cbc -k "$SECRING_PASS" -in 'ci/secring.gpg.enc' -out secring.gpg
