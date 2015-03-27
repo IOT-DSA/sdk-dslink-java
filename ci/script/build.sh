@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
 # Perform a raw build
-./gradlew distZip test
+./gradlew distZip javadoc test
