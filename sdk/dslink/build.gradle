@@ -3,6 +3,13 @@ apply plugin: 'maven'
 
 group = 'org.iot-dsa'
 
+ext {
+    if (!project.hasProperty("ossrhUsername"))
+        ossrhUsername = ""
+    if (!project.hasProperty("ossrhPassword"))
+        ossrhPassword = ""
+}
+
 repositories {
     mavenLocal()
 }
