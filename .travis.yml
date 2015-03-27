@@ -7,6 +7,9 @@ env:
   - secure: gMg5rGY6z+WgpVGtR/wYxqlFKfTVtTbH+0Hl3BRLDuH/BCeqcbkJKBDbtcWCIVpvltOTC412ayAs0Z3RdC6TDt5EeTBJWFoo8FYq7CKEEr1IkUSSeY85BH/3qpsOWi4FNy+8brAGRoa4v5DJSKWz0eZXqUIWDVhO7mHX4dRJPBM=
   - secure: EzcyUAiWT5kPPCpnIXvzqgHwKnHhny0OetlJIdx2zxlGXrM/ZiwZ5SqamFJ6+JXq/QasTLE0zDFuIBHysDoNSGs/N10fhvH/pWJtBwsq+SRLRKlVurL51nNTnCoDvXHIXPTAYS43CRaO8F+/X1/WOLwrYiapWFlScgdQP0RyI5g=
   - secure: e3n9yunu62uvWw1F/SAnXF7tMDso4lFu4OiruvKMWXJ0Z/BoSGoVX40UFQ7+VKR13CHU+e/eo4J7/1frHYw8sT2pxiRb8wM/HNE4aW3vrUnwS243sJR5XHXp2kcQMBEWY0b0AcjdFaWOaKsDyjgY3BqvJSkKVThzxtU47st01Sw=
+install: /bin/true
 before_script:
   - openssl aes-256-cbc -k "$SECRING_PASS" -in 'ci/secring.gpg.enc' -out secring.gpg -d
 script: ./ci/script/build.sh
+after_script:
+  - ./ci/script/deploy.sh
