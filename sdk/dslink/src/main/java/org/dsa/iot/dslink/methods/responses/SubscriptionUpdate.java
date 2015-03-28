@@ -54,7 +54,7 @@ public class SubscriptionUpdate implements Response {
                     Object o = update.get(1);
                     Value val = null;
                     if (o != null) {
-                        val = ValueUtils.toValue(update.get(1));
+                        val = ValueUtils.toValue(o);
                     }
                     value = new SubscriptionValue(path, val);
                     this.updates.put(path, value);
