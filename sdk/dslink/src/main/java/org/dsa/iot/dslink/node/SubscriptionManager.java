@@ -2,6 +2,7 @@ package org.dsa.iot.dslink.node;
 
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.methods.responses.ListResponse;
+import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
@@ -114,7 +115,14 @@ public class SubscriptionManager {
             {
                 JsonArray update = new JsonArray();
                 update.addNumber(sid);
-                ValueUtils.toJson(update, node.getValue());
+
+                Value value = node.getValue();
+                if (value != null) {
+                    ValueUtils.toJson(update, node.getValue());
+                } else {
+                    update.add(null);
+                }
+
                 update.addString(FORMAT.format(new Date()));
 
                 updates.addArray(update);
