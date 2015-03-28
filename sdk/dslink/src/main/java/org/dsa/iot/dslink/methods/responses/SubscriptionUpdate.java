@@ -62,7 +62,11 @@ public class SubscriptionUpdate implements Response {
                     JsonObject update = (JsonObject) obj;
                     rid = update.getInteger("sid");
                     path = paths.get(rid);
-                    Value val = ValueUtils.toValue(update.getField("value"));
+                    Object o = update.getField("value");
+                    Value val = null;
+                    if (o != null) {
+                        val = ValueUtils.toValue(update.getField("value"));
+                    }
                     Integer c = update.getInteger("count");
                     Integer s = update.getInteger("sum");
                     Integer min = update.getInteger("min");
