@@ -51,7 +51,11 @@ public class SubscriptionUpdate implements Response {
                     JsonArray update = (JsonArray) obj;
                     rid = update.get(0);
                     path = paths.get(rid);
-                    Value val = ValueUtils.toValue(update.get(1));
+                    Object o = update.get(1);
+                    Value val = null;
+                    if (o != null) {
+                        val = ValueUtils.toValue(update.get(1));
+                    }
                     value = new SubscriptionValue(path, val);
                     this.updates.put(path, value);
                 } else if (obj instanceof JsonObject) {

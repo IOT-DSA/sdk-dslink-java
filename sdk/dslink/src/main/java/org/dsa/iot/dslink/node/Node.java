@@ -184,7 +184,9 @@ public class Node {
     }
 
     public synchronized void setValue(Value value) {
-        value.setImmutable();
+        if (value != null) {
+            value.setImmutable();
+        }
         this.value = value;
 
         if (link != null) {
