@@ -65,7 +65,7 @@ public class SubscriptionUpdate implements Response {
                     Object o = update.getField("value");
                     Value val = null;
                     if (o != null) {
-                        val = ValueUtils.toValue(update.getField("value"));
+                        val = ValueUtils.toValue(o);
                     }
                     Integer c = update.getInteger("count");
                     Integer s = update.getInteger("sum");
