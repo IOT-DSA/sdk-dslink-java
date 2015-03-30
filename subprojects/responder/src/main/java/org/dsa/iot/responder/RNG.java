@@ -91,9 +91,11 @@ public class RNG {
 
         Map<String, Node> children = child.getChildren();
         for (Node node : children.values()) {
-            RNG rng = new RNG(node);
-            rng.start();
-            NODES.put(node, rng);
+            if (node.getAction() == null) {
+                RNG rng = new RNG(node);
+                rng.start();
+                NODES.put(node, rng);
+            }
         }
     }
 
