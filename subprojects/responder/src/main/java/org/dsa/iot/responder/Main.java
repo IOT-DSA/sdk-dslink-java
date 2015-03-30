@@ -15,6 +15,7 @@ public class Main extends DSLinkHandler {
     @Override
     public void preInit() {
         ActionRegistry registry = getActionRegistry();
+        Replicator.addActions(registry);
         RNG.addActions(registry);
     }
 
