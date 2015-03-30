@@ -14,6 +14,7 @@ import org.dsa.iot.dslink.util.StreamState;
 import org.dsa.iot.dslink.util.StringUtils;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
+import org.vertx.java.core.json.JsonElement;
 import org.vertx.java.core.json.JsonObject;
 
 import java.util.Map;
@@ -237,8 +238,8 @@ public class ListResponse implements Response {
             Map<String, Node> children = node.getChildren();
             if (children != null) {
                 for (Node child : children.values()) {
-                    JsonArray update = getChildUpdate(child, false);
-                    updates.addArray(update);
+                    JsonElement update = getChildUpdate(child, false);
+                    updates.addElement(update);
                 }
             }
         }
@@ -254,7 +255,7 @@ public class ListResponse implements Response {
         }
 
         JsonArray updates = new JsonArray();
-        updates.addArray(getChildUpdate(child, removed));
+        updates.addElement(getChildUpdate(child, removed));
 
         JsonObject resp = new JsonObject();
         resp.putNumber("rid", getRid());
@@ -302,7 +303,14 @@ public class ListResponse implements Response {
         }
     }
 
-    private JsonArray getChildUpdate(Node child, boolean removed) {
+    private JsonElement getChildUpdate(Node child, boolean removed) {
+        if (removed) {
+            JsonObject obj = new JsonObject();
+            obj.putString("name", child.getName());
+            obj.putString("change", "remove");
+            return obj;
+        }
+
         JsonArray update = new JsonArray();
         update.addString(child.getName());
 
@@ -343,10 +351,6 @@ public class ListResponse implements Response {
             if (value != null) {
                 String type = value.getType().toJsonString();
                 childData.putString("$type", type);
-            }
-
-            if (removed) {
-                childData.putString("$changed", "remove");
             }
         }
         update.addObject(childData);
