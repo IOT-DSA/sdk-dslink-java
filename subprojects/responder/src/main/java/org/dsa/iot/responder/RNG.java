@@ -112,7 +112,10 @@ public class RNG {
 
     private synchronized int getAndSubtract(int count) {
         Value prev = parent.getConfig("count");
-        Value c = new Value(prev.getNumber().intValue() - count);
+        count = prev.getNumber().intValue() - count;
+        if (count < 0)
+            count = 0;
+        Value c = new Value(count);
         parent.setConfig("count", c);
         return prev.getNumber().intValue();
     }
