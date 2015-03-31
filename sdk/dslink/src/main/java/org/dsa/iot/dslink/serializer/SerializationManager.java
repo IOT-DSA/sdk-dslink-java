@@ -1,6 +1,8 @@
 package org.dsa.iot.dslink.serializer;
 
 import org.dsa.iot.dslink.node.NodeManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.vertx.java.core.json.JsonObject;
 
 import java.io.IOException;
@@ -19,6 +21,8 @@ import java.util.concurrent.TimeUnit;
  * @author Samuel Grenier
  */
 public class SerializationManager {
+
+    private static final Logger LOGGER;
 
     private final Path path;
     private final Path backup;
@@ -79,9 +83,11 @@ public class SerializationManager {
                 Files.copy(path, backup, StandardCopyOption.REPLACE_EXISTING);
                 Files.delete(path);
             }
-            byte[] bytes = output.encodePrettily().getBytes("UTF-8");
+            String out = output.encodePrettily();
+            byte[] bytes = out.getBytes("UTF-8");
             Files.write(path, bytes);
             Files.delete(backup);
+            LOGGER.debug("Written serialized data: " + out);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -102,11 +108,17 @@ public class SerializationManager {
             Files.deleteIfExists(backup);
 
             if (bytes != null) {
-                JsonObject obj = new JsonObject(new String(bytes, "UTF-8"));
+                String in = new String(bytes, "UTF-8");
+                LOGGER.debug("Read serialized data: " + in);
+                JsonObject obj = new JsonObject(in);
                 deserializer.deserialize(obj);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    static {
+        LOGGER = LoggerFactory.getLogger(SerializationManager.class);
     }
 }
