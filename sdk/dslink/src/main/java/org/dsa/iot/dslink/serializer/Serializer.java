@@ -2,7 +2,6 @@ package org.dsa.iot.dslink.serializer;
 
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
-import org.dsa.iot.dslink.node.actions.Action;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.dsa.iot.dslink.util.StringUtils;
@@ -50,11 +49,6 @@ public class Serializer {
         set = parent.getMixins();
         if (set != null && set.size() > 0) {
             out.putString("$mixin", StringUtils.join(set, "|"));
-        }
-
-        Action action = parent.getAction();
-        if (action != null) {
-            out.putString("$function", parent.getAction().getName());
         }
 
         String profile = parent.getProfile();

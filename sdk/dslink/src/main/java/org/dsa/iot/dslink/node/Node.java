@@ -412,32 +412,7 @@ public class Node {
      *
      * @param action Action to set. Use {@code null} to remove an action.
      */
-    public synchronized void setAction(String action) {
-        if (action == null) {
-            this.action = null;
-        } else {
-            if (link == null) {
-                throw new RuntimeException("link in node is null, use forceSetAction");
-            }
-            this.action = link.getActionRegistry().getAction(action);
-            if (this.action == null) {
-                throw new RuntimeException(action + " does not exist");
-            }
-        }
-    }
-
-    /**
-     * Forcibly sets an action on a node. Depending on the action registry
-     * configuration, this may not be deserialization safe. Caution is to be
-     * taken when using this method. If an action has the same name but
-     * different permission levels and the action is in the action registry,
-     * it will use the permission level defined in the registry and custom
-     * permission levels will be lost. It is highly recommended to use
-     * {@link #setAction(String)} whenever possible.
-     *
-     * @param action Forced action to set.
-     */
-    public synchronized void forceSetAction(Action action) {
+    public synchronized void setAction(Action action) {
         this.action = action;
     }
 

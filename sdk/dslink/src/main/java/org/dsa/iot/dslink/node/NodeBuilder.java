@@ -1,5 +1,6 @@
 package org.dsa.iot.dslink.node;
 
+import org.dsa.iot.dslink.node.actions.Action;
 import org.dsa.iot.dslink.node.value.Value;
 
 /**
@@ -30,7 +31,7 @@ public class NodeBuilder {
         return this;
     }
 
-    public NodeBuilder setAction(String action) {
+    public NodeBuilder setAction(Action action) {
         child.setAction(action);
         return this;
     }
@@ -76,6 +77,16 @@ public class NodeBuilder {
      * @return Child node
      */
     public Node build() {
-        return parent.addChild(child);
+        Node node = parent.addChild(child);
+        // addChild can be used as a getter, which is useful in scenarios
+        // where serialization takes place. However, setting the action
+        // before building the node may remove the action override, so in
+        // order to ensure that the action is preserved after serialization,
+        // the action must be reset on the child node.
+
+        // addChild can return a deserialized node. This results in the action
+        // being removed
+        node.setAction(child.getAction());
+        return node;
     }
 }

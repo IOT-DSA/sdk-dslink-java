@@ -3,7 +3,6 @@ package org.dsa.iot.dslink.link;
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.DSLinkHandler;
 import org.dsa.iot.dslink.node.SubscriptionManager;
-import org.dsa.iot.dslink.node.actions.ActionRegistry;
 
 import java.lang.ref.WeakReference;
 
@@ -29,17 +28,6 @@ public abstract class Linkable {
         DSLink dsLink = getDSLink();
         if (dsLink != null) {
             return dsLink.getSubscriptionManager();
-        }
-        return null;
-    }
-
-    /**
-     * @return The action registry of the link
-     */
-    public ActionRegistry getActionRegistry() {
-        DSLink dsLink = getDSLink();
-        if (dsLink != null) {
-            return dsLink.getActionRegistry();
         }
         return null;
     }

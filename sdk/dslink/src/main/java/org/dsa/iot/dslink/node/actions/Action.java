@@ -18,32 +18,20 @@ public class Action {
     private final List<Parameter> params = new ArrayList<>();
     private final List<Parameter> results = new ArrayList<>();
 
-    private final String name;
     private final Permission permission;
     private final Handler<ActionResult> handler;
 
     /**
-     * @param name       Name of the action
      * @param permission Minimum required permission to invoke
      * @param handler    Handler for invocation
      */
-    public Action(String name, Permission permission, Handler<ActionResult> handler) {
-        if (name == null)
-            throw new NullPointerException("name");
-        else if (permission == null)
+    public Action(Permission permission, Handler<ActionResult> handler) {
+        if (permission == null)
             throw new NullPointerException("permission");
         else if (handler == null)
             throw new NullPointerException("handler");
-        this.name = name;
         this.permission = permission;
         this.handler = handler;
-    }
-
-    /**
-     * @return Serializable name of the action.
-     */
-    public String getName() {
-        return name;
     }
 
     /**

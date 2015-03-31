@@ -4,7 +4,6 @@ import org.dsa.iot.dslink.connection.Endpoint;
 import org.dsa.iot.dslink.connection.NetworkClient;
 import org.dsa.iot.dslink.connection.RemoteEndpoint;
 import org.dsa.iot.dslink.node.NodeManager;
-import org.dsa.iot.dslink.node.actions.ActionRegistry;
 import org.dsa.iot.dslink.serializer.SerializationManager;
 import org.vertx.java.core.Handler;
 
@@ -41,13 +40,11 @@ public class DSLinkProvider {
             public synchronized void handle(NetworkClient event) {
                 DSLink link = null;
                 if (event.isRequester()) {
-                    ActionRegistry registry = new ActionRegistry();
-                    link = new DSLink(handler, event, registry);
+                    link = new DSLink(handler, event);
                     link.setDefaultDataHandlers();
                     handler.onRequesterConnected(link);
                 } else if (event.isResponder()) {
-                    ActionRegistry registry = handler.getActionRegistry();
-                    link = new DSLink(handler, event, registry);
+                    link = new DSLink(handler, event);
 
                     Path path = handler.getConfig().getSerializationPath();
                     if (path != null) {

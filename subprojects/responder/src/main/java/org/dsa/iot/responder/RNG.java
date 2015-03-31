@@ -4,7 +4,6 @@ import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeBuilder;
 import org.dsa.iot.dslink.node.Permission;
 import org.dsa.iot.dslink.node.actions.Action;
-import org.dsa.iot.dslink.node.actions.ActionRegistry;
 import org.dsa.iot.dslink.node.actions.ActionResult;
 import org.dsa.iot.dslink.node.actions.Parameter;
 import org.dsa.iot.dslink.node.value.Value;
@@ -14,13 +13,9 @@ import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonObject;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * Creates a random number generator
@@ -30,152 +25,155 @@ public class RNG {
 
     private static final Logger LOGGER;
     private static final ScheduledThreadPoolExecutor STPE;
-    private static final Map<Node, RNG> NODES;
-
     private static final Random RANDOM = new Random();
-    private static final Object LOCK = new Object();
 
-    private final Node node;
-    private ScheduledFuture<?> fut;
+    private final Node parent;
+    private final Map<Node, ScheduledFuture<?>> futures;
 
-    public RNG(Node node) {
-        this.node = node;
+    private RNG(Node parent) {
+        this.parent = parent;
+        this.futures = new ConcurrentHashMap<>();
     }
 
-    private void start() {
-        fut = STPE.scheduleWithFixedDelay(new Runnable() {
+    public void initChildren() {
+        Map<String, Node> children = parent.getChildren();
+        if (children != null) {
+            for (Node node : children.values()) {
+                if (node.getAction() == null) {
+                    setupRNG(node);
+                }
+            }
+        }
+    }
+
+    private void addRNG(int count) {
+        int max = addAndGet(count);
+        int min = max - count;
+
+        for (; min < max; min++) {
+            // Setup child
+            NodeBuilder builder = parent.createChild("rng_" + min);
+            builder.setValue(new Value(0));
+            final Node child = builder.build();
+
+            // Log creation
+            final String path = child.getPath();
+            final String msg = "Created RNG child at " + path;
+            LOGGER.info(msg);
+
+            // Setup RNG
+            setupRNG(child);
+        }
+    }
+
+    private void removeRNG(int count) {
+        int max = getAndSubtract(count);
+        int min = max - count;
+
+        for (; max > min; max--) {
+            // Remove child if possible
+            Node child = parent.getChild("rng_" + (max - 1));
+            parent.removeChild(child);
+
+            // Remove RNG task if possible
+            ScheduledFuture<?> fut = futures.get(child);
+            if (fut != null) {
+                // Cancel out the RNG task
+                fut.cancel(false);
+
+                // Log removal
+                final String path = child.getPath();
+                final String msg = "Removed RNG child at " + path;
+                LOGGER.info(msg);
+            }
+        }
+    }
+
+    private void setupRNG(final Node child) {
+        ScheduledFuture<?> fut = STPE.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
                 Value val = new Value(RANDOM.nextInt());
-                node.setValue(val);
-                LOGGER.info(node.getPath() + " has new value of " + val.getNumber().intValue());
+                child.setValue(val);
+
+                int value = val.getNumber().intValue();
+                LOGGER.info(child.getPath() + " has new value of " + value);
             }
         }, 0, 2, TimeUnit.SECONDS);
+        futures.put(child, fut);
     }
 
-    private void stop() {
-        if (fut != null) {
-            fut.cancel(false);
-        }
+    private synchronized int addAndGet(int count) {
+        Value c = parent.getConfig("count");
+        c = new Value(c.getNumber().intValue() + count);
+        parent.setConfig("count", c);
+        return c.getNumber().intValue();
     }
 
-    public static void addActions(ActionRegistry registry) {
-        Permission p = Permission.READ;
-        {
-            Action action = new Action("addRNG", p, new RNG.AddHandler());
-            action.addParameter(new Parameter("count", ValueType.NUMBER));
-            registry.register(action);
-        }
-
-        {
-            Action action = new Action("removeRNG", p, new RNG.RemoveChildrenHandler());
-            action.addParameter(new Parameter("count", ValueType.NUMBER));
-            registry.register(action);
-        }
+    private synchronized int getAndSubtract(int count) {
+        Value prev = parent.getConfig("count");
+        Value c = new Value(prev.getNumber().intValue() - count);
+        parent.setConfig("count", c);
+        return prev.getNumber().intValue();
     }
 
-    public static void init(Node parent) {
-        NodeBuilder builder = parent.createChild("rng");
-        builder.setAttribute("count", new Value(0));
-        Node child = builder.build();
+    public static void init(Node superRoot) {
+        Node parent = superRoot.createChild("rng")
+                .setConfig("count", new Value(0))
+                .build();
+        RNG rng = new RNG(parent);
 
-        String name = "addRNG";
-        builder = child.createChild(name);
-        builder.setAction(name);
+        NodeBuilder builder = parent.createChild("addRNG");
+        builder.setAction(getAddAction(rng));
         builder.build();
 
-        name = "removeRNG";
-        builder = child.createChild(name);
-        builder.setAction(name);
+        builder = parent.createChild("removeRNG");
+        builder.setAction(getRemoveAction(rng));
         builder.build();
 
-        Map<String, Node> children = child.getChildren();
-        for (Node node : children.values()) {
-            if (node.getAction() == null) {
-                RNG rng = new RNG(node);
-                rng.start();
-                NODES.put(node, rng);
-            }
-        }
+        rng.initChildren();
     }
 
-    public static Node addRNG(String name, Node parent) {
-        NodeBuilder builder = parent.createChild(name);
-        builder.setValue(new Value(0));
-        Node node = builder.build();
-
-        RNG rng = new RNG(node);
-        rng.start();
-        NODES.put(node, rng);
-
-        LOGGER.info("Created RNG child at " + node.getPath());
-        return node;
+    private static Action getAddAction(final RNG rng) {
+        Action act = new Action(Permission.READ, new Handler<ActionResult>() {
+            @Override
+            public void handle(ActionResult event) {
+                JsonObject params = event.getJsonIn().getObject("params");
+                int count = 1;
+                if (params != null) {
+                    count = params.getInteger("count", 1);
+                }
+                if (count < 0) {
+                    throw new IllegalArgumentException("count < 0");
+                }
+                rng.addRNG(count);
+            }
+        });
+        act.addParameter(new Parameter("count", ValueType.NUMBER));
+        return act;
     }
 
-    public static class AddHandler implements Handler<ActionResult> {
-        @Override
-        public void handle(ActionResult event) {
-            int incrementCount = 1;
-
-            JsonObject params = event.getJsonIn().getObject("params");
-            if (params != null) {
-                Integer count = params.getInteger("count");
-                if (count != null) {
-                    incrementCount = count;
+    private static Action getRemoveAction(final RNG rng) {
+        Action act = new Action(Permission.READ, new Handler<ActionResult>() {
+            @Override
+            public void handle(ActionResult event) {
+                JsonObject params = event.getJsonIn().getObject("params");
+                int count = 1;
+                if (params != null) {
+                    count = params.getInteger("count", 1);
                 }
-            }
-
-            Node node = event.getNode().getParent();
-            synchronized (LOCK) {
-                Value value = node.getAttribute("count");
-                int min = value.getNumber().intValue();
-                int max = min + incrementCount;
-                node.setAttribute("count", new Value(max));
-
-                for (int i = min; i < max; i++) {
-                    Node child = addRNG("rng_" + i, node);
-                    LOGGER.info("Created RNG child at " + child.getPath());
+                if (count < 0) {
+                    throw new IllegalArgumentException("count < 0");
                 }
+                rng.removeRNG(count);
             }
-        }
-    }
-
-    public static class RemoveChildrenHandler implements Handler<ActionResult> {
-
-        @Override
-        public void handle(ActionResult event) {
-            int decrementCount = 1;
-
-            JsonObject params = event.getJsonIn().getObject("params");
-            if (params != null) {
-                Integer count = params.getInteger("count");
-                if (count != null) {
-                    decrementCount = count;
-                }
-            }
-
-            Node node = event.getNode().getParent();
-            synchronized (LOCK) {
-                Value value = node.getAttribute("count");
-                int max = value.getNumber().intValue();
-                int min = max - decrementCount;
-                if (min < 0)
-                    min = 0;
-                node.setAttribute("count", new Value(min));
-
-                for (int i = max; i > min; i--) {
-                    Node child = node.removeChild("rng_" + (i - 1));
-                    RNG rng = NODES.remove(child);
-                    rng.stop();
-                    LOGGER.info("Removed RNG child at " + child.getPath());
-                }
-            }
-        }
+        });
+        act.addParameter(new Parameter("count", ValueType.NUMBER));
+        return act;
     }
 
     static {
         LOGGER =  LoggerFactory.getLogger(RNG.class);
-        NODES = new HashMap<>();
         STPE = new ScheduledThreadPoolExecutor(8, new ThreadFactory() {
             @Override
             public Thread newThread(Runnable r) {

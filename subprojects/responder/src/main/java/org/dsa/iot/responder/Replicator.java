@@ -3,20 +3,14 @@ package org.dsa.iot.responder;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.Permission;
 import org.dsa.iot.dslink.node.actions.Action;
-import org.dsa.iot.dslink.node.actions.ActionRegistry;
 import org.dsa.iot.dslink.node.actions.ActionResult;
 import org.vertx.java.core.Handler;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Creates a bunch of nodes to test children updates.
  * @author Samuel Grenier
  */
 public class Replicator {
-
-    private static final Map<Node, Replicator> NODES;
 
     private Node node;
     private Thread thread;
@@ -25,34 +19,22 @@ public class Replicator {
         this.node = node;
     }
 
-    public static void addActions(ActionRegistry registry) {
-        Permission perm = Permission.READ;
-        registry.register(new Action("reset", perm, new Handler<ActionResult>() {
-            @Override
-            public void handle(ActionResult event) {
-                Node node = event.getNode().getParent();
-                Replicator rep = NODES.get(node);
-                rep.reset();
-                rep.startThread();
-            }
-        }));
-    }
-
     public static void start(Node parent) {
         Node node = parent.createChild("replicator").build();
-        node.createChild("reset").setAction("reset").build();
-        Replicator rep = new Replicator(node);
-        NODES.put(node, rep);
+
+        final Permission perm = Permission.READ;
+        final Replicator rep = new Replicator(node);
+        final Action act = new Action(perm, new ResetHandler(rep));
+        node.createChild("reset").build().setAction(act);
         rep.startThread();
     }
 
     private synchronized void startThread() {
-        reset();
         thread = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    for (int i = 0; i < 100; i++) {
+                    for (int i = 0; i < 5; i++) {
                         Thread.sleep(1000);
                         node.createChild(String.valueOf(i)).build();
                     }
@@ -74,7 +56,18 @@ public class Replicator {
         }
     }
 
-    static {
-        NODES = new HashMap<>();
+    private static class ResetHandler implements Handler<ActionResult> {
+
+        private final Replicator rep;
+
+        public ResetHandler(Replicator rep) {
+            this.rep = rep;
+        }
+
+        @Override
+        public void handle(ActionResult event) {
+            rep.reset();
+            rep.startThread();
+        }
     }
 }

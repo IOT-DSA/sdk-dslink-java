@@ -5,7 +5,6 @@ import org.dsa.iot.dslink.link.Requester;
 import org.dsa.iot.dslink.link.Responder;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.SubscriptionManager;
-import org.dsa.iot.dslink.node.actions.ActionRegistry;
 import org.dsa.iot.dslink.util.StreamState;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
@@ -20,7 +19,6 @@ import java.io.StringWriter;
 public class DSLink {
 
     private final SubscriptionManager manager = new SubscriptionManager(this);
-    private final ActionRegistry registry;
     private final NodeManager nodeManager;
     private final Requester requester;
     private final Responder responder;
@@ -29,15 +27,12 @@ public class DSLink {
     /**
      * @param handler DSLink handler
      * @param client Initialized client endpoint
-     * @param registry Action registry to use in the link
      */
     protected DSLink(DSLinkHandler handler,
-                     NetworkClient client,
-                     ActionRegistry registry) {
+                     NetworkClient client) {
         if (client == null)
             throw new NullPointerException("client");
         this.client = client;
-        this.registry = registry;
 
         if (client.isRequester()) {
             requester = new Requester(handler);
@@ -82,13 +77,6 @@ public class DSLink {
      */
     public SubscriptionManager getSubscriptionManager() {
         return manager;
-    }
-
-    /**
-     * @return Action registry
-     */
-    public ActionRegistry getActionRegistry() {
-        return registry;
     }
 
     /**
