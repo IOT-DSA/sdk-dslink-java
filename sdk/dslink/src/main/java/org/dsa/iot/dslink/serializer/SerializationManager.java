@@ -1,15 +1,12 @@
 package org.dsa.iot.dslink.serializer;
 
 import org.dsa.iot.dslink.node.NodeManager;
+import org.dsa.iot.dslink.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.json.JsonObject;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.io.*;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
@@ -24,8 +21,8 @@ public class SerializationManager {
 
     private static final Logger LOGGER;
 
-    private final Path path;
-    private final Path backup;
+    private final File file;
+    private final File backup;
 
     private final Deserializer deserializer;
     private final Serializer serializer;
@@ -36,12 +33,12 @@ public class SerializationManager {
     /**
      * Handles serialization based on the file path.
      *
-     * @param path Path that holds the data
+     * @param file Path that holds the data
      * @param manager Manager to deserialize/serialize
      */
-    public SerializationManager(Path path, NodeManager manager) {
-        this.path = path;
-        this.backup = Paths.get(path.toString() + ".bak");
+    public SerializationManager(File file, NodeManager manager) {
+        this.file = file;
+        this.backup = new File(file.getPath() + ".bak");
         this.deserializer = new Deserializer(manager);
         this.serializer = new Serializer(manager);
         this.stpe = new ScheduledThreadPoolExecutor(1, new ThreadFactory() {
@@ -76,17 +73,19 @@ public class SerializationManager {
      * path. Manually calling this is redundant as a timer will automatically
      * handle serialization.
      */
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public void serialize() {
-        JsonObject output = serializer.serialize();
+        JsonObject json = serializer.serialize();
         try {
-            if (Files.exists(path)) {
-                Files.copy(path, backup, StandardCopyOption.REPLACE_EXISTING);
-                Files.delete(path);
+            if (file.exists()) {
+                FileUtils.copy(file, backup);
+                file.delete();
             }
-            String out = output.encodePrettily();
+            String out = json.encodePrettily();
             byte[] bytes = out.getBytes("UTF-8");
-            Files.write(path, bytes);
-            Files.delete(backup);
+            FileUtils.write(file, bytes);
+
+            backup.delete();
             LOGGER.debug("Written serialized data: " + out);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -96,16 +95,21 @@ public class SerializationManager {
     /**
      * Deserializes the data into the node manager based on the path.
      */
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public void deserialize() {
+        InputStream input = null;
         try {
-            byte[] bytes = null;
-            if (Files.exists(path)) {
-                bytes = Files.readAllBytes(path);
-            } else if (Files.exists(backup)) {
-                bytes = Files.readAllBytes(backup);
-                Files.copy(backup, path);
+            if (file.exists()) {
+                input = new FileInputStream(file);
+            } else if (backup.exists()) {
+                input = new FileInputStream(backup);
             }
-            Files.deleteIfExists(backup);
+            backup.delete();
+
+            byte[] bytes = null;
+            if (input != null) {
+                bytes = FileUtils.readAllBytes(input);
+            }
 
             if (bytes != null) {
                 String in = new String(bytes, "UTF-8");
@@ -115,6 +119,17 @@ public class SerializationManager {
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
+        } finally {
+            try {
+                if (input != null) {
+                    input.close();
+                }
+            } catch (IOException e) {
+                StringWriter writer = new StringWriter();
+                e.printStackTrace(new PrintWriter(writer));
+                LOGGER.debug(writer.toString());
+            }
+
         }
     }
 

@@ -14,12 +14,12 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.jce.spec.ECNamedCurveSpec;
 import org.bouncycastle.math.ec.ECCurve;
 import org.bouncycastle.math.ec.ECPoint;
+import org.dsa.iot.dslink.util.FileUtils;
 import org.dsa.iot.dslink.util.UrlBase64;
 
+import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.security.KeyPair;
 import java.security.spec.ECGenParameterSpec;
 import java.security.spec.ECParameterSpec;
@@ -157,17 +157,17 @@ public class LocalKeys {
      * doesn't exist then keys will be generated and stored at the designated
      * path.
      *
-     * @param path Path of the keys
+     * @param file Path of the keys
      * @return Keys
      */
-    public static LocalKeys getFromFileSystem(Path path) {
+    public static LocalKeys getFromFileSystem(File file) {
         try {
-            if (!Files.exists(path)) {
+            if (!file.exists()) {
                 LocalKeys generated = generate();
-                Files.write(path, generated.serialize().getBytes("UTF-8"));
+                FileUtils.write(file, generated.serialize().getBytes("UTF-8"));
                 return generated;
             } else {
-                byte[] bytes = Files.readAllBytes(path);
+                byte[] bytes = FileUtils.readAllBytes(file);
                 String serialized = new String(bytes, "UTF-8");
                 return deserialize(serialized);
             }

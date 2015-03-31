@@ -3,7 +3,7 @@ package org.dsa.iot.dslink.util;
 import org.dsa.iot.dslink.connection.ConnectionType;
 import org.dsa.iot.dslink.handshake.LocalKeys;
 
-import java.nio.file.Path;
+import java.io.File;
 
 /**
  * Holds the configuration of a DSLink.
@@ -19,7 +19,7 @@ public class Configuration {
     private boolean isResponder;
     private ConnectionType type;
     private LocalKeys keys;
-    private Path serializationPath;
+    private File serializationPath;
 
     /**
      * Example endpoint: http://localhost:8080/conn
@@ -180,16 +180,16 @@ public class Configuration {
      * Sets the serialization path. This location determines where
      * serialization and deserialization will occur.
      *
-     * @param path Serialization path, can be null.
+     * @param file Serialization path, can be null.
      */
-    public void setSerializationPath(Path path) {
-        this.serializationPath = path;
+    public void setSerializationPath(File file) {
+        this.serializationPath = file;
     }
 
     /**
      * @return Serialization path, can be null.
      */
-    public Path getSerializationPath() {
+    public File getSerializationPath() {
         return serializationPath;
     }
 

@@ -11,8 +11,7 @@ import org.dsa.iot.dslink.util.Configuration;
 import org.dsa.iot.dslink.util.LogLevel;
 import org.dsa.iot.dslink.util.URLInfo;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.File;
 
 /**
  * Factory for generating {@link DSLink} objects.
@@ -126,10 +125,10 @@ public class DSLinkFactory {
         LogLevel.setLevel(parsed.getLogLevel());
         defaults.setAuthEndpoint(parsed.getBrokerHost());
 
-        Path loc = Paths.get(parsed.getKeyPath());
+        File loc = new File(parsed.getKeyPath());
         defaults.setKeys(LocalKeys.getFromFileSystem(loc));
 
-        loc = Paths.get(parsed.getNodesPath());
+        loc = new File(parsed.getNodesPath());
         defaults.setSerializationPath(loc);
 
         handler.setConfig(defaults);

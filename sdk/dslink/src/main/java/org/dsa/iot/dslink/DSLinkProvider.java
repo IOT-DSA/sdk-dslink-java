@@ -7,7 +7,7 @@ import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.serializer.SerializationManager;
 import org.vertx.java.core.Handler;
 
-import java.nio.file.Path;
+import java.io.File;
 
 /**
  * Provides DSLinks as soon as a client connects to the server or vice versa.
@@ -46,7 +46,7 @@ public class DSLinkProvider {
                 } else if (event.isResponder()) {
                     link = new DSLink(handler, event);
 
-                    Path path = handler.getConfig().getSerializationPath();
+                    File path = handler.getConfig().getSerializationPath();
                     if (path != null) {
                         NodeManager man = link.getNodeManager();
                         SerializationManager manager = new SerializationManager(path, man);
