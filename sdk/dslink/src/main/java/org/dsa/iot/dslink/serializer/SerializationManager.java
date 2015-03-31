@@ -6,7 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.json.JsonObject;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
@@ -97,19 +98,14 @@ public class SerializationManager {
      */
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public void deserialize() {
-        InputStream input = null;
         try {
+            byte[] bytes = null;
             if (file.exists()) {
-                input = new FileInputStream(file);
+                bytes = FileUtils.readAllBytes(file);
             } else if (backup.exists()) {
-                input = new FileInputStream(backup);
+                bytes = FileUtils.readAllBytes(backup);
             }
             backup.delete();
-
-            byte[] bytes = null;
-            if (input != null) {
-                bytes = FileUtils.readAllBytes(input);
-            }
 
             if (bytes != null) {
                 String in = new String(bytes, "UTF-8");
@@ -119,17 +115,6 @@ public class SerializationManager {
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
-        } finally {
-            try {
-                if (input != null) {
-                    input.close();
-                }
-            } catch (IOException e) {
-                StringWriter writer = new StringWriter();
-                e.printStackTrace(new PrintWriter(writer));
-                LOGGER.debug(writer.toString());
-            }
-
         }
     }
 
