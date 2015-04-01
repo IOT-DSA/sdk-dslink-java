@@ -43,7 +43,6 @@ public abstract class DSLinkHandler {
     /**
      * @param link The link that has completed a connection.
      */
-    @SuppressWarnings("UnusedParameters")
     public void onRequesterConnected(DSLink link) {
     }
 
@@ -52,7 +51,6 @@ public abstract class DSLinkHandler {
      * @param link The link that has completed a connection.
      */
 
-    @SuppressWarnings("UnusedParameters")
     public void onResponderConnected(DSLink link) {
     }
 }

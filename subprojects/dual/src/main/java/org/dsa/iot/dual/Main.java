@@ -19,7 +19,6 @@ public class Main extends DSLinkHandler {
     /**
      * @param link The link that has completed a connection.
      */
-    @SuppressWarnings("UnusedParameters")
     public void onRequesterConnected(DSLink link) {
         LOGGER.info("Requester link added");
         link.getRequester().list(new ListRequest("/"),
@@ -32,11 +31,8 @@ public class Main extends DSLinkHandler {
     }
 
     /**
-     *
      * @param link The link that has completed a connection.
      */
-
-    @SuppressWarnings("UnusedParameters")
     public void onResponderConnected(DSLink link) {
         LOGGER.info("Responder link added");
     }
