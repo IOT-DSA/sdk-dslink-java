@@ -34,6 +34,7 @@ public class Node {
     private Set<String> interfaces;
     private Action action;
     private Value value;
+    private char[] pass;
 
     /**
      * Constructs a node object.
@@ -414,6 +415,27 @@ public class Node {
      */
     public synchronized void setAction(Action action) {
         this.action = action;
+    }
+
+    /**
+     * Gets the password the node is configured to use. This is necessary
+     * for authentication to servers.
+     *
+     * @return Password the node is configured to use.
+     */
+    public synchronized char[] getPassword() {
+        return pass.clone();
+    }
+
+    /**
+     * If this node accesses servers and requires authentication, the password
+     * must be set here. This will censor the password from being retrieved
+     * through the responder.
+     *
+     * @param password Password to set.
+     */
+    public synchronized void setPassword(char[] password) {
+        this.pass = password.clone();
     }
 
     /**

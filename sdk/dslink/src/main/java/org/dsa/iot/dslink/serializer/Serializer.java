@@ -61,6 +61,11 @@ public class Serializer {
             ValueUtils.toJson(out, "?value", value);
         }
 
+        char[] password = parent.getPassword();
+        if (password != null) {
+            out.putString("$password", new String(password));
+        }
+
         addValues("$", out, parent.getConfigurations());
         addValues("@", out, parent.getAttributes());
 
