@@ -50,7 +50,6 @@ public abstract class DSLinkHandler {
      *
      * @param link The link that has completed a connection.
      */
-
     public void onResponderConnected(DSLink link) {
     }
 }

@@ -74,20 +74,24 @@ public class SerializationManager {
      * path. Manually calling this is redundant as a timer will automatically
      * handle serialization.
      */
-    @SuppressWarnings("ResultOfMethodCallIgnored")
     public void serialize() {
         JsonObject json = serializer.serialize();
         try {
             if (file.exists()) {
                 FileUtils.copy(file, backup);
-                file.delete();
+                LOGGER.debug("Copying serialized data to a backup");
+                if (file.delete()) {
+                    LOGGER.debug("Serialized data removed");
+                }
             }
             String out = json.encodePrettily();
             byte[] bytes = out.getBytes("UTF-8");
             FileUtils.write(file, bytes);
 
-            backup.delete();
-            LOGGER.debug("Written serialized data: " + out);
+            if (backup.delete()) {
+                LOGGER.debug("Backup data removed");
+            }
+            LOGGER.debug("Wrote serialized data: " + out);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -96,7 +100,6 @@ public class SerializationManager {
     /**
      * Deserializes the data into the node manager based on the path.
      */
-    @SuppressWarnings("ResultOfMethodCallIgnored")
     public void deserialize() {
         try {
             byte[] bytes = null;
@@ -105,7 +108,12 @@ public class SerializationManager {
             } else if (backup.exists()) {
                 bytes = FileUtils.readAllBytes(backup);
             }
-            backup.delete();
+            if (backup.delete()) {
+                if (bytes != null) {
+                    FileUtils.write(file, bytes);
+                }
+                LOGGER.debug("Moved backup data to regular data for deserialization");
+            }
 
             if (bytes != null) {
                 String in = new String(bytes, "UTF-8");

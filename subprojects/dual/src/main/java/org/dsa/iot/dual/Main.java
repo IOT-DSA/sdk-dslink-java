@@ -16,9 +16,6 @@ public class Main extends DSLinkHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
 
-    /**
-     * @param link The link that has completed a connection.
-     */
     public void onRequesterConnected(DSLink link) {
         LOGGER.info("Requester link added");
         link.getRequester().list(new ListRequest("/"),
@@ -30,9 +27,6 @@ public class Main extends DSLinkHandler {
         });
     }
 
-    /**
-     * @param link The link that has completed a connection.
-     */
     public void onResponderConnected(DSLink link) {
         LOGGER.info("Responder link added");
     }

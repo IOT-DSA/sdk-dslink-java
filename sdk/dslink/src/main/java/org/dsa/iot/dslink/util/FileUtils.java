@@ -51,9 +51,10 @@ public class FileUtils {
      * @param bytes Bytes to write into the new file.
      * @throws IOException
      */
-    @SuppressWarnings("ResultOfMethodCallIgnored")
     public static void write(File path, byte[] bytes) throws IOException {
-        path.delete();
+        if (path.delete()) {
+            LOGGER.debug("Removed " + path.getPath() + " during writing");
+        }
         try (OutputStream stream = new FileOutputStream(path)) {
             stream.write(bytes);
         }
@@ -66,9 +67,10 @@ public class FileUtils {
      * @param dest Destination file to copy to
      * @throws IOException
      */
-    @SuppressWarnings("ResultOfMethodCallIgnored")
     public static void copy(File src, File dest) throws IOException {
-        dest.delete();
+        if (dest.delete()) {
+            LOGGER.debug("Removed " + dest.getPath() + " during copying");
+        }
         InputStream input = null;
         OutputStream output = null;
 
