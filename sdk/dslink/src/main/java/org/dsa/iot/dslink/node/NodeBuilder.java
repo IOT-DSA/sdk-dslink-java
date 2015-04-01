@@ -66,6 +66,11 @@ public class NodeBuilder {
         return this;
     }
 
+    public NodeBuilder setPassword(char[] password) {
+        child.setPassword(password);
+        return this;
+    }
+
     public Node getChild() {
         return child;
     }
