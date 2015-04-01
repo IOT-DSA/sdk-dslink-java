@@ -1,6 +1,7 @@
 # Runtime
 subprojects/requester/run
 subprojects/responder/run
+subprojects/dual/run
 
 # Gradle
 .gradle

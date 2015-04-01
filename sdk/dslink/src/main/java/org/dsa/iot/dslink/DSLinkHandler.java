@@ -41,16 +41,6 @@ public abstract class DSLinkHandler {
     }
 
     /**
-     * Initializes the link after it connects. The link can then have any
-     * nodes populated and its actions set.
-     *
-     * @param link Link to initialize
-     */
-    @SuppressWarnings("UnusedParameters")
-    public void init(DSLink link) {
-    }
-
-    /**
      * @param link The link that has completed a connection.
      */
     @SuppressWarnings("UnusedParameters")

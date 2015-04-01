@@ -38,13 +38,14 @@ public class DSLinkProvider {
         endpoint.setClientConnectedHandler(new Handler<NetworkClient>() {
             @Override
             public synchronized void handle(NetworkClient event) {
-                DSLink link = null;
                 if (event.isRequester()) {
-                    link = new DSLink(handler, event);
+                    DSLink link = new DSLink(handler, event);
                     link.setDefaultDataHandlers();
                     handler.onRequesterConnected(link);
-                } else if (event.isResponder()) {
-                    link = new DSLink(handler, event);
+                }
+
+                if (event.isResponder()) {
+                    DSLink link = new DSLink(handler, event);
 
                     File path = handler.getConfig().getSerializationPath();
                     if (path != null) {
@@ -56,9 +57,6 @@ public class DSLinkProvider {
 
                     link.setDefaultDataHandlers();
                     handler.onResponderConnected(link);
-                }
-                if (link != null) {
-                    handler.init(link);
                 }
             }
         });
