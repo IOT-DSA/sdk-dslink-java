@@ -40,10 +40,10 @@ public class Main extends DSLinkHandler {
 
     public void onResponderConnected(DSLink link) {
         LOGGER.info("Responder link added");
-        NodeBuilder builder = link.getNodeManager().createRootNode("test");
+        NodeBuilder builder = link.getNodeManager().createRootNode("values");
         Node node = builder.build();
 
-        builder = node.createChild("test2");
+        builder = node.createChild("string");
         builder.setValue(new Value("Hello world"));
         builder.build();
     }
