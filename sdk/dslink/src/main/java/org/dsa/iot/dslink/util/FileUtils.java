@@ -18,7 +18,7 @@ public class FileUtils {
      *
      * @param src Source file to read
      * @return All the bytes of the file
-     * @throws IOException
+     * @throws IOException IO Exception occurred
      */
     public static byte[] readAllBytes(File src) throws IOException {
         try (InputStream stream = new FileInputStream(src)) {
@@ -31,7 +31,7 @@ public class FileUtils {
      *
      * @param input The stream input to read
      * @return Bytes of the stream
-     * @throws IOException
+     * @throws IOException IO Exception occurred
      */
     public static byte[] readAllBytes(InputStream input) throws IOException {
         Buffer buffer = new Buffer();
@@ -49,7 +49,7 @@ public class FileUtils {
      *
      * @param path Path to write to.
      * @param bytes Bytes to write into the new file.
-     * @throws IOException
+     * @throws IOException IO Exception occurred
      */
     public static void write(File path, byte[] bytes) throws IOException {
         if (path.delete()) {
@@ -65,7 +65,7 @@ public class FileUtils {
      *
      * @param src Source file to copy
      * @param dest Destination file to copy to
-     * @throws IOException
+     * @throws IOException IO Exception occurred
      */
     public static void copy(File src, File dest) throws IOException {
         if (dest.delete()) {
