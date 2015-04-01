@@ -5,9 +5,6 @@ import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Action API for handling invocations, parameters, and results.
  *
@@ -15,8 +12,8 @@ import java.util.List;
  */
 public class Action {
 
-    private final List<Parameter> params = new ArrayList<>();
-    private final List<Parameter> results = new ArrayList<>();
+    private final JsonArray params = new JsonArray();
+    private final JsonArray results = new JsonArray();
 
     private final Permission permission;
     private final Handler<ActionResult> handler;
@@ -38,14 +35,20 @@ public class Action {
      * @param parameter Add a parameter for the invocation
      */
     public void addParameter(Parameter parameter) {
-        params.add(parameter);
+        JsonObject param = paramToJson(parameter);
+        if (param != null) {
+            params.addObject(param);
+        }
     }
 
     /**
      * @param parameter Add a result for the invocation
      */
     public void addResult(Parameter parameter) {
-        results.add(parameter);
+        JsonObject result = paramToJson(parameter);
+        if (result != null) {
+            results.addObject(result);
+        }
     }
 
     /**
@@ -76,32 +79,28 @@ public class Action {
      * @return Parameters of the action.
      */
     public JsonArray getParams() {
-        return paramsToJson(params);
+        return params;
     }
 
     /**
      * @return The columns of the action
      */
     public JsonArray getColumns() {
-        return paramsToJson(results);
+        return results;
     }
 
     /**
      * Converts all the parameters to JSON consumable format.
      *
-     * @param p List of parameters
-     * @return JSON array of parameters converted to JSON values.
+     * @param param Parameter to convert.
+     * @return JSON object of the converted parameter.
      */
-    private JsonArray paramsToJson(List<Parameter> p) {
-        JsonArray array = new JsonArray();
-        if (p != null) {
-            for (Parameter param : p) {
-                JsonObject obj = new JsonObject();
-                obj.putString("name", param.getName());
-                obj.putString("type", param.getType().toJsonString());
-                array.add(obj);
-            }
-        }
-        return array;
+    private JsonObject paramToJson(Parameter param) {
+        if (param == null)
+            return null;
+        JsonObject obj = new JsonObject();
+        obj.putString("name", param.getName());
+        obj.putString("type", param.getType().toJsonString());
+        return obj;
     }
 }

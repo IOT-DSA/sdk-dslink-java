@@ -23,6 +23,13 @@ public class ActionResult {
     private final JsonObject jsonIn;
 
     /**
+     * If the action result has dynamic columns this can be set. If the columns
+     * remains {@code null} then the default columns from the defined action
+     * will be used.
+     */
+    private JsonArray columns;
+
+    /**
      * Updates returned from the list response
      */
     private JsonArray updates;
@@ -61,6 +68,26 @@ public class ActionResult {
      */
     public JsonObject getJsonIn() {
         return jsonIn;
+    }
+
+    /**
+     * Gets the columns of the result. If no columns were set then the
+     * default columns sent will be from the defined action.
+     *
+     * @return Columns of the result
+     */
+    public JsonArray getColumns() {
+        return columns;
+    }
+
+    /**
+     * When the columns are sent, these columns override the default columns
+     * of the action. This allows for dynamic columns to be sent.
+     *
+     * @param columns Dynamic columns to set.
+     */
+    public void setColumns(JsonArray columns) {
+        this.columns = columns;
     }
 
     /**

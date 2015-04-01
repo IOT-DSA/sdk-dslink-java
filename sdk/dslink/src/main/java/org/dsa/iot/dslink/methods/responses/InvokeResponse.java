@@ -46,7 +46,12 @@ public class InvokeResponse implements Response {
         JsonObject obj = new JsonObject();
         obj.putNumber("rid", rid);
         obj.putString("stream", results.getStreamState().getJsonName());
-        obj.putArray("columns", action.getColumns());
+
+        JsonArray cols = results.getColumns();
+        if (cols == null) {
+            cols = action.getColumns();
+        }
+        obj.putArray("columns", cols);
         obj.putArray("updates", this.results);
         return obj;
     }
