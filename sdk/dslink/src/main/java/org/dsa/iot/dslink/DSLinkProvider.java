@@ -39,13 +39,13 @@ public class DSLinkProvider {
             @Override
             public synchronized void handle(NetworkClient event) {
                 if (event.isRequester()) {
-                    DSLink link = new DSLink(handler, event);
+                    DSLink link = new DSLink(handler, event, true, true);
                     link.setDefaultDataHandlers(true, false);
                     handler.onRequesterConnected(link);
                 }
 
                 if (event.isResponder()) {
-                    DSLink link = new DSLink(handler, event);
+                    DSLink link = new DSLink(handler, event, false, true);
 
                     File path = handler.getConfig().getSerializationPath();
                     if (path != null) {

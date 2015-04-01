@@ -27,19 +27,25 @@ public class DSLink {
     /**
      * @param handler DSLink handler
      * @param client Initialized client endpoint
+     * @param isRequester Whether to initialize a requester, otherwise
+     *                    a responder is initialized. The initialize
+     *                    param must be true.
+     * @param initialize Whether to initialize a requester or link
      */
     protected DSLink(DSLinkHandler handler,
-                     NetworkClient client) {
+                     NetworkClient client,
+                     boolean isRequester,
+                     boolean initialize) {
         if (client == null)
             throw new NullPointerException("client");
         this.client = client;
 
-        if (client.isRequester()) {
+        if (initialize && isRequester) {
             requester = new Requester(handler);
             responder = null;
             requester.setDSLink(this);
             nodeManager = new NodeManager(requester, "node");
-        } else if (client.isResponder()) {
+        } else if (initialize) {
             requester = null;
             responder = new Responder(handler);
             responder.setDSLink(this);

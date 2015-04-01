@@ -91,7 +91,11 @@ public class SerializationManager {
             if (backup.delete()) {
                 LOGGER.debug("Backup data removed");
             }
-            LOGGER.debug("Wrote serialized data: " + out);
+
+            if (LOGGER.isDebugEnabled()) {
+                out = json.encode();
+                LOGGER.debug("Wrote serialized data: " + out);
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -117,8 +121,11 @@ public class SerializationManager {
 
             if (bytes != null) {
                 String in = new String(bytes, "UTF-8");
-                LOGGER.debug("Read serialized data: " + in);
                 JsonObject obj = new JsonObject(in);
+                if (LOGGER.isDebugEnabled()) {
+                    in = obj.encode();
+                    LOGGER.debug("Read serialized data: " + in);
+                }
                 deserializer.deserialize(obj);
             }
         } catch (IOException e) {

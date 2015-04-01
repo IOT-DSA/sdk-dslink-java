@@ -6,6 +6,8 @@ import org.dsa.iot.dslink.connection.RemoteEndpoint;
 import org.dsa.iot.dslink.handshake.RemoteHandshake;
 import org.dsa.iot.dslink.util.HttpClientUtils;
 import org.dsa.iot.dslink.util.UrlBase64;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.http.HttpClient;
@@ -21,6 +23,8 @@ import java.io.UnsupportedEncodingException;
  * @author Samuel Grenier
  */
 public class WebSocketConnector extends RemoteEndpoint {
+
+    private static final Logger LOGGER;
 
     private WebSocket webSocket;
     private Handler<JsonArray> requestHandler;
@@ -81,6 +85,7 @@ public class WebSocketConnector extends RemoteEndpoint {
 
                         String string = event.toString("UTF-8");
                         JsonObject obj = new JsonObject(string);
+                        print(true, string);
 
                         JsonArray requests = obj.getArray("requests");
                         if (!(reqHandler == null || requests == null)) {
@@ -118,7 +123,9 @@ public class WebSocketConnector extends RemoteEndpoint {
         } else if (object == null) {
             throw new NullPointerException("object");
         }
-        webSocket.writeTextFrame(object.encode());
+        String out = object.encode();
+        print(false, out);
+        webSocket.writeTextFrame(out);
     }
 
     @Override
@@ -160,5 +167,21 @@ public class WebSocketConnector extends RemoteEndpoint {
     @Override
     public boolean isActive() {
         return isActive;
+    }
+
+    private void print(boolean inOrOut, String data) {
+        if (LOGGER.isDebugEnabled()) {
+            String string = getRemoteHandshake().getDsId();
+            if (string == null) {
+                string = "Remote endpoint ";
+            }
+            string += inOrOut ? "--> " : "<-- ";
+            string += data;
+            LOGGER.debug(string);
+        }
+    }
+
+    static {
+        LOGGER = LoggerFactory.getLogger(WebSocketConnector.class);
     }
 }
