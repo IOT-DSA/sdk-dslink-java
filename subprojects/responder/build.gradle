@@ -5,3 +5,8 @@ mainClassName = 'org.dsa.iot.responder.Main'
 dependencies {
     compile project(':sdk/dslink')
 }
+
+run {
+    args System.getProperty("exec.args", "").split()
+    workingDir project.buildDir
+}

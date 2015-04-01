@@ -5,3 +5,9 @@ mainClassName = 'org.dsa.iot.requester.Main'
 dependencies {
     compile project(':sdk/dslink')
 }
+
+run {
+    args System.getProperty("exec.args", "").split()
+    workingDir project.buildDir
+}
+
