@@ -81,19 +81,22 @@ public class DSLink {
 
     /**
      * Sets the default data handler to the remote endpoint.
+     * @param requester Whether to handle responses.
+     * @param responder Whether to handle requests.
      */
-    public void setDefaultDataHandlers() {
-        if (client.isRequester()) {
+    public void setDefaultDataHandlers(boolean requester, boolean responder) {
+        if (requester) {
             client.setResponseDataHandler(new Handler<JsonArray>() {
                 @Override
                 public void handle(JsonArray event) {
                     for (Object object : event) {
                         JsonObject json = (JsonObject) object;
-                        requester.parse(json);
+                        DSLink.this.requester.parse(json);
                     }
                 }
             });
-        } else if (client.isResponder()) {
+        }
+        if (responder) {
             client.setRequestDataHandler(new Handler<JsonArray>() {
                 @Override
                 public void handle(JsonArray event) {
@@ -101,7 +104,7 @@ public class DSLink {
                     for (Object object : event) {
                         JsonObject json = (JsonObject) object;
                         try {
-                            JsonObject resp = responder.parse(json);
+                            JsonObject resp = DSLink.this.responder.parse(json);
                             responses.addObject(resp);
                         } catch (Exception e) {
                             JsonObject resp = new JsonObject();

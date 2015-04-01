@@ -40,7 +40,7 @@ public class DSLinkProvider {
             public synchronized void handle(NetworkClient event) {
                 if (event.isRequester()) {
                     DSLink link = new DSLink(handler, event);
-                    link.setDefaultDataHandlers();
+                    link.setDefaultDataHandlers(true, false);
                     handler.onRequesterConnected(link);
                 }
 
@@ -55,7 +55,7 @@ public class DSLinkProvider {
                         manager.start();
                     }
 
-                    link.setDefaultDataHandlers();
+                    link.setDefaultDataHandlers(false, true);
                     handler.onResponderConnected(link);
                 }
             }

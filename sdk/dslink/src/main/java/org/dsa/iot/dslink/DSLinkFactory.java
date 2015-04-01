@@ -24,13 +24,13 @@ public class DSLinkFactory {
      * Creates a DSLink provider. The provider will automatically connect
      * and block.
      *
-     * @param name Name of the link, prepended in the DsId.
-     * @param args Arguments to parse
+     * @param name    Name of the link, prepended in the DsId.
+     * @param args    Arguments to parse
      * @param handler DSLink handler
      */
     public static void startRequester(String name,
-                                        String[] args,
-                                        DSLinkHandler handler) {
+                                      String[] args,
+                                      DSLinkHandler handler) {
         DSLinkProvider provider = generateRequester(name, args, handler);
         if (provider != null) {
             provider.start();
@@ -42,8 +42,8 @@ public class DSLinkFactory {
      * Creates a DSLink provider. The provider will automatically connect
      * and block.
      *
-     * @param name Name of the link, prepended in the DsId.
-     * @param args Arguments to parse
+     * @param name    Name of the link, prepended in the DsId.
+     * @param args    Arguments to parse
      * @param handler DSLink handler
      */
     public static void startResponder(String name,
@@ -57,15 +57,33 @@ public class DSLinkFactory {
     }
 
     /**
+     * Starts a link that is both a requester and a responder. The provider
+     * is then created, starts a connection, and blocks.
+     *
+     * @param name      Name of the link
+     * @param args      Arguments to parse
+     * @param handler   DSLink handler
+     */
+    public static void startDual(String name,
+                                 String[] args,
+                                 DSLinkHandler handler) {
+        DSLinkProvider provider = generate(name, args, handler, true, true);
+        if (provider != null) {
+            provider.start();
+            provider.sleep();
+        }
+    }
+
+    /**
      * Creates a DSLink provider based on the arguments passed into main. The
      * link handler does not need to set the keys or the authentication
      * endpoint.
      *
-     * @param name Name of the link, prepended in the DsId.
-     * @param args Arguments to parse
+     * @param name    Name of the link, prepended in the DsId.
+     * @param args    Arguments to parse
      * @param handler DSLink handler
      * @return A link provider or null if the args have a help parameter
-     *         passed in.
+     * passed in.
      */
     @SuppressWarnings("ConstantConditions")
     public static DSLinkProvider generateResponder(String name,
@@ -79,16 +97,16 @@ public class DSLinkFactory {
      * link handler does not need to set the keys or the authentication
      * endpoint.
      *
-     * @param name Name of the link, prepended in the DsId.
-     * @param args Arguments to parse
+     * @param name    Name of the link, prepended in the DsId.
+     * @param args    Arguments to parse
      * @param handler DSLink handler
      * @return A link provider or null if the args have a help parameter
-     *         passed in.
+     * passed in.
      */
     @SuppressWarnings("ConstantConditions")
     public static DSLinkProvider generateRequester(String name,
-                                                    String[] args,
-                                                    DSLinkHandler handler) {
+                                                   String[] args,
+                                                   DSLinkHandler handler) {
         return generate(name, args, handler, true, false);
     }
 
@@ -97,20 +115,20 @@ public class DSLinkFactory {
      * link handler does not need to set the keys or the authentication
      * endpoint.
      *
-     * @param name Name of the link, prepended in the DsId.
-     * @param args Arguments to parse.
-     * @param handler DSLink handler.
+     * @param name      Name of the link, prepended in the DsId.
+     * @param args      Arguments to parse.
+     * @param handler   DSLink handler.
      * @param requester Whether the generated link is a requester.
      * @param responder Whether the generated link is a responder.
      * @return A link provider or null if the args have a help parameter
-     *         passed in.
+     * passed in.
      */
     @SuppressWarnings("ConstantConditions")
     public static DSLinkProvider generate(String name,
-                                            String[] args,
-                                            DSLinkHandler handler,
-                                            boolean requester,
-                                            boolean responder) {
+                                          String[] args,
+                                          DSLinkHandler handler,
+                                          boolean requester,
+                                          boolean responder) {
         Configuration defaults = new Configuration();
         defaults.setDsId(name);
         defaults.setConnectionType(ConnectionType.WEB_SOCKET);
@@ -141,7 +159,7 @@ public class DSLinkFactory {
      *
      * @param handler DSLink handler
      * @return A DSLink provider that handles when a connection is successful
-     *         or a client connected to the server.
+     * or a client connected to the server.
      */
     public static DSLinkProvider generate(DSLinkHandler handler) {
         Configuration config;
