@@ -424,7 +424,7 @@ public class Node {
      * @return Password the node is configured to use.
      */
     public synchronized char[] getPassword() {
-        return pass.clone();
+        return pass != null ? pass.clone() : null;
     }
 
     /**
@@ -435,7 +435,7 @@ public class Node {
      * @param password Password to set.
      */
     public synchronized void setPassword(char[] password) {
-        this.pass = password.clone();
+        this.pass = password != null ? password.clone() : null;
     }
 
     /**
