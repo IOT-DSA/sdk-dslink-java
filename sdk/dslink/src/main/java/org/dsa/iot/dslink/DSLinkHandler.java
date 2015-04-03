@@ -1,6 +1,6 @@
 package org.dsa.iot.dslink;
 
-import org.dsa.iot.dslink.util.Configuration;
+import org.dsa.iot.dslink.config.Configuration;
 
 /**
  * Top level API for handling the configuration of nodes and responses to

@@ -73,6 +73,9 @@ public class RNG {
         for (; max > min; max--) {
             // Remove child if possible
             Node child = parent.getChild("rng_" + (max - 1));
+            if (child == null) {
+                continue;
+            }
             parent.removeChild(child);
 
             // Remove RNG task if possible

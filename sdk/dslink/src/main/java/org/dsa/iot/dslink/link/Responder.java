@@ -3,12 +3,12 @@ package org.dsa.iot.dslink.link;
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.DSLinkHandler;
 import org.dsa.iot.dslink.methods.Response;
+import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.methods.responses.*;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
+import org.dsa.iot.dslink.node.NodePair;
 import org.dsa.iot.dslink.node.SubscriptionManager;
-import org.dsa.iot.dslink.util.NodePair;
-import org.dsa.iot.dslink.util.StreamState;
 import org.vertx.java.core.json.JsonObject;
 
 import java.util.Map;

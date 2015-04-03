@@ -1,17 +1,15 @@
 package org.dsa.iot.dslink;
 
+import ch.qos.logback.classic.Level;
+import org.dsa.iot.dslink.config.Configuration;
 import org.dsa.iot.dslink.connection.ConnectionType;
 import org.dsa.iot.dslink.connection.RemoteEndpoint;
 import org.dsa.iot.dslink.connection.connector.WebSocketConnector;
 import org.dsa.iot.dslink.handshake.LocalHandshake;
 import org.dsa.iot.dslink.handshake.LocalKeys;
 import org.dsa.iot.dslink.handshake.RemoteHandshake;
-import org.dsa.iot.dslink.util.Arguments;
-import org.dsa.iot.dslink.util.Configuration;
 import org.dsa.iot.dslink.util.LogLevel;
 import org.dsa.iot.dslink.util.URLInfo;
-
-import java.io.File;
 
 /**
  * Factory for generating {@link DSLink} objects.
@@ -31,11 +29,7 @@ public class DSLinkFactory {
     public static void startRequester(String name,
                                       String[] args,
                                       DSLinkHandler handler) {
-        DSLinkProvider provider = generateRequester(name, args, handler);
-        if (provider != null) {
-            provider.start();
-            provider.sleep();
-        }
+        startProvider(generateRequester(name, args, handler));
     }
 
     /**
@@ -49,11 +43,7 @@ public class DSLinkFactory {
     public static void startResponder(String name,
                                       String[] args,
                                       DSLinkHandler handler) {
-        DSLinkProvider provider = generateResponder(name, args, handler);
-        if (provider != null) {
-            provider.start();
-            provider.sleep();
-        }
+        startProvider(generateResponder(name, args, handler));
     }
 
     /**
@@ -67,11 +57,7 @@ public class DSLinkFactory {
     public static void startDual(String name,
                                  String[] args,
                                  DSLinkHandler handler) {
-        DSLinkProvider provider = generate(name, args, handler, true, true);
-        if (provider != null) {
-            provider.start();
-            provider.sleep();
-        }
+        startProvider(generate(name, args, handler, true, true));
     }
 
     /**
@@ -129,27 +115,10 @@ public class DSLinkFactory {
                                           DSLinkHandler handler,
                                           boolean requester,
                                           boolean responder) {
-        Configuration defaults = new Configuration();
-        defaults.setDsId(name);
-        defaults.setConnectionType(ConnectionType.WEB_SOCKET);
-        defaults.setRequester(requester);
-        defaults.setResponder(responder);
-
-        Arguments parsed = Arguments.parse(args);
-        if (parsed == null) {
-            return null;
-        }
-
-        LogLevel.setLevel(parsed.getLogLevel());
-        defaults.setAuthEndpoint(parsed.getBrokerHost());
-
-        File loc = new File(parsed.getKeyPath());
-        defaults.setKeys(LocalKeys.getFromFileSystem(loc));
-
-        loc = new File(parsed.getNodesPath());
-        defaults.setSerializationPath(loc);
-
-        handler.setConfig(defaults);
+        // Log level is set until the configuration is read and sets
+        // log level to the designated level.
+        LogLevel.setLevel(Level.ERROR);
+        handler.setConfig(Configuration.autoConfigure(name, args, requester, responder));
         return generate(handler);
     }
 
@@ -195,5 +164,12 @@ public class DSLinkFactory {
         DSLinkProvider provider = new DSLinkProvider(rep, handler);
         provider.setDefaultEndpointHandler();
         return provider;
+    }
+
+    private static void startProvider(DSLinkProvider provider) {
+        if (provider != null) {
+            provider.start();
+            provider.sleep();
+        }
     }
 }

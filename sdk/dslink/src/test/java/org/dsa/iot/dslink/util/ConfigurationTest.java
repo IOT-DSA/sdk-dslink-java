@@ -1,5 +1,6 @@
 package org.dsa.iot.dslink.util;
 
+import org.dsa.iot.dslink.config.Configuration;
 import org.dsa.iot.dslink.connection.ConnectionType;
 import org.dsa.iot.dslink.handshake.LocalKeys;
 import org.junit.Test;

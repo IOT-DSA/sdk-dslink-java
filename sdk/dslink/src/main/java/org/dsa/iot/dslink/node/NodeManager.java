@@ -2,7 +2,6 @@ package org.dsa.iot.dslink.node;
 
 import org.dsa.iot.dslink.link.Linkable;
 import org.dsa.iot.dslink.node.exceptions.NoSuchPathException;
-import org.dsa.iot.dslink.util.NodePair;
 import org.dsa.iot.dslink.util.StringUtils;
 
 import java.util.Map;

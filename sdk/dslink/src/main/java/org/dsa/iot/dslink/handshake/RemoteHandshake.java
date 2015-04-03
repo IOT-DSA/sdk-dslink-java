@@ -18,7 +18,6 @@ import java.util.concurrent.CountDownLatch;
  *
  * @author Samuel Grenier
  */
-// TODO: unit test against a server
 public class RemoteHandshake {
 
     private final RemoteKey remoteKey;
@@ -27,7 +26,7 @@ public class RemoteHandshake {
     private final String wsUri;
     private final String httpUri;
     private final String salt;
-    private final String saltS;
+    private String saltS;
     private final int updateInterval;
 
     /**

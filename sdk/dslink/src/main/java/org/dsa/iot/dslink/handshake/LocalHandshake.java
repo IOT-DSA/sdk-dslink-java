@@ -1,6 +1,6 @@
 package org.dsa.iot.dslink.handshake;
 
-import org.dsa.iot.dslink.util.Configuration;
+import org.dsa.iot.dslink.config.Configuration;
 import org.vertx.java.core.json.JsonObject;
 
 /**

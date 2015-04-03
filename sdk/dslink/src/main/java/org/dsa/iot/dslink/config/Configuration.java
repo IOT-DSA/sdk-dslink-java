@@ -1,9 +1,14 @@
-package org.dsa.iot.dslink.util;
+package org.dsa.iot.dslink.config;
 
 import org.dsa.iot.dslink.connection.ConnectionType;
 import org.dsa.iot.dslink.handshake.LocalKeys;
+import org.dsa.iot.dslink.util.FileUtils;
+import org.dsa.iot.dslink.util.LogLevel;
+import org.dsa.iot.dslink.util.URLInfo;
+import org.vertx.java.core.json.JsonObject;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
  * Holds the configuration of a DSLink.
@@ -209,5 +214,69 @@ public class Configuration {
         } else if (keys == null) {
             throw new RuntimeException("keys not set");
         }
+    }
+
+    public static Configuration autoConfigure(String name,
+                                     String[] args,
+                                     boolean requester,
+                                     boolean responder) {
+        Configuration defaults = new Configuration();
+        defaults.setDsId(name);
+        defaults.setConnectionType(ConnectionType.WEB_SOCKET);
+        defaults.setRequester(requester);
+        defaults.setResponder(responder);
+
+        Arguments parsed = Arguments.parse(args);
+        if (parsed == null) {
+            return null;
+        }
+
+        File dslinkJson = new File(parsed.getDslinkJson());
+
+        String logLevel;
+        String brokerHost;
+        String keyPath;
+        String nodePath;
+
+        try {
+            byte[] read = FileUtils.readAllBytes(dslinkJson);
+            String content = new String(read, "UTF-8");
+            JsonObject json = new JsonObject(content);
+            if (!json.containsField("configs")) {
+                throw new RuntimeException("Missing `configs` field");
+            } else {
+                JsonObject configs = json.getObject("configs");
+                logLevel = checkParam(configs, "log");
+                brokerHost = parsed.getBrokerHost();
+                if (brokerHost == null) {
+                    brokerHost = checkParam(configs, "broker");
+                }
+                keyPath = checkParam(configs, "key");
+                nodePath = checkParam(configs, "nodes");
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        LogLevel.setLevel(logLevel);
+        defaults.setAuthEndpoint(brokerHost);
+
+        File loc = new File(keyPath);
+        defaults.setKeys(LocalKeys.getFromFileSystem(loc));
+
+        loc = new File(nodePath);
+        defaults.setSerializationPath(loc);
+        return defaults;
+    }
+
+    private static String checkParam(JsonObject configs, String param) {
+        JsonObject conf = configs.getObject(param);
+        String value;
+        if (conf == null) {
+            throw new RuntimeException("Missing config field of " + param);
+        } else if ((value = conf.getString("value")) == null) {
+            throw new RuntimeException("Missing value in config of " + param);
+        }
+        return value;
     }
 }

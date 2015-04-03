@@ -1,6 +1,4 @@
-package org.dsa.iot.dslink.util;
-
-import org.dsa.iot.dslink.node.value.Value;
+package org.dsa.iot.dslink.node.value;
 
 /**
  * @author Samuel Grenier

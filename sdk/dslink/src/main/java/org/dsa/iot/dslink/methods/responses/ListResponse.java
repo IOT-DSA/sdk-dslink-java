@@ -2,6 +2,7 @@ package org.dsa.iot.dslink.methods.responses;
 
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.methods.Response;
+import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeBuilder;
 import org.dsa.iot.dslink.node.Permission;
@@ -10,7 +11,6 @@ import org.dsa.iot.dslink.node.actions.Action;
 import org.dsa.iot.dslink.node.actions.ActionResult;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueUtils;
-import org.dsa.iot.dslink.util.StreamState;
 import org.dsa.iot.dslink.util.StringUtils;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;

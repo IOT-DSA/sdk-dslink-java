@@ -1,6 +1,4 @@
-package org.dsa.iot.dslink.util;
-
-import org.dsa.iot.dslink.node.Node;
+package org.dsa.iot.dslink.node;
 
 /**
  * Holds a pair between a node reference and a configuration or attribute in

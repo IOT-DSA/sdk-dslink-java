@@ -1,8 +1,8 @@
 package org.dsa.iot.dslink.methods.responses;
 
 import org.dsa.iot.dslink.methods.Response;
-import org.dsa.iot.dslink.util.NodePair;
-import org.dsa.iot.dslink.util.StreamState;
+import org.dsa.iot.dslink.methods.StreamState;
+import org.dsa.iot.dslink.node.NodePair;
 import org.vertx.java.core.json.JsonObject;
 
 /**
