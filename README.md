@@ -6,13 +6,11 @@ Java binding for the DSA API.
 
 ## Running the examples
 
-In order to run any examples a broker must be running. All the examples can quickly be ran
-through gradle. The default connection url is `http://localhost:8080/conn` Howver this can
-be changed by passing `-Dexec.args="--broker http://localhost:8080/conn"` to the gradle
-script.
+In order to run any examples a broker must be running. All the examples can
+quickly be ran through Gradle.
 
 Running the requester: <br />
-`./gradlew :subprojects/requester:run`
+`./gradlew :subprojects/requester:run -Dexec.args="-b http://localhost:8080/conn"`
 
 Running the responder: <br />
-`./gradlew :subprojects/responder:run`
+`./gradlew :subprojects/responder:run -Dexec.args="-b http://localhost:8080/conn"`

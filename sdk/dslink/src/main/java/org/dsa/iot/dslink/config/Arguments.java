@@ -13,7 +13,8 @@ public class Arguments {
 
     @Parameter(names = { "--broker", "-b" },
                 description = "Sets the broker host to perform a handshake connection to",
-                arity = 1)
+                arity = 1,
+                required = true)
     private String broker;
 
     @Parameter(names = { "--dslink-json", "-d" },

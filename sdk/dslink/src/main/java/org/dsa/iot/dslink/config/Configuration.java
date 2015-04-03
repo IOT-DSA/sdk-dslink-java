@@ -248,9 +248,6 @@ public class Configuration {
                 JsonObject configs = json.getObject("configs");
                 logLevel = checkParam(configs, "log");
                 brokerHost = parsed.getBrokerHost();
-                if (brokerHost == null) {
-                    brokerHost = checkParam(configs, "broker");
-                }
                 keyPath = checkParam(configs, "key");
                 nodePath = checkParam(configs, "nodes");
             }
