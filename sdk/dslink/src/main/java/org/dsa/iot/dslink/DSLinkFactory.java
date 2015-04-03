@@ -156,6 +156,7 @@ public class DSLinkFactory {
                 rep.setEndpoint(endpoint);
                 rep.setLocalHandshake(lh);
                 rep.setRemoteHandshake(rh);
+                rep.init();
                 break;
             default:
                 throw new RuntimeException("Unhandled connection type: " + type.name());

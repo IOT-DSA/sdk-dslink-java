@@ -12,6 +12,8 @@ import org.vertx.java.core.json.JsonObject;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * @author Samuel Grenier
@@ -106,12 +108,12 @@ public class DSLink {
             client.setRequestDataHandler(new Handler<JsonArray>() {
                 @Override
                 public void handle(JsonArray event) {
-                    JsonArray responses = new JsonArray();
+                    List<JsonObject> responses = new LinkedList<>();
                     for (Object object : event) {
                         JsonObject json = (JsonObject) object;
                         try {
                             JsonObject resp = DSLink.this.responder.parse(json);
-                            responses.addObject(resp);
+                            responses.add(resp);
                         } catch (Exception e) {
                             JsonObject resp = new JsonObject();
                             Integer rid = json.getInteger("rid");
@@ -128,13 +130,11 @@ public class DSLink {
                                 resp.putString("detail", writer.toString());
                             }
                             resp.putObject("error", err);
-                            responses.addObject(resp);
+                            responses.add(resp);
                         }
                     }
 
-                    JsonObject top = new JsonObject();
-                    top.putArray("responses", responses);
-                    client.write(top);
+                    client.writeResponses(responses);
                 }
             });
         }

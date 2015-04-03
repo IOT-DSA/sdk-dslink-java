@@ -12,7 +12,6 @@ import org.dsa.iot.dslink.node.NodePair;
 import org.dsa.iot.dslink.node.SubscriptionManager;
 import org.dsa.iot.dslink.node.value.SubscriptionValue;
 import org.vertx.java.core.Handler;
-import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 import java.util.*;
@@ -213,12 +212,7 @@ public class Requester extends Linkable {
             reqs.put(rid, wrapper);
         }
         obj.putString("method", request.getName());
-
-        final JsonObject top = new JsonObject();
-        JsonArray requests = new JsonArray();
-        requests.addObject(obj);
-        top.putArray("requests", requests);
-        link.getClient().write(top);
+        link.getClient().writeRequest(obj);
     }
 
     /**

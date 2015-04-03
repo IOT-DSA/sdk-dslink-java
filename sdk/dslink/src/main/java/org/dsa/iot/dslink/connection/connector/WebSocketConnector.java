@@ -1,13 +1,9 @@
 package org.dsa.iot.dslink.connection.connector;
 
-import org.bouncycastle.jcajce.provider.digest.SHA256;
 import org.dsa.iot.dslink.connection.NetworkClient;
 import org.dsa.iot.dslink.connection.RemoteEndpoint;
-import org.dsa.iot.dslink.handshake.RemoteHandshake;
 import org.dsa.iot.dslink.util.HttpClientUtils;
-import org.dsa.iot.dslink.util.UrlBase64;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.dsa.iot.dslink.util.IntervalTaskManager;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.http.HttpClient;
@@ -15,7 +11,7 @@ import org.vertx.java.core.http.WebSocket;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
-import java.io.UnsupportedEncodingException;
+import java.util.List;
 
 /**
  * Handles connecting to web socket servers.
@@ -24,45 +20,47 @@ import java.io.UnsupportedEncodingException;
  */
 public class WebSocketConnector extends RemoteEndpoint {
 
-    private static final Logger LOGGER;
+    private IntervalTaskManager<JsonObject> requests;
+    private IntervalTaskManager<JsonObject> responses;
 
     private WebSocket webSocket;
     private Handler<JsonArray> requestHandler;
     private Handler<JsonArray> responseHandler;
     private Handler<NetworkClient> clientHandler;
+    private boolean isActive;
 
-    private boolean isBecomingActive = false;
-    private boolean isActive = false;
+    @Override
+    public void init() {
+        int updateInterval = getRemoteHandshake().getUpdateInterval();
+        requests = new IntervalTaskManager<>(updateInterval, new Handler<List<JsonObject>>() {
+            @Override
+            public void handle(List<JsonObject> event) {
+                checkConnected();
+                JsonObject top = new JsonObject();
+                top.putArray("requests", toArray(event));
+                webSocket.writeTextFrame(top.encode());
+            }
+        });
+
+        responses = new IntervalTaskManager<>(updateInterval, new Handler<List<JsonObject>>() {
+            @Override
+            public void handle(List<JsonObject> event) {
+                checkConnected();
+                JsonObject top = new JsonObject();
+                top.putArray("responses", toArray(event));
+                webSocket.writeTextFrame(top.encode());
+            }
+        });
+    }
 
     @Override
     public void activate() {
-        isBecomingActive = true;
         HttpClient client = HttpClientUtils.configure(getEndpoint());
-        RemoteHandshake handshake = getRemoteHandshake();
-
-        String uri = handshake.getWsUri() + "?auth=";
-        try {
-            byte[] salt = handshake.getSalt().getBytes("UTF-8");
-            byte[] sharedSecret = handshake.getRemoteKey().getSharedSecret();
-
-            Buffer buffer = new Buffer(salt.length + sharedSecret.length);
-            buffer.appendBytes(salt);
-            buffer.appendBytes(sharedSecret);
-
-            SHA256.Digest sha = new SHA256.Digest();
-            byte[] digested = sha.digest(buffer.getBytes());
-            String encoded = UrlBase64.encode(digested);
-            uri += encoded + "&dsId=" + getLocalHandshake().getDsId();
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-        }
-
-        client.connectWebsocket(uri, new Handler<WebSocket>() {
+        client.connectWebsocket(getUri(), new Handler<WebSocket>() {
             @Override
             public void handle(WebSocket event) {
+                webSocket = event;
                 isActive = true;
-                isBecomingActive = false;
-                WebSocketConnector.this.webSocket = event;
 
                 Handler<NetworkClient> handler = clientHandler;
                 if (handler != null) {
@@ -73,7 +71,6 @@ public class WebSocketConnector extends RemoteEndpoint {
                     @Override
                     public void handle(Throwable event) {
                         event.printStackTrace();
-                        isActive = false;
                     }
                 });
 
@@ -85,7 +82,6 @@ public class WebSocketConnector extends RemoteEndpoint {
 
                         String string = event.toString("UTF-8");
                         JsonObject obj = new JsonObject(string);
-                        print(true, string);
 
                         JsonArray requests = obj.getArray("requests");
                         if (!(reqHandler == null || requests == null)) {
@@ -102,6 +98,7 @@ public class WebSocketConnector extends RemoteEndpoint {
                 event.endHandler(new Handler<Void>() {
                     @Override
                     public void handle(Void event) {
+                        // TODO: implement HTTP fallback
                         isActive = false;
                     }
                 });
@@ -117,15 +114,28 @@ public class WebSocketConnector extends RemoteEndpoint {
     }
 
     @Override
-    public void write(JsonObject object) {
-        if (!isActive()) {
-            throw new IllegalStateException("Connector is not connected completely");
-        } else if (object == null) {
+    public void writeRequest(JsonObject object) {
+        if (object == null) {
             throw new NullPointerException("object");
         }
-        String out = object.encode();
-        print(false, out);
-        webSocket.writeTextFrame(out);
+        requests.post(object);
+    }
+
+    @Override
+    public void writeResponse(JsonObject object) {
+        if (object == null) {
+            throw new NullPointerException("object");
+        }
+        responses.post(object);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public void writeResponses(List<JsonObject> objects) {
+        if (objects == null) {
+            throw new NullPointerException("objects");
+        }
+        responses.post(objects);
     }
 
     @Override
@@ -159,29 +169,17 @@ public class WebSocketConnector extends RemoteEndpoint {
         return getLocalHandshake().isResponder();
     }
 
-    @Override
-    public boolean isBecomingActive() {
-        return isBecomingActive;
-    }
-
-    @Override
-    public boolean isActive() {
-        return isActive;
-    }
-
-    private void print(boolean inOrOut, String data) {
-        if (LOGGER.isDebugEnabled()) {
-            String string = getRemoteHandshake().getDsId();
-            if (string == null) {
-                string = "Remote endpoint ";
-            }
-            string += inOrOut ? "--> " : "<-- ";
-            string += data;
-            LOGGER.debug(string);
+    private JsonArray toArray(List<JsonObject> objs) {
+        JsonArray array = new JsonArray();
+        for (JsonObject obj : objs) {
+            array.addObject(obj);
         }
+        return array;
     }
 
-    static {
-        LOGGER = LoggerFactory.getLogger(WebSocketConnector.class);
+    private void checkConnected() {
+        if (!isActive) {
+            throw new RuntimeException("Cannot write to unconnected connection");
+        }
     }
 }

@@ -4,6 +4,8 @@ import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
+import java.util.List;
+
 /**
  * Handles writing and closing connections. Can be used for clients connected
  * to servers and remote endpoint connections.
@@ -15,9 +17,23 @@ public interface NetworkClient {
     /**
      * Writes the object to the remote endpoint.
      *
-     * @param object Object to write
+     * @param object request to send
      */
-    void write(JsonObject object);
+    void writeRequest(JsonObject object);
+
+    /**
+     * Allows sending multiple responses at once
+     *
+     * @param objects List of responses to send
+     */
+    void writeResponses(List<JsonObject> objects);
+
+    /**
+     * Writes the responses to the remote endpoint.
+     *
+     * @param object response to send
+     */
+    void writeResponse(JsonObject object);
 
     /**
      * Closes the connection to the client

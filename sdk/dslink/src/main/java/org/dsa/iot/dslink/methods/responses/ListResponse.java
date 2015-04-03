@@ -269,13 +269,7 @@ public class ListResponse implements Response {
         resp.putNumber("rid", getRid());
         resp.putString("stream", StreamState.OPEN.getJsonName());
         resp.putArray("updates", updates);
-
-        JsonArray responses = new JsonArray();
-        responses.addObject(resp);
-
-        JsonObject top = new JsonObject();
-        top.putArray("responses", responses);
-        link.getClient().write(top);
+        link.getClient().writeResponse(resp);
     }
 
     @Override

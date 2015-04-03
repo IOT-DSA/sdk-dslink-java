@@ -17,6 +17,7 @@ public class DSLinkProvider {
 
     private final Endpoint endpoint;
     private final DSLinkHandler handler;
+    private boolean running;
 
     public DSLinkProvider(Endpoint endpoint, DSLinkHandler handler) {
         if (endpoint == null)
@@ -66,6 +67,7 @@ public class DSLinkProvider {
      * @see RemoteEndpoint#activate()
      */
     public void start() {
+        running = true;
         endpoint.activate();
     }
 
@@ -73,6 +75,7 @@ public class DSLinkProvider {
      * @see RemoteEndpoint#deactivate()
      */
     public void stop() {
+        running = false;
         endpoint.deactivate();
     }
 
@@ -85,7 +88,7 @@ public class DSLinkProvider {
      */
     public void sleep() {
         try {
-            while (endpoint.isBecomingActive() || endpoint.isActive()) {
+            while (running) {
                 Thread.sleep(500);
             }
         } catch (InterruptedException e) {

@@ -28,15 +28,4 @@ public interface Endpoint {
      * depending on the implementation.
      */
     void deactivate();
-
-    /**
-     * @return Whether the connection/server is in progress to start writing.
-     */
-    boolean isBecomingActive();
-
-    /**
-     * @return Whether the connection/server is active and running.
-     */
-    boolean isActive();
-
 }

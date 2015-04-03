@@ -131,12 +131,7 @@ public class SubscriptionManager {
             JsonObject resp = new JsonObject();
             resp.putNumber("rid", 0);
             resp.putArray("updates", updates);
-
-            JsonArray responses = new JsonArray();
-            responses.addObject(resp);
-            JsonObject top = new JsonObject();
-            top.putArray("responses", responses);
-            link.getClient().write(top);
+            link.getClient().writeResponse(resp);
         }
     }
 }
