@@ -17,6 +17,7 @@ import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonElement;
 import org.vertx.java.core.json.JsonObject;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -29,6 +30,8 @@ public class ListResponse implements Response {
     private final SubscriptionManager manager;
     private final int rid;
     private final Node node;
+
+    private final Map<Node, Boolean> updates = new HashMap<>();
 
     public ListResponse(DSLink link, SubscriptionManager manager,
                         int rid, Node node) {
@@ -56,6 +59,15 @@ public class ListResponse implements Response {
     @Override
     public int getRid() {
         return rid;
+    }
+
+    /**
+     *
+     * @return Children updates. The key is the updated node, the bool is
+     *         {@code true} if the node was removed, otherwise false.
+     */
+    public Map<Node, Boolean> getUpdates() {
+        return updates;
     }
 
     @Override
@@ -106,6 +118,7 @@ public class ListResponse implements Response {
             if (change != null && "remove".equals(change)) {
                 if (child != null) {
                     node.removeChild(child.getName());
+                    updates.put(node, true);
                 }
                 return;
             }
@@ -169,8 +182,10 @@ public class ListResponse implements Response {
             }
 
             if (builder != null) {
-                builder.build();
+                child = builder.build();
             }
+
+            updates.put(child, false);
         }
     }
 
