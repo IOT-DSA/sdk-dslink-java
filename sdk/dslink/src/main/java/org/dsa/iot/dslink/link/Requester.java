@@ -74,6 +74,12 @@ public class Requester extends Linkable {
         return Collections.unmodifiableMap(subUpdates);
     }
 
+    public void subscribe(String path, Handler<SubscriptionValue> onUpdate) {
+        Set<String> paths = new HashSet<>();
+        paths.add(path);
+        subscribe(paths, onUpdate);
+    }
+
     public void subscribe(Set<String> paths, Handler<SubscriptionValue> onUpdate) {
         if (paths == null) {
             throw new NullPointerException("paths");
@@ -100,6 +106,12 @@ public class Requester extends Linkable {
 
         RequestWrapper wrapper = new RequestWrapper(req);
         sendRequest(wrapper, currentReqID.incrementAndGet());
+    }
+
+    public void unsubscribe(String path, Handler<UnsubscribeResponse> onResponse) {
+        Set<String> paths = new HashSet<>();
+        paths.add(path);
+        unsubscribe(paths, onResponse);
     }
 
     public void unsubscribe(Set<String> paths, Handler<UnsubscribeResponse> onResponse) {
