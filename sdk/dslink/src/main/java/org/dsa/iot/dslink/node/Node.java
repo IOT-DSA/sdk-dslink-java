@@ -1,6 +1,7 @@
 package org.dsa.iot.dslink.node;
 
 import org.dsa.iot.dslink.link.Linkable;
+import org.dsa.iot.dslink.node.ValueListener.ValueUpdate;
 import org.dsa.iot.dslink.node.actions.Action;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.util.StringUtils;
@@ -20,6 +21,7 @@ public class Node {
     };
 
     private final WeakReference<Node> parent;
+    private final ValueListener listener;
     private final Linkable link;
     private final String path;
     private final String name;
@@ -45,6 +47,7 @@ public class Node {
      */
     public Node(String name, Node parent, Linkable link) {
         this.parent = new WeakReference<>(parent);
+        this.listener = new ValueListener();
         this.link = link;
         if (parent != null) {
             this.name = checkName(name);
@@ -75,6 +78,16 @@ public class Node {
      */
     public Linkable getLink() {
         return link;
+    }
+
+    /**
+     * The listener API provides functionality for listening to changes
+     * that occur within a node.
+     *
+     * @return The node's listener.
+     */
+    public ValueListener getValueListener() {
+        return listener;
     }
 
     /**
@@ -189,6 +202,7 @@ public class Node {
             value.setImmutable();
         }
         this.value = value;
+        listener.postValueUpdate(value);
 
         if (link != null) {
             SubscriptionManager manager = link.getSubscriptionManager();
@@ -198,6 +212,9 @@ public class Node {
         }
     }
 
+    /**
+     * @return The value of the node.
+     */
     public synchronized Value getValue() {
         return value;
     }
@@ -315,7 +332,12 @@ public class Node {
      * @return Configuration value, or null if it didn't exist
      */
     public synchronized Value removeConfig(String name) {
-        return configs != null ? configs.remove(name) : null;
+        Value ret = configs != null ? configs.remove(name) : null;
+        if (ret != null) {
+            ValueUpdate update = new ValueUpdate(name, ret, true);
+            listener.postConfigUpdate(update);
+        }
+        return ret;
     }
 
     /**
@@ -359,6 +381,8 @@ public class Node {
                 throw new IllegalArgumentException(err);
         }
         value.setImmutable();
+        ValueUpdate update = new ValueUpdate(name, value, false);
+        listener.postConfigUpdate(update);
         return configs.put(name, value);
     }
 
@@ -374,7 +398,12 @@ public class Node {
      * @return Attribute value or null if it didn't exist
      */
     public synchronized Value removeAttribute(String name) {
-        return attribs != null ? attribs.get(name) : null;
+        Value ret = attribs != null ? attribs.get(name) : null;
+        if (ret != null) {
+            ValueUpdate update = new ValueUpdate(name, ret, true);
+            listener.postAttributeUpdate(update);
+        }
+        return ret;
     }
 
     /**
@@ -398,6 +427,8 @@ public class Node {
             attribs = new HashMap<>();
         }
         value.setImmutable();
+        ValueUpdate update = new ValueUpdate(name, value, false);
+        listener.postAttributeUpdate(update);
         return attribs.put(name, value);
     }
 
