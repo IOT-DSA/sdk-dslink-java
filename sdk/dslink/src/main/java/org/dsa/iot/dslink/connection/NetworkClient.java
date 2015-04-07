@@ -1,11 +1,5 @@
 package org.dsa.iot.dslink.connection;
 
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
-
-import java.util.List;
-
 /**
  * Handles writing and closing connections. Can be used for clients connected
  * to servers and remote endpoint connections.
@@ -15,52 +9,14 @@ import java.util.List;
 public interface NetworkClient {
 
     /**
-     * Writes the object to the remote endpoint.
+     * Writes data to the network.
      *
-     * @param object request to send
+     * @param data Data to write
      */
-    void writeRequest(JsonObject object);
-
-    /**
-     * Allows sending multiple responses at once
-     *
-     * @param objects List of responses to send
-     */
-    void writeResponses(List<JsonObject> objects);
-
-    /**
-     * Writes the responses to the remote endpoint.
-     *
-     * @param object response to send
-     */
-    void writeResponse(JsonObject object);
+    void write(String data);
 
     /**
      * Closes the connection to the client
      */
     void close();
-
-    /**
-     * Sets the handler used for managing incoming requests from the endpoint.
-     *
-     * @param handler Handler to set with an array of requests.
-     */
-    void setRequestDataHandler(Handler<JsonArray> handler);
-
-    /**
-     * Sets the handler used for managing incoming responses from the endpoint.
-     *
-     * @param handler Handler to set with an array of responses
-     */
-    void setResponseDataHandler(Handler<JsonArray> handler);
-
-    /**
-     * @return Whether this client is a requester or not.
-     */
-    boolean isRequester();
-
-    /**
-     * @return Whether this client is a responder or not.
-     */
-    boolean isResponder();
 }

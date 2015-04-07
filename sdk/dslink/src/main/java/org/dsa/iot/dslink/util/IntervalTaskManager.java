@@ -54,8 +54,10 @@ public class IntervalTaskManager<T> {
                     @Override
                     public void run() {
                         synchronized (IntervalTaskManager.this) {
-                            callback.handle(tasks);
-                            tasks.clear();
+                            if (!tasks.isEmpty()) {
+                                callback.handle(tasks);
+                                tasks.clear();
+                            }
                             fut = null;
                         }
                     }

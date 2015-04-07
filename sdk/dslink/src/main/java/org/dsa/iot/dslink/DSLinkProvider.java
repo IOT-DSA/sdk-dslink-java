@@ -1,13 +1,14 @@
 package org.dsa.iot.dslink;
 
-import org.dsa.iot.dslink.connection.Endpoint;
-import org.dsa.iot.dslink.connection.NetworkClient;
-import org.dsa.iot.dslink.connection.RemoteEndpoint;
+import org.dsa.iot.dslink.connection.ConnectionManager;
+import org.dsa.iot.dslink.connection.DataHandler;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.serializer.SerializationManager;
 import org.vertx.java.core.Handler;
 
 import java.io.File;
+
+import static org.dsa.iot.dslink.connection.ConnectionManager.ClientConnected;
 
 /**
  * Provides DSLinks as soon as a client connects to the server or vice versa.
@@ -15,38 +16,34 @@ import java.io.File;
  */
 public class DSLinkProvider {
 
-    private final Endpoint endpoint;
+    private final ConnectionManager manager;
     private final DSLinkHandler handler;
     private boolean running;
 
-    public DSLinkProvider(Endpoint endpoint, DSLinkHandler handler) {
-        if (endpoint == null)
-            throw new NullPointerException("endpoint");
+    public DSLinkProvider(ConnectionManager manager, DSLinkHandler handler) {
+        if (manager == null)
+            throw new NullPointerException("manager");
         else if (handler == null)
             throw new NullPointerException("handler");
-        this.endpoint = endpoint;
+        this.manager = manager;
         this.handler = handler;
         handler.preInit();
     }
 
-    /**
-     * Sets the default endpoint handler. Override if a custom DSLink
-     * implementation needs to be provided.
-     * @see DSLinkHandler#onRequesterConnected
-     * @see DSLinkHandler#onResponderConnected
-     */
-    public void setDefaultEndpointHandler() {
-        endpoint.setClientConnectedHandler(new Handler<NetworkClient>() {
+    public void start() {
+        running = true;
+        manager.start(new Handler<ClientConnected>() {
             @Override
-            public synchronized void handle(NetworkClient event) {
+            public synchronized void handle(ClientConnected event) {
+                DataHandler h = event.getHandler();
                 if (event.isRequester()) {
-                    DSLink link = new DSLink(handler, event, true, true);
+                    DSLink link = new DSLink(handler, h, true, true);
                     link.setDefaultDataHandlers(true, false);
                     handler.onRequesterConnected(link);
                 }
 
                 if (event.isResponder()) {
-                    DSLink link = new DSLink(handler, event, false, true);
+                    DSLink link = new DSLink(handler, h, false, true);
 
                     File path = handler.getConfig().getSerializationPath();
                     if (path != null) {
@@ -63,20 +60,9 @@ public class DSLinkProvider {
         });
     }
 
-    /**
-     * @see RemoteEndpoint#activate()
-     */
-    public void start() {
-        running = true;
-        endpoint.activate();
-    }
-
-    /**
-     * @see RemoteEndpoint#deactivate()
-     */
     public void stop() {
         running = false;
-        endpoint.deactivate();
+        manager.stop();
     }
 
     /**

@@ -1,6 +1,6 @@
 package org.dsa.iot.dslink;
 
-import org.dsa.iot.dslink.connection.NetworkClient;
+import org.dsa.iot.dslink.connection.DataHandler;
 import org.dsa.iot.dslink.link.Requester;
 import org.dsa.iot.dslink.link.Responder;
 import org.dsa.iot.dslink.methods.StreamState;
@@ -22,34 +22,36 @@ public class DSLink {
 
     private final SubscriptionManager manager = new SubscriptionManager(this);
     private final NodeManager nodeManager;
+    private final DataHandler handler;
     private final Requester requester;
     private final Responder responder;
-    private NetworkClient client;
 
     /**
-     * @param handler DSLink handler
-     * @param client Initialized client endpoint
+     * @param linkHandler DSLink handler
+     * @param dataHandler Endpoint for reading/writing data from an endpoint.
      * @param isRequester Whether to initialize a requester, otherwise
      *                    a responder is initialized. The initialize
      *                    param must be true.
      * @param initialize Whether to initialize a requester or link
      */
-    protected DSLink(DSLinkHandler handler,
-                     NetworkClient client,
+    protected DSLink(DSLinkHandler linkHandler,
+                     DataHandler dataHandler,
                      boolean isRequester,
                      boolean initialize) {
-        if (client == null)
-            throw new NullPointerException("client");
-        this.client = client;
+        if (linkHandler == null)
+            throw new NullPointerException("linkHandler");
+        else if (dataHandler == null)
+            throw new NullPointerException("dataHandler");
+        this.handler = dataHandler;
 
         if (initialize && isRequester) {
-            requester = new Requester(handler);
+            requester = new Requester(linkHandler);
             responder = null;
             requester.setDSLink(this);
             nodeManager = new NodeManager(requester, "node");
         } else if (initialize) {
             requester = null;
-            responder = new Responder(handler);
+            responder = new Responder(linkHandler);
             responder.setDSLink(this);
             nodeManager = new NodeManager(responder, "node");
         } else {
@@ -60,10 +62,10 @@ public class DSLink {
     }
 
     /**
-     * @return The network client to write data to.
+     * @return The writer to write responses to a remote endpoint.
      */
-    public NetworkClient getClient() {
-        return client;
+    public DataHandler getWriter() {
+        return handler;
     }
 
     /**
@@ -94,7 +96,7 @@ public class DSLink {
      */
     public void setDefaultDataHandlers(boolean requester, boolean responder) {
         if (requester) {
-            client.setResponseDataHandler(new Handler<JsonArray>() {
+            getWriter().setRespHandler(new Handler<JsonArray>() {
                 @Override
                 public void handle(JsonArray event) {
                     for (Object object : event) {
@@ -105,7 +107,7 @@ public class DSLink {
             });
         }
         if (responder) {
-            client.setRequestDataHandler(new Handler<JsonArray>() {
+            getWriter().setReqHandler(new Handler<JsonArray>() {
                 @Override
                 public void handle(JsonArray event) {
                     List<JsonObject> responses = new LinkedList<>();
@@ -134,7 +136,7 @@ public class DSLink {
                         }
                     }
 
-                    client.writeResponses(responses);
+                    getWriter().writeResponses(responses);
                 }
             });
         }

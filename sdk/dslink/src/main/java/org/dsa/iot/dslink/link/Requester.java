@@ -224,7 +224,7 @@ public class Requester extends Linkable {
             reqs.put(rid, wrapper);
         }
         obj.putString("method", request.getName());
-        link.getClient().writeRequest(obj);
+        link.getWriter().writeRequest(obj);
     }
 
     /**

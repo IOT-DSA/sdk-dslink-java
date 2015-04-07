@@ -284,7 +284,7 @@ public class ListResponse implements Response {
         resp.putNumber("rid", getRid());
         resp.putString("stream", StreamState.OPEN.getJsonName());
         resp.putArray("updates", updates);
-        link.getClient().writeResponse(resp);
+        link.getWriter().writeResponse(resp);
     }
 
     @Override

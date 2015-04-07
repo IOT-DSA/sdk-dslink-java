@@ -131,7 +131,7 @@ public class SubscriptionManager {
             JsonObject resp = new JsonObject();
             resp.putNumber("rid", 0);
             resp.putArray("updates", updates);
-            link.getClient().writeResponse(resp);
+            link.getWriter().writeResponse(resp);
         }
     }
 }

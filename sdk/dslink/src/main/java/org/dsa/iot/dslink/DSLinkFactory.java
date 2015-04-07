@@ -2,14 +2,10 @@ package org.dsa.iot.dslink;
 
 import ch.qos.logback.classic.Level;
 import org.dsa.iot.dslink.config.Configuration;
-import org.dsa.iot.dslink.connection.ConnectionType;
-import org.dsa.iot.dslink.connection.RemoteEndpoint;
-import org.dsa.iot.dslink.connection.connector.WebSocketConnector;
+import org.dsa.iot.dslink.connection.ConnectionManager;
 import org.dsa.iot.dslink.handshake.LocalHandshake;
 import org.dsa.iot.dslink.handshake.LocalKeys;
-import org.dsa.iot.dslink.handshake.RemoteHandshake;
 import org.dsa.iot.dslink.util.LogLevel;
-import org.dsa.iot.dslink.util.URLInfo;
 
 /**
  * Factory for generating {@link DSLink} objects.
@@ -144,27 +140,9 @@ public class DSLinkFactory {
         }
         config.validate();
 
-        URLInfo endpoint = config.getAuthEndpoint();
         LocalHandshake lh = new LocalHandshake(config);
-
-        ConnectionType type = config.getConnectionType();
-        RemoteEndpoint rep;
-        switch (type) {
-            case WEB_SOCKET:
-                RemoteHandshake rh = RemoteHandshake.generate(lh, endpoint);
-                rep = new WebSocketConnector();
-                rep.setEndpoint(endpoint);
-                rep.setLocalHandshake(lh);
-                rep.setRemoteHandshake(rh);
-                rep.init();
-                break;
-            default:
-                throw new RuntimeException("Unhandled connection type: " + type.name());
-        }
-
-        DSLinkProvider provider = new DSLinkProvider(rep, handler);
-        provider.setDefaultEndpointHandler();
-        return provider;
+        ConnectionManager manager = new ConnectionManager(config, lh);
+        return new DSLinkProvider(manager, handler);
     }
 
     private static void startProvider(DSLinkProvider provider) {
