@@ -7,6 +7,7 @@ import org.dsa.iot.dslink.serializer.SerializationManager;
 import org.vertx.java.core.Handler;
 
 import java.io.File;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import static org.dsa.iot.dslink.connection.ConnectionManager.ClientConnected;
 
@@ -16,6 +17,7 @@ import static org.dsa.iot.dslink.connection.ConnectionManager.ClientConnected;
  */
 public class DSLinkProvider {
 
+    private static final ScheduledThreadPoolExecutor STPE;
     private final ConnectionManager manager;
     private final DSLinkHandler handler;
     private boolean running;
@@ -34,28 +36,38 @@ public class DSLinkProvider {
         running = true;
         manager.start(new Handler<ClientConnected>() {
             @Override
-            public synchronized void handle(ClientConnected event) {
-                DataHandler h = event.getHandler();
-                if (event.isRequester()) {
-                    DSLink link = new DSLink(handler, h, true, true);
-                    link.setDefaultDataHandlers(true, false);
-                    handler.onRequesterConnected(link);
-                }
-
-                if (event.isResponder()) {
-                    DSLink link = new DSLink(handler, h, false, true);
-
-                    File path = handler.getConfig().getSerializationPath();
-                    if (path != null) {
-                        NodeManager man = link.getNodeManager();
-                        SerializationManager manager = new SerializationManager(path, man);
-                        manager.deserialize();
-                        manager.start();
+            public synchronized void handle(final ClientConnected event) {
+                final DataHandler h = event.getHandler();
+                STPE.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (event.isRequester()) {
+                            DSLink link = new DSLink(handler, h, true, true);
+                            link.setDefaultDataHandlers(true, false);
+                            handler.onRequesterConnected(link);
+                        }
                     }
+                });
 
-                    link.setDefaultDataHandlers(false, true);
-                    handler.onResponderConnected(link);
-                }
+                STPE.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (event.isResponder()) {
+                            DSLink link = new DSLink(handler, h, false, true);
+
+                            File path = handler.getConfig().getSerializationPath();
+                            if (path != null) {
+                                NodeManager man = link.getNodeManager();
+                                SerializationManager manager = new SerializationManager(path, man);
+                                manager.deserialize();
+                                manager.start();
+                            }
+
+                            link.setDefaultDataHandlers(false, true);
+                            handler.onResponderConnected(link);
+                        }
+                    }
+                });
             }
         });
     }
@@ -80,5 +92,9 @@ public class DSLinkProvider {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    static {
+        STPE = new ScheduledThreadPoolExecutor(2);
     }
 }

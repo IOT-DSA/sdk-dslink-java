@@ -41,12 +41,15 @@ public abstract class DSLinkHandler {
     }
 
     /**
+     * This method is asynchronously called.
+     *
      * @param link The link that has completed a connection.
      */
     public void onRequesterConnected(DSLink link) {
     }
 
     /**
+     * This method is asynchronously called.
      *
      * @param link The link that has completed a connection.
      */
