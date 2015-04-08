@@ -1,6 +1,8 @@
 package org.dsa.iot.dslink.node.actions;
 
 import org.dsa.iot.dslink.node.Permission;
+import org.dsa.iot.dslink.node.value.Value;
+import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
@@ -36,6 +38,9 @@ public class Action {
      * @return Current object for daisy chaining
      */
     public Action addParameter(Parameter parameter) {
+        if (parameter == null) {
+            throw new NullPointerException("parameter");
+        }
         JsonObject param = paramToJson(parameter);
         if (param != null) {
             params.addObject(param);
@@ -48,6 +53,12 @@ public class Action {
      * @return Current object for daisy chaining;
      */
     public Action addResult(Parameter parameter) {
+        if (parameter == null) {
+            throw new NullPointerException("parameter");
+        } else if (parameter.getDefault() != null) {
+            String err = "parameter cannot contain a default value in a result";
+            throw new IllegalStateException(err);
+        }
         JsonObject result = paramToJson(parameter);
         if (result != null) {
             results.addObject(result);
@@ -105,6 +116,10 @@ public class Action {
         JsonObject obj = new JsonObject();
         obj.putString("name", param.getName());
         obj.putString("type", param.getType().toJsonString());
+        Value defVal = param.getDefault();
+        if (defVal != null) {
+            ValueUtils.toJson(obj, "default", defVal);
+        }
         return obj;
     }
 }
