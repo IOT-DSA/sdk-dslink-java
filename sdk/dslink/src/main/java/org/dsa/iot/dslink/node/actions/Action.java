@@ -33,22 +33,26 @@ public class Action {
 
     /**
      * @param parameter Add a parameter for the invocation
+     * @return Current object for daisy chaining
      */
-    public void addParameter(Parameter parameter) {
+    public Action addParameter(Parameter parameter) {
         JsonObject param = paramToJson(parameter);
         if (param != null) {
             params.addObject(param);
         }
+        return this;
     }
 
     /**
      * @param parameter Add a result for the invocation
+     * @return Current object for daisy chaining;
      */
-    public void addResult(Parameter parameter) {
+    public Action addResult(Parameter parameter) {
         JsonObject result = paramToJson(parameter);
         if (result != null) {
             results.addObject(result);
         }
+        return this;
     }
 
     /**

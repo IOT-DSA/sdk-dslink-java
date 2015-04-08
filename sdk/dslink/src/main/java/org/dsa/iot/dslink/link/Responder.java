@@ -79,11 +79,7 @@ public class Responder extends Linkable {
                 break;
             case "close":
                 Response resp = resps.remove(rid);
-                if (resp != null) {
-                    response = new CloseResponse(rid, resp);
-                } else {
-                    throw new IllegalStateException("Unknown request id " + rid);
-                }
+                response = new CloseResponse(rid, resp);
                 break;
             default:
                 throw new RuntimeException("Unknown method: " + method);
@@ -95,5 +91,4 @@ public class Responder extends Linkable {
         }
         return resp;
     }
-
 }
