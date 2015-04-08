@@ -52,11 +52,12 @@ public class SubscriptionUpdate implements Response {
                     rid = update.get(0);
                     path = paths.get(rid);
                     Object o = update.get(1);
+                    String ts = update.get(2);
                     Value val = null;
                     if (o != null) {
                         val = ValueUtils.toValue(o);
                     }
-                    value = new SubscriptionValue(path, val);
+                    value = new SubscriptionValue(path, val, ts);
                     this.updates.put(path, value);
                 } else if (obj instanceof JsonObject) {
                     JsonObject update = (JsonObject) obj;
@@ -71,7 +72,8 @@ public class SubscriptionUpdate implements Response {
                     Integer s = update.getInteger("sum");
                     Integer min = update.getInteger("min");
                     Integer max = update.getInteger("max");
-                    value = new SubscriptionValue(path, val, c, s, min, max);
+                    String ts = update.getString("ts");
+                    value = new SubscriptionValue(path, val, ts, c, s, min, max);
                     this.updates.put(path, value);
                 } else {
                     String err = "Invalid subscription update: " + in.encode();
