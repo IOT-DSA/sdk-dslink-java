@@ -92,6 +92,8 @@ public class Main extends DSLinkHandler {
         builder.setValue(new Value(0));
         mirror = builder.build();
         LOGGER.info("Old mirror value: {}", mirror.getValue().toString());
+
+        // Release the latch allowing the requester to update the value
         latch.countDown();
     }
 
