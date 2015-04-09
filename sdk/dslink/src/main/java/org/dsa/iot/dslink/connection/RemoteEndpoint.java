@@ -5,7 +5,6 @@ import org.dsa.iot.dslink.handshake.LocalHandshake;
 import org.dsa.iot.dslink.handshake.RemoteHandshake;
 import org.dsa.iot.dslink.util.URLInfo;
 import org.dsa.iot.dslink.util.UrlBase64;
-import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
 
 import java.io.UnsupportedEncodingException;
@@ -15,7 +14,7 @@ import java.io.UnsupportedEncodingException;
  *
  * @author Samuel Grenier
  */
-public abstract class RemoteEndpoint implements NetworkClient {
+public abstract class RemoteEndpoint extends NetworkHandlers implements NetworkClient {
 
     private final DataHandler handler;
     private LocalHandshake localHandshake;
@@ -26,7 +25,7 @@ public abstract class RemoteEndpoint implements NetworkClient {
         this.handler = handler;
     }
 
-    public abstract void start(Handler<Void> onConnected);
+    public abstract void start();
 
     public DataHandler getDataHandler() {
         return handler;

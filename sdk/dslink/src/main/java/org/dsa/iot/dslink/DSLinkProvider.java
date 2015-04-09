@@ -17,7 +17,7 @@ import static org.dsa.iot.dslink.connection.ConnectionManager.ClientConnected;
  */
 public class DSLinkProvider {
 
-    private static final ScheduledThreadPoolExecutor STPE;
+    public static final ScheduledThreadPoolExecutor STPE;
     private final ConnectionManager manager;
     private final DSLinkHandler handler;
     private boolean running;

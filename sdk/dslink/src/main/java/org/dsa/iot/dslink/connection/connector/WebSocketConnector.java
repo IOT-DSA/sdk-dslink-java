@@ -16,44 +16,38 @@ import org.vertx.java.core.http.WebSocket;
 public class WebSocketConnector extends RemoteEndpoint {
 
     private WebSocket webSocket;
-    private boolean isActive;
 
     public WebSocketConnector(DataHandler handler) {
         super(handler);
     }
 
     @Override
-    public void start(final Handler<Void> onConnected) {
+    public void start() {
         HttpClient client = HttpClientUtils.configure(getEndpoint());
         client.connectWebsocket(getUri(), new Handler<WebSocket>() {
             @Override
             public void handle(WebSocket event) {
                 webSocket = event;
-                isActive = true;
+
+                Handler<Void> onConnected = getOnConnected();
                 if (onConnected != null) {
                     onConnected.handle(null);
                 }
 
-                event.exceptionHandler(new Handler<Throwable>() {
-                    @Override
-                    public void handle(Throwable event) {
-                        event.printStackTrace();
-                    }
-                });
+                Handler<Throwable> onException = getOnException();
+                if (onException != null) {
+                    event.exceptionHandler(onException);
+                }
 
-                event.dataHandler(new Handler<Buffer>() {
-                    @Override
-                    public void handle(Buffer event) {
-                        getDataHandler().processData(event);
-                    }
-                });
+                Handler<Buffer> onData = getOnData();
+                if (onData != null) {
+                    event.dataHandler(onData);
+                }
 
-                event.endHandler(new Handler<Void>() {
-                    @Override
-                    public void handle(Void event) {
-                        isActive = false;
-                    }
-                });
+                Handler<Void> onDisconnected = getOnDisconnected();
+                if (onDisconnected != null) {
+                    event.endHandler(onDisconnected);
+                }
             }
         });
     }
@@ -61,7 +55,12 @@ public class WebSocketConnector extends RemoteEndpoint {
     @Override
     public void close() {
         if (webSocket != null) {
-            webSocket.close();
+            try {
+                webSocket.close();
+            } catch (IllegalStateException ignored) {
+            }
+
+            webSocket = null;
         }
     }
 
@@ -72,7 +71,7 @@ public class WebSocketConnector extends RemoteEndpoint {
     }
 
     private void checkConnected() {
-        if (!isActive) {
+        if (webSocket == null) {
             throw new RuntimeException("Cannot write to unconnected connection");
         }
     }

@@ -6,11 +6,14 @@ import org.dsa.iot.dslink.handshake.LocalHandshake;
 import org.dsa.iot.dslink.handshake.RemoteHandshake;
 import org.dsa.iot.dslink.util.URLInfo;
 import org.vertx.java.core.Handler;
+import org.vertx.java.core.buffer.Buffer;
 
 /**
  * @author Samuel Grenier
  */
 public class ConnectionManager {
+
+    //private static final Logger LOGGER = LoggerFactory.getLogger(ConnectionManager.class);
 
     private final Configuration configuration;
     private final LocalHandshake localHandshake;
@@ -33,7 +36,9 @@ public class ConnectionManager {
 
         RemoteHandshake currentHandshake = generateHandshake();
         int updateInterval = currentHandshake.getUpdateInterval();
-        handler = new DataHandler(updateInterval);
+        if (handler == null) {
+            handler = new DataHandler(updateInterval);
+        }
 
         ConnectionType type = configuration.getConnectionType();
         switch (type) {
@@ -42,9 +47,7 @@ public class ConnectionManager {
                 connector.setEndpoint(configuration.getAuthEndpoint());
                 connector.setRemoteHandshake(currentHandshake);
                 connector.setLocalHandshake(localHandshake);
-                client = connector;
-                handler.setClient(client);
-                connector.start(new Handler<Void>() {
+                connector.setOnConnected(new Handler<Void>() {
                     @Override
                     public void handle(Void event) {
                         if (onClientConnected != null) {
@@ -57,6 +60,24 @@ public class ConnectionManager {
                         }
                     }
                 });
+
+                connector.setOnException(new Handler<Throwable>() {
+                    @Override
+                    public void handle(Throwable event) {
+                        event.printStackTrace();
+                    }
+                });
+
+                connector.setOnData(new Handler<Buffer>() {
+                    @Override
+                    public void handle(Buffer event) {
+                        getHandler().processData(event);
+                    }
+                });
+
+                client = connector;
+                handler.setClient(client);
+                connector.start();
                 break;
             default:
                 throw new RuntimeException("Unhandled type: " + type);
