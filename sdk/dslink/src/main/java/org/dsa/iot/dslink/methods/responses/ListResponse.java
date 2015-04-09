@@ -226,6 +226,14 @@ public class ListResponse implements Response {
                 updates.addArray(update);
             }
 
+            Value value = node.getValue();
+            if (value != null) {
+                JsonArray update = new JsonArray();
+                update.addString("$type");
+                update.addString(value.getType().toJsonString());
+                updates.addArray(update);
+            }
+
             char[] password = node.getPassword();
             if (password != null) {
                 JsonArray update = new JsonArray();
