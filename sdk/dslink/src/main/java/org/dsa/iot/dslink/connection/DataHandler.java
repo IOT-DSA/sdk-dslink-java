@@ -1,6 +1,8 @@
 package org.dsa.iot.dslink.connection;
 
 import org.dsa.iot.dslink.util.IntervalTaskManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.json.JsonArray;
@@ -14,6 +16,8 @@ import java.util.List;
  * @author Samuel Grenier
  */
 public class DataHandler {
+
+    private static final Logger LOGGER;
 
     private final IntervalTaskManager<JsonObject> requests;
     private final IntervalTaskManager<JsonObject> responses;
@@ -47,6 +51,9 @@ public class DataHandler {
     public void processData(Buffer buffer) {
         String string = buffer.toString("UTF-8");
         JsonObject obj = new JsonObject(string);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Received data: {}", obj.encode());
+        }
 
         JsonArray requests = obj.getArray("requests");
         if (!(reqHandler == null || requests == null)) {
@@ -94,8 +101,16 @@ public class DataHandler {
                         }
 
                         top.putArray(name, array);
-                        client.write(top.encode());
+                        String encoded = top.encode();
+                        if (LOGGER.isDebugEnabled()) {
+                            LOGGER.debug("Sent data: {}", encoded);
+                        }
+                        client.write(encoded);
                     }
                 });
+    }
+
+    static {
+        LOGGER = LoggerFactory.getLogger(DataHandler.class);
     }
 }
