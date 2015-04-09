@@ -3,6 +3,10 @@ package org.dsa.iot.dslink.node.value;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 /**
  * Common class for handling values. It is always recommended to check the type
  * before using a getter.
@@ -11,8 +15,12 @@ import org.vertx.java.core.json.JsonObject;
  */
 public class Value {
 
+    private static final DateFormat FORMAT;
+    private static final Object LOCK;
+
     private boolean immutable;
     private ValueType type;
+    private String ts;
 
     private Number number;
     private Boolean bool;
@@ -116,6 +124,10 @@ public class Value {
                      JsonArray a, JsonObject o) {
         checkImmutable();
         this.type = type;
+        synchronized (LOCK) {
+            this.ts = FORMAT.format(new Date());
+        }
+
         this.number = n;
         this.bool = b;
         this.string = s;
@@ -131,6 +143,16 @@ public class Value {
      */
     public ValueType getType() {
         return type;
+    }
+
+    /**
+     * Time stamp is always updates when the value is created or updated
+     * with a new value.
+     *
+     * @return The time this value was set
+     */
+    public String getTimeStamp() {
+        return ts;
     }
 
     /**
@@ -265,5 +287,10 @@ public class Value {
 
     private boolean objectEquals(Object a, Object b) {
         return (a == null && b == null) || (a != null && a.equals(b));
+    }
+
+    static {
+        FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+        LOCK = new Object();
     }
 }

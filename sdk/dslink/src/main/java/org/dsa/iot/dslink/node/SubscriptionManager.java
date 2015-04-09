@@ -7,9 +7,6 @@ import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,7 +16,6 @@ import java.util.Map;
  */
 public class SubscriptionManager {
 
-    private static final DateFormat FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
     private final Map<Node, ListResponse> pathSubs = new HashMap<>();
     private final Map<Node, Integer> valueSubsNodes = new HashMap<>();
     private final Map<Integer, Node> valueSubsSids = new HashMap<>();
@@ -119,11 +115,10 @@ public class SubscriptionManager {
                 Value value = node.getValue();
                 if (value != null) {
                     ValueUtils.toJson(update, node.getValue());
+                    update.addString(value.getTimeStamp());
                 } else {
                     update.add(null);
                 }
-
-                update.addString(FORMAT.format(new Date()));
 
                 updates.addArray(update);
             }
