@@ -4,10 +4,10 @@ import org.dsa.iot.dslink.connection.ConnectionManager;
 import org.dsa.iot.dslink.connection.DataHandler;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.serializer.SerializationManager;
+import org.dsa.iot.dslink.util.Objects;
 import org.vertx.java.core.Handler;
 
 import java.io.File;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import static org.dsa.iot.dslink.connection.ConnectionManager.ClientConnected;
 
@@ -17,7 +17,6 @@ import static org.dsa.iot.dslink.connection.ConnectionManager.ClientConnected;
  */
 public class DSLinkProvider {
 
-    public static final ScheduledThreadPoolExecutor STPE;
     private final ConnectionManager manager;
     private final DSLinkHandler handler;
     private boolean running;
@@ -38,7 +37,7 @@ public class DSLinkProvider {
             @Override
             public synchronized void handle(final ClientConnected event) {
                 final DataHandler h = event.getHandler();
-                STPE.execute(new Runnable() {
+                Objects.getThreadPool().execute(new Runnable() {
                     @Override
                     public void run() {
                         if (event.isRequester()) {
@@ -49,7 +48,7 @@ public class DSLinkProvider {
                     }
                 });
 
-                STPE.execute(new Runnable() {
+                Objects.getThreadPool().execute(new Runnable() {
                     @Override
                     public void run() {
                         if (event.isResponder()) {
@@ -92,9 +91,5 @@ public class DSLinkProvider {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    static {
-        STPE = new ScheduledThreadPoolExecutor(2);
     }
 }

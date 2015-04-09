@@ -8,6 +8,7 @@ import org.dsa.iot.dslink.node.actions.ActionResult;
 import org.dsa.iot.dslink.node.actions.Parameter;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
+import org.dsa.iot.dslink.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
@@ -15,16 +16,19 @@ import org.vertx.java.core.json.JsonObject;
 
 import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Creates a random number generator
+ *
  * @author Samuel Grenier
  */
 public class RNG {
 
     private static final Logger LOGGER;
-    private static final ScheduledThreadPoolExecutor STPE;
     private static final Random RANDOM = new Random();
 
     private final Node parent;
@@ -72,14 +76,13 @@ public class RNG {
 
         for (; max > min; max--) {
             // Remove child if possible
-            Node child = parent.getChild("rng_" + (max - 1));
+            Node child = parent.removeChild("rng_" + (max - 1));
             if (child == null) {
                 continue;
             }
-            parent.removeChild(child);
 
             // Remove RNG task if possible
-            ScheduledFuture<?> fut = futures.get(child);
+            ScheduledFuture<?> fut = futures.remove(child);
             if (fut != null) {
                 // Cancel out the RNG task
                 fut.cancel(false);
@@ -93,7 +96,8 @@ public class RNG {
     }
 
     private void setupRNG(final Node child) {
-        ScheduledFuture<?> fut = STPE.scheduleWithFixedDelay(new Runnable() {
+        ScheduledThreadPoolExecutor stpe = Objects.getDaemonThreadPool();
+        ScheduledFuture<?> fut = stpe.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
                 Value val = new Value(RANDOM.nextInt());
@@ -180,13 +184,5 @@ public class RNG {
 
     static {
         LOGGER =  LoggerFactory.getLogger(RNG.class);
-        STPE = new ScheduledThreadPoolExecutor(8, new ThreadFactory() {
-            @Override
-            public Thread newThread(Runnable r) {
-                Thread t = new Thread(r);
-                t.setDaemon(true);
-                return t;
-            }
-        });
     }
 }
