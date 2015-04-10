@@ -306,9 +306,7 @@ public class ListResponse implements Response {
         JsonArray responses = new JsonArray();
         responses.addObject(resp);
 
-        JsonObject top = new JsonObject();
-        top.putArray("responses", responses);
-        return top;
+        return resp;
     }
 
     /**

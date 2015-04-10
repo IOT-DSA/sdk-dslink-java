@@ -1,6 +1,5 @@
 package org.dsa.iot.dslink.connection;
 
-import org.dsa.iot.dslink.util.IntervalTaskManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
@@ -8,6 +7,7 @@ import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -19,8 +19,8 @@ public class DataHandler {
 
     private static final Logger LOGGER;
 
-    private final IntervalTaskManager<JsonObject> requests;
-    private final IntervalTaskManager<JsonObject> responses;
+    private final IntervalUpdateManager requests;
+    private final IntervalUpdateManager responses;
 
     private NetworkClient client;
     private Handler<JsonArray> reqHandler;
@@ -87,12 +87,12 @@ public class DataHandler {
         responses.post(objects);
     }
 
-    private IntervalTaskManager<JsonObject> getIntervalHandler(int updateInterval,
+    private IntervalUpdateManager getIntervalHandler(int updateInterval,
                                                                final String name) {
-        return new IntervalTaskManager<>(updateInterval,
-                new Handler<List<JsonObject>>() {
+        return new IntervalUpdateManager(updateInterval,
+                new Handler<Collection<JsonObject>>() {
                     @Override
-                    public void handle(List<JsonObject> event) {
+                    public void handle(Collection<JsonObject> event) {
                         JsonObject top = new JsonObject();
 
                         JsonArray array = new JsonArray();
