@@ -147,7 +147,7 @@ public class ConnectionManager {
                     }
                 });
                 delay *= 2;
-                int cap = 120;
+                int cap = 60;
                 if (delay > cap) {
                     delay = cap;
                 }
