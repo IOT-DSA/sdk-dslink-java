@@ -26,6 +26,7 @@ public class ConnectionManager {
 
     private DataHandler handler;
     private NetworkClient client;
+    private int delay = 1;
 
     public ConnectionManager(Configuration configuration,
                              LocalHandshake localHandshake) {
@@ -134,17 +135,24 @@ public class ConnectionManager {
     }
 
     private void reconnect() {
+        LOGGER.info("Reconnecting in {} seconds", delay);
         Objects.getThreadPool().schedule(new Runnable() {
             @Override
             public void run() {
                 start(new Handler<ClientConnected>() {
                     @Override
                     public void handle(ClientConnected event) {
-                        LOGGER.info("WebSocket connection established");
+                        LOGGER.info("Connection established");
+                        delay = 1;
                     }
                 });
+                delay *= 2;
+                int cap = 120;
+                if (delay > cap) {
+                    delay = cap;
+                }
             }
-        }, 5, TimeUnit.SECONDS);
+        }, delay, TimeUnit.SECONDS);
     }
 
     public static class ClientConnected {
