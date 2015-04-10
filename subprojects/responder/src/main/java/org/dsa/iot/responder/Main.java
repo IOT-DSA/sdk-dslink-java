@@ -12,7 +12,7 @@ import org.dsa.iot.dslink.node.NodeManager;
 public class Main extends DSLinkHandler {
 
     @Override
-    public void onResponderConnected(DSLink link) {
+    public void onResponderInitialized(DSLink link) {
         NodeManager manager = link.getNodeManager();
         Node superRoot = manager.getNode("/").getNode();
 

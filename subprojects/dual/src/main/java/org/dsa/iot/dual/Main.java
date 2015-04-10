@@ -43,7 +43,7 @@ public class Main extends DSLinkHandler {
     }
 
     @Override
-    public void onRequesterConnected(final DSLink link) {
+    public void onRequesterInitialized(final DSLink link) {
         LOGGER.info("Requester link added");
         link.getRequester().list(new ListRequest("/"),
                 new Handler<ListResponse>() {
@@ -79,7 +79,7 @@ public class Main extends DSLinkHandler {
     }
 
     @Override
-    public void onResponderConnected(DSLink link) {
+    public void onResponderInitialized(DSLink link) {
         LOGGER.info("Responder link added");
         NodeBuilder builder = link.getNodeManager().createRootNode("values");
         final Node node = builder.build();

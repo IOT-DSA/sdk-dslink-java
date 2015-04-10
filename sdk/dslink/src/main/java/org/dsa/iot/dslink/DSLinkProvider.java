@@ -33,9 +33,10 @@ public class DSLinkProvider {
 
     public void start() {
         running = true;
-        manager.start(new Handler<ClientConnected>() {
+
+        manager.setPreInitHandler(new Handler<ClientConnected>() {
             @Override
-            public synchronized void handle(final ClientConnected event) {
+            public void handle(final ClientConnected event) {
                 final DataHandler h = event.getHandler();
                 Objects.getThreadPool().execute(new Runnable() {
                     @Override
@@ -43,7 +44,7 @@ public class DSLinkProvider {
                         if (event.isRequester()) {
                             DSLink link = new DSLink(handler, h, true, true);
                             link.setDefaultDataHandlers(true, false);
-                            handler.onRequesterConnected(link);
+                            handler.onRequesterInitialized(link);
                         }
                     }
                 });
@@ -63,12 +64,14 @@ public class DSLinkProvider {
                             }
 
                             link.setDefaultDataHandlers(false, true);
-                            handler.onResponderConnected(link);
+                            handler.onResponderInitialized(link);
                         }
                     }
                 });
             }
         });
+
+        manager.start(null);
     }
 
     public void stop() {

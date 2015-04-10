@@ -4,8 +4,8 @@ import org.dsa.iot.dslink.config.Configuration;
 
 /**
  * Top level API for handling the configuration of nodes and responses to
- * requests. Note that {@link #onRequesterConnected} and
- * {@link #onResponderConnected} can be each called for the same link ID.
+ * requests. Note that {@link #onRequesterInitialized} and
+ * {@link #onResponderInitialized} can be each called for the same link ID.
  * This allows for the node managers to be completely isolated between a
  * a requester and responder.
  *
@@ -41,18 +41,20 @@ public abstract class DSLinkHandler {
     }
 
     /**
-     * This method is asynchronously called.
+     * This method is asynchronously called. The link is not yet connected
+     * to the server.
      *
      * @param link The link that has completed a connection.
      */
-    public void onRequesterConnected(DSLink link) {
+    public void onRequesterInitialized(DSLink link) {
     }
 
     /**
-     * This method is asynchronously called.
+     * This method is asynchronously called. The link is not yet connected
+     * to the server.
      *
-     * @param link The link that has completed a connection.
+     * @param link The link that needs to be initialized.
      */
-    public void onResponderConnected(DSLink link) {
+    public void onResponderInitialized(DSLink link) {
     }
 }

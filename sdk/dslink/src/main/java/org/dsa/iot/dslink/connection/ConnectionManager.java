@@ -24,6 +24,7 @@ public class ConnectionManager {
     private final Configuration configuration;
     private final LocalHandshake localHandshake;
 
+    private Handler<ClientConnected> preInitHandler;
     private DataHandler handler;
     private NetworkClient client;
     private int delay = 1;
@@ -36,6 +37,16 @@ public class ConnectionManager {
 
     public DataHandler getHandler() {
         return handler;
+    }
+
+    /**
+     * The pre initialization handler allows the dslink to be configured
+     * before the link is actually connected to the server.
+     *
+     * @param onClientInit Client initialization handler
+     */
+    public void setPreInitHandler(Handler<ClientConnected> onClientInit) {
+        this.preInitHandler = onClientInit;
     }
 
     public void start(final Handler<ClientConnected> onClientConnected) {
@@ -62,6 +73,15 @@ public class ConnectionManager {
                     handler = new DataHandler(updateInterval);
                 }
 
+                boolean req = localHandshake.isRequester();
+                boolean resp = localHandshake.isResponder();
+                final ClientConnected cc = new ClientConnected(req, resp);
+                cc.setHandler(handler);
+
+                if (preInitHandler != null) {
+                    preInitHandler.handle(cc);
+                }
+
                 ConnectionType type = configuration.getConnectionType();
                 switch (type) {
                     case WEB_SOCKET:
@@ -73,11 +93,6 @@ public class ConnectionManager {
                             @Override
                             public void handle(Void event) {
                                 if (onClientConnected != null) {
-                                    boolean req = localHandshake.isRequester();
-                                    boolean resp = localHandshake.isResponder();
-                                    NetworkClient c = client;
-                                    DataHandler h = handler;
-                                    ClientConnected cc = new ClientConnected(c, h, req, resp);
                                     onClientConnected.handle(cc);
                                 }
                             }
@@ -157,27 +172,22 @@ public class ConnectionManager {
 
     public static class ClientConnected {
 
-        private final NetworkClient client;
-        private final DataHandler handler;
         private final boolean isRequester;
         private final boolean isResponder;
+        private DataHandler handler;
 
-        public ClientConnected(NetworkClient client,
-                               DataHandler handler,
-                               boolean isRequester,
+        public ClientConnected(boolean isRequester,
                                boolean isResponder) {
-            this.client = client;
-            this.handler = handler;
             this.isRequester = isRequester;
             this.isResponder = isResponder;
         }
 
-        public NetworkClient getClient() {
-            return client;
-        }
-
         public DataHandler getHandler() {
             return handler;
+        }
+
+        void setHandler(DataHandler handler) {
+            this.handler = handler;
         }
 
         public boolean isRequester() {
