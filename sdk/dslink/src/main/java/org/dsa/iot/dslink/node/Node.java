@@ -286,7 +286,7 @@ public class Node {
         node.setProfile(profile);
         children.put(name, node);
         if (manager != null) {
-            manager.postChildUpdate(this, node, false);
+            manager.postChildUpdate(node, false);
         }
         return node;
     }
@@ -314,7 +314,7 @@ public class Node {
             manager = link.getSubscriptionManager();
         }
         if (child != null && manager != null) {
-            manager.postChildUpdate(this, child, true);
+            manager.postChildUpdate(child, true);
             manager.removeValueSub(this);
         }
         return child;

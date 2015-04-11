@@ -26,6 +26,28 @@ public class SubscriptionManager {
     }
 
     /**
+     * Tests whether the node has a value subscription that a remote endpoint
+     * is listening to.
+     *
+     * @param node Node to test.
+     * @return Whether the node has a value subscription.
+     */
+    public synchronized boolean hasValueSub(Node node) {
+        return valueSubsNodes.containsKey(node);
+    }
+
+    /**
+     * Tests whether the node has a path subscription that a remote endpoint
+     * is listening to.
+     *
+     * @param node Node to test.
+     * @return Whether the onde has a path subscription.
+     */
+    public synchronized boolean hasPathSub(Node node) {
+        return pathSubs.containsKey(node);
+    }
+
+    /**
      * Adds a value subscription to the designated node. This will allow a node
      * to publish a value update and have it updated to the remote endpoint if
      * it is subscribed.
@@ -97,13 +119,25 @@ public class SubscriptionManager {
         }
     }
 
-    public synchronized void postChildUpdate(Node parent, Node child, boolean removed) {
-        ListResponse resp = pathSubs.get(parent);
+    /**
+     * Posts a child update to notify all remote endpoints of an update.
+     *
+     * @param child Updated child.
+     * @param removed Whether the child was removed or not.
+     */
+    public synchronized void postChildUpdate(Node child, boolean removed) {
+        ListResponse resp = pathSubs.get(child.getParent());
         if (resp != null) {
             resp.childUpdate(child, removed);
         }
     }
 
+    /**
+     * Posts a value update to notify all the remote endpoints of a node
+     * value update.
+     *
+     * @param node Updated node.
+     */
     public synchronized void postValueUpdate(Node node) {
         Integer sid = valueSubsNodes.get(node);
         if (sid != null) {
