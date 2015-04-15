@@ -198,6 +198,14 @@ public class ListResponse implements Response {
         JsonArray updates = new JsonArray();
         {
             // Special configurations
+            String name = node.getDisplayName();
+            if (name != null) {
+                JsonArray update = new JsonArray();
+                update.addString("$name");
+                update.addString(name);
+                updates.addArray(update);
+            }
+
             String profile = node.getProfile();
             if (profile != null) {
                 JsonArray update = new JsonArray();
