@@ -231,7 +231,9 @@ public class Node {
      */
     public synchronized void clearChildren() {
         if (children != null) {
-            children.clear();
+            for (Node child : getChildren().values()) {
+                removeChild(child);
+            }
         }
     }
 
@@ -324,7 +326,7 @@ public class Node {
         }
         if (child != null && manager != null) {
             manager.postChildUpdate(child, true);
-            manager.removeValueSub(this);
+            manager.removeValueSub(child);
         }
         return child;
     }
