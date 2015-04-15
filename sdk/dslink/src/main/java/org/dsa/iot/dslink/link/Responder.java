@@ -52,6 +52,7 @@ public class Responder extends Linkable {
                     throw new NullPointerException("path");
                 }
                 Node node = nodeManager.getNode(path).getNode();
+                node.getListener().postListUpdate(node);
                 SubscriptionManager subs = link.getSubscriptionManager();
                 response = new ListResponse(link, subs, rid, node);
                 break;

@@ -1,7 +1,7 @@
 package org.dsa.iot.dslink.node;
 
 import org.dsa.iot.dslink.link.Linkable;
-import org.dsa.iot.dslink.node.ValueListener.ValueUpdate;
+import org.dsa.iot.dslink.node.NodeListener.ValueUpdate;
 import org.dsa.iot.dslink.node.actions.Action;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.util.StringUtils;
@@ -21,7 +21,7 @@ public class Node {
     };
 
     private final WeakReference<Node> parent;
-    private final ValueListener listener;
+    private final NodeListener listener;
     private final Linkable link;
     private final String path;
     private final String name;
@@ -47,7 +47,7 @@ public class Node {
      */
     public Node(String name, Node parent, Linkable link) {
         this.parent = new WeakReference<>(parent);
-        this.listener = new ValueListener();
+        this.listener = new NodeListener();
         this.link = link;
         if (parent != null) {
             this.name = checkName(name);
@@ -86,7 +86,7 @@ public class Node {
      *
      * @return The node's listener.
      */
-    public ValueListener getValueListener() {
+    public NodeListener getListener() {
         return listener;
     }
 
@@ -224,6 +224,15 @@ public class Node {
      */
     public synchronized Map<String, Node> getChildren() {
         return children != null ? new HashMap<>(children) : null;
+    }
+
+    /**
+     * Clears the children in the node.
+     */
+    public synchronized void clearChildren() {
+        if (children != null) {
+            children.clear();
+        }
     }
 
     /**

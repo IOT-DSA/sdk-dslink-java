@@ -11,16 +11,18 @@ import java.util.Set;
  *
  * @author Samuel Grenier
  */
-public class ValueListener {
+public class NodeListener {
 
     private final Set<Handler<Value>> valueHandlers;
     private final Set<Handler<ValueUpdate>> configHandlers;
     private final Set<Handler<ValueUpdate>> attribHandlers;
+    private final Set<Handler<Node>> listHandlers;
 
-    public ValueListener() {
+    public NodeListener() {
         valueHandlers = new HashSet<>();
         configHandlers = new HashSet<>();
         attribHandlers = new HashSet<>();
+        listHandlers = new HashSet<>();
     }
 
     /**
@@ -86,6 +88,28 @@ public class ValueListener {
     protected void postAttributeUpdate(ValueUpdate update) {
         for (Handler<ValueUpdate> handler : attribHandlers) {
             handler.handle(update);
+        }
+    }
+
+    /**
+     * Adds a list handler listener. The handler will be called every time a
+     * remote endpoint performs a list request on the node.
+     *
+     * @param handler Callback.
+     */
+    public void addOnListHandler(Handler<Node> handler) {
+        checkHandler(handler);
+        listHandlers.add(handler);
+    }
+
+    /**
+     * Posts an update that the node is currently being listed.
+     *
+     * @param node Node that is being listed.
+     */
+    public void postListUpdate(Node node) {
+        for (Handler<Node> handler : listHandlers) {
+            handler.handle(node);
         }
     }
 

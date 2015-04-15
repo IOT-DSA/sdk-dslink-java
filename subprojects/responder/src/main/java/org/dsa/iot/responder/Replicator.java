@@ -4,6 +4,8 @@ import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.Permission;
 import org.dsa.iot.dslink.node.actions.Action;
 import org.dsa.iot.dslink.node.actions.ActionResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
 
 /**
@@ -11,6 +13,8 @@ import org.vertx.java.core.Handler;
  * @author Samuel Grenier
  */
 public class Replicator {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Replicator.class);
 
     private Node node;
     private Thread thread;
@@ -21,6 +25,12 @@ public class Replicator {
 
     public static void start(Node parent) {
         Node node = parent.createChild("replicator").build();
+        node.getListener().addOnListHandler(new Handler<Node>() {
+            @Override
+            public void handle(Node event) {
+                LOGGER.info("Replicator node has been listed");
+            }
+        });
 
         final Permission perm = Permission.READ;
         final Replicator rep = new Replicator(node);
