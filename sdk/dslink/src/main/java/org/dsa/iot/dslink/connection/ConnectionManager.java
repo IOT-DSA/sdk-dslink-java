@@ -95,6 +95,7 @@ public class ConnectionManager {
                                 if (onClientConnected != null) {
                                     onClientConnected.handle(cc);
                                 }
+                                cc.connected();
                             }
                         });
 
@@ -174,6 +175,9 @@ public class ConnectionManager {
 
         private final boolean isRequester;
         private final boolean isResponder;
+
+        private Handler<ClientConnected> onRequesterConnected;
+        private Handler<ClientConnected> onResponderConnected;
         private DataHandler handler;
 
         public ClientConnected(boolean isRequester,
@@ -196,6 +200,24 @@ public class ConnectionManager {
 
         public boolean isResponder() {
             return isResponder;
+        }
+
+        public void setRequesterOnConnected(Handler<ClientConnected> handler) {
+            this.onRequesterConnected = handler;
+        }
+
+        public void setResponderOnConnected(Handler<ClientConnected> handler) {
+            this.onResponderConnected = handler;
+        }
+
+        void connected() {
+            if (onRequesterConnected != null) {
+                onRequesterConnected.handle(this);
+            }
+
+            if (onResponderConnected != null) {
+                onResponderConnected.handle(this);
+            }
         }
     }
 }

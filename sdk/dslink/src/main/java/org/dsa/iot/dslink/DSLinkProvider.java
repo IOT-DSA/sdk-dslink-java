@@ -8,6 +8,7 @@ import org.dsa.iot.dslink.util.Objects;
 import org.vertx.java.core.Handler;
 
 import java.io.File;
+import java.util.concurrent.CountDownLatch;
 
 import static org.dsa.iot.dslink.connection.ConnectionManager.ClientConnected;
 
@@ -37,15 +38,23 @@ public class DSLinkProvider {
         manager.setPreInitHandler(new Handler<ClientConnected>() {
             @Override
             public void handle(final ClientConnected event) {
+                final CountDownLatch latch = new CountDownLatch(2);
                 final DataHandler h = event.getHandler();
                 Objects.getThreadPool().execute(new Runnable() {
                     @Override
                     public void run() {
                         if (event.isRequester()) {
-                            DSLink link = new DSLink(handler, h, true, true);
+                            final DSLink link = new DSLink(handler, h, true, true);
                             link.setDefaultDataHandlers(true, false);
                             handler.onRequesterInitialized(link);
+                            event.setRequesterOnConnected(new Handler<ClientConnected>() {
+                                @Override
+                                public void handle(ClientConnected event) {
+                                    handler.onRequesterConnected(link);
+                                }
+                            });
                         }
+                        latch.countDown();
                     }
                 });
 
@@ -53,7 +62,7 @@ public class DSLinkProvider {
                     @Override
                     public void run() {
                         if (event.isResponder()) {
-                            DSLink link = new DSLink(handler, h, false, true);
+                            final DSLink link = new DSLink(handler, h, false, true);
 
                             File path = handler.getConfig().getSerializationPath();
                             if (path != null) {
@@ -65,9 +74,22 @@ public class DSLinkProvider {
 
                             link.setDefaultDataHandlers(false, true);
                             handler.onResponderInitialized(link);
+                            event.setResponderOnConnected(new Handler<ClientConnected>() {
+                                @Override
+                                public void handle(ClientConnected event) {
+                                    handler.onResponderConnected(link);
+                                }
+                            });
                         }
+                        latch.countDown();
                     }
                 });
+
+                try {
+                    latch.await();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
             }
         });
 

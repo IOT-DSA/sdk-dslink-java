@@ -18,10 +18,6 @@ public class SetResponse implements Response {
     private final NodePair pair;
 
     public SetResponse(int rid, NodePair pair) {
-        if (pair.getReference() == null) {
-            String err = "path does not reference config or attribute";
-            throw new NullPointerException(err);
-        }
         this.rid = rid;
         this.pair = pair;
     }
@@ -52,15 +48,19 @@ public class SetResponse implements Response {
 
     private void updateNode(JsonObject in) {
         String ref = pair.getReference();
-        Value value = ValueUtils.toValue(in.getObject("value"));
-        if (ref.startsWith("$")) {
-            ref = ref.substring(1);
-            pair.getNode().setConfig(ref, value);
-        } else if (ref.startsWith("@")) {
-            ref = ref.substring(1);
-            pair.getNode().setAttribute(ref, value);
+        Value value = ValueUtils.toValue(in.getField("value"));
+        if (ref != null) {
+            if (ref.startsWith("$")) {
+                ref = ref.substring(1);
+                pair.getNode().setConfig(ref, value);
+            } else if (ref.startsWith("@")) {
+                ref = ref.substring(1);
+                pair.getNode().setAttribute(ref, value);
+            } else {
+                throw new RuntimeException("Not a valid reference: " + ref);
+            }
         } else {
-            throw new RuntimeException("Not a reference: " + ref);
+            pair.getNode().setValue(value);
         }
     }
 }

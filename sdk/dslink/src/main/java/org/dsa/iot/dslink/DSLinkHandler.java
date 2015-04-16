@@ -11,6 +11,7 @@ import org.dsa.iot.dslink.config.Configuration;
  *
  * @author Samuel Grenier
  */
+@SuppressWarnings("UnusedParameters")
 public abstract class DSLinkHandler {
 
     private Configuration configuration;
@@ -44,9 +45,18 @@ public abstract class DSLinkHandler {
      * This method is asynchronously called. The link is not yet connected
      * to the server.
      *
-     * @param link The link that has completed a connection.
+     * @param link The link that needs to be initialized.
      */
     public void onRequesterInitialized(DSLink link) {
+    }
+
+    /**
+     * This method is asynchronously called. The link is connected to the
+     * server at this stage.
+     *
+     * @param link The link that has completed a connection.
+     */
+    public void onRequesterConnected(DSLink link) {
     }
 
     /**
@@ -56,5 +66,14 @@ public abstract class DSLinkHandler {
      * @param link The link that needs to be initialized.
      */
     public void onResponderInitialized(DSLink link) {
+    }
+
+    /**
+     * This method is asynchronously called. The link is connected to the
+     * server at this stage.
+     *
+     * @param link The link that has completed a connection.
+     */
+    public void onResponderConnected(DSLink link) {
     }
 }

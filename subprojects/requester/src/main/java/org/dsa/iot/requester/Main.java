@@ -75,7 +75,7 @@ public class Main extends DSLinkHandler {
             if (map != null) {
                 for (Map.Entry<String, Value> conf : map.entrySet()) {
                     String a = conf.getKey();
-                    String v = conf.getValue().toDebugString();
+                    String v = conf.getValue().toString();
                     if (indent) {
                         LOGGER.info("      ");
                     }

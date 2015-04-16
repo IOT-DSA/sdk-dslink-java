@@ -225,24 +225,12 @@ public class Value {
                 return bool.toString();
             case STRING:
                 return string;
-            default:
-                throw new RuntimeException("Unhandled type: " + type);
-        }
-    }
-
-    /**
-     * Used for printing out values to the console.
-     *
-     * @return Printable string
-     */
-    public String toDebugString() {
-        switch (type) {
             case MAP:
                 return map.encode();
             case ARRAY:
                 return array.encode();
             default:
-                return toString();
+                throw new RuntimeException("Unhandled type: " + type);
         }
     }
 
