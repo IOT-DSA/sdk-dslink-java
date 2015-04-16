@@ -3,6 +3,9 @@ package org.dsa.iot.dual.responder;
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeBuilder;
+import org.dsa.iot.dslink.node.Permission;
+import org.dsa.iot.dslink.node.actions.Action;
+import org.dsa.iot.dslink.node.actions.ActionResult;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.util.Objects;
 import org.slf4j.Logger;
@@ -31,6 +34,7 @@ public class Responder {
 
         initSettableNode(node);
         initDynamicNode(node);
+        initActionNode(node);
     }
 
     /**
@@ -71,5 +75,22 @@ public class Responder {
                 child.setValue(new Value(RANDOM.nextInt()));
             }
         }, 0, 5, TimeUnit.SECONDS);
+    }
+
+    /**
+     * Initializes the 'action' node that can be invoked.
+     *
+     * @param node Values node.
+     * @see org.dsa.iot.dual.requester.Requester#invoke
+     */
+    private static void initActionNode(Node node) {
+        NodeBuilder builder = node.createChild("action");
+        builder.setAction(new Action(Permission.READ, new Handler<ActionResult>() {
+            @Override
+            public void handle(ActionResult event) {
+                LOGGER.info("Responder action invoked from requester");
+            }
+        }));
+        builder.build();
     }
 }

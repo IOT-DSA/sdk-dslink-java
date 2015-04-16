@@ -2,8 +2,10 @@ package org.dsa.iot.dual.requester;
 
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.DSLinkHandler;
+import org.dsa.iot.dslink.methods.requests.InvokeRequest;
 import org.dsa.iot.dslink.methods.requests.ListRequest;
 import org.dsa.iot.dslink.methods.requests.SetRequest;
+import org.dsa.iot.dslink.methods.responses.InvokeResponse;
 import org.dsa.iot.dslink.methods.responses.ListResponse;
 import org.dsa.iot.dslink.methods.responses.SetResponse;
 import org.dsa.iot.dslink.node.Node;
@@ -31,6 +33,7 @@ public class Requester extends DSLinkHandler {
         setNodeValue(link);
         listValuesChildren(link);
         subscribe(link);
+        invoke(link);
     }
 
     /**
@@ -87,6 +90,23 @@ public class Requester extends DSLinkHandler {
             public void handle(SubscriptionValue event) {
                 int val = event.getValue().getNumber().intValue();
                 LOGGER.info("Received new dynamic value of {}", val);
+            }
+        });
+    }
+
+    /**
+     * Invokes the action on "/conns/dual/values/action".
+     *
+     * @param link Requester link used to communicate to the endpoint.
+     * @see org.dsa.iot.dual.responder.Responder#initActionNode
+     */
+    private static void invoke(DSLink link) {
+        final String path = "/conns/dual/values/action";
+        InvokeRequest request = new InvokeRequest(path);
+        link.getRequester().invoke(request, new Handler<InvokeResponse>() {
+            @Override
+            public void handle(InvokeResponse event) {
+                LOGGER.info("Successfully invoked the responder action");
             }
         });
     }
