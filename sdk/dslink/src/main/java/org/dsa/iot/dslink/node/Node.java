@@ -16,7 +16,7 @@ import java.util.*;
  */
 public class Node {
 
-    private static final String[] BANNED_CHARS = new String[] {
+    public static final String[] BANNED_CHARS = new String[] {
             ".", "/", "\\", "?", "%", "*", ":", "|", "<", ">", "$", "@"
     };
 
