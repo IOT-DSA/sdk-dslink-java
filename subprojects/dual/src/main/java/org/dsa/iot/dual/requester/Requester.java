@@ -2,12 +2,17 @@ package org.dsa.iot.dual.requester;
 
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.DSLinkHandler;
+import org.dsa.iot.dslink.methods.requests.ListRequest;
 import org.dsa.iot.dslink.methods.requests.SetRequest;
+import org.dsa.iot.dslink.methods.responses.ListResponse;
 import org.dsa.iot.dslink.methods.responses.SetResponse;
+import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.value.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
+
+import java.util.Map;
 
 /**
  * @author Samuel Grenier
@@ -23,9 +28,35 @@ public class Requester extends DSLinkHandler {
      */
     public static void init(DSLink link) {
         setNodeValue(link);
+        listValuesChildren(link);
     }
 
     /**
+     * Lists the children of the "/conns/dual/values" path.
+     *
+     * @param link Requester link used to communicate to the endpoint.
+     */
+    private static void listValuesChildren(DSLink link) {
+        ListRequest request = new ListRequest("/conns/dual/values");
+        link.getRequester().list(request, new Handler<ListResponse>() {
+            @Override
+            public void handle(ListResponse event) {
+                Map<Node, Boolean> updates = event.getUpdates();
+                if (updates != null) {
+                    for (Map.Entry<Node, Boolean> entry : updates.entrySet()) {
+                        String msg = "Child node at ";
+                        msg += entry.getKey().getPath() + " was ";
+                        msg += entry.getValue() ? "removed" : "added";
+                        LOGGER.info(msg);
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Sets the node value on "/conns/dual/values/settable" as provided by the
+     * responder to "Hello world!"
      *
      * @param link Requester link used to communicate to the endpoint.
      * @see org.dsa.iot.dual.responder.Responder#initSettableNode
