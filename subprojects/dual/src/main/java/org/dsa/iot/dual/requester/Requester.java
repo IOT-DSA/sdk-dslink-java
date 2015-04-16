@@ -7,6 +7,7 @@ import org.dsa.iot.dslink.methods.requests.SetRequest;
 import org.dsa.iot.dslink.methods.responses.ListResponse;
 import org.dsa.iot.dslink.methods.responses.SetResponse;
 import org.dsa.iot.dslink.node.Node;
+import org.dsa.iot.dslink.node.value.SubscriptionValue;
 import org.dsa.iot.dslink.node.value.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +30,25 @@ public class Requester extends DSLinkHandler {
     public static void init(DSLink link) {
         setNodeValue(link);
         listValuesChildren(link);
+        subscribe(link);
+    }
+
+    /**
+     * Sets the node value on "/conns/dual/values/settable" as provided by the
+     * responder to "Hello world!"
+     *
+     * @param link Requester link used to communicate to the endpoint.
+     * @see org.dsa.iot.dual.responder.Responder#initSettableNode
+     */
+    private static void setNodeValue(DSLink link) {
+        Value value = new Value("Hello world!");
+        SetRequest request = new SetRequest("/conns/dual/values/settable", value);
+        link.getRequester().set(request, new Handler<SetResponse>() {
+            @Override
+            public void handle(SetResponse event) {
+                LOGGER.info("Successfully set the new value on the responder");
+            }
+        });
     }
 
     /**
@@ -55,19 +75,18 @@ public class Requester extends DSLinkHandler {
     }
 
     /**
-     * Sets the node value on "/conns/dual/values/settable" as provided by the
-     * responder to "Hello world!"
+     * Subscribes to the dynamic node on the responder to demonstrate
+     * subscriptions.
      *
      * @param link Requester link used to communicate to the endpoint.
-     * @see org.dsa.iot.dual.responder.Responder#initSettableNode
      */
-    private static void setNodeValue(DSLink link) {
-        Value value = new Value("Hello world!");
-        SetRequest request = new SetRequest("/conns/dual/values/settable", value);
-        link.getRequester().set(request, new Handler<SetResponse>() {
+    private static void subscribe(DSLink link) {
+        final String path = "/conns/dual/values/dynamic";
+        link.getRequester().subscribe(path, new Handler<SubscriptionValue>() {
             @Override
-            public void handle(SetResponse event) {
-                LOGGER.info("Successfully set the new value on the responder");
+            public void handle(SubscriptionValue event) {
+                int val = event.getValue().getNumber().intValue();
+                LOGGER.info("Received new dynamic value of {}", val);
             }
         });
     }
