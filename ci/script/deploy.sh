@@ -15,5 +15,6 @@ else
                 "-Psigning.password=$KEY_PASS" \
                 "-PossrhUsername=$USER" \
                 "-PossrhPassword=$PASS" \
+                build \
                 uploadArchives
 fi
