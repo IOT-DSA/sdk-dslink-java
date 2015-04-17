@@ -1,9 +1,12 @@
 package org.dsa.iot.dslink.methods.responses;
 
+import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.methods.Response;
+import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.actions.Action;
 import org.dsa.iot.dslink.node.actions.ActionResult;
+import org.dsa.iot.dslink.util.Objects;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
@@ -12,11 +15,14 @@ import org.vertx.java.core.json.JsonObject;
  */
 public class InvokeResponse implements Response {
 
+    private final DSLink link;
+
     private final Node node;
     private final int rid;
     private JsonArray results;
 
-    public InvokeResponse(int rid, Node node) {
+    public InvokeResponse(DSLink link, int rid, Node node) {
+        this.link = link;
         this.rid = rid;
         this.node = node;
     }
@@ -33,27 +39,59 @@ public class InvokeResponse implements Response {
     }
 
     @Override
-    public JsonObject getJsonResponse(JsonObject in) {
-        Action action = node.getAction();
+    public JsonObject getJsonResponse(final JsonObject in) {
+        final Action action = node.getAction();
         if (action == null) {
             throw new RuntimeException("Node not invokable");
         }
 
-        ActionResult results = new ActionResult(node, in);
-        action.invoke(results);
-        this.results = results.getUpdates();
+        JsonObject out = new JsonObject();
+        Action.InvokeMode mode = action.getInvokeMode();
+        StreamState streamState;
 
-        JsonObject obj = new JsonObject();
-        obj.putNumber("rid", rid);
-        obj.putString("stream", results.getStreamState().getJsonName());
+        if (mode == Action.InvokeMode.ASYNC) {
+            streamState = StreamState.INITIALIZED;
+            Objects.getThreadPool().execute(new Runnable() {
+                @Override
+                public void run() {
+                    ActionResult results = new ActionResult(node, in);
+                    action.invoke(results);
 
-        JsonArray cols = results.getColumns();
-        if (cols == null) {
-            cols = action.getColumns();
+                    InvokeResponse.this.results = results.getUpdates();
+                    JsonArray cols = results.getColumns();
+                    if (cols == null) {
+                        cols = action.getColumns();
+                    }
+
+                    JsonObject out = new JsonObject();
+                    out.putNumber("rid", rid);
+                    out.putString("stream", results.getStreamState().getJsonName());
+
+                    out.putArray("columns", cols);
+                    out.putArray("updates", InvokeResponse.this.results);
+
+                    link.getWriter().writeResponse(out);
+                }
+            });
+        } else if (mode == Action.InvokeMode.SYNC) {
+            ActionResult results = new ActionResult(node, in);
+            action.invoke(results);
+            this.results = results.getUpdates();
+            streamState = results.getStreamState();
+
+            JsonArray cols = results.getColumns();
+            if (cols == null) {
+                cols = action.getColumns();
+            }
+            out.putArray("columns", cols);
+            out.putArray("updates", this.results);
+        } else {
+            throw new RuntimeException("Action has invalid mode: " + mode);
         }
-        obj.putArray("columns", cols);
-        obj.putArray("updates", this.results);
-        return obj;
+
+        out.putNumber("rid", rid);
+        out.putString("stream", streamState.getJsonName());
+        return out;
     }
 
     @Override

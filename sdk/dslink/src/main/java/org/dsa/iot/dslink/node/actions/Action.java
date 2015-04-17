@@ -19,18 +19,30 @@ public class Action {
 
     private final Permission permission;
     private final Handler<ActionResult> handler;
+    private final InvokeMode mode;
+
+    public Action(Permission permission,
+                  Handler<ActionResult> handler) {
+        this(permission, handler, InvokeMode.SYNC);
+    }
 
     /**
      * @param permission Minimum required permission to invoke
      * @param handler    Handler for invocation
+     * @param mode       Determines how the action should be invoked
      */
-    public Action(Permission permission, Handler<ActionResult> handler) {
+    public Action(Permission permission,
+                  Handler<ActionResult> handler,
+                  InvokeMode mode) {
         if (permission == null)
             throw new NullPointerException("permission");
         else if (handler == null)
             throw new NullPointerException("handler");
+        else if (mode == null)
+            throw new NullPointerException("mode");
         this.permission = permission;
         this.handler = handler;
+        this.mode = mode;
     }
 
     /**
@@ -64,6 +76,16 @@ public class Action {
             results.addObject(result);
         }
         return this;
+    }
+
+    /**
+     * Determines whether to synchronously or asynchronously invoke
+     * the action.
+     *
+     * @return How the action is invoked.
+     */
+    public InvokeMode getInvokeMode() {
+        return mode;
     }
 
     /**
@@ -121,5 +143,13 @@ public class Action {
             ValueUtils.toJson(obj, "default", defVal);
         }
         return obj;
+    }
+
+    /**
+     * Determines how to invoke the action handler.
+     */
+    public enum InvokeMode {
+        SYNC,
+        ASYNC
     }
 }

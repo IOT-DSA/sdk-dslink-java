@@ -301,7 +301,7 @@ public class Requester extends Linkable {
             case "invoke":
                 InvokeRequest inReq = (InvokeRequest) request;
                 node = manager.getNode(inReq.getPath(), true).getNode();
-                InvokeResponse inResp = new InvokeResponse(rid, node);
+                InvokeResponse inResp = new InvokeResponse(link, rid, node);
                 inResp.populate(in);
                 if (wrapper.getInvokeHandler() != null) {
                     wrapper.getInvokeHandler().handle(inResp);

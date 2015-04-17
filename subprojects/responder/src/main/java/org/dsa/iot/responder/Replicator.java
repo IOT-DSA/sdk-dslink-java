@@ -34,7 +34,7 @@ public class Replicator {
 
         final Permission perm = Permission.READ;
         final Replicator rep = new Replicator(node);
-        final Action act = new Action(perm, new ResetHandler(rep));
+        final Action act = new Action(perm, new ResetHandler(rep), Action.InvokeMode.ASYNC);
         node.createChild("reset").build().setAction(act);
         rep.startThread();
     }
