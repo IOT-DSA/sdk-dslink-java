@@ -12,7 +12,6 @@ import org.vertx.java.core.json.JsonObject;
 
 import java.net.HttpURLConnection;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Handshake information retrieved from the server.
@@ -162,7 +161,7 @@ public class RemoteHandshake {
         req.end(lh.toJson().encode());
 
         try {
-            latch.await(5, TimeUnit.SECONDS);
+            latch.await();
         } catch (InterruptedException e) {
             h.setFailure(e);
         }
