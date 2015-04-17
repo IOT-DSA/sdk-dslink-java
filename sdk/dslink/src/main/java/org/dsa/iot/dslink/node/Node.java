@@ -16,7 +16,7 @@ import java.util.*;
  */
 public class Node {
 
-    public static final String[] BANNED_CHARS = new String[] {
+    static final String[] BANNED_CHARS = new String[] {
             ".", "/", "\\", "?", "%", "*", ":", "|", "<", ">", "$", "@"
     };
 
@@ -494,5 +494,12 @@ public class Node {
             throw new IllegalArgumentException("invalid name: " + name);
         }
         return name;
+    }
+
+    /**
+     * @return The banned characters not allowed to be in names.
+     */
+    public static String[] getBannedCharacters() {
+        return BANNED_CHARS.clone();
     }
 }
