@@ -1,5 +1,8 @@
 package org.dsa.iot.dslink.util;
 
+import org.vertx.java.core.Vertx;
+import org.vertx.java.core.VertxFactory;
+
 import java.util.concurrent.*;
 
 /**
@@ -9,8 +12,13 @@ import java.util.concurrent.*;
  */
 public class Objects {
 
+    private static final Vertx VERTX;
     private static final ScheduledThreadPoolExecutor THREAD_POOL;
     private static final ScheduledThreadPoolExecutor DAEMON_THREAD_POOL;
+
+    public static Vertx getVertx() {
+        return VERTX;
+    }
 
     public static ScheduledThreadPoolExecutor getThreadPool() {
         return THREAD_POOL;
@@ -64,6 +72,8 @@ public class Objects {
     }
 
     static {
+        VERTX = VertxFactory.newVertx();
+
         int p = Runtime.getRuntime().availableProcessors();
         THREAD_POOL = new ScheduledThreadPool(p);
         DAEMON_THREAD_POOL = new ScheduledThreadPool(p, getDaemonFactory());

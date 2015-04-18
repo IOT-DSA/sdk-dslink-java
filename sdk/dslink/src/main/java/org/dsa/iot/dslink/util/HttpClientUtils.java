@@ -1,7 +1,6 @@
 package org.dsa.iot.dslink.util;
 
 import org.vertx.java.core.Vertx;
-import org.vertx.java.core.VertxFactory;
 import org.vertx.java.core.http.HttpClient;
 
 /**
@@ -19,7 +18,7 @@ public class HttpClientUtils {
      *         to its destination.
      */
     public static HttpClient configure(URLInfo url) {
-        Vertx vertx = VertxFactory.newVertx();
+        Vertx vertx = Objects.getVertx();
         HttpClient client = vertx.createHttpClient();
         client.setMaxWebSocketFrameSize(Integer.MAX_VALUE);
         client.setPort(url.port);
