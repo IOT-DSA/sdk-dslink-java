@@ -61,8 +61,10 @@ public class ConnectionManager {
         stpe.execute(new Runnable() {
             @Override
             public void run() {
-                if (!running) {
-                    return;
+                synchronized (ConnectionManager.this) {
+                    if (!running) {
+                        return;
+                    }
                 }
                 LOGGER.debug("Initiating connection sequence");
                 RemoteHandshake currentHandshake = generateHandshake(new Handler<Exception>() {
@@ -159,8 +161,10 @@ public class ConnectionManager {
 
     private RemoteHandshake generateHandshake(Handler<Exception> errorHandler) {
         try {
-            if (!running) {
-                return null;
+            synchronized (this) {
+                if (!running) {
+                    return null;
+                }
             }
             URLInfo auth = configuration.getAuthEndpoint();
             return RemoteHandshake.generate(localHandshake, auth);

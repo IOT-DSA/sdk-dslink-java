@@ -256,6 +256,8 @@ public class Value {
                     case ARRAY:
                         equal = objectEquals(array, value.array);
                         break;
+                    case TIME:
+                        equal = objectEquals(string, value.string);
                 }
             }
         }
