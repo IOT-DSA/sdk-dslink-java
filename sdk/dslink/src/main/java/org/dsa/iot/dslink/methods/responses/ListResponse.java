@@ -246,7 +246,7 @@ public class ListResponse implements Response {
             if (password != null) {
                 JsonArray update = new JsonArray();
                 update.addString("$password");
-                update.addString("***************");
+                update.addString(null);
                 updates.addArray(update);
             }
 
