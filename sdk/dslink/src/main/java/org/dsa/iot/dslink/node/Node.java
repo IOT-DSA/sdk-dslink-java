@@ -27,6 +27,8 @@ public class Node {
     private final String name;
 
     private Map<String, Node> children;
+
+    private Map<String, Value> roConfigs;
     private Map<String, Value> configs;
     private Map<String, Value> attribs;
 
@@ -385,8 +387,6 @@ public class Node {
             case "invokable":
             case "interface":
             case "permission":
-            case "password":
-            case "function":
                 String err = "Config `" + name + "` has special methods"
                         + " for setting these properties";
                 throw new IllegalArgumentException(err);
@@ -395,6 +395,58 @@ public class Node {
         ValueUpdate update = new ValueUpdate(name, value, false);
         listener.postConfigUpdate(update);
         return configs.put(name, value);
+    }
+
+    /**
+     * @return The read-only configurations in this node.
+     */
+    public synchronized Map<String, Value> getRoConfigurations() {
+        return roConfigs != null ? new HashMap<>(roConfigs) : null;
+    }
+
+    /**
+     * Removes a read-only configuration.
+     *
+     * @param name Name of the configuration.
+     * @return Previous value of the configuration.
+     */
+    public synchronized Value removeRoConfig(String name) {
+        return roConfigs != null ? roConfigs.remove(name) : null;
+    }
+
+    /**
+     * Retrieves a read-only configuration.
+     *
+     * @param name Name of the configuration.
+     * @return The value of the configuration name, if any.
+     */
+    public synchronized Value getRoConfig(String name) {
+        return roConfigs != null ? roConfigs.get(name) : null;
+    }
+
+    /**
+     * Sets a read-only configuration.
+     *
+     * @param name Name of the configuration.
+     * @param value Value to set.
+     * @return The previous value, if any.
+     */
+    public synchronized Value setRoConfig(String name, Value value) {
+        name = checkName(name);
+        if (value == null) {
+            throw new NullPointerException("value");
+        } else if (roConfigs == null) {
+            roConfigs = new HashMap<>();
+        }
+
+        switch (name) {
+            case "password":
+                String err = "Config `" + name + "` has special methods"
+                        + " for setting these properties";
+                throw new IllegalArgumentException(err);
+        }
+
+        return roConfigs.put(name, value);
     }
 
     /**

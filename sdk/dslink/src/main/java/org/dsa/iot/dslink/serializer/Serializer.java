@@ -66,6 +66,7 @@ public class Serializer {
             out.putString("$password", new String(password));
         }
 
+        addValues("$$", out, parent.getRoConfigurations());
         addValues("$", out, parent.getConfigurations());
         addValues("@", out, parent.getAttributes());
 

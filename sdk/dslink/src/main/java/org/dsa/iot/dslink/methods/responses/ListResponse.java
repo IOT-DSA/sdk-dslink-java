@@ -245,7 +245,7 @@ public class ListResponse implements Response {
             char[] password = node.getPassword();
             if (password != null) {
                 JsonArray update = new JsonArray();
-                update.addString("$password");
+                update.addString("$$password");
                 update.addString(null);
                 updates.addArray(update);
             }
@@ -270,6 +270,7 @@ public class ListResponse implements Response {
             }
 
             // Attributes and configurations
+            add("$$", updates, node.getRoConfigurations());
             add("$", updates, node.getConfigurations());
             add("@", updates, node.getAttributes());
 
