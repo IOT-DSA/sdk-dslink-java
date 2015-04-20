@@ -40,7 +40,7 @@ public class DSLinkProvider {
             public void handle(final ClientConnected event) {
                 final CountDownLatch latch = new CountDownLatch(2);
                 final DataHandler h = event.getHandler();
-                Objects.getThreadPool().execute(new Runnable() {
+                Objects.getDaemonThreadPool().execute(new Runnable() {
                     @Override
                     public void run() {
                         if (event.isRequester()) {
@@ -58,7 +58,7 @@ public class DSLinkProvider {
                     }
                 });
 
-                Objects.getThreadPool().execute(new Runnable() {
+                Objects.getDaemonThreadPool().execute(new Runnable() {
                     @Override
                     public void run() {
                         if (event.isResponder()) {

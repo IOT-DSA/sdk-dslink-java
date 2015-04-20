@@ -158,7 +158,8 @@ public class RemoteHandshake {
             }
         });
 
-        req.end(lh.toJson().encode());
+        String encoded = lh.toJson().encode();
+        req.end(encoded);
 
         try {
             latch.await();

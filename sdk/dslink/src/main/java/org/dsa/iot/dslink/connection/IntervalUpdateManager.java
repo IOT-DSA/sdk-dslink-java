@@ -46,7 +46,7 @@ public class IntervalUpdateManager {
             addTask(content);
             long delay = updateInterval - diff;
             if (fut == null) {
-                fut = org.dsa.iot.dslink.util.Objects.getThreadPool().schedule(new Runnable() {
+                fut = org.dsa.iot.dslink.util.Objects.getDaemonThreadPool().schedule(new Runnable() {
                     @Override
                     public void run() {
                         synchronized (IntervalUpdateManager.this) {

@@ -12,7 +12,8 @@ public enum ValueType {
     STRING,
     BOOL,
     MAP,
-    ARRAY;
+    ARRAY,
+    TIME;
 
     /**
      * @return Type of value that is suitable for JSON consumption.
@@ -37,6 +38,8 @@ public enum ValueType {
                 return MAP;
             case "array":
                 return ARRAY;
+            case "time":
+                return TIME;
             default:
                 throw new RuntimeException("Unknown type: " + type);
         }

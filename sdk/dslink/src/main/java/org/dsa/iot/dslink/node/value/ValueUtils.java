@@ -33,6 +33,7 @@ public class ValueUtils {
                 return new Value((Boolean) null);
             case NUMBER:
                 return new Value((Number) null);
+            case TIME:
             case STRING:
                 return new Value((String) null);
             case MAP:

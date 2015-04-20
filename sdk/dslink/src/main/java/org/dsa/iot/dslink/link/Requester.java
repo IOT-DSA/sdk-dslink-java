@@ -145,6 +145,9 @@ public class Requester extends Linkable {
         RequestWrapper wrapper = new RequestWrapper(req);
         wrapper.setCloseHandler(onResponse);
         sendRequest(wrapper, rid);
+
+        reqs.remove(rid);
+        onResponse.handle(new CloseResponse(rid, null));
     }
 
     /**
@@ -281,11 +284,6 @@ public class Requester extends Linkable {
                 }
                 break;
             case "close":
-                CloseResponse closeResponse = new CloseResponse(rid, null);
-                closeResponse.populate(in);
-                if (wrapper.getCloseHandler() != null) {
-                    wrapper.getCloseHandler().handle(closeResponse);
-                }
                 break;
             case "subscribe":
                 SubscribeResponse subResp = new SubscribeResponse(rid, link);

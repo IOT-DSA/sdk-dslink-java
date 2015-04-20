@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
 
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -28,6 +29,9 @@ public class ConnectionManager {
     private DataHandler handler;
     private NetworkClient client;
     private int delay = 1;
+
+    private ScheduledFuture<?> future;
+    private boolean running;
 
     public ConnectionManager(Configuration configuration,
                              LocalHandshake localHandshake) {
@@ -49,13 +53,18 @@ public class ConnectionManager {
         this.preInitHandler = onClientInit;
     }
 
-    public void start(final Handler<ClientConnected> onClientConnected) {
+    public synchronized void start(final Handler<ClientConnected> onClientConnected) {
         stop();
+        running = true;
 
-        final ScheduledThreadPoolExecutor stpe = Objects.getThreadPool();
+        final ScheduledThreadPoolExecutor stpe = Objects.getDaemonThreadPool();
         stpe.execute(new Runnable() {
             @Override
             public void run() {
+                if (!running) {
+                    return;
+                }
+                LOGGER.debug("Initiating connection sequence");
                 RemoteHandshake currentHandshake = generateHandshake(new Handler<Exception>() {
                     @Override
                     public void handle(Exception event) {
@@ -102,15 +111,17 @@ public class ConnectionManager {
                         connector.setOnDisconnected(new Handler<Void>() {
                             @Override
                             public void handle(Void event) {
-                                LOGGER.warn("WebSocket connection failed");
-                                reconnect();
+                                if (running) {
+                                    LOGGER.warn("WebSocket connection failed");
+                                    reconnect();
+                                }
                             }
                         });
 
                         connector.setOnException(new Handler<Throwable>() {
                             @Override
                             public void handle(Throwable event) {
-                                event.printStackTrace();
+                                LOGGER.error("Connector exception", event);
                             }
                         });
 
@@ -122,7 +133,7 @@ public class ConnectionManager {
                         });
 
                         client = connector;
-                        handler.setClient(client);
+                        handler.setClient(connector);
                         connector.start();
                         break;
                     default:
@@ -132,14 +143,25 @@ public class ConnectionManager {
         });
     }
 
-    public void stop() {
+    public synchronized void stop() {
+        running = false;
+
+        if (future != null) {
+            future.cancel(false);
+            future = null;
+        }
+
         if (client != null) {
             client.close();
+            client = null;
         }
     }
 
     private RemoteHandshake generateHandshake(Handler<Exception> errorHandler) {
         try {
+            if (!running) {
+                return null;
+            }
             URLInfo auth = configuration.getAuthEndpoint();
             return RemoteHandshake.generate(localHandshake, auth);
         } catch (Exception e) {
@@ -150,9 +172,13 @@ public class ConnectionManager {
         return null;
     }
 
-    private void reconnect() {
+    private synchronized void reconnect() {
+        if (!running) {
+            return;
+        }
+
         LOGGER.info("Reconnecting in {} seconds", delay);
-        Objects.getThreadPool().schedule(new Runnable() {
+        future = Objects.getDaemonThreadPool().schedule(new Runnable() {
             @Override
             public void run() {
                 start(new Handler<ClientConnected>() {
@@ -167,6 +193,8 @@ public class ConnectionManager {
                 if (delay > cap) {
                     delay = cap;
                 }
+
+                future = null;
             }
         }, delay, TimeUnit.SECONDS);
     }

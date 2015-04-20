@@ -3,6 +3,7 @@ package org.dsa.iot.requester;
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.DSLinkFactory;
 import org.dsa.iot.dslink.DSLinkHandler;
+import org.dsa.iot.dslink.DSLinkProvider;
 import org.dsa.iot.dslink.methods.requests.ListRequest;
 import org.dsa.iot.dslink.methods.responses.ListResponse;
 import org.dsa.iot.dslink.node.Node;
@@ -12,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
 
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Responder simply lists everything from the "/" root.
@@ -21,10 +23,13 @@ import java.util.Map;
 public class Main extends DSLinkHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
+    private AtomicInteger integer = new AtomicInteger();
+
+    private DSLinkProvider provider;
     private DSLink link;
 
     @Override
-    public void onRequesterInitialized(DSLink link) {
+    public void onRequesterConnected(DSLink link) {
         this.link = link;
         LOGGER.info("--------------");
         LOGGER.info("Connected!");
@@ -34,7 +39,10 @@ public class Main extends DSLinkHandler {
     }
 
     public static void main(String[] args) {
-        DSLinkFactory.startRequester("requester", args, new Main());
+        Main main = new Main();
+        main.provider = DSLinkFactory.generateRequester("requester", args, main);
+        main.provider.start();
+        main.provider.sleep();
     }
 
     private class Lister implements Handler<ListResponse> {
@@ -66,7 +74,14 @@ public class Main extends DSLinkHandler {
 
                     ListRequest newReq = new ListRequest(child.getPath());
                     link.getRequester().list(newReq, new Lister(newReq));
+                    integer.incrementAndGet();
                 }
+            }
+
+            int i = integer.decrementAndGet();
+            if (i <= 0) {
+                LOGGER.info("List completed, stopping the link");
+                provider.stop();
             }
         }
 
