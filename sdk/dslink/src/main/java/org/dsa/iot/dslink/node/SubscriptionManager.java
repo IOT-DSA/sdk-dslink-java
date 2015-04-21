@@ -95,10 +95,7 @@ public class SubscriptionManager {
      * @param resp Response to send updates to
      */
     public synchronized void addPathSub(Node node, ListResponse resp) {
-        ListResponse prev = pathSubs.put(node, resp);
-        if (prev != null) {
-            throw new RuntimeException("Node " + node.getPath() + " already subscribed");
-        }
+        pathSubs.put(node, resp);
     }
 
     /**
