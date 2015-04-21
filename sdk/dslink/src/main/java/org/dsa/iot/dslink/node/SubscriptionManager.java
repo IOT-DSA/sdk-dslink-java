@@ -56,11 +56,8 @@ public class SubscriptionManager {
      * @param sid Subscription ID to send back to the client
      */
     public synchronized void addValueSub(Node node, int sid) {
-        Integer prev = valueSubsNodes.put(node, sid);
+        valueSubsNodes.put(node, sid);
         valueSubsSids.put(sid, node);
-        if (prev != null) {
-            throw new NullPointerException("Node " + node.getPath() + " already subscribed");
-        }
         postValueUpdate(node);
     }
 
