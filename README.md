@@ -14,3 +14,9 @@ Running the requester: <br />
 
 Running the responder: <br />
 `./gradlew :subprojects/responder:run -Dexec.args="-b http://localhost:8080/conn"`
+
+## Acknowledgements
+
+A special thanks to JProfiler for supporting this project!
+
+[![](https://www.ej-technologies.com/images/product_banners/jprofiler_small.png)](http://www.ej-technologies.com/products/jprofiler/overview.html)
