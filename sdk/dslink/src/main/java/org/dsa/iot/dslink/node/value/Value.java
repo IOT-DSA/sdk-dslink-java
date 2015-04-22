@@ -292,6 +292,7 @@ public class Value {
         int hh = offset / 60;
         int mm = offset % 60;
         TIMEZONE = s + (hh < 10 ? "0" : "") + hh + ":" + (mm < 10 ? "0" : "") + mm;
-        FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.sss");        LOCK = new Object();
+        FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.sss");
+        LOCK = new Object();
     }
 }
