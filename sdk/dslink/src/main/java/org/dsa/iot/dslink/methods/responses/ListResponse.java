@@ -384,6 +384,9 @@ public class ListResponse implements Response {
             if (action != null) {
                 String perm = action.getPermission().getJsonName();
                 childData.putString("$invokable", perm);
+
+                String jsonName = action.getResultType().getJsonName();
+                childData.putString("$result", jsonName);
             }
 
             Set<String> mixins = child.getMixins();
