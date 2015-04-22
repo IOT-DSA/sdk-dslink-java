@@ -6,6 +6,7 @@ import org.vertx.java.core.json.JsonObject;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.TimeZone;
 
 /**
  * Common class for handling values. It is always recommended to check the type
@@ -17,6 +18,7 @@ public class Value {
 
     private static final DateFormat FORMAT;
     private static final Object LOCK;
+    private static final String TIMEZONE;
 
     private boolean immutable;
     private ValueType type;
@@ -125,7 +127,7 @@ public class Value {
         checkImmutable();
         this.type = type;
         synchronized (LOCK) {
-            this.ts = FORMAT.format(new Date());
+            this.ts = FORMAT.format(new Date()) + TIMEZONE;
         }
 
         this.number = n;
@@ -280,7 +282,16 @@ public class Value {
     }
 
     static {
-        FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
-        LOCK = new Object();
+        long currentTime = new Date().getTime();
+        int offset = TimeZone.getDefault().getOffset(currentTime) / (1000 * 60);
+        String s = "+";
+        if (offset < 0) {
+            offset = -offset;
+            s = "-";
+        }
+        int hh = offset / 60;
+        int mm = offset % 60;
+        TIMEZONE = s + (hh < 10 ? "0" : "") + hh + ":" + (mm < 10 ? "0" : "") + mm;
+        FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.sss");        LOCK = new Object();
     }
 }
