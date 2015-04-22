@@ -3,7 +3,10 @@ package org.dsa.iot.dslink.util;
 import org.vertx.java.core.Vertx;
 import org.vertx.java.core.VertxFactory;
 
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadFactory;
 
 /**
  * Miscellaneous global fields.
@@ -29,6 +32,7 @@ public class Objects {
         return THREAD_POOL;
     }
 
+    @SuppressWarnings("unused")
     public static void setThreadPool(ScheduledThreadPoolExecutor stpe) {
         THREAD_POOL = stpe;
     }
@@ -41,6 +45,7 @@ public class Objects {
         return DAEMON_THREAD_POOL;
     }
 
+    @SuppressWarnings("unused")
     public static void setDaemonThreadPool(ScheduledThreadPoolExecutor stpe) {
         DAEMON_THREAD_POOL = stpe;
     }
@@ -56,7 +61,7 @@ public class Objects {
         };
     }
 
-    private static class ScheduledThreadPool extends ScheduledThreadPoolExecutor {
+    protected static class ScheduledThreadPool extends ScheduledThreadPoolExecutor {
 
         public ScheduledThreadPool(int corePoolSize) {
             super(corePoolSize);
@@ -72,17 +77,18 @@ public class Objects {
         protected void afterExecute(Runnable runnable, Throwable t) {
             if (t == null && runnable instanceof Future<?>) {
                 try {
-                    ((Future<?>) runnable).get(0, TimeUnit.NANOSECONDS);
-                } catch (CancellationException | TimeoutException ignored) {
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                } catch (ExecutionException e) {
+                    ((Future<?>) runnable).get();
+                } catch (ExecutionException
+                        | InterruptedException e) {
                     if (e.getCause() instanceof RuntimeException) {
                         throw (RuntimeException) e.getCause();
                     }
                     throw new RuntimeException(e.getCause());
                 }
             } else if (t != null) {
+                if (t instanceof RuntimeException) {
+                    throw (RuntimeException) t;
+                }
                 throw new RuntimeException(t);
             }
         }

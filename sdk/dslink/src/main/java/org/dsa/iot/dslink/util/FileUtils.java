@@ -61,7 +61,7 @@ public class FileUtils {
     }
 
     /**
-     * Copying files will delete the destination file.
+     * Copying files will delete the destination file if it already exists.
      *
      * @param src Source file to copy
      * @param dest Destination file to copy to

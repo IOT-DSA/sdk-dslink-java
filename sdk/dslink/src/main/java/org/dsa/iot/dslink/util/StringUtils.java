@@ -16,6 +16,8 @@ public class StringUtils {
      * @return Whether the name is a reference to a configuration or attribute.
      */
     public static boolean isReference(String name) {
+        if (name == null)
+            throw new NullPointerException("name");
         return name.startsWith("$") || name.startsWith("@");
     }
 
@@ -43,7 +45,7 @@ public class StringUtils {
 
     /**
      * @param string String to check
-     * @param chars  Characters to look for
+     * @param chars  Characters or strings to look for
      * @return Whether the string contains any of the designated characters.
      */
     public static boolean contains(String string, String[] chars) {

@@ -42,8 +42,20 @@ public class LogLevel {
      * @param level Level to set
      */
     public static void setLevel(Level level) {
+        if (level == null)
+            throw new NullPointerException("level");
         Logger log = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
         log.setLevel(level);
     }
 
+    /**
+     * Retrieves the root logging level, which may also be the global
+     * root level.
+     *
+     * @return Root logger level
+     */
+    public static Level getLevel() {
+        Logger log = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+        return log.getLevel();
+    }
 }

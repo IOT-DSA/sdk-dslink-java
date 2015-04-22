@@ -117,7 +117,7 @@ public class URLInfo {
     public static boolean getDefaultProtocolSecurity(String scheme) {
         if (scheme == null)
             throw new NullPointerException("scheme");
-        return "ws".equals(scheme) || "https".equals(scheme);
+        return "wss".equals(scheme) || "https".equals(scheme);
     }
 
     /**
