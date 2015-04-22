@@ -2,6 +2,7 @@ package org.dsa.iot.dslink.serializer;
 
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.util.FileUtils;
+import org.dsa.iot.dslink.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.json.JsonObject;
@@ -10,7 +11,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -27,8 +27,6 @@ public class SerializationManager {
 
     private final Deserializer deserializer;
     private final Serializer serializer;
-
-    private final ScheduledThreadPoolExecutor stpe;
     private ScheduledFuture<?> future;
 
     /**
@@ -42,19 +40,12 @@ public class SerializationManager {
         this.backup = new File(file.getPath() + ".bak");
         this.deserializer = new Deserializer(manager);
         this.serializer = new Serializer(manager);
-        this.stpe = new ScheduledThreadPoolExecutor(1, new ThreadFactory() {
-            @Override
-            public Thread newThread(Runnable r) {
-                Thread t = new Thread(r);
-                t.setDaemon(true);
-                return t;
-            }
-        });
     }
 
     public synchronized void start() {
         stop();
-        future = stpe.scheduleWithFixedDelay(new Runnable() {
+        ScheduledThreadPoolExecutor daemon = Objects.getDaemonThreadPool();
+        future = daemon.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
                 serialize();
