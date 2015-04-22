@@ -12,20 +12,37 @@ import java.util.concurrent.*;
  */
 public class Objects {
 
+    private static final int PROCESSORS;
     private static final Vertx VERTX;
-    private static final ScheduledThreadPoolExecutor THREAD_POOL;
-    private static final ScheduledThreadPoolExecutor DAEMON_THREAD_POOL;
+
+    private static ScheduledThreadPoolExecutor THREAD_POOL;
+    private static ScheduledThreadPoolExecutor DAEMON_THREAD_POOL;
 
     public static Vertx getVertx() {
         return VERTX;
     }
 
     public static ScheduledThreadPoolExecutor getThreadPool() {
+        if (THREAD_POOL == null) {
+            THREAD_POOL = new ScheduledThreadPool(PROCESSORS);
+        }
         return THREAD_POOL;
     }
 
+    public static void setThreadPool(ScheduledThreadPoolExecutor stpe) {
+        THREAD_POOL = stpe;
+    }
+
     public static ScheduledThreadPoolExecutor getDaemonThreadPool() {
+        if (DAEMON_THREAD_POOL == null) {
+            ThreadFactory factory = getDaemonFactory();
+            DAEMON_THREAD_POOL = new ScheduledThreadPool(PROCESSORS, factory);
+        }
         return DAEMON_THREAD_POOL;
+    }
+
+    public static void setDaemonThreadPool(ScheduledThreadPoolExecutor stpe) {
+        DAEMON_THREAD_POOL = stpe;
     }
 
     private static ThreadFactory getDaemonFactory() {
@@ -73,9 +90,6 @@ public class Objects {
 
     static {
         VERTX = VertxFactory.newVertx();
-
-        int p = Runtime.getRuntime().availableProcessors();
-        THREAD_POOL = new ScheduledThreadPool(p);
-        DAEMON_THREAD_POOL = new ScheduledThreadPool(p, getDaemonFactory());
+        PROCESSORS = Runtime.getRuntime().availableProcessors();
     }
 }
