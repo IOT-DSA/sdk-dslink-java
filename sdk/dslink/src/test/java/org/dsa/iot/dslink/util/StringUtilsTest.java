@@ -5,6 +5,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
@@ -45,7 +46,7 @@ public class StringUtilsTest {
             Assert.assertEquals("delimiter", e.getMessage());
         }
 
-        Set<String> strings = new HashSet<>();
+        Set<String> strings = new LinkedHashSet<>();
         strings.add("1");
         strings.add("2");
         strings.add("3");

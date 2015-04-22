@@ -35,12 +35,20 @@ public class StringUtils {
         } else if (delimiter == null) {
             throw new NullPointerException("delimiter");
         }
+
         StringBuilder builder = new StringBuilder();
-        for (String s : strings) {
-            builder.append(s);
-            builder.append(delimiter);
+        int size = strings.size();
+        String[] array = strings.toArray(new String[size]);
+        for (int i = 0;;) {
+            builder.append(array[i]);
+            if (++i < size) {
+                builder.append(delimiter);
+            } else {
+                break;
+            }
         }
-        return builder.substring(0, builder.length() - delimiter.length());
+
+        return builder.toString();
     }
 
     /**
