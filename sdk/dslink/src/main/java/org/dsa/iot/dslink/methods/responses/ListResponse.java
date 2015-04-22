@@ -9,7 +9,9 @@ import org.dsa.iot.dslink.node.Permission;
 import org.dsa.iot.dslink.node.SubscriptionManager;
 import org.dsa.iot.dslink.node.actions.Action;
 import org.dsa.iot.dslink.node.actions.ActionResult;
+import org.dsa.iot.dslink.node.actions.Parameter;
 import org.dsa.iot.dslink.node.value.Value;
+import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.dsa.iot.dslink.util.StringUtils;
 import org.vertx.java.core.Handler;
@@ -84,8 +86,16 @@ public class ListResponse implements Response {
         String name = in.get(0);
         Object v = in.get(1);
 
-        char start = name.charAt(0);
-        if (start == '$') {
+        if (name.startsWith("$$")) {
+            name = name.substring(2);
+            if ("password".equals(name)) {
+                if (v instanceof String) {
+                    node.setPassword(((String) v).toCharArray());
+                }
+            } else {
+                node.setRoConfig(name, ValueUtils.toValue(v));
+            }
+        } else if (name.startsWith("$")) {
             name = name.substring(1);
             if ("is".equals(name)) {
                 node.setProfile((String) v);
@@ -95,16 +105,20 @@ public class ListResponse implements Response {
                 node.setInterfaces((String) v);
             } else if ("invokable".equals(name)) {
                 Permission perm = Permission.toEnum((String) v);
-                node.setAction(new Action(perm, new Handler<ActionResult>() {
-                    @Override
-                    public void handle(ActionResult event) {
-                        throw new UnsupportedOperationException();
-                    }
-                }));
+                Action act = getOrCreateAction(node, perm);
+                act.setPermission(perm);
+            } else if ("params".equals(name)) {
+                JsonArray array = (JsonArray) v;
+                Action act = getOrCreateAction(node, Permission.NONE);
+                iterateActionMetaData(act, array, false);
+            } else if ("columns".equals(name)) {
+                JsonArray array = (JsonArray) v;
+                Action act = getOrCreateAction(node, Permission.NONE);
+                iterateActionMetaData(act, array, true);
             } else {
                 node.setConfig(name, ValueUtils.toValue(v));
             }
-        } else if (start == '@') {
+        } else if (name.startsWith("@")) {
             name = name.substring(1);
             node.setAttribute(name, ValueUtils.toValue(v));
         } else {
@@ -387,5 +401,38 @@ public class ListResponse implements Response {
         }
         update.addObject(childData);
         return update;
+    }
+
+    private static void iterateActionMetaData(Action act,
+                                              JsonArray array,
+                                              boolean isCol) {
+        for (Object anArray : array) {
+            JsonObject data = (JsonObject) anArray;
+            String name = data.getString("name");
+            String type = data.getString("type");
+            ValueType valType = ValueType.toEnum(type);
+            Parameter param = new Parameter(name, valType);
+            if (isCol) {
+                act.addResult(param);
+            } else {
+                act.addParameter(param);
+            }
+        }
+    }
+
+    private static Action getOrCreateAction(Node node, Permission perm) {
+        Action action = node.getAction();
+        if (action != null) {
+            return action;
+        }
+
+        action = new Action(perm, new Handler<ActionResult>() {
+            @Override
+            public void handle(ActionResult event) {
+                throw new UnsupportedOperationException();
+            }
+        });
+        node.setAction(action);
+        return action;
     }
 }

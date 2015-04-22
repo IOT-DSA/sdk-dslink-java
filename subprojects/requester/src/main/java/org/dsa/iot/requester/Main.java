@@ -73,13 +73,13 @@ public class Main extends DSLinkHandler {
                     printValueMap(child.getConfigurations(), "Configuration", true);
 
                     ListRequest newReq = new ListRequest(child.getPath());
-                    link.getRequester().list(newReq, new Lister(newReq));
                     integer.incrementAndGet();
+                    link.getRequester().list(newReq, new Lister(newReq));
                 }
             }
 
             int i = integer.decrementAndGet();
-            if (i <= 0) {
+            if (i <= 1) {
                 LOGGER.info("List completed, stopping the link");
                 provider.stop();
             }

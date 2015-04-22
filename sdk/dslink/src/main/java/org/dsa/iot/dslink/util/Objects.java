@@ -3,10 +3,7 @@ package org.dsa.iot.dslink.util;
 import org.vertx.java.core.Vertx;
 import org.vertx.java.core.VertxFactory;
 
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.*;
 
 /**
  * Miscellaneous global fields.
@@ -77,9 +74,11 @@ public class Objects {
         protected void afterExecute(Runnable runnable, Throwable t) {
             if (t == null && runnable instanceof Future<?>) {
                 try {
-                    ((Future<?>) runnable).get();
-                } catch (ExecutionException
-                        | InterruptedException e) {
+                    ((Future<?>) runnable).get(0, TimeUnit.NANOSECONDS);
+                } catch (CancellationException
+                        | InterruptedException
+                        | TimeoutException ignored) {
+                } catch (ExecutionException e) {
                     if (e.getCause() instanceof RuntimeException) {
                         throw (RuntimeException) e.getCause();
                     }

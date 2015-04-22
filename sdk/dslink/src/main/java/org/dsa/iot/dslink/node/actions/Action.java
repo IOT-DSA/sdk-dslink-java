@@ -17,7 +17,7 @@ public class Action {
     private final JsonArray params = new JsonArray();
     private final JsonArray results = new JsonArray();
 
-    private final Permission permission;
+    private Permission permission;
     private final Handler<ActionResult> handler;
     private final InvokeMode mode;
 
@@ -43,6 +43,15 @@ public class Action {
         this.permission = permission;
         this.handler = handler;
         this.mode = mode;
+    }
+
+    /**
+     * Updates the permission level of the action.
+     *
+     * @param permission New permission level
+     */
+    public void setPermission(Permission permission) {
+        this.permission = permission;
     }
 
     /**
