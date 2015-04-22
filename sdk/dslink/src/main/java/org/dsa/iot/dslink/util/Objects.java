@@ -15,8 +15,8 @@ public class Objects {
     private static final int PROCESSORS;
     private static final Vertx VERTX;
 
-    private static ScheduledThreadPoolExecutor THREAD_POOL;
-    private static ScheduledThreadPoolExecutor DAEMON_THREAD_POOL;
+    private static volatile ScheduledThreadPoolExecutor THREAD_POOL;
+    private static volatile ScheduledThreadPoolExecutor DAEMON_THREAD_POOL;
 
     public static Vertx getVertx() {
         return VERTX;
