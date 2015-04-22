@@ -18,6 +18,8 @@ public class Action {
     private final JsonArray results = new JsonArray();
 
     private Permission permission;
+    private ResultType resultType;
+
     private final Handler<ActionResult> handler;
     private final InvokeMode mode;
 
@@ -27,9 +29,13 @@ public class Action {
     }
 
     /**
+     * The default result type is {@link ResultType#VALUES}. This value must
+     * be changed accordingly.
+     *
      * @param permission Minimum required permission to invoke
      * @param handler    Handler for invocation
      * @param mode       Determines how the action should be invoked
+     * @see #setResultType(ResultType) For changing the invocation results.
      */
     public Action(Permission permission,
                   Handler<ActionResult> handler,
@@ -40,6 +46,7 @@ public class Action {
             throw new NullPointerException("handler");
         else if (mode == null)
             throw new NullPointerException("mode");
+        this.resultType = ResultType.VALUES;
         this.permission = permission;
         this.handler = handler;
         this.mode = mode;
@@ -51,7 +58,23 @@ public class Action {
      * @param permission New permission level
      */
     public void setPermission(Permission permission) {
+        if (permission == null)
+            throw new NullPointerException("permission");
         this.permission = permission;
+    }
+
+    /**
+     * The default result type {@link ResultType#VALUES} and must be
+     * set accordingly.
+     *
+     * @param type The new result type to set.
+     * @return Current object for daisy chaining.
+     */
+    public Action setResultType(ResultType type) {
+        if (type == null)
+            throw new NullPointerException("type");
+        this.resultType = type;
+        return this;
     }
 
     /**
@@ -112,6 +135,13 @@ public class Action {
      */
     public boolean hasPermission() {
         return permission != Permission.NONE;
+    }
+
+    /**
+     * @return The result type this invocation returns.
+     */
+    public ResultType getResultType() {
+        return resultType;
     }
 
     /**

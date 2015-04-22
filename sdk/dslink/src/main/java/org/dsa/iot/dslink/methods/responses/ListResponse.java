@@ -10,6 +10,7 @@ import org.dsa.iot.dslink.node.SubscriptionManager;
 import org.dsa.iot.dslink.node.actions.Action;
 import org.dsa.iot.dslink.node.actions.ActionResult;
 import org.dsa.iot.dslink.node.actions.Parameter;
+import org.dsa.iot.dslink.node.actions.ResultType;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.node.value.ValueUtils;
@@ -115,6 +116,10 @@ public class ListResponse implements Response {
                 JsonArray array = (JsonArray) v;
                 Action act = getOrCreateAction(node, Permission.NONE);
                 iterateActionMetaData(act, array, true);
+            } else if ("result".equals(name)) {
+                String string = (String) v;
+                Action act = getOrCreateAction(node, Permission.NONE);
+                act.setResultType(ResultType.toEnum(string));
             } else {
                 node.setConfig(name, ValueUtils.toValue(v));
             }
@@ -182,12 +187,7 @@ public class ListResponse implements Response {
             String invokable = childData.getString("$invokable");
             if (invokable != null) {
                 Permission perm = Permission.toEnum(invokable);
-                Action action = new Action(perm, new Handler<ActionResult>() {
-                    @Override
-                    public void handle(ActionResult event) {
-                        throw new UnsupportedOperationException();
-                    }
-                });
+                Action action = getRawAction(perm);
                 if (builder != null) {
                     builder.getChild().setAction(action);
                 } else {
@@ -280,6 +280,11 @@ public class ListResponse implements Response {
                 update = new JsonArray();
                 update.addString("$columns");
                 update.addArray(action.getColumns());
+                updates.addArray(update);
+
+                update = new JsonArray();
+                update.addString("$result");
+                update.addString(action.getResultType().getJsonName());
                 updates.addArray(update);
             }
 
@@ -426,13 +431,17 @@ public class ListResponse implements Response {
             return action;
         }
 
-        action = new Action(perm, new Handler<ActionResult>() {
+        action = getRawAction(perm);
+        node.setAction(action);
+        return action;
+    }
+
+    private static Action getRawAction(Permission perm) {
+        return new Action(perm, new Handler<ActionResult>() {
             @Override
             public void handle(ActionResult event) {
                 throw new UnsupportedOperationException();
             }
         });
-        node.setAction(action);
-        return action;
     }
 }
