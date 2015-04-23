@@ -26,8 +26,8 @@ public class WebSocketConnector extends RemoteEndpoint {
         HttpClient client = HttpClientUtils.configure(getEndpoint());
         client.connectWebsocket(getUri(), new Handler<WebSocket>() {
             @Override
-            public void handle(WebSocket event) {
-                webSocket = event;
+            public void handle(final WebSocket webSocket) {
+                WebSocketConnector.this.webSocket = webSocket;
 
                 Handler<Void> onConnected = getOnConnected();
                 if (onConnected != null) {
@@ -36,18 +36,25 @@ public class WebSocketConnector extends RemoteEndpoint {
 
                 Handler<Throwable> onException = getOnException();
                 if (onException != null) {
-                    event.exceptionHandler(onException);
+                    webSocket.exceptionHandler(onException);
                 }
 
                 Handler<Buffer> onData = getOnData();
                 if (onData != null) {
-                    event.dataHandler(onData);
+                    webSocket.dataHandler(onData);
                 }
 
-                Handler<Void> onDisconnected = getOnDisconnected();
-                if (onDisconnected != null) {
-                    event.endHandler(onDisconnected);
-                }
+                webSocket.endHandler(new Handler<Void>() {
+                    @Override
+                    public void handle(Void event) {
+                        Handler<Void> onDisconnected = getOnDisconnected();
+                        if (onDisconnected != null) {
+                            onDisconnected.handle(event);
+                        }
+                        WebSocketConnector.this.webSocket = null;
+                    }
+                });
+
             }
         });
     }
@@ -68,6 +75,11 @@ public class WebSocketConnector extends RemoteEndpoint {
     public void write(String data) {
         checkConnected();
         webSocket.writeTextFrame(data);
+    }
+
+    @Override
+    public boolean isConnected() {
+        return webSocket != null;
     }
 
     private void checkConnected() {

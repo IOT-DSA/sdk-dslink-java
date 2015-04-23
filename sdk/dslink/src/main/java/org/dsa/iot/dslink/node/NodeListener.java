@@ -13,16 +13,26 @@ import java.util.Set;
  */
 public class NodeListener {
 
+    private final Node node;
+
     private final Set<Handler<Value>> valueHandlers;
     private final Set<Handler<ValueUpdate>> configHandlers;
     private final Set<Handler<ValueUpdate>> attribHandlers;
-    private final Set<Handler<Node>> listHandlers;
 
-    public NodeListener() {
+    private final Set<Handler<Node>> listHandlers;
+    private final Set<Handler<Node>> onSubscribedHandlers;
+    private final Set<Handler<Node>> onUnsubscribedHandlers;
+
+    public NodeListener(Node node) {
+        this.node = node;
+
         valueHandlers = new HashSet<>();
         configHandlers = new HashSet<>();
         attribHandlers = new HashSet<>();
+
         listHandlers = new HashSet<>();
+        onSubscribedHandlers = new HashSet<>();
+        onUnsubscribedHandlers = new HashSet<>();
     }
 
     /**
@@ -104,11 +114,51 @@ public class NodeListener {
 
     /**
      * Posts an update that the node is currently being listed.
-     *
-     * @param node Node that is being listed.
      */
-    public void postListUpdate(Node node) {
+    public void postListUpdate() {
         for (Handler<Node> handler : listHandlers) {
+            handler.handle(node);
+        }
+    }
+
+    /**
+     * Adds a subscription handler for the node to take action when
+     * a node's value has been subscribed to.
+     *
+     * @param handler Callback.
+     */
+    public void addOnSubscribeHandler(Handler<Node> handler) {
+        checkHandler(handler);
+        onSubscribedHandlers.add(handler);
+    }
+
+    /**
+     * Posts a subscription update. The node's value has been subscribed
+     * to.
+     */
+    protected void postOnSubscription() {
+        for (Handler<Node> handler : onSubscribedHandlers) {
+            handler.handle(node);
+        }
+    }
+
+    /**
+     * Adds an unsubscription handler for the node to take action when
+     * a node's value is unsubscribed.
+     *
+     * @param handler Callback.
+     */
+    public void addOnUnsubcriptionHandler(Handler<Node> handler) {
+        checkHandler(handler);
+        onUnsubscribedHandlers.add(handler);
+    }
+
+    /**
+     * Posts an unsubscription update. The node's value has been unsubscribed
+     * to.
+     */
+    protected void postOnUnsubscription() {
+        for (Handler<Node> handler : onUnsubscribedHandlers) {
             handler.handle(node);
         }
     }

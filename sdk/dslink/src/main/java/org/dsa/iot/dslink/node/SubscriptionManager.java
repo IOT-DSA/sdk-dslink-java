@@ -59,6 +59,7 @@ public class SubscriptionManager {
         valueSubsNodes.put(node, sid);
         valueSubsSids.put(sid, node);
         postValueUpdate(node);
+        node.getListener().postOnSubscription();
     }
 
     /**
@@ -70,6 +71,9 @@ public class SubscriptionManager {
     public synchronized void removeValueSub(int sid) {
         Node node = valueSubsSids.remove(sid);
         valueSubsNodes.remove(node);
+        if (node != null) {
+            node.getListener().postOnUnsubscription();
+        }
     }
 
     /**
@@ -81,6 +85,9 @@ public class SubscriptionManager {
     public synchronized void removeValueSub(Node node) {
         Integer sid = valueSubsNodes.remove(node);
         valueSubsSids.remove(sid);
+        if (sid != null) {
+            node.getListener().postOnUnsubscription();
+        }
     }
 
     /**

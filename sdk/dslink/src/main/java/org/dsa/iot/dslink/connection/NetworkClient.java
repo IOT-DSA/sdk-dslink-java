@@ -19,4 +19,9 @@ public interface NetworkClient {
      * Closes the connection to the client
      */
     void close();
+
+    /**
+     * @return Whether the client is connected or not.
+     */
+    boolean isConnected();
 }

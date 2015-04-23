@@ -102,10 +102,13 @@ public class DataHandler {
 
                         top.putArray(name, array);
                         String encoded = top.encode();
-                        if (LOGGER.isDebugEnabled()) {
-                            LOGGER.debug("Sent data: {}", encoded);
+
+                        if (client.isConnected()) {
+                            if (LOGGER.isDebugEnabled()) {
+                                LOGGER.debug("Sent data: {}", encoded);
+                            }
+                            client.write(encoded);
                         }
-                        client.write(encoded);
                     }
                 });
     }

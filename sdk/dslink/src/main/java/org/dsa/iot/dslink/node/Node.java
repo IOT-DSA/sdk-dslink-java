@@ -49,7 +49,7 @@ public class Node {
      */
     public Node(String name, Node parent, Linkable link) {
         this.parent = new WeakReference<>(parent);
-        this.listener = new NodeListener();
+        this.listener = new NodeListener(this);
         this.link = link;
         if (parent != null) {
             this.name = checkName(name);
@@ -329,6 +329,7 @@ public class Node {
         if (child != null && manager != null) {
             manager.postChildUpdate(child, true);
             manager.removeValueSub(child);
+            manager.removePathSub(child);
         }
         return child;
     }

@@ -81,33 +81,50 @@ public class RNG {
                 continue;
             }
 
+            // Log removal
+            final String path = child.getPath();
+            final String msg = "Removed RNG child at " + path;
+            LOGGER.info(msg);
+
             // Remove RNG task if possible
             ScheduledFuture<?> fut = futures.remove(child);
             if (fut != null) {
                 // Cancel out the RNG task
                 fut.cancel(false);
-
-                // Log removal
-                final String path = child.getPath();
-                final String msg = "Removed RNG child at " + path;
-                LOGGER.info(msg);
             }
         }
     }
 
-    private void setupRNG(final Node child) {
-        ScheduledThreadPoolExecutor stpe = Objects.getDaemonThreadPool();
-        ScheduledFuture<?> fut = stpe.scheduleWithFixedDelay(new Runnable() {
+    private void setupRNG(Node child) {
+        child.getListener().addOnSubscribeHandler(new Handler<Node>() {
             @Override
-            public void run() {
-                Value val = new Value(RANDOM.nextInt());
-                child.setValue(val);
+            public void handle(final Node event) {
+                LOGGER.info("Subscribed to {}", event.getPath());
+                ScheduledThreadPoolExecutor stpe = Objects.getDaemonThreadPool();
+                ScheduledFuture<?> fut = stpe.scheduleWithFixedDelay(new Runnable() {
+                    @Override
+                    public void run() {
+                        Value val = new Value(RANDOM.nextInt());
+                        event.setValue(val);
 
-                int value = val.getNumber().intValue();
-                LOGGER.info(child.getPath() + " has new value of " + value);
+                        int value = val.getNumber().intValue();
+                        LOGGER.info(event.getPath() + " has new value of " + value);
+                    }
+                }, 0, 2, TimeUnit.SECONDS);
+                futures.put(event, fut);
             }
-        }, 0, 2, TimeUnit.SECONDS);
-        futures.put(child, fut);
+        });
+
+        child.getListener().addOnUnsubcriptionHandler(new Handler<Node>() {
+            @Override
+            public void handle(Node event) {
+                ScheduledFuture<?> fut = futures.remove(event);
+                if (fut != null) {
+                    fut.cancel(false);
+                    LOGGER.info("Unsubscribed to {}", event.getPath());
+                }
+            }
+        });
     }
 
     private synchronized int addAndGet(int count) {
