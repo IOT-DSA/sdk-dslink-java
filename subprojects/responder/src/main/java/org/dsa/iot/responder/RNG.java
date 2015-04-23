@@ -115,7 +115,7 @@ public class RNG {
             }
         });
 
-        child.getListener().addOnUnsubcriptionHandler(new Handler<Node>() {
+        child.getListener().addOnUnsubscribeHandler(new Handler<Node>() {
             @Override
             public void handle(Node event) {
                 ScheduledFuture<?> fut = futures.remove(event);

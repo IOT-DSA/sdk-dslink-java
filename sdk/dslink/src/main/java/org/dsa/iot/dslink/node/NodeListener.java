@@ -148,7 +148,7 @@ public class NodeListener {
      *
      * @param handler Callback.
      */
-    public void addOnUnsubcriptionHandler(Handler<Node> handler) {
+    public void addOnUnsubscribeHandler(Handler<Node> handler) {
         checkHandler(handler);
         onUnsubscribedHandlers.add(handler);
     }
