@@ -80,6 +80,10 @@ public class NodeBuilder {
         return child.getListener();
     }
 
+    public Node getChild() {
+        return child;
+    }
+
     /**
      * The child will then be added to the parent with the set data. Any
      * subscriptions will then be notified. Note that the parent must not
