@@ -41,6 +41,11 @@ public class NodeBuilder {
         return this;
     }
 
+    public NodeBuilder setRoConfig(String name, Value value) {
+        child.setRoConfig(name, value);
+        return this;
+    }
+
     public NodeBuilder setAttribute(String name, Value value) {
         child.setAttribute(name, value);
         return this;
