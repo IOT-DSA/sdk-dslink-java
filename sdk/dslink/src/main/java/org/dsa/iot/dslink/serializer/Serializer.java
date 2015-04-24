@@ -63,7 +63,7 @@ public class Serializer {
 
         char[] password = parent.getPassword();
         if (password != null) {
-            out.putString("$password", new String(password));
+            out.putString("$$password", new String(password));
         }
 
         addValues("$$", out, parent.getRoConfigurations());

@@ -50,7 +50,7 @@ public class Deserializer {
                 node.setMixins((String) value);
             } else if ("$name".equals(name)) {
                 node.setDisplayName((String) value);
-            } else if ("$password".equals(name)) {
+            } else if ("$$password".equals(name)) {
                 node.setPassword(((String) value).toCharArray());
             } else if ("?value".equals(name)) {
                 node.setValue(ValueUtils.toValue(value));
