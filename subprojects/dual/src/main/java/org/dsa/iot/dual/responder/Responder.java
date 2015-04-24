@@ -46,16 +46,16 @@ public class Responder {
      */
     private static void initSettableNode(Node node) {
         NodeBuilder builder = node.createChild("settable");
-        node = builder.build();
-        node.setValue(new Value("UNSET"));
-        LOGGER.info("Responder has a current value of {}", node.getValue().toString());
-        node.getListener().addValueHandler(new Handler<Value>() {
+        builder.getListener().addValueHandler(new Handler<Value>() {
             @Override
             public void handle(Value event) {
                 String val = event.toString();
                 LOGGER.info("Responder has a new value set from requester: {}", val);
             }
         });
+        node = builder.build();
+        node.setValue(new Value("UNSET"));
+        LOGGER.info("Responder has a current value of {}", node.getValue().toString());
     }
 
     /**

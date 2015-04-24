@@ -1,6 +1,7 @@
 package org.dsa.iot.responder;
 
 import org.dsa.iot.dslink.node.Node;
+import org.dsa.iot.dslink.node.NodeBuilder;
 import org.dsa.iot.dslink.node.Permission;
 import org.dsa.iot.dslink.node.actions.Action;
 import org.dsa.iot.dslink.node.actions.ActionResult;
@@ -24,14 +25,15 @@ public class Replicator {
     }
 
     public static void start(Node parent) {
-        Node node = parent.createChild("replicator").build();
-        node.getListener().addOnListHandler(new Handler<Node>() {
+        NodeBuilder builder = parent.createChild("replicator");
+        builder.getListener().addOnListHandler(new Handler<Node>() {
             @Override
             public void handle(Node event) {
                 LOGGER.info("Replicator node has been listed");
             }
         });
 
+        final Node node = builder.build();
         final Permission perm = Permission.READ;
         final Replicator rep = new Replicator(node);
         final Action act = new Action(perm, new ResetHandler(rep), Action.InvokeMode.ASYNC);

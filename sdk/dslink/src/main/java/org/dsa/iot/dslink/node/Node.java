@@ -21,11 +21,11 @@ public class Node {
     };
 
     private final WeakReference<Node> parent;
-    private final NodeListener listener;
     private final Linkable link;
     private final String path;
     private final String name;
 
+    private NodeListener listener;
     private Map<String, Node> children;
 
     private Map<String, Value> roConfigs;
@@ -83,16 +83,6 @@ public class Node {
     }
 
     /**
-     * The listener API provides functionality for listening to changes
-     * that occur within a node.
-     *
-     * @return The node's listener.
-     */
-    public NodeListener getListener() {
-        return listener;
-    }
-
-    /**
      * @return Name of the node
      */
     public String getName() {
@@ -135,6 +125,16 @@ public class Node {
      */
     public String getProfile() {
         return profile;
+    }
+
+    /**
+     * The listener API provides functionality for listening to changes
+     * that occur within a node.
+     *
+     * @return The node's listener.
+     */
+    public synchronized NodeListener getListener() {
+        return listener;
     }
 
     public synchronized void addMixin(String mixin) {
@@ -532,6 +532,30 @@ public class Node {
      */
     public synchronized void setPassword(char[] password) {
         this.pass = password != null ? password.clone() : null;
+    }
+
+    /**
+     * Creates a fake node builder that wraps its methods around
+     * this node. This allows fitting a {@link Node} into a {@link NodeBuilder}
+     * when necessary.
+     *
+     * @return A fake node builder.
+     */
+    public NodeBuilder createFakeBuilder() {
+        return new NodeBuilder(getParent(), this);
+    }
+
+    /**
+     * Used to set the listener to allow the node builder to override
+     * the internal listener.
+     *
+     * @param listener Listener to set.
+     */
+    protected synchronized void setListener(NodeListener listener) {
+        if (listener == null) {
+            throw new NullPointerException("listener");
+        }
+        this.listener = listener;
     }
 
     /**

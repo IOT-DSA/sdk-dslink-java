@@ -44,7 +44,7 @@ public class RNG {
         if (children != null) {
             for (Node node : children.values()) {
                 if (node.getAction() == null) {
-                    setupRNG(node);
+                    setupRNG(node.createFakeBuilder());
                 }
             }
         }
@@ -57,6 +57,7 @@ public class RNG {
         for (; min < max; min++) {
             // Setup child
             NodeBuilder builder = parent.createChild("rng_" + min);
+            setupRNG(builder);
             builder.setValue(new Value(0));
             final Node child = builder.build();
 
@@ -64,9 +65,6 @@ public class RNG {
             final String path = child.getPath();
             final String msg = "Created RNG child at " + path;
             LOGGER.info(msg);
-
-            // Setup RNG
-            setupRNG(child);
         }
     }
 
@@ -95,7 +93,7 @@ public class RNG {
         }
     }
 
-    private void setupRNG(Node child) {
+    private void setupRNG(NodeBuilder child) {
         child.getListener().addOnSubscribeHandler(new Handler<Node>() {
             @Override
             public void handle(final Node event) {

@@ -76,8 +76,8 @@ public class NodeBuilder {
         return this;
     }
 
-    public Node getChild() {
-        return child;
+    public NodeListener getListener() {
+        return child.getListener();
     }
 
     /**
@@ -97,6 +97,7 @@ public class NodeBuilder {
         // addChild can return a deserialized node. This results in the action
         // being removed
         node.setAction(child.getAction());
+        node.setListener(child.getListener());
         return node;
     }
 }

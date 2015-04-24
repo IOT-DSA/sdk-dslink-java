@@ -189,7 +189,7 @@ public class ListResponse implements Response {
                 Permission perm = Permission.toEnum(invokable);
                 Action action = getRawAction(perm);
                 if (builder != null) {
-                    builder.getChild().setAction(action);
+                    builder.setAction(action);
                 } else {
                     child.setAction(action);
                 }
