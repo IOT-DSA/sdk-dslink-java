@@ -55,7 +55,7 @@ public class Deserializer {
             } else if ("?value".equals(name)) {
                 node.setValue(ValueUtils.toValue(value));
             } else if (name.startsWith("$$")) {
-                node.setConfig(name.substring(2), ValueUtils.toValue(value));
+                node.setRoConfig(name.substring(2), ValueUtils.toValue(value));
             } else if (name.startsWith("$")) {
                 node.setConfig(name.substring(1), ValueUtils.toValue(value));
             } else if (name.startsWith("@")) {
