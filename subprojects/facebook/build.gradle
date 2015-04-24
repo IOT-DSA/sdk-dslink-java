@@ -1,0 +1,21 @@
+apply plugin: 'application'
+
+mainClassName = 'org.dsa.iot.facebook.Main'
+
+repositories {
+    mavenLocal()
+}
+		
+
+dependencies {
+    compile project(':sdk/dslink')
+    compile 'org.facebook4j:facebook4j-core:2.2.2'
+    
+}
+
+run {
+    args System.getProperty("exec.args", "").split() + "-d" + "../dslink.json"
+    workingDir project.buildDir
+}
+
+applicationDistribution.from new File(project.projectDir, "/dslink.json")

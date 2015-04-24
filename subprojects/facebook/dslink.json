@@ -1,0 +1,37 @@
+{
+  "name": "facebook",
+  "version": "0.0.1",
+  "description": "A dslink for facebook",
+  "license": "Apache",
+  "author": {
+    "name": "Daniel Shapiro",
+    "email": "danielsspam1272@gmail.com"
+  },
+  "engines": {
+    "java": ">=1.7.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/IOT-DSA/sdk-dslink-java"
+  },
+  "bugs": {
+    "url": "https://github.com/IOT-DSA/sdk-dslink-java/issues"
+  },
+  "configs": {
+    "nodes": {
+      "type": "path",
+      "value": ".nodes.json",
+      "required": true
+    },
+    "key": {
+      "type": "path",
+      "value": ".key",
+      "required": true
+    },
+    "log": {
+      "type": "enum",
+      "value": "debug",
+      "required": true
+    }
+  }
+}
