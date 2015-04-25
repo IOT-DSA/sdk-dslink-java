@@ -79,7 +79,6 @@ public class TwitterThing {
 		err = node.createChild("errors").build();
 		Action act = new Action(Permission.READ, new ConnectHandler());
 		act.addParameter(new Parameter("username", ValueType.STRING));
-		act.addParameter(new Parameter("password", ValueType.STRING));
 		node.createChild("connect").setAction(act).build();
 			
 	}
@@ -116,37 +115,6 @@ public class TwitterThing {
         }
 	}
 	
-	private void savePassword(File file, String pass) {
-        try {
-            FileOutputStream fileOut = new FileOutputStream(file);
-            ObjectOutputStream objectOut = new ObjectOutputStream(fileOut);
-            objectOut.writeObject(pass);
-            objectOut.close();
-        } catch (IOException e) {
-            String msg = "IOException while saving password.";
-            System.out.println(msg);
-        }
-	}
-	
-	private String loadPassword(File file) {
-		String pass = null;
-		if (file.exists()) {
-            try {
-                FileInputStream fileIn = new FileInputStream(file);
-                ObjectInputStream objectIn = new ObjectInputStream(fileIn);
-                pass = (String) objectIn.readObject();
-                objectIn.close();
-                return pass;
-            } catch (IOException e) {
-                String msg = "IOException while loading password.";
-                System.out.println(msg);
-            } catch (ClassNotFoundException e) {
-                String msg = "ClassNotFoundException while loading password.";
-                System.out.println(msg);
-            }
-        }
-		return pass;
-	}
 	
 	private void connect() {
 	
@@ -171,13 +139,7 @@ public class TwitterThing {
 		builder.setAction(act);
 		builder.build();
 		
-		builder = node.createChild("logout");
-		builder.setAction(new Action(Permission.READ, new LogoutHandler()));
-		builder.build();
 		
-		builder = node.createChild("deleteUserAccount");
-		builder.setAction(new Action(Permission.READ, new AccountDeleteHandler()));
-		builder.build();
 		
 	}
 	
@@ -185,10 +147,8 @@ public class TwitterThing {
 		public void handle(ActionResult event){
 			
 			String username = event.getJsonIn().getObject("params").getString("username");
-			String password = event.getJsonIn().getObject("params").getString("password");
 			userPath = "C:/dgtwitbot/userdata/"+username;
 			File userFile = new File(userPath);
-			File passFile = new File(userPath+"/password.ser");
 			
 			clearErrorMsgs();
 			
@@ -196,21 +156,21 @@ public class TwitterThing {
 				userFile.setWritable(true);
 				if (userFile.mkdirs()) {
 					System.out.println("made a user dir");
-//					NodeBuilder builder = node.createChild("debug");
-//					builder.setValue(new Value("yay?"));
-//					builder.build();
 				}
-				savePassword(passFile, password);
 			} else {
-				if (!loadPassword(passFile).equals(password)) {
-					NodeBuilder builder = err.createChild("login error message");
-					builder.setValue(new Value("Wrong Password"));
-					builder.build();
-					return;
-				}
 				File tokenFile = new File(userPath+"/accessToken.ser");
 				loadAccessToken(tokenFile);
 			}		
+			
+			NodeBuilder builder = node.createChild("logout");
+			builder.setAction(new Action(Permission.READ, new LogoutHandler()));
+			builder.build();
+			
+			builder = node.createChild("deleteUserAccount");
+			builder.setAction(new Action(Permission.READ, new AccountDeleteHandler()));
+			builder.build();
+			
+			node.removeChild("connect");
 			
 			if (accessToken != null) {
 				ConfigurationBuilder cb = new ConfigurationBuilder();
@@ -226,7 +186,7 @@ public class TwitterThing {
 				return;
 			}
 			
-			NodeBuilder builder = node.createChild("Authorization URL");
+			builder = node.createChild("Authorization URL");
 			builder.setValue(new Value(""));
 			Node auth = builder.build();
 			
@@ -246,9 +206,6 @@ public class TwitterThing {
 				node.createChild("authorize").setAction(act).build();
 				
 			} catch (TwitterException e) {
-//				NodeBuilder builderr = node.createChild("debug2");
-//				builderr.setValue(new Value("nooo"));
-//				builderr.build();
 				e.printStackTrace();
 			}
 			
@@ -274,6 +231,7 @@ public class TwitterThing {
 
 				clearErrorMsgs();
 				twitter.setOAuthAccessToken(accessToken);
+				node.removeChild("authorize");
 				connect();
 		    } catch (TwitterException te) {
 		    	if(401 == te.getStatusCode()){
