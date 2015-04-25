@@ -46,7 +46,7 @@ public class Responder {
      */
     private static void initSettableNode(Node node) {
         NodeBuilder builder = node.createChild("settable");
-        builder.getListener().addValueHandler(new Handler<Value>() {
+        builder.getListener().setValueHandler(new Handler<Value>() {
             @Override
             public void handle(Value event) {
                 String val = event.toString();
