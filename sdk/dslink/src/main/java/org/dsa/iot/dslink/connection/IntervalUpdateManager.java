@@ -1,5 +1,6 @@
 package org.dsa.iot.dslink.connection;
 
+import org.dsa.iot.dslink.util.Objects;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
@@ -46,7 +47,7 @@ public class IntervalUpdateManager {
             addTask(content);
             long delay = updateInterval - diff;
             if (fut == null) {
-                fut = org.dsa.iot.dslink.util.Objects.getDaemonThreadPool().schedule(new Runnable() {
+                fut = Objects.getDaemonThreadPool().schedule(new Runnable() {
                     @Override
                     public void run() {
                         synchronized (IntervalUpdateManager.this) {

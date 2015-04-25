@@ -203,6 +203,9 @@ public class Node {
         if (value != null) {
             value.setImmutable();
         }
+        if (this.value != null && this.value.equals(value)) {
+            return;
+        }
         this.value = value;
         listener.postValueUpdate(value);
 
