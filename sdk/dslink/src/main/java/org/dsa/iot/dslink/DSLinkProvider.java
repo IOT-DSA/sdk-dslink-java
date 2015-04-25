@@ -8,6 +8,8 @@ import org.dsa.iot.dslink.util.Objects;
 import org.vertx.java.core.Handler;
 
 import java.io.File;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 
 import static org.dsa.iot.dslink.connection.ConnectionManager.ClientConnected;
@@ -18,8 +20,11 @@ import static org.dsa.iot.dslink.connection.ConnectionManager.ClientConnected;
  */
 public class DSLinkProvider {
 
+    private final Map<String, DSLink> linkRequesterCache;
+    private final Map<String, DSLink> linkResponderCache;
     private final ConnectionManager manager;
     private final DSLinkHandler handler;
+    private final Object lock;
     private boolean running;
 
     public DSLinkProvider(ConnectionManager manager, DSLinkHandler handler) {
@@ -27,6 +32,9 @@ public class DSLinkProvider {
             throw new NullPointerException("manager");
         else if (handler == null)
             throw new NullPointerException("handler");
+        this.linkRequesterCache = new ConcurrentHashMap<>();
+        this.linkResponderCache = new ConcurrentHashMap<>();
+        this.lock = new Object();
         this.manager = manager;
         this.handler = handler;
         handler.preInit();
@@ -35,6 +43,7 @@ public class DSLinkProvider {
     public void start() {
         running = true;
 
+        final String dsId = handler.getConfig().getDsIdWithHash();
         manager.setPreInitHandler(new Handler<ClientConnected>() {
             @Override
             public void handle(final ClientConnected event) {
@@ -44,9 +53,18 @@ public class DSLinkProvider {
                     @Override
                     public void run() {
                         if (event.isRequester()) {
-                            final DSLink link = new DSLink(handler, h, true, true);
-                            link.setDefaultDataHandlers(true, false);
-                            handler.onRequesterInitialized(link);
+                            final DSLink link;
+                            synchronized (lock) {
+                                DSLink tmp = linkRequesterCache.get(dsId);
+                                if (tmp == null) {
+                                    tmp = new DSLink(handler, h, true, true);
+                                    tmp.setDefaultDataHandlers(true, false);
+                                    handler.onRequesterInitialized(tmp);
+                                    linkRequesterCache.put(dsId, tmp);
+                                }
+                                link = tmp;
+                            }
+
                             event.setRequesterOnConnected(new Handler<ClientConnected>() {
                                 @Override
                                 public void handle(ClientConnected event) {
@@ -62,18 +80,28 @@ public class DSLinkProvider {
                     @Override
                     public void run() {
                         if (event.isResponder()) {
-                            final DSLink link = new DSLink(handler, h, false, true);
+                            final DSLink link;
 
-                            File path = handler.getConfig().getSerializationPath();
-                            if (path != null) {
-                                NodeManager man = link.getNodeManager();
-                                SerializationManager manager = new SerializationManager(path, man);
-                                manager.deserialize();
-                                manager.start();
+                            synchronized (lock) {
+                                DSLink tmp = linkResponderCache.get(dsId);
+                                if (tmp == null) {
+                                    tmp = new DSLink(handler, h, false, true);
+                                    File path = handler.getConfig().getSerializationPath();
+                                    if (path != null) {
+                                        NodeManager man = tmp.getNodeManager();
+                                        SerializationManager manager;
+                                        manager = new SerializationManager(path, man);
+                                        manager.deserialize();
+                                        manager.start();
+                                    }
+
+                                    tmp.setDefaultDataHandlers(false, true);
+                                    handler.onResponderInitialized(tmp);
+                                    linkResponderCache.put(dsId, tmp);
+                                }
+                                link = tmp;
                             }
 
-                            link.setDefaultDataHandlers(false, true);
-                            handler.onResponderInitialized(link);
                             event.setResponderOnConnected(new Handler<ClientConnected>() {
                                 @Override
                                 public void handle(ClientConnected event) {

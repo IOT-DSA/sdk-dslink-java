@@ -22,9 +22,9 @@ public class DSLink {
 
     private final SubscriptionManager manager = new SubscriptionManager(this);
     private final NodeManager nodeManager;
-    private final DataHandler handler;
     private final Requester requester;
     private final Responder responder;
+    private DataHandler handler;
 
     /**
      * @param linkHandler DSLink handler
@@ -62,6 +62,17 @@ public class DSLink {
     }
 
     /**
+     * Sets a new writer for the link to utilize.
+     *
+     * @param handler New handler to set.
+     */
+    public void setWriter(DataHandler handler) {
+        this.handler = handler;
+    }
+
+    /**
+     * The writer must never be cached as it can change.
+     *
      * @return The writer to write responses to a remote endpoint.
      */
     public DataHandler getWriter() {

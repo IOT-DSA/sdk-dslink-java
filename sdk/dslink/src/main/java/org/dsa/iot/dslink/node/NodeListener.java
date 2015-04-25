@@ -3,9 +3,6 @@ package org.dsa.iot.dslink.node;
 import org.dsa.iot.dslink.node.value.Value;
 import org.vertx.java.core.Handler;
 
-import java.util.HashSet;
-import java.util.Set;
-
 /**
  * Handles listening to node updates.
  *
@@ -15,24 +12,16 @@ public class NodeListener {
 
     private final Node node;
 
-    private final Set<Handler<Value>> valueHandlers;
-    private final Set<Handler<ValueUpdate>> configHandlers;
-    private final Set<Handler<ValueUpdate>> attribHandlers;
+    private Handler<Value> valueHandler;
+    private Handler<ValueUpdate> configHandler;
+    private Handler<ValueUpdate> attribHandler;
 
-    private final Set<Handler<Node>> listHandlers;
-    private final Set<Handler<Node>> onSubscribedHandlers;
-    private final Set<Handler<Node>> onUnsubscribedHandlers;
+    private Handler<Node> listHandler;
+    private Handler<Node> onSubscribedHandler;
+    private Handler<Node> onUnsubscribedHandler;
 
     public NodeListener(Node node) {
         this.node = node;
-
-        valueHandlers = new HashSet<>();
-        configHandlers = new HashSet<>();
-        attribHandlers = new HashSet<>();
-
-        listHandlers = new HashSet<>();
-        onSubscribedHandlers = new HashSet<>();
-        onUnsubscribedHandlers = new HashSet<>();
     }
 
     /**
@@ -41,9 +30,8 @@ public class NodeListener {
      *
      * @param handler Callback.
      */
-    public void addValueHandler(Handler<Value> handler) {
-        checkHandler(handler);
-        valueHandlers.add(handler);
+    public void setValueHandler(Handler<Value> handler) {
+        valueHandler = handler;
     }
 
     /**
@@ -52,7 +40,8 @@ public class NodeListener {
      * @param value Updated value.
      */
     protected void postValueUpdate(Value value) {
-        for (Handler<Value> handler : valueHandlers) {
+        Handler<Value> handler = valueHandler;
+        if (handler != null) {
             handler.handle(value);
         }
     }
@@ -62,9 +51,8 @@ public class NodeListener {
      *
      * @param handler Callback.
      */
-    public void addConfigHandler(Handler<ValueUpdate> handler) {
-        checkHandler(handler);
-        configHandlers.add(handler);
+    public void setConfigHandler(Handler<ValueUpdate> handler) {
+        configHandler = handler;
     }
 
     /**
@@ -74,7 +62,8 @@ public class NodeListener {
      * @param update Update to post.
      */
     protected void postConfigUpdate(ValueUpdate update) {
-        for (Handler<ValueUpdate> handler : configHandlers) {
+        Handler<ValueUpdate> handler = configHandler;
+        if (handler != null) {
             handler.handle(update);
         }
     }
@@ -84,9 +73,8 @@ public class NodeListener {
      *
      * @param handler Callback.
      */
-    public void addAttributeHandler(Handler<ValueUpdate> handler) {
-        checkHandler(handler);
-        attribHandlers.add(handler);
+    public void setAttributeHandler(Handler<ValueUpdate> handler) {
+        attribHandler = handler;
     }
 
     /**
@@ -96,40 +84,40 @@ public class NodeListener {
      * @param update Update to post.
      */
     protected void postAttributeUpdate(ValueUpdate update) {
-        for (Handler<ValueUpdate> handler : attribHandlers) {
+        Handler<ValueUpdate> handler = attribHandler;
+        if (handler != null) {
             handler.handle(update);
         }
     }
 
     /**
-     * Adds a list handler listener. The handler will be called every time a
+     * Sets a list handler listener. The handler will be called every time a
      * remote endpoint performs a list request on the node.
      *
      * @param handler Callback.
      */
-    public void addOnListHandler(Handler<Node> handler) {
-        checkHandler(handler);
-        listHandlers.add(handler);
+    public void setOnListHandler(Handler<Node> handler) {
+        listHandler = handler;
     }
 
     /**
      * Posts an update that the node is currently being listed.
      */
     public void postListUpdate() {
-        for (Handler<Node> handler : listHandlers) {
+        Handler<Node> handler = listHandler;
+        if (handler != null) {
             handler.handle(node);
         }
     }
 
     /**
-     * Adds a subscription handler for the node to take action when
+     * Sets a subscription handler for the node to take action when
      * a node's value has been subscribed to.
      *
      * @param handler Callback.
      */
-    public void addOnSubscribeHandler(Handler<Node> handler) {
-        checkHandler(handler);
-        onSubscribedHandlers.add(handler);
+    public void setOnSubscribeHandler(Handler<Node> handler) {
+        onSubscribedHandler = handler;
     }
 
     /**
@@ -137,20 +125,20 @@ public class NodeListener {
      * to.
      */
     protected void postOnSubscription() {
-        for (Handler<Node> handler : onSubscribedHandlers) {
+        Handler<Node> handler = onSubscribedHandler;
+        if (handler != null) {
             handler.handle(node);
         }
     }
 
     /**
-     * Adds an unsubscription handler for the node to take action when
+     * Sets an unsubscription handler for the node to take action when
      * a node's value is unsubscribed.
      *
      * @param handler Callback.
      */
-    public void addOnUnsubscribeHandler(Handler<Node> handler) {
-        checkHandler(handler);
-        onUnsubscribedHandlers.add(handler);
+    public void setOnUnsubscribeHandler(Handler<Node> handler) {
+        onUnsubscribedHandler = handler;
     }
 
     /**
@@ -158,14 +146,9 @@ public class NodeListener {
      * to.
      */
     protected void postOnUnsubscription() {
-        for (Handler<Node> handler : onUnsubscribedHandlers) {
+        Handler<Node> handler = onUnsubscribedHandler;
+        if (handler != null) {
             handler.handle(node);
-        }
-    }
-
-    private void checkHandler(Handler handler) {
-        if (handler == null) {
-            throw new NullPointerException("handler");
         }
     }
 

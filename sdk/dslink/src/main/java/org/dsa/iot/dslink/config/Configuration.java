@@ -136,6 +136,15 @@ public class Configuration {
     }
 
     /**
+     * Gets the full ID of this DSLink.
+     *
+     * @return DsId with public key hash appended to it.
+     */
+    public String getDsIdWithHash() {
+        return getDsId() + "-" + keys.encodedHashPublicKey();
+    }
+
+    /**
      * This variable is only effective when the broker needs to approve of this
      * DSLink. When approved, the broker will take you out of this zone and
      * place the link in a normal designated area.

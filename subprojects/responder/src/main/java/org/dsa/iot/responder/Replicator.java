@@ -26,7 +26,7 @@ public class Replicator {
 
     public static void start(Node parent) {
         NodeBuilder builder = parent.createChild("replicator");
-        builder.getListener().addOnListHandler(new Handler<Node>() {
+        builder.getListener().setOnListHandler(new Handler<Node>() {
             @Override
             public void handle(Node event) {
                 LOGGER.info("Replicator node has been listed");

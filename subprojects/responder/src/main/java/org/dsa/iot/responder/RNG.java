@@ -94,10 +94,13 @@ public class RNG {
     }
 
     private void setupRNG(NodeBuilder child) {
-        child.getListener().addOnSubscribeHandler(new Handler<Node>() {
+        child.getListener().setOnSubscribeHandler(new Handler<Node>() {
             @Override
             public void handle(final Node event) {
                 LOGGER.info("Subscribed to {}", event.getPath());
+                if (futures.containsKey(event)) {
+                    return;
+                }
                 ScheduledThreadPoolExecutor stpe = Objects.getDaemonThreadPool();
                 ScheduledFuture<?> fut = stpe.scheduleWithFixedDelay(new Runnable() {
                     @Override
@@ -108,12 +111,12 @@ public class RNG {
                         int value = val.getNumber().intValue();
                         LOGGER.info(event.getPath() + " has new value of " + value);
                     }
-                }, 0, 2, TimeUnit.SECONDS);
+                }, 0, 5, TimeUnit.SECONDS);
                 futures.put(event, fut);
             }
         });
 
-        child.getListener().addOnUnsubscribeHandler(new Handler<Node>() {
+        child.getListener().setOnUnsubscribeHandler(new Handler<Node>() {
             @Override
             public void handle(Node event) {
                 ScheduledFuture<?> fut = futures.remove(event);

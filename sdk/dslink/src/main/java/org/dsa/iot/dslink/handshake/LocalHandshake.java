@@ -28,7 +28,7 @@ public class LocalHandshake {
         config.validate();
         this.keys = config.getKeys();
         this.publicKey = keys.encodedPublicKey();
-        this.dsId = config.getDsId() + "-" + keys.encodedHashPublicKey();
+        this.dsId = config.getDsIdWithHash();
         this.isRequester = config.isRequester();
         this.isResponder = config.isResponder();
         this.zone = config.getZone();
