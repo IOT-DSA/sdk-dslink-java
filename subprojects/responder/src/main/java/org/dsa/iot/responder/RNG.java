@@ -111,7 +111,7 @@ public class RNG {
                         int value = val.getNumber().intValue();
                         LOGGER.info(event.getPath() + " has new value of " + value);
                     }
-                }, 0, 5, TimeUnit.SECONDS);
+                }, 0, 2, TimeUnit.SECONDS);
                 futures.put(event, fut);
             }
         });
