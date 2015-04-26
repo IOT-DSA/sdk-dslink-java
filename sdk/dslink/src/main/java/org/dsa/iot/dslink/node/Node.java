@@ -117,7 +117,6 @@ public class Node {
      */
     public void setProfile(String profile) {
         this.profile = profile;
-        // TODO: confirm profile exists in the node manager
     }
 
     /**

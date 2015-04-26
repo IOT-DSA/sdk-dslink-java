@@ -40,6 +40,8 @@ public class ValueUtils {
                 return new Value((JsonObject) null);
             case ARRAY:
                 return new Value((JsonArray) null);
+            case DYNAMIC:
+                return new Value((String) null, true);
             default:
                 throw new RuntimeException(ERROR_MSG + switchType);
         }
@@ -90,6 +92,7 @@ public class ValueUtils {
             case NUMBER:
                 array.addNumber(value.getNumber());
                 break;
+            case TIME:
             case STRING:
                 array.addString(value.getString());
                 break;
@@ -99,6 +102,7 @@ public class ValueUtils {
             case ARRAY:
                 array.addArray(value.getArray());
                 break;
+            case DYNAMIC:
             default:
                 throw new RuntimeException(ERROR_MSG + value.getType());
         }
@@ -126,6 +130,7 @@ public class ValueUtils {
             case NUMBER:
                 object.putNumber(name, value.getNumber());
                 break;
+            case TIME:
             case STRING:
                 object.putString(name, value.getString());
                 break;
@@ -137,6 +142,7 @@ public class ValueUtils {
                 JsonArray arr = value.getArray();
                 object.putArray(name, arr);
                 break;
+            case DYNAMIC:
             default:
                 throw new RuntimeException(ERROR_MSG + value.getType());
         }

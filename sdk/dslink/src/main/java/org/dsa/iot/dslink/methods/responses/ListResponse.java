@@ -252,7 +252,7 @@ public class ListResponse implements Response {
             if (value != null) {
                 JsonArray update = new JsonArray();
                 update.addString("$type");
-                update.addString(value.getType().toJsonString());
+                update.addString(value.getVisibleType().toJsonString());
                 updates.addArray(update);
             }
 
@@ -403,7 +403,7 @@ public class ListResponse implements Response {
 
             Value value = child.getValue();
             if (value != null) {
-                String type = value.getType().toJsonString();
+                String type = value.getVisibleType().toJsonString();
                 childData.putString("$type", type);
             }
         }

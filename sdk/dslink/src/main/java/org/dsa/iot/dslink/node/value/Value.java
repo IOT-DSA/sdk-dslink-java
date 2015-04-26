@@ -20,8 +20,10 @@ public class Value {
     private static final Object LOCK;
     private static final String TIMEZONE;
 
+    private final ValueType visibleType;
+    private ValueType internalType;
+
     private boolean immutable;
-    private ValueType type;
     private String ts;
 
     private Number number;
@@ -31,47 +33,108 @@ public class Value {
     private JsonArray array;
 
     /**
-     * Creates a value with an initial type of a number.
+     * Creates a value with an initial type of a number. The value type
+     * cannot be changed through the setter.
      *
-     * @param n Number to set
+     * @param n Initial number to set.
      */
     public Value(Number n) {
+        this(n, false);
+    }
+
+    /**
+     * Creates a value with an initial type of a number. If the value is
+     * dynamic then the value can be changed to anything.
+     *
+     * @param n Initial number to set.
+     * @param dynamic Whether the value is dynamic or not.
+     */
+    public Value(Number n, boolean dynamic) {
+        this.visibleType = dynamic ? ValueType.DYNAMIC : ValueType.NUMBER;
         set(n);
     }
 
     /**
      * Creates a value with an initial type of a boolean.
      *
-     * @param b Boolean to set
+     * @param b Initial boolean to set.
      */
     public Value(Boolean b) {
+        this(b, false);
+    }
+
+    /**
+     * Creates a value with an initial type of a boolean. If the value is
+     * dynamic then the value can be changed to anything.
+     *
+     * @param b Initial boolean to set.
+     * @param dynamic Whether the value is dynamic or not.
+     */
+    public Value(Boolean b, boolean dynamic) {
+        this.visibleType = dynamic ? ValueType.DYNAMIC : ValueType.BOOL;
         set(b);
     }
 
     /**
      * Creates a value with an initial type of a string.
      *
-     * @param s String to set
+     * @param s Initial string to set.
      */
     public Value(String s) {
+        this(s, false);
+    }
+
+    /**
+     * Creates a value with an initial type of a string. If the value is
+     * dynamic then the value can be changed to anything.
+     *
+     * @param s Initial string to set.
+     * @param dynamic Whether the value is dynamic or not.
+     */
+    public Value(String s, boolean dynamic) {
+        this.visibleType = dynamic ? ValueType.DYNAMIC : ValueType.STRING;
         set(s);
     }
 
     /**
      * Creates a value with an initial type of a JSON object.
      *
-     * @param o JSON object to set
+     * @param o Initial JSON object to set.
      */
     public Value(JsonObject o) {
+        this(o, false);
+    }
+
+    /**
+     * Creates a value with an initial type of a JSON object. If the value is
+     * dynamic then the value can be set to anything.
+     *
+     * @param o Initial JSON object to set.
+     * @param dynamic Whether the value is dynamic or not.
+     */
+    public Value(JsonObject o, boolean dynamic) {
+        this.visibleType = dynamic ? ValueType.DYNAMIC : ValueType.MAP;
         set(o);
     }
 
     /**
-     * Creates a value with an initial type of a JSON object.
+     * Creates a value with an initial type of a JSON array.
      *
-     * @param a JSON array to set
+     * @param a Initial JSON array to set.
      */
     public Value(JsonArray a) {
+        this(a, false);
+    }
+
+    /**
+     * Creates a value with ian initial type of a JSON array. If the value is
+     * dynamic then the value can be set to anything.
+     *
+     * @param a Initial JSON array to set.
+     * @param dynamic Whether the value is dynamic or not.
+     */
+    public Value(JsonArray a, boolean dynamic) {
+        this.visibleType = dynamic ? ValueType.DYNAMIC : ValueType.ARRAY;
         set(a);
     }
 
@@ -125,7 +188,11 @@ public class Value {
     private void set(ValueType type, Number n, Boolean b, String s,
                      JsonArray a, JsonObject o) {
         checkImmutable();
-        this.type = type;
+        if (!(visibleType == ValueType.DYNAMIC
+                || internalType == null || internalType == type)) {
+            throw new RuntimeException("Value is not dynamic");
+        }
+        this.internalType = type;
         synchronized (LOCK) {
             this.ts = FORMAT.format(new Date()) + TIMEZONE;
         }
@@ -143,8 +210,29 @@ public class Value {
      *
      * @return Type of the value
      */
+    @Deprecated
     public ValueType getType() {
-        return type;
+        return getInternalType();
+    }
+
+    /**
+     * Retrieves the real type of the value that should be exposed to the
+     * outside world.
+     *
+     * @return The real type of the value.
+     */
+    public ValueType getVisibleType() {
+        return visibleType;
+    }
+
+    /**
+     * Retrieves the internal type of the value that the value is currently
+     * holding. The internal type can never be {@link ValueType#DYNAMIC}.
+     *
+     * @return The internal type of the value.
+     */
+    public ValueType getInternalType() {
+        return internalType;
     }
 
     /**
@@ -220,7 +308,7 @@ public class Value {
 
     @Override
     public String toString() {
-        switch (type) {
+        switch (internalType) {
             case NUMBER:
                 return number.toString();
             case BOOL:
@@ -232,7 +320,7 @@ public class Value {
             case ARRAY:
                 return array.encode();
             default:
-                throw new RuntimeException("Unhandled type: " + type);
+                throw new RuntimeException("Unhandled type: " + internalType);
         }
     }
 
@@ -241,11 +329,12 @@ public class Value {
         boolean equal = false;
         if (o instanceof Value) {
             Value value = (Value) o;
-            if (value.type.equals(getType())) {
-                switch (type) {
+            if (value.getInternalType().equals(getInternalType())) {
+                switch (value.getInternalType()) {
                     case NUMBER:
                         equal = objectEquals(number, value.number);
                         break;
+                    case TIME:
                     case STRING:
                         equal = objectEquals(string, value.string);
                         break;
@@ -258,9 +347,14 @@ public class Value {
                     case ARRAY:
                         equal = objectEquals(array, value.array);
                         break;
-                    case TIME:
-                        equal = objectEquals(string, value.string);
+                    default:
+                        String err = "Bad internal type: " + getInternalType();
+                        throw new RuntimeException(err);
                 }
+            }
+
+            if (equal) {
+                equal = value.getVisibleType() == getVisibleType();
             }
         }
         return equal;
@@ -268,7 +362,8 @@ public class Value {
 
     @Override
     public int hashCode() {
-        int result = getType().hashCode();
+        int result = getInternalType().hashCode();
+        result = 31 * result + (getVisibleType().hashCode());
         result = 31 * result + (getNumber() != null ? getNumber().hashCode() : 0);
         result = 31 * result + (getBool() != null ? getBool().hashCode() : 0);
         result = 31 * result + (getString() != null ? getString().hashCode() : 0);

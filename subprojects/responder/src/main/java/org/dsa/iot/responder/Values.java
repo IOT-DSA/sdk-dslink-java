@@ -27,6 +27,10 @@ public class Values {
         builder.setValue(new Value("Hello world"));
         builder.build();
 
+        builder = parent.createChild("dynamic");
+        builder.setValue(new Value("test", true));
+        builder.build();
+
         builder = parent.createChild("map");
         {
             JsonObject object = new JsonObject();

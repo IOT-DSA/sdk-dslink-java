@@ -14,8 +14,8 @@ public class ValueTest {
     @Test
     public void initialValueSetter() {
         Value val = new Value(1);
-
-        Assert.assertEquals(ValueType.NUMBER, val.getType());
+        Assert.assertEquals(ValueType.NUMBER, val.getVisibleType());
+        Assert.assertEquals(ValueType.NUMBER, val.getInternalType());
 
         Assert.assertNotNull(val.getNumber());
         Assert.assertEquals(1, val.getNumber().intValue());
@@ -26,10 +26,11 @@ public class ValueTest {
 
     @Test
     public void modifyingValues() {
-        Value val = new Value(1);
+        Value val = new Value(1, true);
         val.set(true);
 
-        Assert.assertEquals(ValueType.BOOL, val.getType());
+        Assert.assertEquals(ValueType.BOOL, val.getInternalType());
+        Assert.assertEquals(ValueType.DYNAMIC, val.getVisibleType());
         Assert.assertNotNull(val.getBool());
         Assert.assertEquals(true, val.getBool());
 
@@ -42,20 +43,20 @@ public class ValueTest {
      */
     @Test
     public void equal() {
-        Value a = new Value(1);
-        Value b = new Value(1);
+        Value a = new Value(1, true);
+        Value b = new Value(1, true);
         Assert.assertEquals(a, b);
 
         b.setImmutable();
         Assert.assertEquals(a, b);
 
-        a = new Value(true);
-        b = new Value(false);
+        a = new Value(true, true);
+        b = new Value(false, true);
         b.set(true);
         Assert.assertEquals(a, b);
 
-        a = new Value("test");
-        b = new Value("test");
+        a = new Value("test", true);
+        b = new Value("test", true);
         Assert.assertEquals(a, b);
 
         a.set(new JsonArray());

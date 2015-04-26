@@ -13,7 +13,8 @@ public enum ValueType {
     BOOL,
     MAP,
     ARRAY,
-    TIME;
+    TIME,
+    DYNAMIC;
 
     /**
      * @return Type of value that is suitable for JSON consumption.
@@ -40,6 +41,8 @@ public enum ValueType {
                 return ARRAY;
             case "time":
                 return TIME;
+            case "dynamic":
+                return DYNAMIC;
             default:
                 throw new RuntimeException("Unknown type: " + type);
         }

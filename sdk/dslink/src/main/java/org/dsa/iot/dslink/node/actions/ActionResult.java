@@ -126,7 +126,7 @@ public class ActionResult {
 
         Value ret = ValueUtils.toValue(obj);
         if (def != null) {
-            checkType(name, def.getType(), ret);
+            checkType(name, def.getVisibleType(), ret);
         }
         return ret;
     }
@@ -186,9 +186,11 @@ public class ActionResult {
     }
 
     private void checkType(String name, ValueType type, Value value) {
-        if (value == null || type != value.getType()) {
-            String t = value == null ? "null" : value.getType().toJsonString();
-            throw new RuntimeException("Parameter " + name + " has a bad type of " + t);
+        if (type != ValueType.DYNAMIC) {
+            if (type != value.getVisibleType()) {
+                String t = value == null ? "null" : value.getVisibleType().toJsonString();
+                throw new RuntimeException("Parameter " + name + " has a bad type of " + t);
+            }
         }
     }
 }
