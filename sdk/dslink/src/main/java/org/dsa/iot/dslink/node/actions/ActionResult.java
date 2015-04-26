@@ -188,7 +188,7 @@ public class ActionResult {
     private void checkType(String name, ValueType type, Value value) {
         if (type != ValueType.DYNAMIC) {
             if (type != value.getVisibleType()) {
-                String t = value == null ? "null" : value.getVisibleType().toJsonString();
+                String t = value.getVisibleType().toJsonString();
                 throw new RuntimeException("Parameter " + name + " has a bad type of " + t);
             }
         }
