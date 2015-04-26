@@ -12,6 +12,7 @@ import org.dsa.iot.dslink.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
+import org.vertx.java.core.json.JsonArray;
 
 import java.util.Map;
 import java.util.Random;
@@ -49,7 +50,7 @@ public class RNG {
         }
     }
 
-    private void addRNG(int count) {
+    private int addRNG(int count) {
         int max = addAndGet(count);
         int min = max - count;
 
@@ -65,11 +66,15 @@ public class RNG {
             final String msg = "Created RNG child at " + path;
             LOGGER.info(msg);
         }
+        return max;
     }
 
-    private void removeRNG(int count) {
+    private int removeRNG(int count) {
         int max = getAndSubtract(count);
         int min = max - count;
+        if (min < 0) {
+            min = 0;
+        }
 
         for (; max > min; max--) {
             // Remove child if possible
@@ -90,6 +95,7 @@ public class RNG {
                 fut.cancel(false);
             }
         }
+        return min;
     }
 
     private void setupRNG(NodeBuilder child) {
@@ -170,10 +176,17 @@ public class RNG {
                 if (count < 0) {
                     throw new IllegalArgumentException("count < 0");
                 }
-                rng.addRNG(count);
+                count = rng.addRNG(count);
+
+                JsonArray updates = new JsonArray();
+                JsonArray update = new JsonArray();
+                update.addNumber(count);
+                updates.addArray(update);
+                event.setUpdates(updates);
             }
         });
-        act.addParameter(new Parameter("count", ValueType.NUMBER));
+        act.addParameter(new Parameter("count", ValueType.NUMBER, new Value(1)));
+        act.addResult(new Parameter("count", ValueType.NUMBER));
         return act;
     }
 
@@ -186,10 +199,17 @@ public class RNG {
                 if (count < 0) {
                     throw new IllegalArgumentException("count < 0");
                 }
-                rng.removeRNG(count);
+                count = rng.removeRNG(count);
+
+                JsonArray updates = new JsonArray();
+                JsonArray update = new JsonArray();
+                update.addNumber(count);
+                updates.addArray(update);
+                event.setUpdates(updates);
             }
         });
-        act.addParameter(new Parameter("count", ValueType.NUMBER));
+        act.addParameter(new Parameter("count", ValueType.NUMBER, new Value(1)));
+        act.addResult(new Parameter("count", ValueType.NUMBER));
         return act;
     }
 
