@@ -20,7 +20,7 @@
   "configs": {
     "nodes": {
       "type": "path",
-      "value": ".nodes.json",
+      "value": "nodes.json",
       "required": true
     },
     "key": {
