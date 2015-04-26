@@ -1,12 +1,12 @@
 package facebook;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-
+import facebook4j.Facebook;
+import facebook4j.FacebookException;
+import facebook4j.FacebookFactory;
+import facebook4j.GeoLocation;
+import facebook4j.auth.AccessToken;
+import facebook4j.conf.ConfigurationBuilder;
+import facebook4j.json.DataObjectFactory;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeBuilder;
 import org.dsa.iot.dslink.node.Permission;
@@ -19,13 +19,7 @@ import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.DecodeException;
 import org.vertx.java.core.json.JsonObject;
 
-import facebook4j.Facebook;
-import facebook4j.FacebookException;
-import facebook4j.FacebookFactory;
-import facebook4j.GeoLocation;
-import facebook4j.auth.AccessToken;
-import facebook4j.conf.ConfigurationBuilder;
-import facebook4j.json.DataObjectFactory;
+import java.io.*;
 
 
 public class FacebookThing {
@@ -64,7 +58,7 @@ public class FacebookThing {
 	private class LoginHandler implements Handler<ActionResult> {
 		public void handle(ActionResult event) {
 			
-			String username = event.getJsonIn().getObject("params").getString("username");
+			String username = event.getParameter("username", ValueType.STRING).getString();
 			userPath = "C:/dgfacebot/userdata/"+username;
 			File userFile = new File(userPath);
 
@@ -104,7 +98,7 @@ public class FacebookThing {
 	
 	private class AuthHandler implements Handler<ActionResult> {
 		public void handle(ActionResult event) {
-			String urlstring = event.getJsonIn().getObject("params").getString("redirectUrl");
+			String urlstring = event.getParameter("redirectUrl", ValueType.STRING).getString();
 			String accessTokenString = urlstring.split("access_token=")[1].split("[/?&]")[0];
 			long expires = Long.parseLong(urlstring.split("expires_in=")[1].split("[/?&]")[0]);
 			accessToken = new AccessToken(accessTokenString, expires);
@@ -144,7 +138,7 @@ public class FacebookThing {
 	
 	private class PostHandler implements Handler<ActionResult> {
 		public void handle(ActionResult event) {
-			String statusText = event.getJsonIn().getObject("params").getString("text");
+			String statusText = event.getParameter("text", ValueType.STRING).getString();
 			try {
 				facebook.postStatusMessage(statusText);
 			} catch (FacebookException e) {
@@ -235,15 +229,17 @@ public class FacebookThing {
 	private class SearchHandler implements Handler<ActionResult> {
 		
 		public void handle(ActionResult event) {
-			SearchType type = SearchType.valueOf(event.getJsonIn().getObject("params").getString("type"));
-			String query = event.getJsonIn().getObject("params").getString("query");
+			ValueType vt = ValueType.STRING;
+			SearchType type = SearchType.valueOf(event.getParameter("type", vt).getString());
+			String query = event.getParameter("query", vt).getString();
 			Integer distance = null;
 			GeoLocation center = null;
 			if (type == SearchType.PLACE) {
-				Number lati = event.getJsonIn().getObject("params").getNumber("center latitude");
-				Number longi = event.getJsonIn().getObject("params").getNumber("center longitude");
+                vt = ValueType.NUMBER;
+				Number lati = event.getParameter("center latitude", vt).getNumber();
+				Number longi = event.getParameter("center longitude", vt).getNumber();
 				if (lati != null && longi != null) center = new GeoLocation(lati.doubleValue(), longi.doubleValue());
-				Number dist = event.getJsonIn().getObject("params").getNumber("distance");
+				Number dist = event.getParameter("distance", vt).getNumber();
 				if (dist != null) distance = dist.intValue();
 			}
 			String raw = doSearch(type, query, center, distance);

@@ -1,13 +1,5 @@
 package twitter;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.util.HashSet;
-
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeBuilder;
 import org.dsa.iot.dslink.node.Permission;
@@ -17,42 +9,13 @@ import org.dsa.iot.dslink.node.actions.Parameter;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.vertx.java.core.Handler;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-import twitter4j.FilterQuery;
-import twitter4j.Twitter;
-import twitter4j.TwitterException;
-import twitter4j.TwitterFactory;
-import twitter4j.TwitterStream;
-import twitter4j.TwitterStreamFactory;
+import twitter4j.*;
 import twitter4j.auth.AccessToken;
 import twitter4j.auth.RequestToken;
 import twitter4j.conf.ConfigurationBuilder;
+
+import java.io.*;
+import java.util.HashSet;
 
 public class TwitterThing {
 	
@@ -146,7 +109,7 @@ public class TwitterThing {
 	private class ConnectHandler implements Handler<ActionResult> {
 		public void handle(ActionResult event){
 			
-			String username = event.getJsonIn().getObject("params").getString("username");
+			String username = event.getParameter("username", ValueType.STRING).getString();
 			userPath = "C:/dgtwitbot/userdata/"+username;
 			File userFile = new File(userPath);
 			
@@ -220,7 +183,7 @@ public class TwitterThing {
 			this.reqToken = requestToken;
 		}
 		public void handle(ActionResult event) {
-			String authpin = event.getJsonIn().getObject("params").getString("pin");
+			String authpin = event.getParameter("pin", ValueType.STRING).getString();
 			try{
 				if(authpin.length() > 0){
 					accessToken = twitter.getOAuthAccessToken(reqToken, authpin);
@@ -253,12 +216,13 @@ public class TwitterThing {
 	
 	private class FilterHandler implements Handler<ActionResult> {
 		public void handle(ActionResult event) {
-			String name = event.getJsonIn().getObject("params").getString("streamName");
-			String alllocstrings = event.getJsonIn().getObject("params").getString("locations");
-			String alltrack = event.getJsonIn().getObject("params").getString("track");
-			String allfollowstrings = event.getJsonIn().getObject("params").getString("follow");
-			Number count = event.getJsonIn().getObject("params").getNumber("count");
-			String alllang = event.getJsonIn().getObject("params").getString("language");
+			ValueType type = ValueType.STRING;
+			String name = event.getParameter("streamName", type).getString();
+			String alllocstrings = event.getParameter("locations", type).getString();
+			String alltrack = event.getParameter("track", type).getString();
+			String allfollowstrings = event.getParameter("follow", type).getString();
+			Number count = event.getParameter("count", ValueType.NUMBER).getNumber();
+			String alllang = event.getParameter("language", type).getString();
 			
 			Node stream = node.createChild(name).build();
 			Node Atweet = stream.createChild("someTweet").build();
@@ -405,7 +369,7 @@ public class TwitterThing {
 	
 	private class PostHandler implements Handler<ActionResult> {
 		public void handle (ActionResult event) {
-			String status = event.getJsonIn().getObject("params").getString("status");
+			String status = event.getParameter("status", ValueType.STRING).getString();
 			try {
 				twitter.updateStatus(status);
 			} catch (TwitterException e) {

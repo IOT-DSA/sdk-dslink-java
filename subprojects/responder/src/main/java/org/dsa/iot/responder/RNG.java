@@ -12,7 +12,6 @@ import org.dsa.iot.dslink.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
-import org.vertx.java.core.json.JsonObject;
 
 import java.util.Map;
 import java.util.Random;
@@ -166,11 +165,8 @@ public class RNG {
         Action act = new Action(Permission.READ, new Handler<ActionResult>() {
             @Override
             public void handle(ActionResult event) {
-                JsonObject params = event.getJsonIn().getObject("params");
-                int count = 1;
-                if (params != null) {
-                    count = params.getInteger("count", 1);
-                }
+                Value val = event.getParameter("count", new Value(1));
+                int count = val.getNumber().intValue();
                 if (count < 0) {
                     throw new IllegalArgumentException("count < 0");
                 }
@@ -185,11 +181,8 @@ public class RNG {
         Action act = new Action(Permission.READ, new Handler<ActionResult>() {
             @Override
             public void handle(ActionResult event) {
-                JsonObject params = event.getJsonIn().getObject("params");
-                int count = 1;
-                if (params != null) {
-                    count = params.getInteger("count", 1);
-                }
+                Value val = event.getParameter("count", new Value(1));
+                int count = val.getNumber().intValue();
                 if (count < 0) {
                     throw new IllegalArgumentException("count < 0");
                 }

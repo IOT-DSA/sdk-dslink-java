@@ -2,6 +2,9 @@ package org.dsa.iot.dslink.node.actions;
 
 import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.node.Node;
+import org.dsa.iot.dslink.node.value.Value;
+import org.dsa.iot.dslink.node.value.ValueType;
+import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
@@ -65,9 +68,67 @@ public class ActionResult {
 
     /**
      * @return Original invocation request.
+     * @see #getParameter
      */
+    @Deprecated
     public JsonObject getJsonIn() {
         return jsonIn;
+    }
+
+    /**
+     * Gets a parameter from the incoming parameters from the endpoint. The
+     * returned parameter is unchecked.
+     *
+     * @param name Name of the parameter.
+     * @return Returns a value of {@code null} if it doesn't exist.
+     */
+    public Value getParameter(String name) {
+        return getParameter(name, (Value) null);
+    }
+
+    /**
+     * Gets a parameter from the incoming parameters from the endpoint. The
+     * parameter is checked to make sure it exists and matches the type.
+     *
+     * @param name Name of the parameter.
+     * @param type Value type the parameter must have.
+     * @return Returns a value.
+     */
+    public Value getParameter(String name, ValueType type) {
+        Value ret = getParameter(name);
+        if (ret == null) {
+            throw new RuntimeException("Missing parameter: " + name);
+        }
+        checkType(name, type, ret);
+        return ret;
+    }
+
+    /**
+     * Gets a parameter from the incoming parameters from the endpoint. The
+     * default value type is checked against the type of the parameter as
+     * received from the endpoint. If the default value is {@code null} then
+     * then type is unchecked and a value of {@code null} can be returned.
+     *
+     * @param name Name of the parameter.
+     * @param def Default value to return if the parameter doesn't exist.
+     * @return Returns a value.
+     */
+    public Value getParameter(String name, Value def) {
+        JsonObject params = jsonIn.getObject("params");
+        if (params == null) {
+            return def;
+        }
+
+        Object obj = params.getField(name);
+        if (obj == null) {
+            return def;
+        }
+
+        Value ret = ValueUtils.toValue(obj);
+        if (def != null) {
+            checkType(name, def.getType(), ret);
+        }
+        return ret;
     }
 
     /**
@@ -122,5 +183,12 @@ public class ActionResult {
         if (state == null)
             throw new NullPointerException("state");
         this.state = state;
+    }
+
+    private void checkType(String name, ValueType type, Value value) {
+        if (value == null || type != value.getType()) {
+            String t = value == null ? "null" : value.getType().toJsonString();
+            throw new RuntimeException("Parameter " + name + " has a bad type of " + t);
+        }
     }
 }
