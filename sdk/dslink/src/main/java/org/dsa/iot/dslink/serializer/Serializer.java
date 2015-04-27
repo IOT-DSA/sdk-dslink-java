@@ -27,9 +27,11 @@ public class Serializer {
         Map<String, Node> rootChildren = manager.getChildren("/");
         if (rootChildren != null) {
             for (Node child : rootChildren.values()) {
-                JsonObject childOut = new JsonObject();
-                serializeChildren(childOut, child);
-                top.putObject(child.getName(), childOut);
+                if (child.isSerializable()) {
+                    JsonObject childOut = new JsonObject();
+                    serializeChildren(childOut, child);
+                    top.putObject(child.getName(), childOut);
+                }
             }
         }
         return top;
@@ -73,9 +75,11 @@ public class Serializer {
         Map<String, Node> children = parent.getChildren();
         if (children != null && children.size() > 0) {
             for (Node child : children.values()) {
-                JsonObject childOut = new JsonObject();
-                serializeChildren(childOut, child);
-                out.putObject(child.getName(), childOut);
+                if (child.isSerializable()) {
+                    JsonObject childOut = new JsonObject();
+                    serializeChildren(childOut, child);
+                    out.putObject(child.getName(), childOut);
+                }
             }
         }
     }

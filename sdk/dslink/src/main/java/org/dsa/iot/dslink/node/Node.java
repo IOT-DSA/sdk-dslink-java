@@ -25,6 +25,7 @@ public class Node {
     private final String path;
     private final String name;
 
+    private boolean serializable = true;
     private NodeListener listener;
     private Map<String, Node> children;
 
@@ -545,6 +546,25 @@ public class Node {
      */
     public NodeBuilder createFakeBuilder() {
         return new NodeBuilder(getParent(), this);
+    }
+
+    /**
+     * If this node is not serializable, none of the children will be either
+     * by default.
+     *
+     * @return Whether this node should be serialized or not
+     */
+    public boolean isSerializable() {
+        return serializable;
+    }
+
+    /**
+     * Sets whether this node and its children should be serialized.
+     *
+     * @param serializable Whether this node can be serialized.
+     */
+    public void setSerializable(boolean serializable) {
+        this.serializable = serializable;
     }
 
     /**
