@@ -20,6 +20,12 @@ public class StringUtilsTest {
     }
 
     @Test
+    public void filter() {
+        String s = StringUtils.filterBannedChars(".test");
+        Assert.assertEquals("test", s);
+    }
+
+    @Test
     public void references() {
         Assert.assertTrue(StringUtils.isReference("$test"));
         Assert.assertTrue(StringUtils.isReference("@test"));
