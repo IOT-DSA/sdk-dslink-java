@@ -1,6 +1,9 @@
 package org.dsa.iot.dslink.util;
 
+import org.dsa.iot.dslink.node.Node;
+
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * String utilities for manipulating strings
@@ -19,6 +22,35 @@ public class StringUtils {
         if (name == null)
             throw new NullPointerException("name");
         return name.startsWith("$") || name.startsWith("@");
+    }
+
+    /**
+     * Filters names based on banned characters for node names.
+     *
+     * @param name Name to filter.
+     * @return Filtered text.
+     * @see Node#getBannedCharacters
+     */
+    public static String filterBannedChars(String name) {
+        return filterBannedChars(name, Node.getBannedCharacters(), "");
+    }
+
+    /**
+     *
+     * @param name Name to filter.
+     * @param chars Banned strings that are not allowed to be in the name.
+     * @param replacement What to replace the bad text with.
+     * @return Filtered text.
+     */
+    public static String filterBannedChars(String name,
+                                           String[] chars,
+                                           String replacement) {
+        for (String banned : chars) {
+            if (name.contains(banned)) {
+                name = name.replaceAll(Pattern.quote(banned), replacement);
+            }
+        }
+        return name;
     }
 
     /**
