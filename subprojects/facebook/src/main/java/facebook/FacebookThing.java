@@ -130,7 +130,10 @@ public class FacebookThing {
 		act = new Action(Permission.READ, new RawSearchHandler());
 		act.addParameter(new Parameter("query", ValueType.STRING));
 		node.createChild("RawSearch").setAction(act).build();
-		
+		act = new Action(Permission.READ, new RawCallHandler());
+		act.addParameter(new Parameter("type", ValueType.STRING));
+		act.addParameter(new Parameter("query", ValueType.STRING));
+		node.createChild("RawAPICall").setAction(act).build();
 	}
 	
 	private void clearErrorMsgs() {
@@ -230,15 +233,26 @@ public class FacebookThing {
 		if (correctFormat) return raw;
 		else return "{ \"data\": "+ raw + "}";
 	}
+		
+	private enum ApiType {GET, POST, DELETE};
 	
-	private String doRawSearch(String fullquery) {
+	private String makeRawAPICall(ApiType type, String call) {
 		String result = null;
 		try {
-			RawAPIResponse res = facebook.callGetAPI("search?" + fullquery);
-			if (res.isJSONArray()) {
+			RawAPIResponse res;
+			switch (type) {
+			case GET: res = facebook.callGetAPI(call); break;
+			case POST: res = facebook.callPostAPI(call); break;
+			case DELETE: res = facebook.callDeleteAPI(call); break;
+			default: res = null; break;
+			}
+			if (res == null) {
+			} else if (res.isJSONArray()) {
 				result = res.asJSONArray().toString();
 			} else if (res.isJSONObject()) {
 				result = res.asJSONObject().toString();
+			} else if (res.isBoolean()) {
+				result = String.valueOf(res.asBoolean());
 			} else {
 				result = res.asString();
 			}
@@ -250,7 +264,7 @@ public class FacebookThing {
 				builder.setValue(new Value("OAuth error has occured. Logging out and deleting user data. Please login and reauthorize"));
 				builder.build();
 			} else {
-				NodeBuilder builder = err.createChild("search query error message");
+				NodeBuilder builder = err.createChild("facebook api error message");
 				builder.setValue(new Value("Invalid Query"));
 				builder.build();
 			}
@@ -263,7 +277,7 @@ public class FacebookThing {
 		public void handle(ActionResult event) {
 			ValueType vt = ValueType.STRING;
 			String query = event.getParameter("query", vt).getString();
-			String result = doRawSearch(query);
+			String result = makeRawAPICall(ApiType.GET, "search?"+query);
 			Node sr = node.getChild("SearchResults");
 			if (sr == null) {
 				NodeBuilder builder = node.createChild("SearchResults");
@@ -273,6 +287,23 @@ public class FacebookThing {
 				sr.setValue(new Value(result));
 			}
 			
+		}
+	}
+	
+	private class RawCallHandler implements Handler<ActionResult> {
+		public void handle(ActionResult event) {
+			ValueType vt = ValueType.STRING;
+			ApiType type = ApiType.valueOf(event.getParameter("type", vt).getString());
+			String query = event.getParameter("query", vt).getString();
+			String result = makeRawAPICall(type, query);
+			Node res = node.getChild("RawResponse");
+			if (res == null) {
+				NodeBuilder builder = node.createChild("RawResponse");
+				builder.setValue(new Value(result));
+				builder.build();
+			} else {
+				res.setValue(new Value(result));
+			}
 		}
 	}
 	
