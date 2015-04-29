@@ -4,9 +4,11 @@ import facebook4j.Facebook;
 import facebook4j.FacebookException;
 import facebook4j.FacebookFactory;
 import facebook4j.GeoLocation;
+import facebook4j.RawAPIResponse;
 import facebook4j.auth.AccessToken;
 import facebook4j.conf.ConfigurationBuilder;
 import facebook4j.json.DataObjectFactory;
+
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeBuilder;
 import org.dsa.iot.dslink.node.Permission;
@@ -125,6 +127,9 @@ public class FacebookThing {
 		act.addParameter(new Parameter("center longitude", ValueType.NUMBER));
 		act.addParameter(new Parameter("distance", ValueType.NUMBER));
 		node.createChild("Search").setAction(act).build();
+		act = new Action(Permission.READ, new RawSearchHandler());
+		act.addParameter(new Parameter("query", ValueType.STRING));
+		node.createChild("RawSearch").setAction(act).build();
 		
 	}
 	
@@ -224,6 +229,51 @@ public class FacebookThing {
 		}
 		if (correctFormat) return raw;
 		else return "{ \"data\": "+ raw + "}";
+	}
+	
+	private String doRawSearch(String fullquery) {
+		String result = null;
+		try {
+			RawAPIResponse res = facebook.callGetAPI("search?" + fullquery);
+			if (res.isJSONArray()) {
+				result = res.asJSONArray().toString();
+			} else if (res.isJSONObject()) {
+				result = res.asJSONObject().toString();
+			} else {
+				result = res.asString();
+			}
+		} catch (FacebookException e) {
+			e.printStackTrace();
+			if (e.getErrorType().equals("OAuthException")) {
+				accountDelete();
+				NodeBuilder builder = err.createChild("oauth error message");
+				builder.setValue(new Value("OAuth error has occured. Logging out and deleting user data. Please login and reauthorize"));
+				builder.build();
+			} else {
+				NodeBuilder builder = err.createChild("search query error message");
+				builder.setValue(new Value("Invalid Query"));
+				builder.build();
+			}
+		}
+		
+		return result;
+	}
+	
+	private class RawSearchHandler implements Handler<ActionResult> {
+		public void handle(ActionResult event) {
+			ValueType vt = ValueType.STRING;
+			String query = event.getParameter("query", vt).getString();
+			String result = doRawSearch(query);
+			Node sr = node.getChild("SearchResults");
+			if (sr == null) {
+				NodeBuilder builder = node.createChild("SearchResults");
+				builder.setValue(new Value(result));
+				builder.build();
+			} else {
+				sr.setValue(new Value(result));
+			}
+			
+		}
 	}
 	
 	private class SearchHandler implements Handler<ActionResult> {
