@@ -18,7 +18,7 @@ public class Main extends DSLinkHandler {
     @Override
     public void onResponderInitialized(DSLink link) {
         NodeManager manager = link.getNodeManager();
-        Node superRoot = manager.getNode("/").getNode();
+        Node superRoot = manager.getSuperRoot();
 
         Replicator.start(superRoot);
         RNG.init(superRoot);

@@ -33,6 +33,10 @@ public class NodeManager {
         return builder;
     }
 
+    public Node getSuperRoot() {
+        return superRoot;
+    }
+
     public Map<String, Node> getChildren(String path) {
         Node child = getNode(path).getNode();
         if (child == null)

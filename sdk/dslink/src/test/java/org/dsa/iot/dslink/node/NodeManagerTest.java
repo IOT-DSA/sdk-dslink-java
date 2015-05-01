@@ -35,7 +35,7 @@ public class NodeManagerTest {
     public void nodeRemovals() {
         NodeManager manager = new NodeManager(null, "node");
         manager.createRootNode("A", "node");
-        manager.getNode("/").getNode().removeChild("A");
+        manager.getSuperRoot().removeChild("A");
         manager.getNode("/A");
     }
 
