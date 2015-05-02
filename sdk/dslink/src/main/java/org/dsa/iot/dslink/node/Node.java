@@ -392,6 +392,7 @@ public class Node {
             case "interface":
             case "permission":
             case "result":
+            case "type":
                 String err = "Config `" + name + "` has special methods"
                         + " for setting these properties";
                 throw new IllegalArgumentException(err);
