@@ -100,7 +100,9 @@ public class InvokeResponse implements Response {
     public JsonObject getCloseResponse() {
         if (actionResult != null) {
             Handler<Void> handler = actionResult.getCloseHandler();
-            handler.handle(null);
+            if (handler != null) {
+                handler.handle(null);
+            }
         }
         JsonObject obj = new JsonObject();
         obj.putNumber("rid", rid);
