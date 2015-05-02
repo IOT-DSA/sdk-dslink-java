@@ -85,7 +85,7 @@ public class ValueUtils {
             throw new NullPointerException("array");
         else if (value == null)
             throw new NullPointerException("value");
-        switch (value.getType()) {
+        switch (value.getInternalType()) {
             case BOOL:
                 array.addBoolean(value.getBool());
                 break;
@@ -104,7 +104,7 @@ public class ValueUtils {
                 break;
             case DYNAMIC:
             default:
-                throw new RuntimeException(ERROR_MSG + value.getType());
+                throw new RuntimeException(ERROR_MSG + value.getInternalType());
         }
     }
 
@@ -123,7 +123,7 @@ public class ValueUtils {
             throw new NullPointerException("name");
         else if (value == null)
             throw new NullPointerException("value");
-        switch (value.getType()) {
+        switch (value.getInternalType()) {
             case BOOL:
                 object.putBoolean(name, value.getBool());
                 break;
@@ -144,7 +144,7 @@ public class ValueUtils {
                 break;
             case DYNAMIC:
             default:
-                throw new RuntimeException(ERROR_MSG + value.getType());
+                throw new RuntimeException(ERROR_MSG + value.getInternalType());
         }
     }
 }

@@ -5,6 +5,7 @@ import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.node.value.ValueUtils;
+import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
@@ -42,6 +43,11 @@ public class ActionResult {
      * The default state is to immediately close the invocation response.
      */
     private StreamState state = StreamState.CLOSED;
+
+    /**
+     * Callback for when close is called on this action.
+     */
+    private Handler<Void> closeHandler;
 
     /**
      * Creates an action result that is ready to be invoked and populated
@@ -183,6 +189,22 @@ public class ActionResult {
         if (state == null)
             throw new NullPointerException("state");
         this.state = state;
+    }
+
+    /**
+     * Sets the close handler to be called when the invocation is being closed.
+     *
+     * @param handler Close handler callback.
+     */
+    public void setCloseHandler(Handler<Void> handler) {
+        this.closeHandler = handler;
+    }
+
+    /**
+     * @return Close handler callback.
+     */
+    public Handler<Void> getCloseHandler() {
+        return closeHandler;
     }
 
     private void checkType(String name, ValueType type, Value value) {

@@ -7,6 +7,7 @@ import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.actions.Action;
 import org.dsa.iot.dslink.node.actions.ActionResult;
 import org.dsa.iot.dslink.util.Objects;
+import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
@@ -20,6 +21,7 @@ public class InvokeResponse implements Response {
     private final Node node;
     private final int rid;
     private JsonArray results;
+    private ActionResult actionResult;
 
     public InvokeResponse(DSLink link, int rid, Node node) {
         this.link = link;
@@ -54,18 +56,18 @@ public class InvokeResponse implements Response {
             Objects.getThreadPool().execute(new Runnable() {
                 @Override
                 public void run() {
-                    ActionResult results = new ActionResult(node, in);
-                    action.invoke(results);
+                    actionResult = new ActionResult(node, in);
+                    action.invoke(actionResult);
 
-                    InvokeResponse.this.results = results.getUpdates();
-                    JsonArray cols = results.getColumns();
+                    InvokeResponse.this.results = actionResult.getUpdates();
+                    JsonArray cols = actionResult.getColumns();
                     if (cols == null) {
                         cols = action.getColumns();
                     }
 
                     JsonObject out = new JsonObject();
                     out.putNumber("rid", rid);
-                    out.putString("stream", results.getStreamState().getJsonName());
+                    out.putString("stream", actionResult.getStreamState().getJsonName());
 
                     out.putArray("columns", cols);
                     out.putArray("updates", InvokeResponse.this.results);
@@ -74,12 +76,12 @@ public class InvokeResponse implements Response {
                 }
             });
         } else if (mode == Action.InvokeMode.SYNC) {
-            ActionResult results = new ActionResult(node, in);
-            action.invoke(results);
-            this.results = results.getUpdates();
-            streamState = results.getStreamState();
+            actionResult = new ActionResult(node, in);
+            action.invoke(actionResult);
+            this.results = actionResult.getUpdates();
+            streamState = actionResult.getStreamState();
 
-            JsonArray cols = results.getColumns();
+            JsonArray cols = actionResult.getColumns();
             if (cols == null) {
                 cols = action.getColumns();
             }
@@ -96,6 +98,13 @@ public class InvokeResponse implements Response {
 
     @Override
     public JsonObject getCloseResponse() {
-        return null;
+        if (actionResult != null) {
+            Handler<Void> handler = actionResult.getCloseHandler();
+            handler.handle(null);
+        }
+        JsonObject obj = new JsonObject();
+        obj.putNumber("rid", rid);
+        obj.putString("stream", StreamState.CLOSED.getJsonName());
+        return obj;
     }
 }
