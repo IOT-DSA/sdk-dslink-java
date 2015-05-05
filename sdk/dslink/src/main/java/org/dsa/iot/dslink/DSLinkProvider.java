@@ -5,6 +5,8 @@ import org.dsa.iot.dslink.connection.DataHandler;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.serializer.SerializationManager;
 import org.dsa.iot.dslink.util.Objects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
 
 import java.io.File;
@@ -19,6 +21,8 @@ import static org.dsa.iot.dslink.connection.ConnectionManager.ClientConnected;
  * @author Samuel Grenier
  */
 public class DSLinkProvider {
+
+    private static final Logger LOGGER;
 
     private final Map<String, DSLink> linkRequesterCache;
     private final Map<String, DSLink> linkResponderCache;
@@ -91,7 +95,11 @@ public class DSLinkProvider {
                                         NodeManager man = tmp.getNodeManager();
                                         SerializationManager manager;
                                         manager = new SerializationManager(path, man);
-                                        manager.deserialize();
+                                        try {
+                                            manager.deserialize();
+                                        } catch (Exception e) {
+                                            LOGGER.error("Failed to deserialize nodes", e);
+                                        }
                                         manager.start();
                                     }
 
@@ -144,5 +152,9 @@ public class DSLinkProvider {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    static {
+        LOGGER = LoggerFactory.getLogger(DSLinkProvider.class);
     }
 }
