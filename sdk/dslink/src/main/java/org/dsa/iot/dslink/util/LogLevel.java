@@ -31,6 +31,9 @@ public class LogLevel {
             case "debug":
                 setLevel(Level.DEBUG);
                 break;
+            case "trace":
+                setLevel(Level.TRACE);
+                break;
             default:
                 throw new RuntimeException("Unknown log level: " + level);
         }
