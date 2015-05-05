@@ -14,6 +14,7 @@ public enum ValueType {
     MAP,
     ARRAY,
     TIME,
+    ENUM,
     DYNAMIC;
 
     /**
@@ -41,9 +42,14 @@ public enum ValueType {
                 return ARRAY;
             case "time":
                 return TIME;
+            case "enum":
+                return ENUM;
             case "dynamic":
                 return DYNAMIC;
             default:
+                if (type.startsWith(ENUM.toJsonString())) {
+                    return ENUM;
+                }
                 throw new RuntimeException("Unknown type: " + type);
         }
     }

@@ -23,6 +23,7 @@ public class Main extends DSLinkHandler {
         Replicator.start(superRoot);
         RNG.init(superRoot);
         Values.init(superRoot);
+        Echo.init(superRoot);
         LOGGER.info("Responder initialized");
     }
 

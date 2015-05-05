@@ -2,6 +2,7 @@ package org.dsa.iot.dslink.node.actions;
 
 import org.dsa.iot.dslink.node.Permission;
 import org.dsa.iot.dslink.node.value.Value;
+import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
@@ -176,10 +177,18 @@ public class Action {
             return null;
         JsonObject obj = new JsonObject();
         obj.putString("name", param.getName());
-        obj.putString("type", param.getType().toJsonString());
-        Value defVal = param.getDefault();
-        if (defVal != null) {
-            ValueUtils.toJson(obj, "default", defVal);
+        if (param.getType() != ValueType.ENUM) {
+            obj.putString("type", param.getType().toJsonString());
+            Value defVal = param.getDefault();
+            if (defVal != null) {
+                ValueUtils.toJson(obj, "default", defVal);
+            }
+        } else {
+            Value def = param.getDefault();
+            if (def == null) {
+                throw new IllegalStateException("Enum parameter requires default value");
+            }
+            obj.putString("type", def.toString());
         }
         return obj;
     }

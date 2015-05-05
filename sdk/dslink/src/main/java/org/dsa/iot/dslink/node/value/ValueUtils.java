@@ -3,8 +3,7 @@ package org.dsa.iot.dslink.node.value;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Utilities for manipulating values.
@@ -35,6 +34,15 @@ public class ValueUtils {
                 return new Value((Number) null);
             case TIME:
             case STRING:
+                String starter = "enum[";
+                if (type.startsWith(starter) && type.endsWith("]")) {
+                    type = type.substring(starter.length());
+                    type = type.substring(0, type.length() - 1);
+
+                    String[] split = type.split(",");
+                    Set<String> enums = new LinkedHashSet<>(Arrays.asList(split));
+                    return new Value(enums);
+                }
                 return new Value((String) null);
             case MAP:
                 return new Value((JsonObject) null);
@@ -92,7 +100,6 @@ public class ValueUtils {
             case NUMBER:
                 array.addNumber(value.getNumber());
                 break;
-            case TIME:
             case STRING:
                 array.addString(value.getString());
                 break;
@@ -102,6 +109,10 @@ public class ValueUtils {
             case ARRAY:
                 array.addArray(value.getArray());
                 break;
+            case ENUM:
+                array.addString(value.toString());
+                break;
+            case TIME:
             case DYNAMIC:
             default:
                 throw new RuntimeException(ERROR_MSG + value.getInternalType());
@@ -130,7 +141,6 @@ public class ValueUtils {
             case NUMBER:
                 object.putNumber(name, value.getNumber());
                 break;
-            case TIME:
             case STRING:
                 object.putString(name, value.getString());
                 break;
@@ -142,6 +152,10 @@ public class ValueUtils {
                 JsonArray arr = value.getArray();
                 object.putArray(name, arr);
                 break;
+            case ENUM:
+                object.putString(name, value.toString());
+                break;
+            case TIME:
             case DYNAMIC:
             default:
                 throw new RuntimeException(ERROR_MSG + value.getInternalType());
