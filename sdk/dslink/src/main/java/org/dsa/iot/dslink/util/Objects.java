@@ -12,7 +12,7 @@ import java.util.concurrent.*;
  */
 public class Objects {
 
-    private static final int PROCESSORS;
+    private static final int POOL_SIZE = 32;
     private static final Vertx VERTX;
 
     private static volatile ScheduledThreadPoolExecutor THREAD_POOL;
@@ -24,7 +24,7 @@ public class Objects {
 
     public static ScheduledThreadPoolExecutor getThreadPool() {
         if (THREAD_POOL == null) {
-            THREAD_POOL = new ScheduledThreadPool(PROCESSORS);
+            THREAD_POOL = new ScheduledThreadPool(POOL_SIZE);
         }
         return THREAD_POOL;
     }
@@ -37,7 +37,7 @@ public class Objects {
     public static ScheduledThreadPoolExecutor getDaemonThreadPool() {
         if (DAEMON_THREAD_POOL == null) {
             ThreadFactory factory = getDaemonFactory();
-            DAEMON_THREAD_POOL = new ScheduledThreadPool(PROCESSORS, factory);
+            DAEMON_THREAD_POOL = new ScheduledThreadPool(POOL_SIZE, factory);
         }
         return DAEMON_THREAD_POOL;
     }
@@ -95,6 +95,5 @@ public class Objects {
 
     static {
         VERTX = VertxFactory.newVertx();
-        PROCESSORS = Runtime.getRuntime().availableProcessors();
     }
 }
