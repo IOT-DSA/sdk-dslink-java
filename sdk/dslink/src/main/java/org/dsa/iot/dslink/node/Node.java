@@ -20,6 +20,16 @@ public class Node {
             ".", "/", "\\", "?", "%", "*", ":", "|", "<", ">", "$", "@"
     };
 
+    private final Object roConfigLock = new Object();
+    private final Object configLock = new Object();
+
+    private final Object attributeLock = new Object();
+    private final Object interfaceLock = new Object();
+    private final Object childrenLock = new Object();
+    private final Object passwordLock = new Object();
+    private final Object mixinLock = new Object();
+    private final Object valueLock = new Object();
+
     private final WeakReference<Node> parent;
     private final Linkable link;
     private final String path;
@@ -133,86 +143,117 @@ public class Node {
      *
      * @return The node's listener.
      */
-    public synchronized NodeListener getListener() {
+    public NodeListener getListener() {
         return listener;
     }
 
-    public synchronized void addMixin(String mixin) {
-        if (mixin == null) {
-            throw new NullPointerException("mixin");
-        } else if (mixins == null) {
-            mixins = new HashSet<>();
+    /**
+     * Used to set the listener to allow the node builder to override
+     * the internal listener.
+     *
+     * @param listener Listener to set.
+     */
+    protected void setListener(NodeListener listener) {
+        if (listener == null) {
+            throw new NullPointerException("listener");
         }
-        mixins.add(mixin);
+        this.listener = listener;
     }
 
-    public synchronized void removeMixin(String mixin) {
-        if (mixin == null) {
-            throw new NullPointerException("mixin");
-        } else if (mixins != null) {
-            mixins.remove(mixin);
-        }
-    }
-
-    public synchronized void setMixins(String mixin) {
-        if (mixin == null) {
-            throw new NullPointerException("mixin");
-        } else if (mixins == null) {
-            mixins = new HashSet<>();
-        }
-        String[] split = mixin.split("\\|");
-        Collections.addAll(mixins, split);
-    }
-
-    public synchronized Set<String> getMixins() {
-        return mixins != null ? new HashSet<>(mixins) : null;
-    }
-
-    public synchronized void addInterface(String _interface) {
-        if (_interface == null) {
-            throw new NullPointerException("_interface");
-        } else if (interfaces == null) {
-            interfaces = new HashSet<>();
-        }
-        interfaces.add(_interface);
-    }
-
-    public synchronized void removeInterface(String mixin) {
-        if (mixin == null) {
-            throw new NullPointerException("mixin");
-        } else if (interfaces != null) {
-            interfaces.remove(mixin);
+    public void addMixin(String mixin) {
+        synchronized (mixinLock) {
+            if (mixin == null) {
+                throw new NullPointerException("mixin");
+            } else if (mixins == null) {
+                mixins = new HashSet<>();
+            }
+            mixins.add(mixin);
         }
     }
 
-    public synchronized void setInterfaces(String _interface) {
-        if (_interface == null) {
-            throw new NullPointerException("_interface");
-        } else if (interfaces == null) {
-            interfaces = new HashSet<>();
+    public void removeMixin(String mixin) {
+        synchronized (mixinLock) {
+            if (mixin == null) {
+                throw new NullPointerException("mixin");
+            } else if (mixins != null) {
+                mixins.remove(mixin);
+            }
         }
-        String[] split = _interface.split("\\|");
-        Collections.addAll(interfaces, split);
     }
 
-    public synchronized Set<String> getInterfaces() {
-        return interfaces != null ? new HashSet<>(interfaces) : null;
+    public void setMixins(String mixin) {
+        synchronized (mixinLock) {
+            if (mixin == null) {
+                throw new NullPointerException("mixin");
+            } else if (mixins == null) {
+                mixins = new HashSet<>();
+            }
+            String[] split = mixin.split("\\|");
+            Collections.addAll(mixins, split);
+        }
     }
 
-    public synchronized void setValue(Value value) {
-        if (value != null) {
-            value.setImmutable();
+    public Set<String> getMixins() {
+        synchronized (mixinLock) {
+            return mixins != null ? new HashSet<>(mixins) : null;
         }
-        if (this.value != null && this.value.equals(value)) {
-            return;
-        }
-        this.value = value;
-        listener.postValueUpdate(value);
+    }
 
-        if (link != null) {
-            SubscriptionManager manager = link.getSubscriptionManager();
-            if (manager != null) {
-                manager.postValueUpdate(this);
+    public void addInterface(String _interface) {
+        synchronized (interfaceLock) {
+            if (_interface == null) {
+                throw new NullPointerException("_interface");
+            } else if (interfaces == null) {
+                interfaces = new HashSet<>();
+            }
+            interfaces.add(_interface);
+        }
+    }
+
+    public void removeInterface(String _interface) {
+        synchronized (interfaceLock) {
+            if (_interface == null) {
+                throw new NullPointerException("_interface");
+            } else if (interfaces != null) {
+                interfaces.remove(_interface);
+            }
+        }
+    }
+
+    public void setInterfaces(String _interface) {
+        synchronized (interfaceLock) {
+            if (_interface == null) {
+                throw new NullPointerException("_interface");
+            } else if (interfaces == null) {
+                interfaces = new HashSet<>();
+            }
+            String[] split = _interface.split("\\|");
+            Collections.addAll(interfaces, split);
+        }
+    }
+
+    public Set<String> getInterfaces() {
+        synchronized (interfaceLock) {
+            return interfaces != null ? new HashSet<>(interfaces) : null;
+        }
+    }
+
+    public void setValue(Value value) {
+        synchronized (valueLock) {
+            if (value != null) {
+                value.setImmutable();
+            }
+            if (this.value != null && this.value.equals(value)) {
+                return;
+            }
+            this.value = value;
+            listener.postValueUpdate(value);
+
+            if (link != null) {
+                SubscriptionManager manager = link.getSubscriptionManager();
+                if (manager != null) {
+                    manager.postValueUpdate(this);
+                }
             }
         }
     }
@@ -220,24 +261,30 @@ public class Node {
     /**
      * @return The value of the node.
      */
-    public synchronized Value getValue() {
-        return value;
+    public Value getValue() {
+        synchronized (valueLock) {
+            return value;
+        }
     }
 
     /**
      * @return Children of the node, can be null
      */
-    public synchronized Map<String, Node> getChildren() {
-        return children != null ? new HashMap<>(children) : null;
+    public Map<String, Node> getChildren() {
+        synchronized (childrenLock) {
+            return children != null ? new HashMap<>(children) : null;
+        }
     }
 
     /**
      * Clears the children in the node.
      */
-    public synchronized void clearChildren() {
-        if (children != null) {
-            for (Node child : getChildren().values()) {
-                removeChild(child);
+    public void clearChildren() {
+        synchronized (childrenLock) {
+            if (children != null) {
+                for (Node child : getChildren().values()) {
+                    removeChild(child);
+                }
             }
         }
     }
@@ -246,8 +293,10 @@ public class Node {
      * @param name Child name
      * @return Child, or null if non-existent
      */
-    public synchronized Node getChild(String name) {
-        return children != null ? children.get(name) : null;
+    public Node getChild(String name) {
+        synchronized (childrenLock) {
+            return children != null ? children.get(name) : null;
+        }
     }
 
     /**
@@ -286,25 +335,27 @@ public class Node {
      * @param node Child node to add.
      * @return The node
      */
-    public synchronized Node addChild(Node node) {
-        String name = node.getName();
-        if (children == null) {
-            children = new HashMap<>();
-        } else if (children.containsKey(name)) {
-            return children.get(name);
-        }
+    public Node addChild(Node node) {
+        synchronized (childrenLock) {
+            String name = node.getName();
+            if (children == null) {
+                children = new HashMap<>();
+            } else if (children.containsKey(name)) {
+                return children.get(name);
+            }
 
-        SubscriptionManager manager = null;
-        if (link != null) {
-            manager = link.getSubscriptionManager();
-        }
+            SubscriptionManager manager = null;
+            if (link != null) {
+                manager = link.getSubscriptionManager();
+            }
 
-        node.setProfile(profile);
-        children.put(name, node);
-        if (manager != null) {
-            manager.postChildUpdate(node, false);
+            node.setProfile(profile);
+            children.put(name, node);
+            if (manager != null) {
+                manager.postChildUpdate(node, false);
+            }
+            return node;
         }
-        return node;
     }
 
     /**
@@ -323,46 +374,54 @@ public class Node {
      * @param name Node to remove.
      * @return The node if it existed.
      */
-    public synchronized Node removeChild(String name) {
-        Node child = children != null ? children.remove(name) : null;
-        SubscriptionManager manager = null;
-        if (link != null) {
-            manager = link.getSubscriptionManager();
+    public Node removeChild(String name) {
+        synchronized (childrenLock) {
+            Node child = children != null ? children.remove(name) : null;
+            SubscriptionManager manager = null;
+            if (link != null) {
+                manager = link.getSubscriptionManager();
+            }
+            if (child != null && manager != null) {
+                manager.postChildUpdate(child, true);
+                manager.removeValueSub(child);
+                manager.removePathSub(child);
+            }
+            return child;
         }
-        if (child != null && manager != null) {
-            manager.postChildUpdate(child, true);
-            manager.removeValueSub(child);
-            manager.removePathSub(child);
-        }
-        return child;
     }
 
     /**
      * @return The configurations in this node.
      */
-    public synchronized Map<String, Value> getConfigurations() {
-        return configs != null ? new HashMap<>(configs) : null;
-    }
-
-    /**
-     * @param name Configuration name to remove
-     * @return Configuration value, or null if it didn't exist
-     */
-    public synchronized Value removeConfig(String name) {
-        Value ret = configs != null ? configs.remove(name) : null;
-        if (ret != null) {
-            ValueUpdate update = new ValueUpdate(name, ret, true);
-            listener.postConfigUpdate(update);
+    public Map<String, Value> getConfigurations() {
+        synchronized (configLock) {
+            return configs != null ? new HashMap<>(configs) : null;
         }
-        return ret;
     }
 
     /**
      * @param name Configuration name to get
      * @return Value of the configuration, if it exists
      */
-    public synchronized Value getConfig(String name) {
-        return configs != null ? configs.get(name) : null;
+    public Value getConfig(String name) {
+        synchronized (configLock) {
+            return configs != null ? configs.get(name) : null;
+        }
+    }
+
+    /**
+     * @param name Configuration name to remove
+     * @return Configuration value, or null if it didn't exist
+     */
+    public Value removeConfig(String name) {
+        synchronized (configLock) {
+            Value ret = configs != null ? configs.remove(name) : null;
+            if (ret != null) {
+                ValueUpdate update = new ValueUpdate(name, ret, true);
+                listener.postConfigUpdate(update);
+            }
+            return ret;
+        }
     }
 
     /**
@@ -375,39 +434,46 @@ public class Node {
      * @return The previous configuration value, if any
      * @see Action
      */
-    public synchronized Value setConfig(String name, Value value) {
-        name = checkName(name);
-        if (value == null) {
-            throw new NullPointerException("value");
-        } else if (configs == null) {
-            configs = new HashMap<>();
+    public Value setConfig(String name, Value value) {
+        synchronized (configLock) {
+            name = checkName(name);
+            if (value == null) {
+                throw new NullPointerException("value");
+            } else if (configs == null) {
+                configs = new HashMap<>();
+            }
+            switch (name) {
+                case "params":
+                case "columns":
+                case "name":
+                case "is":
+                case "mixin":
+                case "invokable":
+                case "interface":
+                case "permission":
+                case "result":
+                case "type":
+                    String err = "Config `" + name + "` has special methods"
+                            + " for setting these properties";
+                    throw new IllegalArgumentException(err);
+            }
+            value.setImmutable();
+            ValueUpdate update = new ValueUpdate(name, value, false);
+            NodeListener listener = this.listener;
+            if (listener != null) {
+                listener.postConfigUpdate(update);
+            }
+            return configs.put(name, value);
         }
-        switch (name) {
-            case "params":
-            case "columns":
-            case "name":
-            case "is":
-            case "mixin":
-            case "invokable":
-            case "interface":
-            case "permission":
-            case "result":
-            case "type":
-                String err = "Config `" + name + "` has special methods"
-                        + " for setting these properties";
-                throw new IllegalArgumentException(err);
-        }
-        value.setImmutable();
-        ValueUpdate update = new ValueUpdate(name, value, false);
-        listener.postConfigUpdate(update);
-        return configs.put(name, value);
     }
 
     /**
      * @return The read-only configurations in this node.
      */
-    public synchronized Map<String, Value> getRoConfigurations() {
-        return roConfigs != null ? new HashMap<>(roConfigs) : null;
+    public Map<String, Value> getRoConfigurations() {
+        synchronized (roConfigLock) {
+            return roConfigs != null ? new HashMap<>(roConfigs) : null;
+        }
     }
 
     /**
@@ -416,8 +482,10 @@ public class Node {
      * @param name Name of the configuration.
      * @return Previous value of the configuration.
      */
-    public synchronized Value removeRoConfig(String name) {
-        return roConfigs != null ? roConfigs.remove(name) : null;
+    public Value removeRoConfig(String name) {
+        synchronized (roConfigLock) {
+            return roConfigs != null ? roConfigs.remove(name) : null;
+        }
     }
 
     /**
@@ -426,8 +494,10 @@ public class Node {
      * @param name Name of the configuration.
      * @return The value of the configuration name, if any.
      */
-    public synchronized Value getRoConfig(String name) {
-        return roConfigs != null ? roConfigs.get(name) : null;
+    public Value getRoConfig(String name) {
+        synchronized (roConfigLock) {
+            return roConfigs != null ? roConfigs.get(name) : null;
+        }
     }
 
     /**
@@ -437,50 +507,58 @@ public class Node {
      * @param value Value to set.
      * @return The previous value, if any.
      */
-    public synchronized Value setRoConfig(String name, Value value) {
-        name = checkName(name);
-        if (value == null) {
-            throw new NullPointerException("value");
-        } else if (roConfigs == null) {
-            roConfigs = new HashMap<>();
-        }
+    public Value setRoConfig(String name, Value value) {
+        synchronized (roConfigLock) {
+            name = checkName(name);
+            if (value == null) {
+                throw new NullPointerException("value");
+            } else if (roConfigs == null) {
+                roConfigs = new HashMap<>();
+            }
 
-        switch (name) {
-            case "password":
-                String err = "Config `" + name + "` has special methods"
-                        + " for setting these properties";
-                throw new IllegalArgumentException(err);
-        }
+            switch (name) {
+                case "password":
+                    String err = "Config `" + name + "` has special methods"
+                            + " for setting these properties";
+                    throw new IllegalArgumentException(err);
+            }
 
-        return roConfigs.put(name, value);
+            return roConfigs.put(name, value);
+        }
     }
 
     /**
      * @return The attributes in this node.
      */
-    public synchronized Map<String, Value> getAttributes() {
-        return attribs != null ? new HashMap<>(attribs) : null;
+    public Map<String, Value> getAttributes() {
+        synchronized (attributeLock) {
+            return attribs != null ? new HashMap<>(attribs) : null;
+        }
     }
 
     /**
      * @param name Attribute name to remove.
      * @return Attribute value or null if it didn't exist
      */
-    public synchronized Value removeAttribute(String name) {
-        Value ret = attribs != null ? attribs.get(name) : null;
-        if (ret != null) {
-            ValueUpdate update = new ValueUpdate(name, ret, true);
-            listener.postAttributeUpdate(update);
+    public Value removeAttribute(String name) {
+        synchronized (attributeLock) {
+            Value ret = attribs != null ? attribs.get(name) : null;
+            if (ret != null) {
+                ValueUpdate update = new ValueUpdate(name, ret, true);
+                listener.postAttributeUpdate(update);
+            }
+            return ret;
         }
-        return ret;
     }
 
     /**
      * @param name Attribute name to get
      * @return Value of the attribute, if it exists
      */
-    public synchronized Value getAttribute(String name) {
-        return attribs != null ? attribs.get(name) : null;
+    public Value getAttribute(String name) {
+        synchronized (attributeLock) {
+            return attribs != null ? attribs.get(name) : null;
+        }
     }
 
     /**
@@ -488,23 +566,25 @@ public class Node {
      * @param value Value to set
      * @return The previous attribute value, if any
      */
-    public synchronized Value setAttribute(String name, Value value) {
-        name = checkName(name);
-        if (value == null) {
-            throw new NullPointerException("value");
-        } else if (attribs == null) {
-            attribs = new HashMap<>();
+    public Value setAttribute(String name, Value value) {
+        synchronized (attributeLock) {
+            name = checkName(name);
+            if (value == null) {
+                throw new NullPointerException("value");
+            } else if (attribs == null) {
+                attribs = new HashMap<>();
+            }
+            value.setImmutable();
+            ValueUpdate update = new ValueUpdate(name, value, false);
+            listener.postAttributeUpdate(update);
+            return attribs.put(name, value);
         }
-        value.setImmutable();
-        ValueUpdate update = new ValueUpdate(name, value, false);
-        listener.postAttributeUpdate(update);
-        return attribs.put(name, value);
     }
 
     /**
      * @return Action this node can invoke
      */
-    public synchronized Action getAction() {
+    public Action getAction() {
         return action;
     }
 
@@ -513,7 +593,7 @@ public class Node {
      *
      * @param action Action to set. Use {@code null} to remove an action.
      */
-    public synchronized void setAction(Action action) {
+    public void setAction(Action action) {
         this.action = action;
     }
 
@@ -523,8 +603,10 @@ public class Node {
      *
      * @return Password the node is configured to use.
      */
-    public synchronized char[] getPassword() {
-        return pass != null ? pass.clone() : null;
+    public char[] getPassword() {
+        synchronized (passwordLock) {
+            return pass != null ? pass.clone() : null;
+        }
     }
 
     /**
@@ -534,8 +616,10 @@ public class Node {
      *
      * @param password Password to set.
      */
-    public synchronized void setPassword(char[] password) {
-        this.pass = password != null ? password.clone() : null;
+    public void setPassword(char[] password) {
+        synchronized (passwordLock) {
+            this.pass = password != null ? password.clone() : null;
+        }
     }
 
     /**
@@ -571,19 +655,6 @@ public class Node {
      */
     public void setSerializable(boolean serializable) {
         this.serializable = serializable;
-    }
-
-    /**
-     * Used to set the listener to allow the node builder to override
-     * the internal listener.
-     *
-     * @param listener Listener to set.
-     */
-    protected synchronized void setListener(NodeListener listener) {
-        if (listener == null) {
-            throw new NullPointerException("listener");
-        }
-        this.listener = listener;
     }
 
     /**
