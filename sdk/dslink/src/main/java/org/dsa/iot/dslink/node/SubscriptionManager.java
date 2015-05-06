@@ -7,8 +7,8 @@ import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Handles subscriptions for values and paths.
@@ -16,9 +16,11 @@ import java.util.Map;
  */
 public class SubscriptionManager {
 
-    private final Map<Node, ListResponse> pathSubs = new HashMap<>();
-    private final Map<Node, Integer> valueSubsNodes = new HashMap<>();
-    private final Map<Integer, Node> valueSubsSids = new HashMap<>();
+    private final Object valueLock = new Object();
+
+    private final Map<Node, ListResponse> pathSubs = new ConcurrentHashMap<>();
+    private final Map<Node, Integer> valueSubsNodes = new ConcurrentHashMap<>();
+    private final Map<Integer, Node> valueSubsSids = new ConcurrentHashMap<>();
     private final DSLink link;
 
     public SubscriptionManager(DSLink link) {
@@ -32,7 +34,7 @@ public class SubscriptionManager {
      * @param node Node to test.
      * @return Whether the node has a value subscription.
      */
-    public synchronized boolean hasValueSub(Node node) {
+    public boolean hasValueSub(Node node) {
         return valueSubsNodes.containsKey(node);
     }
 
@@ -43,7 +45,7 @@ public class SubscriptionManager {
      * @param node Node to test.
      * @return Whether the onde has a path subscription.
      */
-    public synchronized boolean hasPathSub(Node node) {
+    public boolean hasPathSub(Node node) {
         return pathSubs.containsKey(node);
     }
 
@@ -55,9 +57,11 @@ public class SubscriptionManager {
      * @param node Node to subscribe to
      * @param sid Subscription ID to send back to the client
      */
-    public synchronized void addValueSub(Node node, int sid) {
-        valueSubsNodes.put(node, sid);
-        valueSubsSids.put(sid, node);
+    public void addValueSub(Node node, int sid) {
+        synchronized (valueLock) {
+            valueSubsNodes.put(node, sid);
+            valueSubsSids.put(sid, node);
+        }
         postValueUpdate(node);
         node.getListener().postOnSubscription();
     }
@@ -68,9 +72,14 @@ public class SubscriptionManager {
      *
      * @param sid Subscription ID to unsubscribe
      */
-    public synchronized void removeValueSub(int sid) {
-        Node node = valueSubsSids.remove(sid);
-        valueSubsNodes.remove(node);
+    public void removeValueSub(int sid) {
+        Node node;
+        synchronized (valueLock) {
+            node = valueSubsSids.remove(sid);
+            if (node != null) {
+                valueSubsNodes.remove(node);
+            }
+        }
         if (node != null) {
             node.getListener().postOnUnsubscription();
         }
@@ -82,9 +91,14 @@ public class SubscriptionManager {
      *
      * @param node Subscribed node to unsubscribe
      */
-    public synchronized void removeValueSub(Node node) {
-        Integer sid = valueSubsNodes.remove(node);
-        valueSubsSids.remove(sid);
+    public void removeValueSub(Node node) {
+        Integer sid;
+        synchronized (valueLock) {
+            sid = valueSubsNodes.remove(node);
+            if (sid != null) {
+                valueSubsSids.remove(sid);
+            }
+        }
         if (sid != null) {
             node.getListener().postOnUnsubscription();
         }
@@ -98,7 +112,7 @@ public class SubscriptionManager {
      * @param node Node to subscribe to
      * @param resp Response to send updates to
      */
-    public synchronized void addPathSub(Node node, ListResponse resp) {
+    public void addPathSub(Node node, ListResponse resp) {
         pathSubs.put(node, resp);
     }
 
@@ -107,14 +121,16 @@ public class SubscriptionManager {
      *
      * @param node Node to unsubscribe to.
      */
-    public synchronized void removePathSub(Node node) {
-        pathSubs.remove(node);
-        Map<String, Node> children = node.getChildren();
-        if (children != null) {
-            for (Node child : children.values()) {
-                ListResponse resp = pathSubs.get(child);
-                if (resp != null) {
-                    resp.getCloseResponse();
+    public void removePathSub(Node node) {
+        ListResponse resp = pathSubs.remove(node);
+        if (resp != null) {
+            Map<String, Node> children = node.getChildren();
+            if (children != null) {
+                for (Node child : children.values()) {
+                    resp = pathSubs.get(child);
+                    if (resp != null) {
+                        resp.getCloseResponse();
+                    }
                 }
             }
         }
@@ -126,7 +142,7 @@ public class SubscriptionManager {
      * @param child Updated child.
      * @param removed Whether the child was removed or not.
      */
-    public synchronized void postChildUpdate(Node child, boolean removed) {
+    public void postChildUpdate(Node child, boolean removed) {
         ListResponse resp = pathSubs.get(child.getParent());
         if (resp != null) {
             resp.childUpdate(child, removed);
@@ -139,7 +155,7 @@ public class SubscriptionManager {
      *
      * @param node Updated node.
      */
-    public synchronized void postValueUpdate(Node node) {
+    public void postValueUpdate(Node node) {
         Integer sid = valueSubsNodes.get(node);
         if (sid != null) {
             JsonArray updates = new JsonArray();
