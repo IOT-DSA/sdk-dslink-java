@@ -546,7 +546,12 @@ public class Node {
      * @return A fake node builder.
      */
     public NodeBuilder createFakeBuilder() {
-        return new NodeBuilder(getParent(), this);
+        return new NodeBuilder(getParent(), this) {
+            @Override
+            public Node build() {
+                return Node.this;
+            }
+        };
     }
 
     /**
