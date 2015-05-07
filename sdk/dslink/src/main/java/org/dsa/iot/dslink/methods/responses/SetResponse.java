@@ -3,6 +3,7 @@ package org.dsa.iot.dslink.methods.responses;
 import org.dsa.iot.dslink.methods.Response;
 import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.node.NodePair;
+import org.dsa.iot.dslink.node.Writable;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.vertx.java.core.json.JsonObject;
@@ -47,6 +48,11 @@ public class SetResponse implements Response {
     }
 
     private void updateNode(JsonObject in) {
+        Writable writable = pair.getNode().getWritable();
+        if (writable == null || writable == Writable.NEVER) {
+            throw new RuntimeException("Not writable");
+        }
+
         String ref = pair.getReference();
         Value value = ValueUtils.toValue(in.getField("value"));
         if (ref != null) {
