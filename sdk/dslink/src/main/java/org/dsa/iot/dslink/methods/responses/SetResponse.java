@@ -2,9 +2,11 @@ package org.dsa.iot.dslink.methods.responses;
 
 import org.dsa.iot.dslink.methods.Response;
 import org.dsa.iot.dslink.methods.StreamState;
+import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodePair;
 import org.dsa.iot.dslink.node.Writable;
 import org.dsa.iot.dslink.node.value.Value;
+import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.vertx.java.core.json.JsonObject;
 
@@ -48,25 +50,47 @@ public class SetResponse implements Response {
     }
 
     private void updateNode(JsonObject in) {
-        Writable writable = pair.getNode().getWritable();
+        Node node = pair.getNode();
+        Writable writable = node.getWritable();
         if (writable == null || writable == Writable.NEVER) {
             throw new RuntimeException("Not writable");
         }
 
         String ref = pair.getReference();
         Value value = ValueUtils.toValue(in.getField("value"));
+        Value current = node.getValue();
+
         if (ref != null) {
             if (ref.startsWith("$")) {
                 ref = ref.substring(1);
-                pair.getNode().setConfig(ref, value);
+                node.setConfig(ref, value);
             } else if (ref.startsWith("@")) {
                 ref = ref.substring(1);
-                pair.getNode().setAttribute(ref, value);
+                node.setAttribute(ref, value);
             } else {
                 throw new RuntimeException("Not a valid reference: " + ref);
             }
         } else {
-            pair.getNode().setValue(value);
+            checkValue(current, value);
+            node.setValue(value);
+        }
+    }
+
+    private void checkValue(Value current, Value other) {
+        if (current == null) {
+            return;
+        }
+
+        ValueType currType = current.getVisibleType();
+        ValueType otherType = other.getVisibleType();
+        if (currType == ValueType.DYNAMIC) {
+            other.setDynamic();
+        } else if (currType != otherType) {
+            String expected = currType.toJsonString();
+            String got = otherType.toJsonString();
+            String error = "Type mismatch ";
+            error += "(got: " + got + ", expected: " + expected + ")";
+            throw new RuntimeException(error);
         }
     }
 }

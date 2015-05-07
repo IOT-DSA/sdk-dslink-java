@@ -23,7 +23,7 @@ public class Value {
     private static final Object LOCK;
     private static final String TIMEZONE;
 
-    private final ValueType visibleType;
+    private ValueType visibleType;
     private ValueType internalType;
 
     private boolean immutable;
@@ -203,6 +203,14 @@ public class Value {
      */
     public void set(Set<String> enums) {
         set(ValueType.ENUM, null, null, null, null, null, enums);
+    }
+
+    /**
+     * Converts the value into a dynamic type.
+     */
+    public void setDynamic() {
+        checkImmutable();
+        visibleType = ValueType.DYNAMIC;
     }
 
     /**

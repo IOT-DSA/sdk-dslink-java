@@ -1,6 +1,7 @@
 package org.dsa.iot.dslink.node;
 
 import org.dsa.iot.dslink.node.value.Value;
+import org.dsa.iot.dslink.node.value.ValuePair;
 import org.vertx.java.core.Handler;
 
 /**
@@ -12,7 +13,7 @@ public class NodeListener {
 
     private final Node node;
 
-    private Handler<Value> valueHandler;
+    private Handler<ValuePair> valueHandler;
     private Handler<ValueUpdate> configHandler;
     private Handler<ValueUpdate> attribHandler;
 
@@ -30,20 +31,25 @@ public class NodeListener {
      *
      * @param handler Callback.
      */
-    public void setValueHandler(Handler<Value> handler) {
+    public void setValueHandler(Handler<ValuePair> handler) {
         valueHandler = handler;
     }
 
     /**
      * Posts a value update calling all the value handler callbacks.
      *
-     * @param value Updated value.
+     * @param previous Old value.
+     * @param current Updated value.
+     * @return Whether the new value was rejected or not.
      */
-    protected void postValueUpdate(Value value) {
-        Handler<Value> handler = valueHandler;
+    protected boolean postValueUpdate(Value previous, Value current) {
+        Handler<ValuePair> handler = valueHandler;
         if (handler != null) {
-            handler.handle(value);
+            ValuePair pair = new ValuePair(previous, current);
+            handler.handle(pair);
+            return pair.isRejected();
         }
+        return false;
     }
 
     /**

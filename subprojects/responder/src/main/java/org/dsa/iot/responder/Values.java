@@ -4,6 +4,7 @@ import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeBuilder;
 import org.dsa.iot.dslink.node.Writable;
 import org.dsa.iot.dslink.node.value.Value;
+import org.dsa.iot.dslink.node.value.ValuePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
@@ -56,12 +57,14 @@ public class Values {
 
         builder = parent.createChild("writable");
         {
-            builder.setValue(new Value(0));
+            builder.setValue(new Value(0, true));
             builder.setWritable(Writable.WRITE);
-            builder.getListener().setValueHandler(new Handler<Value>() {
+            builder.getListener().setValueHandler(new Handler<ValuePair>() {
                 @Override
-                public void handle(Value event) {
-                    LOGGER.info("Writable has a new value of {}", event);
+                public void handle(ValuePair event) {
+                    String from = event.getPrevious().toString();
+                    String to = event.getCurrent().toString();
+                    LOGGER.info("Writable value changed from `{}` to `{}`", from, to);
                 }
             });
         }

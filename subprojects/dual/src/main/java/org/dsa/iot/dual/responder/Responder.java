@@ -7,6 +7,7 @@ import org.dsa.iot.dslink.node.Permission;
 import org.dsa.iot.dslink.node.actions.Action;
 import org.dsa.iot.dslink.node.actions.ActionResult;
 import org.dsa.iot.dslink.node.value.Value;
+import org.dsa.iot.dslink.node.value.ValuePair;
 import org.dsa.iot.dslink.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,9 +47,9 @@ public class Responder {
      */
     private static void initSettableNode(Node node) {
         NodeBuilder builder = node.createChild("settable");
-        builder.getListener().setValueHandler(new Handler<Value>() {
+        builder.getListener().setValueHandler(new Handler<ValuePair>() {
             @Override
-            public void handle(Value event) {
+            public void handle(ValuePair event) {
                 String val = event.toString();
                 LOGGER.info("Responder has a new value set from requester: {}", val);
             }

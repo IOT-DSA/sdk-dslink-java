@@ -244,12 +244,13 @@ public class Node {
             if (value != null) {
                 value.setImmutable();
             }
-            if (this.value != null && this.value.equals(value)) {
+
+            if ((this.value != null && this.value.equals(value))
+                    || listener.postValueUpdate(this.value, value)) {
                 return;
             }
-            this.value = value;
-            listener.postValueUpdate(value);
 
+            this.value = value;
             if (link != null) {
                 SubscriptionManager manager = link.getSubscriptionManager();
                 if (manager != null) {
