@@ -2,6 +2,7 @@ package org.dsa.iot.dslink.serializer;
 
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
+import org.dsa.iot.dslink.node.Writable;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.dsa.iot.dslink.util.StringUtils;
@@ -66,6 +67,11 @@ public class Serializer {
         char[] password = parent.getPassword();
         if (password != null) {
             out.putString("$$password", new String(password));
+        }
+
+        Writable writable = parent.getWritable();
+        if (!(writable == null || writable == Writable.NEVER)) {
+            out.putString("$writable", writable.toJsonName());
         }
 
         addValues("$$", out, parent.getRoConfigurations());

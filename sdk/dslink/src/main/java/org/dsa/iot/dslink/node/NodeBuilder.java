@@ -76,6 +76,11 @@ public class NodeBuilder {
         return this;
     }
 
+    public NodeBuilder setWritable(Writable writable) {
+        child.setWritable(writable);
+        return this;
+    }
+
     public NodeListener getListener() {
         return child.getListener();
     }

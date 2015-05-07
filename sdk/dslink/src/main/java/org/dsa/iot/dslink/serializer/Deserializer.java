@@ -2,6 +2,7 @@ package org.dsa.iot.dslink.serializer;
 
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
+import org.dsa.iot.dslink.node.Writable;
 import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.vertx.java.core.json.JsonObject;
 
@@ -50,6 +51,8 @@ public class Deserializer {
                 node.setMixins((String) value);
             } else if ("$name".equals(name)) {
                 node.setDisplayName((String) value);
+            } else if ("$writable".equals(name)) {
+                node.setWritable(Writable.toEnum((String) value));
             } else if ("$$password".equals(name)) {
                 node.setPassword(((String) value).toCharArray());
             } else if ("?value".equals(name)) {

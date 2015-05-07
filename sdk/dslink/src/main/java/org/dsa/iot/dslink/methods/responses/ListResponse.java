@@ -3,10 +3,7 @@ package org.dsa.iot.dslink.methods.responses;
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.methods.Response;
 import org.dsa.iot.dslink.methods.StreamState;
-import org.dsa.iot.dslink.node.Node;
-import org.dsa.iot.dslink.node.NodeBuilder;
-import org.dsa.iot.dslink.node.Permission;
-import org.dsa.iot.dslink.node.SubscriptionManager;
+import org.dsa.iot.dslink.node.*;
 import org.dsa.iot.dslink.node.actions.Action;
 import org.dsa.iot.dslink.node.actions.ActionResult;
 import org.dsa.iot.dslink.node.actions.Parameter;
@@ -120,6 +117,9 @@ public class ListResponse implements Response {
                 String string = (String) v;
                 Action act = getOrCreateAction(node, Permission.NONE);
                 act.setResultType(ResultType.toEnum(string));
+            } else if ("writable".equals(name)) {
+                String string = (String) v;
+                node.setWritable(Writable.toEnum(string));
             } else {
                 node.setConfig(name, ValueUtils.toValue(v));
             }
@@ -261,6 +261,14 @@ public class ListResponse implements Response {
                 JsonArray update = new JsonArray();
                 update.addString("$$password");
                 update.addString(null);
+                updates.addArray(update);
+            }
+
+            Writable writable = node.getWritable();
+            if (!(writable == null || writable == Writable.NEVER)) {
+                JsonArray update = new JsonArray();
+                update.addString("$writable");
+                update.addString(writable.toJsonName());
                 updates.addArray(update);
             }
 

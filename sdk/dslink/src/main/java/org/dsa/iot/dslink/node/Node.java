@@ -38,6 +38,7 @@ public class Node {
     private boolean serializable = true;
     private NodeListener listener;
     private Map<String, Node> children;
+    private Writable writable;
 
     private Map<String, Value> roConfigs;
     private Map<String, Value> configs;
@@ -268,6 +269,20 @@ public class Node {
     }
 
     /**
+     * @param writable Permission level required to write.
+     */
+    public void setWritable(Writable writable) {
+        this.writable = writable;
+    }
+
+    /**
+     * @return The permission level needed to be writable.
+     */
+    public Writable getWritable() {
+        return writable;
+    }
+
+    /**
      * @return Children of the node, can be null
      */
     public Map<String, Node> getChildren() {
@@ -453,6 +468,7 @@ public class Node {
                 case "permission":
                 case "result":
                 case "type":
+                case "writable":
                     String err = "Config `" + name + "` has special methods"
                             + " for setting these properties";
                     throw new IllegalArgumentException(err);
