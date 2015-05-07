@@ -56,28 +56,39 @@ public class ValueUtils {
     }
 
     /**
-     * @param object Object to convert
-     * @return Converted object instance
+     * Creates a static value based on the provided instance.
+     *
+     * @param object Object to convert.
+     * @return Converted object instance.
+     */
+    public static Value toValue(Object object) {
+        return toValue(object, false);
+    }
+
+    /**
+     * @param object Object to convert.
+     * @param dynamic Whether the created value is dynamic or not.
+     * @return Converted object instance.
      */
     @SuppressWarnings("unchecked")
-    public static Value toValue(Object object) {
+    public static Value toValue(Object object, boolean dynamic) {
         if (object == null)
             throw new NullPointerException("object");
         Value val;
         if (object instanceof Number) {
-            val = new Value((Number) object);
+            val = new Value((Number) object, dynamic);
         } else if (object instanceof Boolean) {
-            val = new Value(((Boolean) object));
+            val = new Value(((Boolean) object), dynamic);
         } else if (object instanceof String) {
-            val = new Value((String) object);
+            val = new Value((String) object, dynamic);
         } else if (object instanceof JsonObject) {
-            val = new Value((JsonObject) object);
+            val = new Value((JsonObject) object, dynamic);
         } else if (object instanceof Map) {
-            val = new Value(new JsonObject((Map) object));
+            val = new Value(new JsonObject((Map) object), dynamic);
         } else if (object instanceof JsonArray) {
-            val = new Value((JsonArray) object);
+            val = new Value((JsonArray) object, dynamic);
         } else if (object instanceof List) {
-            val = new Value(new JsonArray((List) object));
+            val = new Value(new JsonArray((List) object), dynamic);
         } else {
             throw new RuntimeException(ERROR_MSG + object.getClass().getName());
         }

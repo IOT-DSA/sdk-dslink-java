@@ -3,6 +3,7 @@ package org.dsa.iot.dslink.serializer;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.Writable;
+import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.vertx.java.core.json.JsonObject;
 
@@ -40,9 +41,13 @@ public class Deserializer {
 
     @SuppressWarnings("unchecked")
     private void deserializeNode(Node node, Map<String, Object> map) {
+        final String type = (String) map.get("$type");
         for (Map.Entry<String, Object> entry : map.entrySet()) {
             String name = entry.getKey();
             Object value = entry.getValue();
+            if ("$type".equals(name)) {
+                continue;
+            }
             if ("$is".equals(name)) {
                 node.setProfile((String) value);
             } else if ("$interface".equals(name)) {
@@ -56,7 +61,8 @@ public class Deserializer {
             } else if ("$$password".equals(name)) {
                 node.setPassword(((String) value).toCharArray());
             } else if ("?value".equals(name)) {
-                node.setValue(ValueUtils.toValue(value));
+                boolean dynamic = ValueType.DYNAMIC.toJsonString().equals(type);
+                node.setValue(ValueUtils.toValue(value, dynamic));
             } else if (name.startsWith("$$")) {
                 node.setRoConfig(name.substring(2), ValueUtils.toValue(value));
             } else if (name.startsWith("$")) {

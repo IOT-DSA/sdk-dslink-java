@@ -61,6 +61,7 @@ public class Serializer {
 
         Value value = parent.getValue();
         if (value != null) {
+            out.putString("$type", value.getVisibleType().toJsonString());
             ValueUtils.toJson(out, "?value", value);
         }
 
