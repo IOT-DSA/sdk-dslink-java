@@ -98,8 +98,9 @@ public class URLInfo {
             }
         } else if (host.contains("/")) {
             int index = host.indexOf('/');
-            host = host.substring(0, index);
+            String tmp = host.substring(0, index);
             path = host.substring(index);
+            host = tmp;
             if (path.isEmpty())
                 path = "/";
         }
