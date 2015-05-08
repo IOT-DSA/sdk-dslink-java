@@ -53,7 +53,7 @@ public class LogManager {
 
         PatternLayoutEncoder encoder = new PatternLayoutEncoder();
         encoder.setContext(loggerContext);
-        encoder.setPattern("%date{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread]: %message%n");
+        encoder.setPattern("%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{32} - %msg%n");
         encoder.start();
 
         ConsoleAppender<ILoggingEvent> appender = new ConsoleAppender<>();
