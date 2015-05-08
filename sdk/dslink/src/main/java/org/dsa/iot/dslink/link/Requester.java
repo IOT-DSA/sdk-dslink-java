@@ -251,7 +251,6 @@ public class Requester extends Linkable {
                     update.populate(in);
                 }
             });
-            update.populate(in);
             return;
         }
         RequestWrapper wrapper = reqs.get(rid);
