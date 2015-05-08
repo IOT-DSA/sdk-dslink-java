@@ -5,7 +5,7 @@ import org.dsa.iot.dslink.config.Configuration;
 import org.dsa.iot.dslink.connection.ConnectionManager;
 import org.dsa.iot.dslink.handshake.LocalHandshake;
 import org.dsa.iot.dslink.handshake.LocalKeys;
-import org.dsa.iot.dslink.util.LogLevel;
+import org.dsa.iot.dslink.util.LogManager;
 
 /**
  * Factory for generating {@link DSLink} objects.
@@ -113,7 +113,7 @@ public class DSLinkFactory {
                                           boolean responder) {
         // Log level is set until the configuration is read and sets
         // log level to the designated level.
-        LogLevel.setLevel(Level.ERROR);
+        LogManager.setLevel(Level.ERROR);
         handler.setConfig(Configuration.autoConfigure(name, args, requester, responder));
         return generate(handler);
     }

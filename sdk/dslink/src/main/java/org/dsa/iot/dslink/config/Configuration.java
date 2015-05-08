@@ -3,7 +3,7 @@ package org.dsa.iot.dslink.config;
 import org.dsa.iot.dslink.connection.ConnectionType;
 import org.dsa.iot.dslink.handshake.LocalKeys;
 import org.dsa.iot.dslink.util.FileUtils;
-import org.dsa.iot.dslink.util.LogLevel;
+import org.dsa.iot.dslink.util.LogManager;
 import org.dsa.iot.dslink.util.URLInfo;
 import org.vertx.java.core.json.JsonObject;
 
@@ -264,7 +264,8 @@ public class Configuration {
             throw new RuntimeException(e);
         }
 
-        LogLevel.setLevel(logLevel);
+        LogManager.configure();
+        LogManager.setLevel(logLevel);
         defaults.setAuthEndpoint(brokerHost);
 
         File loc = new File(keyPath);
