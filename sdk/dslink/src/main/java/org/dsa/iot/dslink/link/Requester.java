@@ -11,6 +11,7 @@ import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.NodePair;
 import org.dsa.iot.dslink.node.SubscriptionManager;
 import org.dsa.iot.dslink.node.value.SubscriptionValue;
+import org.dsa.iot.dslink.util.Objects;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonObject;
 
@@ -235,7 +236,7 @@ public class Requester extends Linkable {
      *
      * @param in Incoming response.
      */
-    public void parse(JsonObject in) {
+    public void parse(final JsonObject in) {
         DSLink link = getDSLink();
         if (link == null) {
             return;
@@ -243,7 +244,13 @@ public class Requester extends Linkable {
         int rid = in.getInteger("rid");
         NodeManager manager = link.getNodeManager();
         if (rid == 0) {
-            SubscriptionUpdate update = new SubscriptionUpdate(this);
+            final SubscriptionUpdate update = new SubscriptionUpdate(this);
+            Objects.getThreadPool().execute(new Runnable() {
+                @Override
+                public void run() {
+                    update.populate(in);
+                }
+            });
             update.populate(in);
             return;
         }
