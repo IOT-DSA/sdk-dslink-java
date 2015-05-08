@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class Requester extends Linkable {
 
+    private final Object subUpdateLock = new Object();
     private final Map<Integer, RequestWrapper> reqs;
 
     /**
@@ -248,7 +249,9 @@ public class Requester extends Linkable {
             Objects.getThreadPool().execute(new Runnable() {
                 @Override
                 public void run() {
-                    update.populate(in);
+                    synchronized (subUpdateLock) {
+                        update.populate(in);
+                    }
                 }
             });
             return;
