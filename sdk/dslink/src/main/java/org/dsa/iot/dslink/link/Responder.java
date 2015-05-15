@@ -28,6 +28,15 @@ public class Responder extends Linkable {
     }
 
     /**
+     * Forcibly removes a response from the cache.
+     *
+     * @param rid ID to remove.
+     */
+    public void removeResponse(int rid) {
+        resps.remove(rid);
+    }
+
+    /**
      * Handles incoming requests
      *
      * @param in Incoming request

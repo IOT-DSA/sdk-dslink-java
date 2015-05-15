@@ -65,14 +65,18 @@ public class InvokeResponse implements Response {
                         cols = action.getColumns();
                     }
 
+                    StreamState state = actionResult.getStreamState();
                     JsonObject out = new JsonObject();
                     out.putNumber("rid", rid);
-                    out.putString("stream", actionResult.getStreamState().getJsonName());
+                    out.putString("stream", state.getJsonName());
 
                     out.putArray("columns", cols);
                     out.putArray("updates", InvokeResponse.this.results);
 
                     link.getWriter().writeResponse(out);
+                    if (state == StreamState.CLOSED) {
+                        link.getResponder().removeResponse(rid);
+                    }
                 }
             });
         } else if (mode == Action.InvokeMode.SYNC) {

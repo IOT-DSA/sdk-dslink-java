@@ -80,10 +80,17 @@ public class DSLink {
     }
 
     /**
-     * @return Requester of the singleton client, can be null
+     * @return Requester of the link, can be {@code null}.
      */
     public Requester getRequester() {
         return requester;
+    }
+
+    /**
+     * @return Responder of the link, can be {@code null}.
+     */
+    public Responder getResponder() {
+        return responder;
     }
 
     /**
