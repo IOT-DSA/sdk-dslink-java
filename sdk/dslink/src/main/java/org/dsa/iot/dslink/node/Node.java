@@ -4,6 +4,7 @@ import org.dsa.iot.dslink.link.Linkable;
 import org.dsa.iot.dslink.node.NodeListener.ValueUpdate;
 import org.dsa.iot.dslink.node.actions.Action;
 import org.dsa.iot.dslink.node.value.Value;
+import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.util.StringUtils;
 
 import java.lang.ref.WeakReference;
@@ -44,12 +45,14 @@ public class Node {
     private Map<String, Value> configs;
     private Map<String, Value> attribs;
 
+    private ValueType valueType;
+    private Value value;
+
     private String displayName;
     private String profile;
     private Set<String> mixins;
     private Set<String> interfaces;
     private Action action;
-    private Value value;
     private char[] pass;
 
     /**
@@ -241,6 +244,17 @@ public class Node {
 
     public void setValue(Value value) {
         synchronized (valueLock) {
+            ValueType type = valueType;
+            if (type == null) {
+                String err = "Value type not set on node (" + getPath() + ")";
+                throw new RuntimeException(err);
+            } else if (!(value == null || type == value.getVisibleType())) {
+                String err = "Expected value type ";
+                err += "'" + type + "' ";
+                err += "got '" + value.getVisibleType() + "'";
+                throw new RuntimeException(err);
+            }
+
             if (value != null) {
                 value.setImmutable();
             }
@@ -267,6 +281,14 @@ public class Node {
         synchronized (valueLock) {
             return value;
         }
+    }
+
+    public void setValueType(ValueType type) {
+        this.valueType = type;
+    }
+
+    public ValueType getValueType() {
+        return valueType;
     }
 
     /**

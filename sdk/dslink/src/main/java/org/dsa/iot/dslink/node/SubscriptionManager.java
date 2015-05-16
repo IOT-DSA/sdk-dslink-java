@@ -165,7 +165,7 @@ public class SubscriptionManager {
 
                 Value value = node.getValue();
                 if (value != null) {
-                    ValueUtils.toJson(update, node.getValue());
+                    ValueUtils.toJson(update, value);
                     update.addString(value.getTimeStamp());
                 } else {
                     update.add(null);

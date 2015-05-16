@@ -79,7 +79,7 @@ public class Main extends DSLinkHandler {
             }
 
             int i = integer.decrementAndGet();
-            if (i <= 1) {
+            if (i == 0) {
                 LOGGER.info("List completed, stopping the link");
                 provider.stop();
             }

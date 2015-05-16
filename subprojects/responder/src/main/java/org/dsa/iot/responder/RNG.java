@@ -58,6 +58,7 @@ public class RNG {
             // Setup child
             NodeBuilder builder = parent.createChild("rng_" + min);
             setupRNG(builder);
+            builder.setValueType(ValueType.NUMBER);
             builder.setValue(new Value(0));
             final Node child = builder.build();
 

@@ -4,6 +4,7 @@ import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.Writable;
 import org.dsa.iot.dslink.node.value.Value;
+import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.dsa.iot.dslink.util.StringUtils;
 import org.vertx.java.core.json.JsonObject;
@@ -59,10 +60,13 @@ public class Serializer {
             out.putString("$is", profile);
         }
 
-        Value value = parent.getValue();
-        if (value != null) {
-            out.putString("$type", value.getVisibleType().toJsonString());
-            ValueUtils.toJson(out, "?value", value);
+        ValueType type = parent.getValueType();
+        if (type != null) {
+            out.putString("$type", type.toJsonString());
+            Value value = parent.getValue();
+            if (value != null) {
+                ValueUtils.toJson(out, "?value", value);
+            }
         }
 
         char[] password = parent.getPassword();

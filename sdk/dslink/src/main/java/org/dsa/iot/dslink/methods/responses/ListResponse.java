@@ -120,6 +120,9 @@ public class ListResponse implements Response {
             } else if ("writable".equals(name)) {
                 String string = (String) v;
                 node.setWritable(Writable.toEnum(string));
+            } else if ("type".equals(name)) {
+                ValueType type = ValueType.toEnum((String) v);
+                node.setValueType(type);
             } else {
                 node.setConfig(name, ValueUtils.toValue(v));
             }
@@ -177,10 +180,11 @@ public class ListResponse implements Response {
 
             String type = childData.getString("$type");
             if (type != null) {
+                ValueType t = ValueType.toEnum(type);
                 if (builder != null) {
-                    builder.setValue(ValueUtils.fromType(type));
+                    builder.setValueType(t);
                 } else {
-                    child.setValue(ValueUtils.fromType(type));
+                    child.setValueType(t);
                 }
             }
 
@@ -248,11 +252,11 @@ public class ListResponse implements Response {
                 updates.addArray(update);
             }
 
-            Value value = node.getValue();
-            if (value != null) {
+            ValueType type = node.getValueType();
+            if (type != null) {
                 JsonArray update = new JsonArray();
                 update.addString("$type");
-                update.addString(value.getVisibleType().toJsonString());
+                update.addString(type.toJsonString());
                 updates.addArray(update);
             }
 
@@ -404,10 +408,9 @@ public class ListResponse implements Response {
                 childData.putString("$interface", _interface);
             }
 
-            Value value = child.getValue();
-            if (value != null) {
-                String type = value.getVisibleType().toJsonString();
-                childData.putString("$type", type);
+            ValueType type = child.getValueType();
+            if (type != null) {
+                childData.putString("$type", type.toJsonString());
             }
         }
         update.addObject(childData);

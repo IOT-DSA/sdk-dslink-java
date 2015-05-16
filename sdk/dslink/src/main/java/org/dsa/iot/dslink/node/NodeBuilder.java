@@ -2,6 +2,7 @@ package org.dsa.iot.dslink.node;
 
 import org.dsa.iot.dslink.node.actions.Action;
 import org.dsa.iot.dslink.node.value.Value;
+import org.dsa.iot.dslink.node.value.ValueType;
 
 /**
  * @author Samuel Grenier
@@ -28,6 +29,11 @@ public class NodeBuilder {
 
     public NodeBuilder setValue(Value value) {
         child.setValue(value);
+        return this;
+    }
+
+    public NodeBuilder setValueType(ValueType type) {
+        child.setValueType(type);
         return this;
     }
 

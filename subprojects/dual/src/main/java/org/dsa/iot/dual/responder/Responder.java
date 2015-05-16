@@ -8,6 +8,7 @@ import org.dsa.iot.dslink.node.actions.Action;
 import org.dsa.iot.dslink.node.actions.ActionResult;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValuePair;
+import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,6 +56,7 @@ public class Responder {
             }
         });
         node = builder.build();
+        node.setValueType(ValueType.STRING);
         node.setValue(new Value("UNSET"));
         LOGGER.info("Responder has a current value of {}", node.getValue().toString());
     }
@@ -69,11 +71,12 @@ public class Responder {
     private static void initDynamicNode(Node node) {
         NodeBuilder builder = node.createChild("dynamic");
         final Node child = builder.build();
+        child.setValueType(ValueType.DYNAMIC);
 
         Objects.getDaemonThreadPool().scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
-                child.setValue(new Value(RANDOM.nextInt()));
+                child.setValue(new Value(RANDOM.nextInt(), true));
             }
         }, 0, 5, TimeUnit.SECONDS);
     }
