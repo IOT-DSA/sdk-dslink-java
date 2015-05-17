@@ -4,6 +4,7 @@ import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeBuilder;
 import org.dsa.iot.dslink.node.Permission;
+import org.dsa.iot.dslink.node.Writable;
 import org.dsa.iot.dslink.node.actions.Action;
 import org.dsa.iot.dslink.node.actions.ActionResult;
 import org.dsa.iot.dslink.node.value.Value;
@@ -56,6 +57,7 @@ public class Responder {
             }
         });
         node = builder.build();
+        node.setWritable(Writable.WRITE);
         node.setValueType(ValueType.STRING);
         node.setValue(new Value("UNSET"));
         LOGGER.info("Responder has a current value of {}", node.getValue().toString());

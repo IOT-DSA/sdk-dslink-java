@@ -1,5 +1,9 @@
 package org.dsa.iot.dslink.node.value;
 
+import org.dsa.iot.dslink.util.StringUtils;
+
+import java.util.Set;
+
 /**
  * Type of the value
  *
@@ -23,7 +27,6 @@ public final class ValueType {
     public static final ValueType MAP = new ValueType(JSON_MAP);
     public static final ValueType ARRAY = new ValueType(JSON_ARRAY);
     public static final ValueType TIME = new ValueType(JSON_TIME);
-    public static final ValueType ENUM = new ValueType(JSON_ENUM);
     public static final ValueType DYNAMIC = new ValueType(JSON_DYNAMIC);
 
     private final String jsonName;
@@ -37,6 +40,11 @@ public final class ValueType {
      */
     public String toJsonString() {
         return jsonName;
+    }
+
+    public static ValueType makeEnum(Set<String> enums) {
+        String built = "enum[" + StringUtils.join(enums, ",") + "]";
+        return new ValueType(built);
     }
 
     /**
@@ -57,13 +65,11 @@ public final class ValueType {
                 return ARRAY;
             case JSON_TIME:
                 return TIME;
-            case JSON_ENUM:
-                return ENUM;
             case JSON_DYNAMIC:
                 return DYNAMIC;
             default:
-                if (type.startsWith(ENUM.toJsonString())) {
-                    return ENUM;
+                if (type.startsWith(JSON_ENUM + "[") && type.endsWith("]")) {
+                    return new ValueType(type);
                 }
                 throw new RuntimeException("Unknown type: " + type);
         }

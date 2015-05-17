@@ -40,7 +40,7 @@ public class Echo {
         enums.add("A");
         enums.add("B");
         enums.add("C");
-        a.addParameter(new Parameter("type", ValueType.ENUM, new Value(enums)));
+        a.addParameter(new Parameter("type", ValueType.makeEnum(enums)));
         a.addResult(new Parameter("echo", ValueType.STRING));
         return a;
     }
