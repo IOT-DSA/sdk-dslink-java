@@ -55,27 +55,25 @@ public class ValueUtils {
             throw new NullPointerException("array");
         else if (value == null)
             throw new NullPointerException("value");
-        switch (value.getType()) {
-            case BOOL:
+        switch (value.getType().toJsonString()) {
+            case ValueType.JSON_BOOL:
                 array.addBoolean(value.getBool());
                 break;
-            case NUMBER:
+            case ValueType.JSON_NUMBER:
                 array.addNumber(value.getNumber());
                 break;
-            case STRING:
+            case ValueType.JSON_STRING:
                 array.addString(value.getString());
                 break;
-            case MAP:
+            case ValueType.JSON_MAP:
                 array.addObject(value.getMap());
                 break;
-            case ARRAY:
+            case ValueType.JSON_ARRAY:
                 array.addArray(value.getArray());
                 break;
-            case ENUM:
+            case ValueType.JSON_ENUM:
                 array.addString(value.toString());
                 break;
-            case TIME:
-            case DYNAMIC:
             default:
                 throw new RuntimeException(ERROR_MSG + value.getType());
         }
@@ -96,29 +94,27 @@ public class ValueUtils {
             throw new NullPointerException("name");
         else if (value == null)
             throw new NullPointerException("value");
-        switch (value.getType()) {
-            case BOOL:
+        switch (value.getType().toJsonString()) {
+            case ValueType.JSON_BOOL:
                 object.putBoolean(name, value.getBool());
                 break;
-            case NUMBER:
+            case ValueType.JSON_NUMBER:
                 object.putNumber(name, value.getNumber());
                 break;
-            case STRING:
+            case ValueType.JSON_STRING:
                 object.putString(name, value.getString());
                 break;
-            case MAP:
+            case ValueType.JSON_MAP:
                 JsonObject map = value.getMap();
                 object.putObject(name, map);
                 break;
-            case ARRAY:
+            case ValueType.JSON_ARRAY:
                 JsonArray arr = value.getArray();
                 object.putArray(name, arr);
                 break;
-            case ENUM:
+            case ValueType.JSON_ENUM:
                 object.putString(name, value.toString());
                 break;
-            case TIME:
-            case DYNAMIC:
             default:
                 throw new RuntimeException(ERROR_MSG + value.getType());
         }

@@ -6,22 +6,37 @@ package org.dsa.iot.dslink.node.value;
  * @author Samuel Grenier
  * @see Value
  */
-public enum ValueType {
+public final class ValueType {
 
-    NUMBER,
-    STRING,
-    BOOL,
-    MAP,
-    ARRAY,
-    TIME,
-    ENUM,
-    DYNAMIC;
+    public static final String JSON_NUMBER = "number";
+    public static final String JSON_STRING = "string";
+    public static final String JSON_BOOL = "bool";
+    public static final String JSON_MAP = "map";
+    public static final String JSON_ARRAY = "array";
+    public static final String JSON_TIME = "time";
+    public static final String JSON_ENUM = "enum";
+    public static final String JSON_DYNAMIC = "dynamic";
+
+    public static final ValueType NUMBER = new ValueType(JSON_NUMBER);
+    public static final ValueType STRING = new ValueType(JSON_STRING);
+    public static final ValueType BOOL = new ValueType(JSON_BOOL);
+    public static final ValueType MAP = new ValueType(JSON_MAP);
+    public static final ValueType ARRAY = new ValueType(JSON_ARRAY);
+    public static final ValueType TIME = new ValueType(JSON_TIME);
+    public static final ValueType ENUM = new ValueType(JSON_ENUM);
+    public static final ValueType DYNAMIC = new ValueType(JSON_DYNAMIC);
+
+    private final String jsonName;
+
+    private ValueType(String jsonName) {
+        this.jsonName = jsonName;
+    }
 
     /**
      * @return Type of value that is suitable for JSON consumption.
      */
     public String toJsonString() {
-        return this.name().toLowerCase();
+        return jsonName;
     }
 
     /**
@@ -30,21 +45,21 @@ public enum ValueType {
      */
     public static ValueType toEnum(String type) {
         switch (type) {
-            case "number":
+            case JSON_NUMBER:
                 return NUMBER;
-            case "string":
+            case JSON_STRING:
                 return STRING;
-            case "bool":
+            case JSON_BOOL:
                 return BOOL;
-            case "map":
+            case JSON_MAP:
                 return MAP;
-            case "array":
+            case JSON_ARRAY:
                 return ARRAY;
-            case "time":
+            case JSON_TIME:
                 return TIME;
-            case "enum":
+            case JSON_ENUM:
                 return ENUM;
-            case "dynamic":
+            case JSON_DYNAMIC:
                 return DYNAMIC;
             default:
                 if (type.startsWith(ENUM.toJsonString())) {

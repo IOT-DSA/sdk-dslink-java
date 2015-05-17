@@ -246,18 +246,18 @@ public class Value {
 
     @Override
     public String toString() {
-        switch (type) {
-            case NUMBER:
+        switch (type.toJsonString()) {
+            case ValueType.JSON_NUMBER:
                 return number.toString();
-            case BOOL:
+            case ValueType.JSON_BOOL:
                 return bool.toString();
-            case STRING:
+            case ValueType.JSON_STRING:
                 return string;
-            case MAP:
+            case ValueType.JSON_MAP:
                 return map.encode();
-            case ARRAY:
+            case ValueType.JSON_ARRAY:
                 return array.encode();
-            case ENUM:
+            case ValueType.JSON_ENUM:
                 return "enum[" + StringUtils.join(enums, ",") + "]";
             default:
                 throw new RuntimeException("Unhandled type: " + type);
@@ -269,25 +269,26 @@ public class Value {
         boolean equal = false;
         if (o instanceof Value) {
             Value value = (Value) o;
-            if (value.getType().equals(getType())) {
-                switch (getType()) {
-                    case NUMBER:
+            String compare = getType().toJsonString();
+            if (value.getType().toJsonString().equals(compare)) {
+                switch (compare) {
+                    case ValueType.JSON_NUMBER:
                         equal = objectEquals(number, value.number);
                         break;
-                    case TIME:
-                    case STRING:
+                    case ValueType.JSON_TIME:
+                    case ValueType.JSON_STRING:
                         equal = objectEquals(string, value.string);
                         break;
-                    case BOOL:
+                    case ValueType.JSON_BOOL:
                         equal = objectEquals(bool, value.bool);
                         break;
-                    case MAP:
+                    case ValueType.JSON_MAP:
                         equal = objectEquals(map, value.map);
                         break;
-                    case ARRAY:
+                    case ValueType.JSON_ARRAY:
                         equal = objectEquals(array, value.array);
                         break;
-                    case ENUM:
+                    case ValueType.JSON_ENUM:
                         equal = objectEquals(enums, value.enums);
                         break;
                     default:
