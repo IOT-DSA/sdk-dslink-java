@@ -40,7 +40,7 @@ public class Values {
 
         builder = parent.createChild("dynamic");
         builder.setValueType(ValueType.DYNAMIC);
-        builder.setValue(new Value("test", true));
+        builder.setValue(new Value("test"));
         builder.build();
 
         builder = parent.createChild("map");
@@ -65,7 +65,7 @@ public class Values {
         builder = parent.createChild("writable");
         builder.setValueType(ValueType.DYNAMIC);
         {
-            builder.setValue(new Value(0, true));
+            builder.setValue(new Value(0));
             builder.setWritable(Writable.WRITE);
             builder.getListener().setValueHandler(new Handler<ValuePair>() {
                 @Override

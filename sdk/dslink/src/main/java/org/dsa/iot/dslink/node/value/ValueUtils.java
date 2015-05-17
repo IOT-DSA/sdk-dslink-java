@@ -3,7 +3,8 @@ package org.dsa.iot.dslink.node.value;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Utilities for manipulating values.
@@ -15,80 +16,30 @@ public class ValueUtils {
     private static final String ERROR_MSG = "Unhandled value type: ";
 
     /**
-     * Converts a string type to a value type with a null underlying
-     * value.
-     *
-     * @param type Type to set on the value
-     * @return Type to value
-     */
-    public static Value fromType(String type) {
-        if (type == null) {
-            throw new NullPointerException("type");
-        }
-
-        ValueType switchType = ValueType.toEnum(type);
-        switch (switchType) {
-            case BOOL:
-                return new Value((Boolean) null);
-            case NUMBER:
-                return new Value((Number) null);
-            case TIME:
-            case STRING:
-                String starter = "enum[";
-                if (type.startsWith(starter) && type.endsWith("]")) {
-                    type = type.substring(starter.length());
-                    type = type.substring(0, type.length() - 1);
-
-                    String[] split = type.split(",");
-                    Set<String> enums = new LinkedHashSet<>(Arrays.asList(split));
-                    return new Value(enums);
-                }
-                return new Value((String) null);
-            case MAP:
-                return new Value((JsonObject) null);
-            case ARRAY:
-                return new Value((JsonArray) null);
-            case DYNAMIC:
-                return new Value((String) null, true);
-            default:
-                throw new RuntimeException(ERROR_MSG + switchType);
-        }
-    }
-
-    /**
-     * Creates a static value based on the provided instance.
+     * Converts an {@link Object} to a {@link Value}.
      *
      * @param object Object to convert.
-     * @return Converted object instance.
-     */
-    public static Value toValue(Object object) {
-        return toValue(object, false);
-    }
-
-    /**
-     * @param object Object to convert.
-     * @param dynamic Whether the created value is dynamic or not.
      * @return Converted object instance.
      */
     @SuppressWarnings("unchecked")
-    public static Value toValue(Object object, boolean dynamic) {
+    public static Value toValue(Object object) {
         if (object == null)
             throw new NullPointerException("object");
         Value val;
         if (object instanceof Number) {
-            val = new Value((Number) object, dynamic);
+            val = new Value((Number) object);
         } else if (object instanceof Boolean) {
-            val = new Value(((Boolean) object), dynamic);
+            val = new Value(((Boolean) object));
         } else if (object instanceof String) {
-            val = new Value((String) object, dynamic);
+            val = new Value((String) object);
         } else if (object instanceof JsonObject) {
-            val = new Value((JsonObject) object, dynamic);
+            val = new Value((JsonObject) object);
         } else if (object instanceof Map) {
-            val = new Value(new JsonObject((Map) object), dynamic);
+            val = new Value(new JsonObject((Map) object));
         } else if (object instanceof JsonArray) {
-            val = new Value((JsonArray) object, dynamic);
+            val = new Value((JsonArray) object);
         } else if (object instanceof List) {
-            val = new Value(new JsonArray((List) object), dynamic);
+            val = new Value(new JsonArray((List) object));
         } else {
             throw new RuntimeException(ERROR_MSG + object.getClass().getName());
         }
@@ -104,7 +55,7 @@ public class ValueUtils {
             throw new NullPointerException("array");
         else if (value == null)
             throw new NullPointerException("value");
-        switch (value.getInternalType()) {
+        switch (value.getType()) {
             case BOOL:
                 array.addBoolean(value.getBool());
                 break;
@@ -126,7 +77,7 @@ public class ValueUtils {
             case TIME:
             case DYNAMIC:
             default:
-                throw new RuntimeException(ERROR_MSG + value.getInternalType());
+                throw new RuntimeException(ERROR_MSG + value.getType());
         }
     }
 
@@ -145,7 +96,7 @@ public class ValueUtils {
             throw new NullPointerException("name");
         else if (value == null)
             throw new NullPointerException("value");
-        switch (value.getInternalType()) {
+        switch (value.getType()) {
             case BOOL:
                 object.putBoolean(name, value.getBool());
                 break;
@@ -169,7 +120,7 @@ public class ValueUtils {
             case TIME:
             case DYNAMIC:
             default:
-                throw new RuntimeException(ERROR_MSG + value.getInternalType());
+                throw new RuntimeException(ERROR_MSG + value.getType());
         }
     }
 }

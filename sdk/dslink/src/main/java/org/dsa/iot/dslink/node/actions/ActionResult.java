@@ -132,7 +132,7 @@ public class ActionResult {
 
         Value ret = ValueUtils.toValue(obj);
         if (def != null) {
-            checkType(name, def.getVisibleType(), ret);
+            checkType(name, def.getType(), ret);
         }
         return ret;
     }
@@ -209,8 +209,8 @@ public class ActionResult {
 
     private void checkType(String name, ValueType type, Value value) {
         if (type != ValueType.DYNAMIC) {
-            if (type != value.getVisibleType()) {
-                String t = value.getVisibleType().toJsonString();
+            if (type != value.getType()) {
+                String t = value.getType().toJsonString();
                 throw new RuntimeException("Parameter " + name + " has a bad type of " + t);
             }
         }

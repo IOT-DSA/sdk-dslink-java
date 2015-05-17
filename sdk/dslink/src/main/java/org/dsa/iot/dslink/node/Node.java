@@ -248,10 +248,11 @@ public class Node {
             if (type == null) {
                 String err = "Value type not set on node (" + getPath() + ")";
                 throw new RuntimeException(err);
-            } else if (!(value == null || type == value.getVisibleType())) {
+            } else if (type != ValueType.DYNAMIC &&
+                        !(value == null || type == value.getType())) {
                 String err = "Expected value type ";
                 err += "'" + type + "' ";
-                err += "got '" + value.getVisibleType() + "'";
+                err += "got '" + value.getType() + "'";
                 throw new RuntimeException(err);
             }
 

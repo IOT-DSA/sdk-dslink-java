@@ -65,8 +65,7 @@ public class Deserializer {
             } else if ("$$password".equals(name)) {
                 node.setPassword(((String) value).toCharArray());
             } else if ("?value".equals(name)) {
-                boolean dynamic = ValueType.DYNAMIC.toJsonString().equals(type);
-                node.setValue(ValueUtils.toValue(value, dynamic));
+                node.setValue(ValueUtils.toValue(value));
             } else if (name.startsWith("$$")) {
                 node.setRoConfig(name.substring(2), ValueUtils.toValue(value));
             } else if (name.startsWith("$")) {

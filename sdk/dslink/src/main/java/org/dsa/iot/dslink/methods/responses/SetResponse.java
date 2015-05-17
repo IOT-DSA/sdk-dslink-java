@@ -81,11 +81,9 @@ public class SetResponse implements Response {
             return;
         }
 
-        ValueType currType = current.getVisibleType();
-        ValueType otherType = other.getVisibleType();
-        if (currType == ValueType.DYNAMIC) {
-            other.setDynamic();
-        } else if (currType != otherType) {
+        ValueType currType = current.getType();
+        ValueType otherType = other.getType();
+        if (currType != otherType) {
             String expected = currType.toJsonString();
             String got = otherType.toJsonString();
             String error = "Type mismatch ";

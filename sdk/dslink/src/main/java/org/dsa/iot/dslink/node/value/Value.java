@@ -23,9 +23,7 @@ public class Value {
     private static final Object LOCK;
     private static final String TIMEZONE;
 
-    private ValueType visibleType;
-    private ValueType internalType;
-
+    private ValueType type;
     private boolean immutable;
     private String ts;
 
@@ -43,18 +41,6 @@ public class Value {
      * @param n Initial number to set.
      */
     public Value(Number n) {
-        this(n, false);
-    }
-
-    /**
-     * Creates a value with an initial type of a number. If the value is
-     * dynamic then the value can be changed to anything.
-     *
-     * @param n Initial number to set.
-     * @param dynamic Whether the value is dynamic or not.
-     */
-    public Value(Number n, boolean dynamic) {
-        this.visibleType = dynamic ? ValueType.DYNAMIC : ValueType.NUMBER;
         set(n);
     }
 
@@ -64,18 +50,6 @@ public class Value {
      * @param b Initial boolean to set.
      */
     public Value(Boolean b) {
-        this(b, false);
-    }
-
-    /**
-     * Creates a value with an initial type of a boolean. If the value is
-     * dynamic then the value can be changed to anything.
-     *
-     * @param b Initial boolean to set.
-     * @param dynamic Whether the value is dynamic or not.
-     */
-    public Value(Boolean b, boolean dynamic) {
-        this.visibleType = dynamic ? ValueType.DYNAMIC : ValueType.BOOL;
         set(b);
     }
 
@@ -85,18 +59,6 @@ public class Value {
      * @param s Initial string to set.
      */
     public Value(String s) {
-        this(s, false);
-    }
-
-    /**
-     * Creates a value with an initial type of a string. If the value is
-     * dynamic then the value can be changed to anything.
-     *
-     * @param s Initial string to set.
-     * @param dynamic Whether the value is dynamic or not.
-     */
-    public Value(String s, boolean dynamic) {
-        this.visibleType = dynamic ? ValueType.DYNAMIC : ValueType.STRING;
         set(s);
     }
 
@@ -106,18 +68,6 @@ public class Value {
      * @param o Initial JSON object to set.
      */
     public Value(JsonObject o) {
-        this(o, false);
-    }
-
-    /**
-     * Creates a value with an initial type of a JSON object. If the value is
-     * dynamic then the value can be set to anything.
-     *
-     * @param o Initial JSON object to set.
-     * @param dynamic Whether the value is dynamic or not.
-     */
-    public Value(JsonObject o, boolean dynamic) {
-        this.visibleType = dynamic ? ValueType.DYNAMIC : ValueType.MAP;
         set(o);
     }
 
@@ -127,18 +77,6 @@ public class Value {
      * @param a Initial JSON array to set.
      */
     public Value(JsonArray a) {
-        this(a, false);
-    }
-
-    /**
-     * Creates a value with an initial type of a JSON array. If the value is
-     * dynamic then the value can be set to anything.
-     *
-     * @param a Initial JSON array to set.
-     * @param dynamic Whether the value is dynamic or not.
-     */
-    public Value(JsonArray a, boolean dynamic) {
-        this.visibleType = dynamic ? ValueType.DYNAMIC : ValueType.ARRAY;
         set(a);
     }
 
@@ -148,18 +86,6 @@ public class Value {
      * @param e Initial enumerations to set.
      */
     public Value(Set<String> e) {
-        this(e, false);
-    }
-
-    /**
-     * Creates a value with an initial type of an enum. If the value is dynamic
-     * then the value can later be set to anything.
-     *
-     * @param e Initial enumerations to set.
-     * @param dynamic Whether the value is dynamic or not.
-     */
-    public Value(Set<String> e, boolean dynamic) {
-        this.visibleType = dynamic ? ValueType.DYNAMIC : ValueType.ENUM;
         set(e);
     }
 
@@ -206,14 +132,6 @@ public class Value {
     }
 
     /**
-     * Converts the value into a dynamic type.
-     */
-    public void setDynamic() {
-        checkImmutable();
-        visibleType = ValueType.DYNAMIC;
-    }
-
-    /**
      * Sets the value to the new value and type. However immutability is
      * checked. If this value is declared as immutable, an exception will be
      * thrown.
@@ -229,11 +147,7 @@ public class Value {
     private void set(ValueType type, Number n, Boolean b, String s,
                      JsonArray a, JsonObject o, Set<String> e) {
         checkImmutable();
-        if (!(visibleType == ValueType.DYNAMIC
-                || internalType == null || internalType == type)) {
-            throw new RuntimeException("Value is not dynamic");
-        }
-        this.internalType = type;
+        this.type = type;
         synchronized (LOCK) {
             this.ts = FORMAT.format(new Date()) + TIMEZONE;
         }
@@ -247,34 +161,12 @@ public class Value {
     }
 
     /**
-     * Getting the type will allow you use to use the recommended getter
-     * that this value is used for.
+     * Gets the internal type of the value.
      *
      * @return Type of the value
      */
-    @Deprecated
     public ValueType getType() {
-        return getInternalType();
-    }
-
-    /**
-     * Retrieves the real type of the value that should be exposed to the
-     * outside world.
-     *
-     * @return The real type of the value.
-     */
-    public ValueType getVisibleType() {
-        return visibleType;
-    }
-
-    /**
-     * Retrieves the internal type of the value that the value is currently
-     * holding. The internal type can never be {@link ValueType#DYNAMIC}.
-     *
-     * @return The internal type of the value.
-     */
-    public ValueType getInternalType() {
-        return internalType;
+        return type;
     }
 
     /**
@@ -354,7 +246,7 @@ public class Value {
 
     @Override
     public String toString() {
-        switch (internalType) {
+        switch (type) {
             case NUMBER:
                 return number.toString();
             case BOOL:
@@ -368,7 +260,7 @@ public class Value {
             case ENUM:
                 return "enum[" + StringUtils.join(enums, ",") + "]";
             default:
-                throw new RuntimeException("Unhandled type: " + internalType);
+                throw new RuntimeException("Unhandled type: " + type);
         }
     }
 
@@ -377,8 +269,8 @@ public class Value {
         boolean equal = false;
         if (o instanceof Value) {
             Value value = (Value) o;
-            if (value.getInternalType().equals(getInternalType())) {
-                switch (value.getInternalType()) {
+            if (value.getType().equals(getType())) {
+                switch (getType()) {
                     case NUMBER:
                         equal = objectEquals(number, value.number);
                         break;
@@ -399,13 +291,9 @@ public class Value {
                         equal = objectEquals(enums, value.enums);
                         break;
                     default:
-                        String err = "Bad internal type: " + getInternalType();
+                        String err = "Bad type: " + getType();
                         throw new RuntimeException(err);
                 }
-            }
-
-            if (equal) {
-                equal = value.getVisibleType() == getVisibleType();
             }
         }
         return equal;
@@ -413,8 +301,8 @@ public class Value {
 
     @Override
     public int hashCode() {
-        int result = getInternalType().hashCode();
-        result = 31 * result + (getVisibleType().hashCode());
+        int result = getType().hashCode();
+        result = 31 * result + (getType().hashCode());
         result = 31 * result + (getNumber() != null ? getNumber().hashCode() : 0);
         result = 31 * result + (getBool() != null ? getBool().hashCode() : 0);
         result = 31 * result + (getString() != null ? getString().hashCode() : 0);
