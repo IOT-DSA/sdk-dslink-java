@@ -91,7 +91,7 @@ public final class ValueType {
      * @param type Type to convert
      * @return Converted type
      */
-    public static ValueType toEnum(String type) {
+    public static ValueType toValueType(String type) {
         switch (type) {
             case JSON_NUMBER:
                 return NUMBER;

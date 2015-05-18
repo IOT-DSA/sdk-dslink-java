@@ -121,7 +121,7 @@ public class ListResponse implements Response {
                 String string = (String) v;
                 node.setWritable(Writable.toEnum(string));
             } else if ("type".equals(name)) {
-                ValueType type = ValueType.toEnum((String) v);
+                ValueType type = ValueType.toValueType((String) v);
                 node.setValueType(type);
             } else {
                 node.setConfig(name, ValueUtils.toValue(v));
@@ -180,7 +180,7 @@ public class ListResponse implements Response {
 
             String type = childData.getString("$type");
             if (type != null) {
-                ValueType t = ValueType.toEnum(type);
+                ValueType t = ValueType.toValueType(type);
                 if (builder != null) {
                     builder.setValueType(t);
                 } else {
@@ -424,7 +424,7 @@ public class ListResponse implements Response {
             JsonObject data = (JsonObject) anArray;
             String name = data.getString("name");
             String type = data.getString("type");
-            ValueType valType = ValueType.toEnum(type);
+            ValueType valType = ValueType.toValueType(type);
             Parameter param = new Parameter(name, valType);
             if (isCol) {
                 act.addResult(param);

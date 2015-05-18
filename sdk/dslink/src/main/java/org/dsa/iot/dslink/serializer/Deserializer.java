@@ -43,7 +43,7 @@ public class Deserializer {
     private void deserializeNode(Node node, Map<String, Object> map) {
         final String type = (String) map.get("$type");
         if (type != null) {
-            ValueType t = ValueType.toEnum(type);
+            ValueType t = ValueType.toValueType(type);
             node.setValueType(t);
         }
         for (Map.Entry<String, Object> entry : map.entrySet()) {
