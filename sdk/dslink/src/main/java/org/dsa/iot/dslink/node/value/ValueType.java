@@ -2,10 +2,7 @@ package org.dsa.iot.dslink.node.value;
 
 import org.dsa.iot.dslink.util.StringUtils;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Type of the value
@@ -109,7 +106,12 @@ public final class ValueType {
                 return DYNAMIC;
             default:
                 if (type.startsWith(JSON_ENUM + "[") && type.endsWith("]")) {
-                    return new ValueType(JSON_ENUM, type);
+                    type = type.substring(JSON_ENUM.length() + 1);
+                    type = type.substring(0, type.length() - 1);
+                    String[] split = type.split(",");
+                    List<String> list = Arrays.asList(split);
+                    Set<String> enums = new LinkedHashSet<>(list);
+                    return new ValueType(enums);
                 }
                 throw new RuntimeException("Unknown type: " + type);
         }
