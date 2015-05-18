@@ -82,6 +82,7 @@ public class Values {
         builder.setValueType(ValueType.makeEnum("a", "b", "c"));
         {
             builder.setValue(new Value("a"));
+            builder.setWritable(Writable.WRITE);
             builder.getListener().setValueHandler(new Handler<ValuePair>() {
                 @Override
                 public void handle(ValuePair event) {
@@ -91,6 +92,7 @@ public class Values {
                 }
             });
         }
+        builder.build();
     }
 
     static {

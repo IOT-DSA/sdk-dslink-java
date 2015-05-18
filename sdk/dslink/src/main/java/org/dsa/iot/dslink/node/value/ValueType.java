@@ -109,7 +109,7 @@ public final class ValueType {
                 return DYNAMIC;
             default:
                 if (type.startsWith(JSON_ENUM + "[") && type.endsWith("]")) {
-                    return new ValueType(type);
+                    return new ValueType(JSON_ENUM, type);
                 }
                 throw new RuntimeException("Unknown type: " + type);
         }
