@@ -2,6 +2,9 @@ package org.dsa.iot.dslink.node.value;
 
 import org.dsa.iot.dslink.util.StringUtils;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
@@ -28,23 +31,60 @@ public final class ValueType {
     public static final ValueType ARRAY = new ValueType(JSON_ARRAY);
     public static final ValueType TIME = new ValueType(JSON_TIME);
     public static final ValueType DYNAMIC = new ValueType(JSON_DYNAMIC);
+    public static final ValueType ENUM = new ValueType(JSON_ENUM);
 
-    private final String jsonName;
+    private final String rawName;
+    private final String builtName;
+    private final Set<String> enums;
 
     private ValueType(String jsonName) {
-        this.jsonName = jsonName;
+        this(jsonName, jsonName);
+    }
+
+    private ValueType(String rawName, String builtName) {
+        this.rawName = rawName;
+        this.builtName = builtName;
+        this.enums = null;
+    }
+
+    private ValueType(Set<String> enums) {
+        this.rawName = JSON_ENUM;
+        this.builtName = "enum[" + StringUtils.join(enums, ",") + "]";
+        this.enums = enums;
     }
 
     /**
      * @return Type of value that is suitable for JSON consumption.
      */
     public String toJsonString() {
-        return jsonName;
+        return builtName;
+    }
+
+    /**
+     * Compares whether the 2 raw JSON types are equal or not. This is
+     * necessary when comparing if a type is an enum or not.
+     *
+     * @param other Other type to compare
+     * @return Whether the JSON types are equal or not.
+     */
+    public boolean compare(ValueType other) {
+        return this == other || this.rawName.equals(other.rawName);
+    }
+
+    /**
+     * @return The enums this value type represents
+     */
+    public Set<String> getEnums() {
+        return enums != null ? Collections.unmodifiableSet(enums) : null;
+    }
+
+    public static ValueType makeEnum(String... enums) {
+        Set<String> e = new LinkedHashSet<>(Arrays.asList(enums));
+        return makeEnum(e);
     }
 
     public static ValueType makeEnum(Set<String> enums) {
-        String built = "enum[" + StringUtils.join(enums, ",") + "]";
-        return new ValueType(built);
+        return new ValueType(enums);
     }
 
     /**

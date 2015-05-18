@@ -248,11 +248,22 @@ public class Node {
             if (type == null) {
                 String err = "Value type not set on node (" + getPath() + ")";
                 throw new RuntimeException(err);
-            } else if (type != ValueType.DYNAMIC &&
-                        !(value == null || type == value.getType())) {
-                String err = "Expected value type ";
-                err += "'" + type + "' ";
-                err += "got '" + value.getType() + "'";
+            } else if (type.compare(ValueType.ENUM)) {
+                if (!value.getType().compare(ValueType.STRING)) {
+                    String err = "[" + getPath() + "] ";
+                    err += "Node has enum value type, value must be string";
+                    throw new RuntimeException(err);
+                } else if (!type.getEnums().contains(value.getString())) {
+                    String err = "[" + getPath() + "] ";
+                    err += "New value does not contain a valid enum value";
+                    throw new RuntimeException(err);
+                }
+            } else if (!type.compare(ValueType.DYNAMIC)
+                        && !(value == null || type == value.getType())) {
+                String err = "[" + getPath() + "] ";
+                err += "Expected value type ";
+                err += "'" + type.toJsonString() + "' ";
+                err += "got '" + value.getType().toJsonString() + "'";
                 throw new RuntimeException(err);
             }
 

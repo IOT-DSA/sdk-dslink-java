@@ -77,6 +77,20 @@ public class Values {
             });
         }
         builder.build();
+
+        builder = parent.createChild("writable_enum");
+        builder.setValueType(ValueType.makeEnum("a", "b", "c"));
+        {
+            builder.setValue(new Value("a"));
+            builder.getListener().setValueHandler(new Handler<ValuePair>() {
+                @Override
+                public void handle(ValuePair event) {
+                    String from = event.getPrevious().toString();
+                    String to = event.getCurrent().toString();
+                    LOGGER.info("Writable enum value changed from `{}` to `{}`", from, to);
+                }
+            });
+        }
     }
 
     static {
