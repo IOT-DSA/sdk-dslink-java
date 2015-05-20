@@ -3,12 +3,14 @@ package org.dsa.iot.dslink.config;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
+import com.beust.jcommander.Parameters;
 
 /**
  * Command line arguments to be parsed.
  *
  * @author Samuel Grenier
  */
+@Parameters(separators = "= ")
 public class Arguments {
 
     @Parameter(names = { "--broker", "-b" },
