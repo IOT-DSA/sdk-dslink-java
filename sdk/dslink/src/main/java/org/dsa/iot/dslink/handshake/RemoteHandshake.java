@@ -27,6 +27,7 @@ public class RemoteHandshake {
     private final String httpUri;
     private final String salt;
     private String saltS;
+    private String saltL;
     private final int updateInterval;
 
     /**
@@ -44,6 +45,7 @@ public class RemoteHandshake {
         this.httpUri = in.getString("httpUri");
         this.salt = in.getString("salt");
         this.saltS = in.getString("saltS");
+        this.saltL = in.getString("saltL");
 
         Number ui = in.getNumber("updateInterval");
         if (ui != null) {
@@ -100,6 +102,13 @@ public class RemoteHandshake {
      */
     public String getSaltS() {
         return saltS;
+    }
+
+    /**
+     * @return The salt used in long polling.
+     */
+    public String getSaltL() {
+        return saltL;
     }
 
     /**
