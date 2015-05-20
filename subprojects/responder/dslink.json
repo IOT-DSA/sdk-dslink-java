@@ -7,9 +7,7 @@
     "name": "Samuel Grenier",
     "email": "samrg472@gmail.com"
   },
-  "engines": {
-    "java": ">=1.7.0"
-  },
+  "main": "bin/responder",
   "repository": {
     "type": "git",
     "url": "https://github.com/IOT-DSA/sdk-dslink-java"
