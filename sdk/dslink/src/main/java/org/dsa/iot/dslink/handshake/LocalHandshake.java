@@ -78,6 +78,7 @@ public class LocalHandshake {
         }
         obj.putBoolean("isRequester", isRequester);
         obj.putBoolean("isResponder", isResponder);
+        obj.putString("version", "1.0.1");
         return obj;
     }
 }

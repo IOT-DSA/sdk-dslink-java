@@ -7,6 +7,7 @@ import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.http.HttpClient;
 import org.vertx.java.core.http.WebSocket;
+import org.vertx.java.core.json.JsonObject;
 
 /**
  * Handles connecting to web socket servers.
@@ -39,9 +40,21 @@ public class WebSocketConnector extends RemoteEndpoint {
                     webSocket.exceptionHandler(onException);
                 }
 
-                Handler<Buffer> onData = getOnData();
+                final Handler<JsonObject> onData = getOnData();
                 if (onData != null) {
-                    webSocket.dataHandler(onData);
+                    webSocket.dataHandler(new Handler<Buffer>() {
+                        @Override
+                        public void handle(Buffer event) {
+                            String data = event.toString("UTF-8");
+                            JsonObject obj = new JsonObject(data);
+                            if (obj.containsField("ping")) {
+                                String pong = data.replaceFirst("i", "o");
+                                webSocket.writeTextFrame(pong);
+                                return;
+                            }
+                            onData.handle(obj);
+                        }
+                    });
                 }
 
                 webSocket.endHandler(new Handler<Void>() {

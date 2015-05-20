@@ -1,7 +1,7 @@
 package org.dsa.iot.dslink.connection;
 
 import org.vertx.java.core.Handler;
-import org.vertx.java.core.buffer.Buffer;
+import org.vertx.java.core.json.JsonObject;
 
 /**
  * Handles network clients on vertx events.
@@ -13,7 +13,7 @@ class NetworkHandlers {
     private Handler<Void> onConnected;
     private Handler<Void> onDisconnected;
     private Handler<Throwable> onException;
-    private Handler<Buffer> onData;
+    private Handler<JsonObject> onData;
 
     public Handler<Void> getOnConnected() {
         return onConnected;
@@ -39,11 +39,11 @@ class NetworkHandlers {
         this.onException = onException;
     }
 
-    public Handler<Buffer> getOnData() {
+    public Handler<JsonObject> getOnData() {
         return onData;
     }
 
-    public void setOnData(Handler<Buffer> onData) {
+    public void setOnData(Handler<JsonObject> onData) {
         this.onData = onData;
     }
 }

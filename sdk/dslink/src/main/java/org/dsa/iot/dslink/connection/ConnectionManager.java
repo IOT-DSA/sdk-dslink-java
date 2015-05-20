@@ -9,7 +9,7 @@ import org.dsa.iot.dslink.util.URLInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
-import org.vertx.java.core.buffer.Buffer;
+import org.vertx.java.core.json.JsonObject;
 
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -127,9 +127,9 @@ public class ConnectionManager {
                             }
                         });
 
-                        connector.setOnData(new Handler<Buffer>() {
+                        connector.setOnData(new Handler<JsonObject>() {
                             @Override
-                            public void handle(Buffer event) {
+                            public void handle(JsonObject event) {
                                 getHandler().processData(event);
                             }
                         });

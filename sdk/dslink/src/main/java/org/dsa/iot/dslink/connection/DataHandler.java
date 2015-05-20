@@ -3,7 +3,6 @@ package org.dsa.iot.dslink.connection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
-import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
@@ -46,11 +45,9 @@ public class DataHandler {
     /**
      * Processes incoming data from a remote endpoint.
      *
-     * @param buffer Buffer to process
+     * @param obj JSON object to process.
      */
-    public void processData(Buffer buffer) {
-        String string = buffer.toString("UTF-8");
-        JsonObject obj = new JsonObject(string);
+    public void processData(JsonObject obj) {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Received data: {}", obj.encode());
         }
