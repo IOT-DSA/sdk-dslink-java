@@ -100,7 +100,10 @@ public class Action {
         if (parameter == null) {
             throw new NullPointerException("parameter");
         } else if (parameter.getDefault() != null) {
-            String err = "parameter cannot contain a default value in a result";
+            String err = "Parameter cannot contain a default value in a result";
+            throw new IllegalStateException(err);
+        } else if (parameter.getEditorType() != null) {
+            String err = "Parameter cannot contain an editor type";
             throw new IllegalStateException(err);
         }
         JsonObject result = paramToJson(parameter);
@@ -181,6 +184,12 @@ public class Action {
         if (defVal != null) {
             ValueUtils.toJson(obj, "default", defVal);
         }
+
+        EditorType type = param.getEditorType();
+        if (type != null) {
+            obj.putString("editor", type.toJsonString());
+        }
+
         return obj;
     }
 

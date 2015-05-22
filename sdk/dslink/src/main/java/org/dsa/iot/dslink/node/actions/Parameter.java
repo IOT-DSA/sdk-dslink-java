@@ -11,6 +11,7 @@ public class Parameter {
     private final String name;
     private final ValueType type;
     private final Value defVal;
+    private EditorType editorType;
 
     public Parameter(String name, ValueType type) {
         this(name, type, null);
@@ -31,6 +32,26 @@ public class Parameter {
         this.name = name;
         this.type = type;
         this.defVal = def;
+    }
+
+    /**
+     * Sets the editor type of the parameter, used for parameters in an
+     * action.
+     *
+     * @param type Editor type to set.
+     */
+    public void setEditorType(EditorType type) {
+        if (!this.type.compare(ValueType.STRING)) {
+            throw new RuntimeException("Parameter must be of type string");
+        }
+        this.editorType = type;
+    }
+
+    /**
+     * @return Editor type this parameter uses.
+     */
+    public EditorType getEditorType() {
+        return editorType;
     }
 
     /**
