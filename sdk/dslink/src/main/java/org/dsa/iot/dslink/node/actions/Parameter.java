@@ -39,12 +39,14 @@ public class Parameter {
      * action.
      *
      * @param type Editor type to set.
+     * @return This object for daisy chaining.
      */
-    public void setEditorType(EditorType type) {
+    public Parameter setEditorType(EditorType type) {
         if (!this.type.compare(ValueType.STRING)) {
             throw new RuntimeException("Parameter must be of type string");
         }
         this.editorType = type;
+        return this;
     }
 
     /**
