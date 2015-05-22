@@ -2,19 +2,12 @@ package org.dsa.iot.dslink.util;
 
 import ch.qos.logback.classic.Level;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
 /**
  * @author Samuel Grenier
  */
 public class LogManagerTest {
-
-    @Before
-    public void setup() {
-        // Coverage
-        new LogManager();
-    }
 
     @Test
     public void logLevelSetting() {

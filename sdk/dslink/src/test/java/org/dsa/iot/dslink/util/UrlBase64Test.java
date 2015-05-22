@@ -1,7 +1,6 @@
 package org.dsa.iot.dslink.util;
 
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -10,12 +9,6 @@ import org.junit.Test;
  * @author Samuel Grenier
  */
 public class UrlBase64Test {
-
-    @Before
-    public void setup() {
-        // Coverage
-        new UrlBase64();
-    }
 
     /**
      * Ensures that there is no padding during the encoding process.

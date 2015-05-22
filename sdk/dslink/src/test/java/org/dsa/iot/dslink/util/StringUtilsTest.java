@@ -1,7 +1,6 @@
 package org.dsa.iot.dslink.util;
 
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.util.HashSet;
@@ -12,12 +11,6 @@ import java.util.Set;
  * @author Samuel Grenier
  */
 public class StringUtilsTest {
-
-    @Before
-    public void setup() {
-        // Coverage
-        new StringUtils();
-    }
 
     @Test
     public void filter() {
