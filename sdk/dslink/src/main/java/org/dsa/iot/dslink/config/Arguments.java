@@ -19,6 +19,21 @@ public class Arguments {
                 required = true)
     private String broker;
 
+    @Parameter(names = { "--nodes", "-n" },
+                description = "Sets the path for the serialized nodes",
+                arity = 1)
+    private String nodes;
+
+    @Parameter(names = { "--key", "-k" },
+                description = "Sets the path for the stored key",
+                arity = 1)
+    private String key;
+
+    @Parameter(names = { "--log", "-l"},
+                description = "Sets the log level",
+                arity = 1)
+    private String log;
+
     @Parameter(names = { "--dslink-json", "-d" },
                 description = "Sets the location of the dslink.json file",
                 arity = 1)
@@ -40,12 +55,39 @@ public class Arguments {
     }
 
     /**
-     * Overrides the broker host configured in the dslink.json file
+     * Overrides the broker host configured in the dslink.json file.
      *
-     * @return Broker host
+     * @return Broker host.
      */
     public String getBrokerHost() {
         return broker;
+    }
+
+    /**
+     * Overrides the nodes path configured in the dslink.json file.
+     *
+     * @return Nodes path.
+     */
+    public String getNodesPath() {
+        return nodes;
+    }
+
+    /**
+     * Overrides the key path configured in the dslink.json file.
+     *
+     * @return Key path.
+     */
+    public String getKeyPath() {
+        return key;
+    }
+
+    /**
+     * Overrides the log level configured in the dslink.json file.
+     *
+     * @return Log level.
+     */
+    public String getLogLevel() {
+        return log;
     }
 
     /**

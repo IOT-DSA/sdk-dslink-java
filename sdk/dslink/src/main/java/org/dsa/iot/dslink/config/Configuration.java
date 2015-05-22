@@ -240,29 +240,11 @@ public class Configuration {
             return null;
         }
 
-        File dslinkJson = new File(parsed.getDslinkJson());
-
-        String logLevel;
-        String brokerHost;
-        String keyPath;
-        String nodePath;
-
-        try {
-            byte[] read = FileUtils.readAllBytes(dslinkJson);
-            String content = new String(read, "UTF-8");
-            JsonObject json = new JsonObject(content);
-            if (!json.containsField("configs")) {
-                throw new RuntimeException("Missing `configs` field");
-            } else {
-                JsonObject configs = json.getObject("configs");
-                logLevel = checkParam(configs, "log");
-                brokerHost = parsed.getBrokerHost();
-                keyPath = checkParam(configs, "key");
-                nodePath = checkParam(configs, "nodes");
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        JsonObject json = getAndValidateJson(parsed.getDslinkJson());
+        String logLevel = getFieldValue(parsed.getLogLevel(), json, "log");
+        String brokerHost = parsed.getBrokerHost();
+        String keyPath = getFieldValue(parsed.getKeyPath(), json, "key");
+        String nodePath = getFieldValue(parsed.getNodesPath(), json, "nodes");
 
         LogManager.configure();
         LogManager.setLevel(logLevel);
@@ -276,14 +258,48 @@ public class Configuration {
         return defaults;
     }
 
-    private static String checkParam(JsonObject configs, String param) {
+    private static JsonObject getAndValidateJson(String jsonPath) {
+        try {
+            byte[] read = FileUtils.readAllBytes(new File(jsonPath));
+            String content = new String(read, "UTF-8");
+            JsonObject json = new JsonObject(content);
+            if (!json.containsField("configs")) {
+                throw new RuntimeException("Missing `configs` field");
+            } else {
+                JsonObject configs = json.getObject("configs");
+                checkField(configs, "broker");
+                checkParam(configs, "log");
+                checkParam(configs, "key");
+                checkParam(configs, "nodes");
+                return configs;
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static String getFieldValue(String argsVal,
+                                        JsonObject json,
+                                        String field) {
+        if (argsVal == null) {
+            JsonObject param = json.getObject(field);
+            return param.getString("default");
+        }
+        return argsVal;
+    }
+
+    private static void checkField(JsonObject configs, String name) {
+        if (!configs.containsField(name)) {
+            throw new RuntimeException("Missing config field of " + name);
+        }
+    }
+
+    private static void checkParam(JsonObject configs, String param) {
         JsonObject conf = configs.getObject(param);
-        String value;
         if (conf == null) {
             throw new RuntimeException("Missing config field of " + param);
-        } else if ((value = conf.getString("value")) == null) {
-            throw new RuntimeException("Missing value in config of " + param);
+        } else if (conf.getString("default") == null) {
+            throw new RuntimeException("Missing default value in config of " + param);
         }
-        return value;
     }
 }
