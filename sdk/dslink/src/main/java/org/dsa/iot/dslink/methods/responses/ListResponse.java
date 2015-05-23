@@ -4,10 +4,7 @@ import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.methods.Response;
 import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.node.*;
-import org.dsa.iot.dslink.node.actions.Action;
-import org.dsa.iot.dslink.node.actions.ActionResult;
-import org.dsa.iot.dslink.node.actions.Parameter;
-import org.dsa.iot.dslink.node.actions.ResultType;
+import org.dsa.iot.dslink.node.actions.*;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.node.value.ValueUtils;
@@ -429,6 +426,10 @@ public class ListResponse implements Response {
             if (isCol) {
                 act.addResult(param);
             } else {
+                String editor = data.getString("editor");
+                if (editor != null) {
+                    param.setEditorType(EditorType.make(editor));
+                }
                 act.addParameter(param);
             }
         }
