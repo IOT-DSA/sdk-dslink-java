@@ -107,6 +107,7 @@ public class Requester extends DSLinkHandler {
             @Override
             public void handle(InvokeResponse event) {
                 LOGGER.info("Successfully invoked the responder action");
+                LOGGER.info("Received response: " + event.getResults().encode());
             }
         });
     }

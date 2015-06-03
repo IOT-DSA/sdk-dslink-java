@@ -40,6 +40,10 @@ public class InvokeResponse implements Response {
         results = in.getArray("updates");
     }
 
+    public JsonArray getResults() {
+        return results;
+    }
+
     @Override
     public JsonObject getJsonResponse(final JsonObject in) {
         final Action action = node.getAction();
