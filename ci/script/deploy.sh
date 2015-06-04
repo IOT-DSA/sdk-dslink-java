@@ -12,6 +12,7 @@ else
     if [ -z "$PASS" ]; then
         echo "Passowrd is empty"
     fi
+    echo 'Deploying to maven'
     ./gradlew "-Psigning.secretKeyRingFile=$PWD/$LOC" \
                 "-Psigning.keyId=$ID" \
                 "-Psigning.password=$KEY_PASS" \
