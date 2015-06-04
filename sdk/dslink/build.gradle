@@ -1,14 +1,7 @@
-apply plugin: 'signing'
 apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
-group = 'org.iot-dsa'
-
-ext {
-    if (!project.hasProperty("ossrhUsername"))
-        ossrhUsername = ""
-    if (!project.hasProperty("ossrhPassword"))
-        ossrhPassword = ""
-}
+group = 'com.datapath.maxview.org.iot-dsa'
 
 repositories {
     mavenLocal()
@@ -37,52 +30,41 @@ artifacts {
     archives javadocJar
 }
 
-signing {
-    required { gradle.taskGraph.hasTask("uploadArchives") }
-    sign configurations.archives
-}
-
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-
-            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2") {
-                authentication(userName: ossrhUsername, password: ossrhPassword)
+publishing {
+   repositories {
+       maven {
+            credentials {
+                username mavenUser
+                password mavenPassword
             }
+            name 'snapshots'
+            url 'http://dpd-app04:8082/artifactory/libs-snapshots-local'
+       }
+       mavenLocal()
+   }
 
-            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots") {
-                authentication(userName: ossrhUsername, password: ossrhPassword)
-            }
+   publications {
+       mavenJava(MavenPublication){
+           artifactId 'dslink'
 
-            pom.project {
-                name = 'DSLink SDK'
-                packaging = 'jar'
-                artifactId = 'dslink'
-                description = 'SDK for the IoT DSA protocol'
-                url = 'http://iot-dsa.org'
+           artifact sourcesJar {
+               classifier "sources"
+           }
 
-                scm {
-                    connection = 'scm:git:https://github.com/IOT-DSA/sdk-dslink-java.git'
-                    developerConnection = 'scm:git:git@github.com:IOT-DSA/sdk-dslink-java.git'
-                    url = 'https://github.com/IOT-DSA/sdk-dslink-java'
-                }
+           artifact javadocJar {
+               classifier "javadoc"
+           }
 
-                licenses {
-                    license {
-                        name = 'The Apache License, Version 2.0'
-                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                    }
-                }
+           pom.withXml {
+               asNode().appendNode('description',
+'MaxView fork of SDK for the IoT DSA protocol. \
+Built from https://github.com/buzz3791/sdk-dslink-java/commit/.  \
+Forked with workaround for a ClassCastException  org.slf4j.impl.Log4jLoggerAdapter cannot be cast to ch.qos.logback.classic.Logger')
 
-                developers {
-                    developer {
-                        id = 'samrg472'
-                        name = 'Samuel Grenier'
-                        email = 'samrg472@gmail.com'
-                    }
-                }
-            }
-        }
-    }
+           }
+           
+           from components.java
+       }
+   }
+
 }
