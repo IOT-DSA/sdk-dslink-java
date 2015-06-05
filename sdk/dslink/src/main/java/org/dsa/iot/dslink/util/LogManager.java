@@ -6,9 +6,6 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.ConsoleAppender;
-
-import java.util.concurrent.atomic.AtomicReference;
-
 import org.slf4j.LoggerFactory;
 
 /**
@@ -18,51 +15,42 @@ import org.slf4j.LoggerFactory;
  */
 public class LogManager {
 
-	private static final LogManager DEFAULT_LOG_MANAGER = createDefaultLogManager();
-	
-    private static LogManager createDefaultLogManager() {
-    	LogManager defaultLogManager = new LogManager();
-    	return defaultLogManager ;
-    }
-    
-	/** 
-	 * Use the {@link #setInstance(LogManager)} method to
-	 * customize the active LogManager implementation.
-	 */
-    private final static AtomicReference<LogManager> refLogManagerImpl = new AtomicReference<>(DEFAULT_LOG_MANAGER);
-	
     /**
-     * <p>
+     * Use the {@link #setInstance(LogManager)} method to
+     * customize the active LogManager implementation.
+     */
+    private static volatile LogManager instance = new LogManager();
+
+    /**
+     * <p/>
      * Replace the "default" LogManager implementation
      * with a custom implementation.
-     * 
-     * <p>
+     * <p/>
+     * <p/>
      * Useful if the app container running sdk-dslink-java
      * is using an Simple Logging Facade for Java (SLF4J)
      * backend other than logback.
-     * 
-     * @param customLogManager In-parameter, a LogManager instance. 
+     *
+     * @param customLogManager In-parameter, a LogManager instance.
      */
-	public static void setInstance( LogManager customLogManager ) {
-		
-		if (null==customLogManager) {
-			throw new IllegalArgumentException("attempt to set null customLogManager");
-		}
-		
-		refLogManagerImpl.set(customLogManager);
-    }	
-	
-    public static void setLevel(String level) {
-    	LogManager custom = refLogManagerImpl.get();
-    	custom.doSetLevel(level);
+    @SuppressWarnings("unused")
+    public static void setInstance(LogManager customLogManager) {
+        if (customLogManager == null) {
+            throw new NullPointerException("customLogManager");
+        }
+
+        instance = customLogManager;
     }
 
-	/**
+    public static void setLevel(String level) {
+        instance.doSetLevel(level);
+    }
+
+    /**
      * Configures the root logger with a different layout.
      */
     public static void configure() {
-    	LogManager custom = refLogManagerImpl.get();    	
-		custom.doConfigure();
+        instance.doConfigure();
     }
 
     /**
@@ -71,37 +59,36 @@ public class LogManager {
      * @param level Level to set
      */
     public static void setLevel(Level level) {
-    	LogManager custom = refLogManagerImpl.get();    	
-    	custom.doSetLevel(level);
+        instance.doSetLevel(level);
     }
 
-	/**
+    /**
      * Retrieves the root logging level, which may also be the global
      * root level.
      *
      * @return Root logger level
      */
     public static Level getLevel() {
-    	LogManager custom = refLogManagerImpl.get();
-    	return custom.doGetLevel();
+        return instance.doGetLevel();
     }
 
     private static Logger getLogger() {
-    	LogManager custom = refLogManagerImpl.get();
-    	return custom.doGetLogger();
+        return instance.doGetLogger();
     }
 
     /**
      * Protected to allow sub-classes to call the constructor but don't
      * permit outsiders to construct LogManager instances.
      */
-    protected LogManager() {}
-    
+    protected LogManager() {
+    }
+
     // Method implementations for the "Default" LogManager
-    
-	protected void doSetLevel(String level) {
-        if (level == null)
+
+    protected void doSetLevel(String level) {
+        if (level == null) {
             throw new NullPointerException("level");
+        }
         level = level.toLowerCase();
         switch (level) {
             case "none":
@@ -127,7 +114,7 @@ public class LogManager {
         }
 
     }
-    
+
     protected void doConfigure() {
         Logger logger = getLogger();
         LoggerContext loggerContext = logger.getLoggerContext();
@@ -146,17 +133,17 @@ public class LogManager {
         logger.addAppender(appender);
     }
 
-	protected void doSetLevel(Level level) {
+    protected void doSetLevel(Level level) {
         if (level == null)
             throw new NullPointerException("level");
         getLogger().setLevel(level);
     }
-    
-    protected Level doGetLevel() {  
-    	return getLogger().getLevel(); 
+
+    protected Level doGetLevel() {
+        return getLogger().getLevel();
     }
-	
-    protected Logger doGetLogger() { 
-    	return (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME); 
-    }	
+
+    protected Logger doGetLogger() {
+        return (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+    }
 }
