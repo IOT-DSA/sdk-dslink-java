@@ -22,24 +22,18 @@ public class LogManager {
     private static volatile LogManager instance = new LogManager();
 
     /**
-     * <p/>
-     * Replace the "default" LogManager implementation
-     * with a custom implementation.
-     * <p/>
-     * <p/>
-     * Useful if the app container running sdk-dslink-java
-     * is using an Simple Logging Facade for Java (SLF4J)
-     * backend other than logback.
+     * Replaces the default log manager with a custom log manager. This
+     * allows for use with custom slf4j back ends.
      *
-     * @param customLogManager In-parameter, a LogManager instance.
+     * @param logManager Custom log manager to set.
      */
     @SuppressWarnings("unused")
-    public static void setInstance(LogManager customLogManager) {
-        if (customLogManager == null) {
-            throw new NullPointerException("customLogManager");
+    public static void setInstance(LogManager logManager) {
+        if (logManager == null) {
+            throw new NullPointerException("logManager");
         }
 
-        instance = customLogManager;
+        instance = logManager;
     }
 
     public static void setLevel(String level) {
