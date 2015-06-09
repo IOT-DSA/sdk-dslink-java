@@ -2,9 +2,9 @@ package org.dsa.iot.dslink.config;
 
 import org.dsa.iot.dslink.connection.ConnectionType;
 import org.dsa.iot.dslink.handshake.LocalKeys;
+import org.dsa.iot.dslink.util.FileUtils;
 import org.dsa.iot.dslink.util.LogManager;
 import org.dsa.iot.dslink.util.URLInfo;
-import org.dsa.iot.dslink.util.io.FileUtils;
 import org.vertx.java.core.json.JsonObject;
 
 import java.io.File;

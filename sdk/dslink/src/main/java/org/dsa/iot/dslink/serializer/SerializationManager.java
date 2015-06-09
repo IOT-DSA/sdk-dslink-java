@@ -1,16 +1,14 @@
 package org.dsa.iot.dslink.serializer;
 
 import org.dsa.iot.dslink.node.NodeManager;
+import org.dsa.iot.dslink.util.FileUtils;
 import org.dsa.iot.dslink.util.Objects;
-import org.dsa.iot.dslink.util.io.FileCluster;
-import org.dsa.iot.dslink.util.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.json.JsonObject;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -25,7 +23,7 @@ public class SerializationManager {
     private static final Logger LOGGER;
 
     private final File file;
-    private final FileCluster backup;
+    private final File backup;
 
     private final Deserializer deserializer;
     private final Serializer serializer;
@@ -38,8 +36,8 @@ public class SerializationManager {
      * @param manager Manager to deserialize/serialize
      */
     public SerializationManager(File file, NodeManager manager) {
-        this.file = file.getAbsoluteFile();
-        this.backup = new FileCluster(file.getPath() + ".bak", 5);
+        this.file = file;
+        this.backup = new File(file.getPath() + ".bak");
         this.deserializer = new Deserializer(manager);
         this.serializer = new Serializer(manager);
     }
@@ -71,11 +69,8 @@ public class SerializationManager {
         JsonObject json = serializer.serialize();
         try {
             if (file.exists()) {
-                File dest = backup.move(file);
-                if (LOGGER.isDebugEnabled()) {
-                    String debug = "Copied Serialized data to backup [{}]";
-                    LOGGER.debug(debug, dest.getPath());
-                }
+                FileUtils.copy(file, backup);
+                LOGGER.debug("Copying serialized data to a backup");
                 if (file.delete()) {
                     LOGGER.debug("Serialized data removed");
                 }
@@ -84,9 +79,13 @@ public class SerializationManager {
             byte[] bytes = out.getBytes("UTF-8");
             FileUtils.write(file, bytes);
 
+            if (backup.delete()) {
+                LOGGER.debug("Backup data removed");
+            }
+
             if (LOGGER.isDebugEnabled()) {
                 out = json.encode();
-                LOGGER.debug("Wrote serialized data: {}", out);
+                LOGGER.debug("Wrote serialized data: " + out);
             }
         } catch (IOException e) {
             LOGGER.error("Failed to save serialized data", e);
@@ -101,16 +100,14 @@ public class SerializationManager {
             byte[] bytes = null;
             if (file.exists()) {
                 bytes = FileUtils.readAllBytes(file);
-            } else {
-                Map.Entry<File, byte[]> data = backup.read();
-                if (data != null) {
-                    bytes = data.getValue();
+            } else if (backup.exists()) {
+                bytes = FileUtils.readAllBytes(backup);
+            }
+            if (backup.delete()) {
+                if (bytes != null) {
                     FileUtils.write(file, bytes);
-                    if (LOGGER.isDebugEnabled()) {
-                        String path = data.getKey().getPath();
-                        LOGGER.debug("Restored backup data from {}", path);
-                    }
                 }
+                LOGGER.debug("Moved backup data to regular data for deserialization");
             }
 
             if (bytes != null) {
@@ -118,7 +115,7 @@ public class SerializationManager {
                 JsonObject obj = new JsonObject(in);
                 if (LOGGER.isDebugEnabled()) {
                     in = obj.encode();
-                    LOGGER.debug("Read serialized data: {}", in);
+                    LOGGER.debug("Read serialized data: " + in);
                 }
                 deserializer.deserialize(obj);
             }

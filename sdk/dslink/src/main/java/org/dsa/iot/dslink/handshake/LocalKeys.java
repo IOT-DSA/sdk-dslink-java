@@ -14,8 +14,8 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.jce.spec.ECNamedCurveSpec;
 import org.bouncycastle.math.ec.ECCurve;
 import org.bouncycastle.math.ec.ECPoint;
+import org.dsa.iot.dslink.util.FileUtils;
 import org.dsa.iot.dslink.util.UrlBase64;
-import org.dsa.iot.dslink.util.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
