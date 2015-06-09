@@ -69,19 +69,19 @@ public class SerializationManager {
         JsonObject json = serializer.serialize();
         try {
             if (file.exists()) {
-                FileUtils.copy(file, backup);
-                LOGGER.debug("Copying serialized data to a backup");
-                if (file.delete()) {
-                    LOGGER.debug("Serialized data removed");
+                if (backup.exists()) {
+                    if (!backup.delete()) {
+                        LOGGER.error("Failed to remove backup data");
+                    }
                 }
+                if (!file.renameTo(backup)) {
+                    LOGGER.error("Failed to create backup data");
+                }
+                LOGGER.debug("Copying serialized data to a backup");
             }
             String out = json.encodePrettily();
             byte[] bytes = out.getBytes("UTF-8");
             FileUtils.write(file, bytes);
-
-            if (backup.delete()) {
-                LOGGER.debug("Backup data removed");
-            }
 
             if (LOGGER.isDebugEnabled()) {
                 out = json.encode();
@@ -102,12 +102,8 @@ public class SerializationManager {
                 bytes = FileUtils.readAllBytes(file);
             } else if (backup.exists()) {
                 bytes = FileUtils.readAllBytes(backup);
-            }
-            if (backup.delete()) {
-                if (bytes != null) {
-                    FileUtils.write(file, bytes);
-                }
-                LOGGER.debug("Moved backup data to regular data for deserialization");
+                FileUtils.write(file, bytes);
+                LOGGER.debug("Restored backup data");
             }
 
             if (bytes != null) {
