@@ -1,5 +1,6 @@
 package org.dsa.iot.dslink.util;
 
+import org.dsa.iot.dslink.util.io.FileUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

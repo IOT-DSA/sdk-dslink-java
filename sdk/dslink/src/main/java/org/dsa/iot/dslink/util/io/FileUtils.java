@@ -1,4 +1,4 @@
-package org.dsa.iot.dslink.util;
+package org.dsa.iot.dslink.util.io;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
