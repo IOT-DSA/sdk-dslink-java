@@ -594,11 +594,12 @@ public class Node {
      */
     public Value removeAttribute(String name) {
         synchronized (attributeLock) {
-            Value ret = attribs != null ? attribs.get(name) : null;
+            Value ret = attribs != null ? attribs.remove(name) : null;
             if (ret != null) {
                 ValueUpdate update = new ValueUpdate(name, ret, true);
                 listener.postAttributeUpdate(update);
             }
+
             return ret;
         }
     }
