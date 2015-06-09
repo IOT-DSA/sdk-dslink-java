@@ -432,10 +432,14 @@ public class Node {
             if (link != null) {
                 manager = link.getSubscriptionManager();
             }
-            if (child != null && manager != null) {
-                manager.postChildUpdate(child, true);
-                manager.removeValueSub(child);
-                manager.removePathSub(child);
+
+            if (child != null) {
+                child.getListener().kill();
+                if (manager != null) {
+                    manager.postChildUpdate(child, true);
+                    manager.removeValueSub(child);
+                    manager.removePathSub(child);
+                }
             }
             return child;
         }

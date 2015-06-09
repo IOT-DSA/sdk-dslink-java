@@ -158,6 +158,18 @@ public class NodeListener {
         }
     }
 
+    /**
+     * Removes all handlers
+     */
+    public void kill() {
+        setValueHandler(null);
+        setOnSubscribeHandler(null);
+        setOnUnsubscribeHandler(null);
+        setOnListHandler(null);
+        setAttributeHandler(null);
+        setConfigHandler(null);
+    }
+
     public static class ValueUpdate {
 
         private final String name;
