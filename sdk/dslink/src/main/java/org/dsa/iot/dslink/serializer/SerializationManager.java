@@ -88,7 +88,7 @@ public class SerializationManager {
                 LOGGER.debug("Wrote serialized data: " + out);
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            LOGGER.error("Failed to save serialized data", e);
         }
     }
 
