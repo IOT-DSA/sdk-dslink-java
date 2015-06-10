@@ -72,8 +72,32 @@ public class ListResponse implements Response {
         JsonArray updates = in.getArray("updates");
         if (updates != null) {
             for (Object obj : updates) {
-                update((JsonArray) obj);
+                if (obj instanceof JsonObject) {
+                    update((JsonObject) obj);
+                } else {
+                    update((JsonArray) obj);
+                }
             }
+        }
+    }
+
+    private void update(JsonObject in) {
+        String name = in.getString("name");
+        String change = in.getString("change");
+        if (change != null) {
+            if ("remove".equals(change)) {
+                if (name.startsWith("$$")) {
+                    node.removeRoConfig(name.substring(2));
+                } else if (name.startsWith("$")) {
+                    node.removeConfig(name.substring(1));
+                } else if (name.startsWith("@")) {
+                    node.removeAttribute(name.substring(1));
+                } else {
+                    throw new RuntimeException("Unhandled update: " + in.encodePrettily());
+                }
+            }
+        } else {
+            throw new RuntimeException("Unhandled update: " + in.encodePrettily());
         }
     }
 
