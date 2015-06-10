@@ -3,6 +3,7 @@ package org.dsa.iot.dslink.connection.connector;
 import org.dsa.iot.dslink.connection.DataHandler;
 import org.dsa.iot.dslink.connection.RemoteEndpoint;
 import org.dsa.iot.dslink.util.HttpClientUtils;
+import org.dsa.iot.dslink.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
@@ -10,6 +11,9 @@ import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.http.HttpClient;
 import org.vertx.java.core.http.WebSocket;
 import org.vertx.java.core.json.JsonObject;
+
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Handles connecting to web socket servers.
@@ -19,6 +23,9 @@ import org.vertx.java.core.json.JsonObject;
 public class WebSocketConnector extends RemoteEndpoint {
 
     private static final Logger LOGGER;
+
+    private ScheduledFuture<?> pingHandler;
+    private long lastSentMessage;
     private WebSocket webSocket;
 
     public WebSocketConnector(DataHandler handler) {
@@ -32,6 +39,7 @@ public class WebSocketConnector extends RemoteEndpoint {
             @Override
             public void handle(final WebSocket webSocket) {
                 WebSocketConnector.this.webSocket = webSocket;
+                setupPingHandler();
 
                 Handler<Void> onConnected = getOnConnected();
                 if (onConnected != null) {
@@ -52,7 +60,7 @@ public class WebSocketConnector extends RemoteEndpoint {
                             JsonObject obj = new JsonObject(data);
                             if (obj.containsField("ping")) {
                                 String pong = data.replaceFirst("i", "o");
-                                webSocket.writeTextFrame(pong);
+                                write(pong);
                                 if (LOGGER.isDebugEnabled()) {
                                     String s = "Received ping, sending pong: {}";
                                     LOGGER.debug(s, pong);
@@ -71,7 +79,7 @@ public class WebSocketConnector extends RemoteEndpoint {
                         if (onDisconnected != null) {
                             onDisconnected.handle(event);
                         }
-                        WebSocketConnector.this.webSocket = null;
+                        close();
                     }
                 });
 
@@ -84,10 +92,18 @@ public class WebSocketConnector extends RemoteEndpoint {
         if (webSocket != null) {
             try {
                 webSocket.close();
-            } catch (IllegalStateException ignored) {
+            } catch (Exception ignored) {
             }
 
             webSocket = null;
+        }
+
+        if (pingHandler != null) {
+            try {
+                pingHandler.cancel(false);
+            } catch (Exception ignored) {
+            }
+            pingHandler = null;
         }
     }
 
@@ -95,11 +111,31 @@ public class WebSocketConnector extends RemoteEndpoint {
     public void write(String data) {
         checkConnected();
         webSocket.writeTextFrame(data);
+        lastSentMessage = System.currentTimeMillis();
     }
 
     @Override
     public boolean isConnected() {
         return webSocket != null;
+    }
+
+    private void setupPingHandler() {
+        if (pingHandler != null) {
+            pingHandler.cancel(false);
+        }
+
+        pingHandler = Objects.getDaemonThreadPool().scheduleWithFixedDelay(new Runnable() {
+            @Override
+            public void run() {
+                if (System.currentTimeMillis() - lastSentMessage >= 29000) {
+                    try {
+                        webSocket.writeTextFrame("{}");
+                        LOGGER.debug("Sent ping");
+                    } catch (Exception ignored) {
+                    }
+                }
+            }
+        }, 30, 30, TimeUnit.SECONDS);
     }
 
     private void checkConnected() {
