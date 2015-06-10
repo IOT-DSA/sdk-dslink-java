@@ -64,12 +64,18 @@ public class Requester extends Linkable {
         reqs = new ConcurrentHashMap<>();
     }
 
+    @SuppressWarnings("unused")
     public Map<String, Integer> getSubscriptionPaths() {
         return Collections.unmodifiableMap(subPaths);
     }
 
     public Map<Integer, String> getSubscriptionIDs() {
         return Collections.unmodifiableMap(subSids);
+    }
+
+    @SuppressWarnings("unused")
+    public boolean isSubscribed(String path) {
+        return subPaths.containsKey(path);
     }
 
     public Map<Integer, Handler<SubscriptionValue>> getSubscriptionHandlers() {
