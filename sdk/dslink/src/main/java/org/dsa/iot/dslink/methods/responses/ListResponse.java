@@ -120,6 +120,8 @@ public class ListResponse implements Response {
             } else if ("type".equals(name)) {
                 ValueType type = ValueType.toValueType((String) v);
                 node.setValueType(type);
+            } else if ("name".equals(name)) {
+                node.setDisplayName((String) v);
             } else {
                 node.setConfig(name, ValueUtils.toValue(v));
             }
