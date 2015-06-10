@@ -3,6 +3,8 @@ package org.dsa.iot.dslink.connection.connector;
 import org.dsa.iot.dslink.connection.DataHandler;
 import org.dsa.iot.dslink.connection.RemoteEndpoint;
 import org.dsa.iot.dslink.util.HttpClientUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.http.HttpClient;
@@ -16,6 +18,7 @@ import org.vertx.java.core.json.JsonObject;
  */
 public class WebSocketConnector extends RemoteEndpoint {
 
+    private static final Logger LOGGER;
     private WebSocket webSocket;
 
     public WebSocketConnector(DataHandler handler) {
@@ -50,6 +53,10 @@ public class WebSocketConnector extends RemoteEndpoint {
                             if (obj.containsField("ping")) {
                                 String pong = data.replaceFirst("i", "o");
                                 webSocket.writeTextFrame(pong);
+                                if (LOGGER.isDebugEnabled()) {
+                                    String s = "Received ping, sending pong: {}";
+                                    LOGGER.debug(s, pong);
+                                }
                                 return;
                             }
                             onData.handle(obj);
@@ -99,5 +106,9 @@ public class WebSocketConnector extends RemoteEndpoint {
         if (webSocket == null) {
             throw new RuntimeException("Cannot write to unconnected connection");
         }
+    }
+
+    static {
+        LOGGER = LoggerFactory.getLogger(WebSocketConnector.class);
     }
 }
