@@ -22,7 +22,9 @@ public class Value {
 
     private ValueType type;
     private boolean immutable;
-    private String ts;
+
+    private Date tsDate;
+    private String tsFormatted;
 
     private Number number;
     private Boolean bool;
@@ -127,15 +129,21 @@ public class Value {
                      JsonArray a, JsonObject o) {
         checkImmutable();
         this.type = type;
-        synchronized (LOCK) {
-            this.ts = FORMAT.format(new Date()) + TIMEZONE;
-        }
+        setTime(System.currentTimeMillis());
 
         this.number = n;
         this.bool = b;
         this.string = s;
         this.array = a != null ? a.copy() : null;
         this.map = o != null ? o.copy() : null;
+    }
+
+    public void setTime(long ms) {
+        checkImmutable();
+        synchronized (LOCK) {
+            this.tsDate = new Date(ms);
+            this.tsFormatted = FORMAT.format(getDate()) + TIMEZONE;
+        }
     }
 
     /**
@@ -148,13 +156,22 @@ public class Value {
     }
 
     /**
-     * Time stamp is always updates when the value is created or updated
+     * Time stamp is always updated when the value is created or updated
      * with a new value.
      *
-     * @return The time this value was set
+     * @return The formatted time this value was set or created.
      */
     public String getTimeStamp() {
-        return ts;
+        return tsFormatted;
+    }
+
+    /**
+     * Time stamp is always
+     *
+     * @return The raw date this value was set or created.
+     */
+    public Date getDate() {
+        return new Date(tsDate.getTime());
     }
 
     /**
