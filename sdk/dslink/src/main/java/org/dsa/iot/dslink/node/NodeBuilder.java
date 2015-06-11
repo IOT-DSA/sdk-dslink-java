@@ -7,6 +7,7 @@ import org.dsa.iot.dslink.node.value.ValueType;
 /**
  * @author Samuel Grenier
  */
+@SuppressWarnings("unused")
 public class NodeBuilder {
 
     private final Node parent;
@@ -54,16 +55,6 @@ public class NodeBuilder {
 
     public NodeBuilder setAttribute(String name, Value value) {
         child.setAttribute(name, value);
-        return this;
-    }
-
-    public NodeBuilder setMixins(String mixins) {
-        child.setMixins(mixins);
-        return this;
-    }
-
-    public NodeBuilder addMixin(String name) {
-        child.addMixin(name);
         return this;
     }
 

@@ -28,7 +28,6 @@ public class Node {
     private final Object interfaceLock = new Object();
     private final Object childrenLock = new Object();
     private final Object passwordLock = new Object();
-    private final Object mixinLock = new Object();
     private final Object valueLock = new Object();
 
     private final WeakReference<Node> parent;
@@ -50,7 +49,6 @@ public class Node {
 
     private String displayName;
     private String profile;
-    private Set<String> mixins;
     private Set<String> interfaces;
     private Action action;
     private char[] pass;
@@ -164,45 +162,6 @@ public class Node {
         this.listener = listener;
     }
 
-    public void addMixin(String mixin) {
-        synchronized (mixinLock) {
-            if (mixin == null) {
-                throw new NullPointerException("mixin");
-            } else if (mixins == null) {
-                mixins = new HashSet<>();
-            }
-            mixins.add(mixin);
-        }
-    }
-
-    public void removeMixin(String mixin) {
-        synchronized (mixinLock) {
-            if (mixin == null) {
-                throw new NullPointerException("mixin");
-            } else if (mixins != null) {
-                mixins.remove(mixin);
-            }
-        }
-    }
-
-    public void setMixins(String mixin) {
-        synchronized (mixinLock) {
-            if (mixin == null) {
-                throw new NullPointerException("mixin");
-            } else if (mixins == null) {
-                mixins = new HashSet<>();
-            }
-            String[] split = mixin.split("\\|");
-            Collections.addAll(mixins, split);
-        }
-    }
-
-    public Set<String> getMixins() {
-        synchronized (mixinLock) {
-            return mixins != null ? new HashSet<>(mixins) : null;
-        }
-    }
-
     public void addInterface(String _interface) {
         synchronized (interfaceLock) {
             if (_interface == null) {
@@ -214,6 +173,7 @@ public class Node {
         }
     }
 
+    @SuppressWarnings("unused")
     public void removeInterface(String _interface) {
         synchronized (interfaceLock) {
             if (_interface == null) {
@@ -330,6 +290,7 @@ public class Node {
     /**
      * Clears the children in the node.
      */
+    @SuppressWarnings("unused")
     public void clearChildren() {
         synchronized (childrenLock) {
             if (children != null) {
@@ -502,7 +463,6 @@ public class Node {
                 case "columns":
                 case "name":
                 case "is":
-                case "mixin":
                 case "invokable":
                 case "interface":
                 case "permission":
@@ -550,6 +510,7 @@ public class Node {
      * @param name Name of the configuration.
      * @return The value of the configuration name, if any.
      */
+    @SuppressWarnings("unused")
     public Value getRoConfig(String name) {
         synchronized (roConfigLock) {
             return roConfigs != null ? roConfigs.get(name) : null;
@@ -710,6 +671,7 @@ public class Node {
      *
      * @param serializable Whether this node can be serialized.
      */
+    @SuppressWarnings("unused")
     public void setSerializable(boolean serializable) {
         this.serializable = serializable;
     }

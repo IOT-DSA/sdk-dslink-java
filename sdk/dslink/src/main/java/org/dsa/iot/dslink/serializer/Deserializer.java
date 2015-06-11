@@ -56,8 +56,6 @@ public class Deserializer {
                 node.setProfile((String) value);
             } else if ("$interface".equals(name)) {
                 node.setInterfaces((String) value);
-            } else if ("$mixin".equals(name)) {
-                node.setMixins((String) value);
             } else if ("$name".equals(name)) {
                 node.setDisplayName((String) value);
             } else if ("$writable".equals(name)) {

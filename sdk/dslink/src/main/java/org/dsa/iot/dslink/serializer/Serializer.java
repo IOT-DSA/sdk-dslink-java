@@ -50,11 +50,6 @@ public class Serializer {
             out.putString("$interface", StringUtils.join(set, "|"));
         }
 
-        set = parent.getMixins();
-        if (set != null && set.size() > 0) {
-            out.putString("$mixin", StringUtils.join(set, "|"));
-        }
-
         String profile = parent.getProfile();
         if (profile != null) {
             out.putString("$is", profile);

@@ -118,8 +118,6 @@ public class ListResponse implements Response {
             name = name.substring(1);
             if ("is".equals(name)) {
                 node.setProfile((String) v);
-            } else if ("mixin".equals(name)) {
-                node.setMixins((String) v);
             } else if ("interface".equals(name)) {
                 node.setInterfaces((String) v);
             } else if ("invokable".equals(name)) {
@@ -172,15 +170,6 @@ public class ListResponse implements Response {
             if (child == null) {
                 builder = node.createChild(name);
                 builder.setProfile(is);
-            }
-
-            String mixin = childData.getString("$mixin");
-            if (mixin != null) {
-                if (builder != null) {
-                    builder.setMixins(mixin);
-                } else {
-                    child.setMixins(mixin);
-                }
             }
 
             String _interface = childData.getString("$interface");
@@ -257,14 +246,6 @@ public class ListResponse implements Response {
                 String err = "Profile not set on node: "
                             + node.getPath();
                 throw new RuntimeException(err);
-            }
-
-            Set<String> mixins = node.getMixins();
-            if (mixins != null && mixins.size() > 0) {
-                JsonArray update = new JsonArray();
-                update.addString("$mixin");
-                update.addString(StringUtils.join(mixins, "|"));
-                updates.addArray(update);
             }
 
             Set<String> interfaces = node.getInterfaces();
@@ -419,15 +400,9 @@ public class ListResponse implements Response {
                 childData.putString("$result", jsonName);
             }
 
-            Set<String> mixins = child.getMixins();
-            if (mixins != null) {
-                String mixin = StringUtils.join(mixins, "|");
-                childData.putString("$mixin", mixin);
-            }
-
             Set<String> interfaces = child.getInterfaces();
             if (interfaces != null) {
-                String _interface = StringUtils.join(mixins, "|");
+                String _interface = StringUtils.join(interfaces, "|");
                 childData.putString("$interface", _interface);
             }
 
