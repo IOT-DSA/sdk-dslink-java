@@ -21,6 +21,17 @@ public class NodeTest {
         Assert.assertNull(node.getDisplayName());
     }
 
+    @Test
+    public void profileTest() {
+        Node node = new Node("Test", null, null);
+        node = node.createChild("test", "test").build();
+        Assert.assertEquals("test", node.getProfile());
+
+        node = new Node("Test", null, null);
+        node.setProfile("test");
+        Assert.assertEquals("test", node.getProfile());
+    }
+
     /**
      * Ensures that the node can build its node properly
      */

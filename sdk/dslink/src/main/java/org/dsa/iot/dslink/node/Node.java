@@ -77,7 +77,6 @@ public class Node {
                 this.name = "";
             }
         }
-        setProfile(profile);
     }
 
     /**
@@ -361,7 +360,9 @@ public class Node {
                 manager = link.getSubscriptionManager();
             }
 
-            node.setProfile(profile);
+            if (node.getProfile() == null) {
+                node.setProfile(profile);
+            }
             children.put(name, node);
             if (manager != null) {
                 manager.postChildUpdate(node, false);
