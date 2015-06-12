@@ -186,7 +186,8 @@ public class RNG {
                 event.setUpdates(updates);
             }
         });
-        act.addParameter(new Parameter("count", ValueType.NUMBER, new Value(1)));
+        act.addParameter(new Parameter("count", ValueType.NUMBER, new Value(1))
+                            .setDescription("How many RNGs to add"));
         act.addResult(new Parameter("count", ValueType.NUMBER));
         return act;
     }
@@ -209,7 +210,8 @@ public class RNG {
                 event.setUpdates(updates);
             }
         });
-        act.addParameter(new Parameter("count", ValueType.NUMBER, new Value(1)));
+        act.addParameter(new Parameter("count", ValueType.NUMBER, new Value(1))
+                            .setDescription("How many RNGs to remove"));
         act.addResult(new Parameter("count", ValueType.NUMBER));
         return act;
     }

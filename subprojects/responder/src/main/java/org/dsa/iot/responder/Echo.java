@@ -20,12 +20,38 @@ import java.util.Set;
 public class Echo {
 
     public static void init(Node superRoot) {
-        NodeBuilder builder = superRoot.createChild("echo");
-        builder.setAction(getEchoAction());
-        builder.build();
+        {
+            NodeBuilder builder = superRoot.createChild("echoEnum");
+            builder.setAction(getEchoEnumAction());
+            builder.build();
+        }
+
+        {
+            NodeBuilder builder = superRoot.createChild("echoText");
+            builder.setAction(getEchoTextAction());
+            builder.build();
+        }
     }
 
-    private static Action getEchoAction() {
+    private static Action getEchoTextAction() {
+        Action a = new Action(Permission.READ, new Handler<ActionResult>() {
+            @Override
+            public void handle(ActionResult event) {
+                JsonArray updates = new JsonArray();
+                JsonArray update = new JsonArray();
+                update.addString(event.getParameter("text", new Value("")).getString());
+                updates.addArray(update);
+                event.setUpdates(updates);
+            }
+        });
+        a.addParameter(new Parameter("text", ValueType.STRING)
+                        .setDescription("Text to echo")
+                        .setPlaceHolder("Hello world!"));
+        a.addResult(new Parameter("echo", ValueType.STRING));
+        return a;
+    }
+
+    private static Action getEchoEnumAction() {
         Action a = new Action(Permission.READ, new Handler<ActionResult>() {
             @Override
             public void handle(ActionResult event) {
@@ -40,7 +66,8 @@ public class Echo {
         enums.add("A");
         enums.add("B");
         enums.add("C");
-        a.addParameter(new Parameter("type", ValueType.makeEnum(enums)));
+        a.addParameter(new Parameter("type", ValueType.makeEnum(enums))
+                        .setDescription("Enumeration string to echo"));
         a.addResult(new Parameter("echo", ValueType.STRING));
         return a;
     }

@@ -211,6 +211,16 @@ public class Action {
             obj.putString("editor", type.toJsonString());
         }
 
+        String description = param.getDescription();
+        if (description != null) {
+            obj.putString("description", description);
+        }
+
+        String placeHolder = param.getPlaceHolder();
+        if (placeHolder != null) {
+            obj.putString("placeholder", placeHolder);
+        }
+
         return obj;
     }
 

@@ -11,7 +11,10 @@ public class Parameter {
     private final String name;
     private final ValueType type;
     private final Value defVal;
+
     private EditorType editorType;
+    private String description;
+    private String placeHolder;
 
     public Parameter(String name, ValueType type) {
         this(name, type, null);
@@ -54,6 +57,44 @@ public class Parameter {
      */
     public EditorType getEditorType() {
         return editorType;
+    }
+
+    /**
+     * Sets the description of the parameter. Displayed to the user when
+     * the parameter is hovered over.
+     *
+     * @param description Description of the parameter.
+     * @return This object for daisy chaining.
+     */
+    public Parameter setDescription(String description) {
+        this.description = description;
+        return this;
+    }
+
+    /**
+     * @return The description of the parameter.
+     */
+    public String getDescription() {
+        return description;
+    }
+
+    /**
+     * Sets the place holder over the parameter. Displayed to the user in the
+     * field box.
+     *
+     * @param placeHolder Place holder of the parameter.
+     * @return This object for daisy chaining.
+     */
+    public Parameter setPlaceHolder(String placeHolder) {
+        this.placeHolder = placeHolder;
+        return this;
+    }
+
+    /**
+     * @return The place holder of the parameter.
+     */
+    public String getPlaceHolder() {
+        return placeHolder;
     }
 
     /**
