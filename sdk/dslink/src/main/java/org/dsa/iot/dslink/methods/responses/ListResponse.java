@@ -282,7 +282,9 @@ public class ListResponse implements Response {
 
             // Action
             Action action = node.getAction();
-            if (action != null && action.hasPermission()) {
+            if (action != null
+                    && !action.isHidden()
+                    && action.hasPermission()) {
                 JsonArray update = new JsonArray();
                 update.addString("$invokable");
                 update.addString(action.getPermission().getJsonName());

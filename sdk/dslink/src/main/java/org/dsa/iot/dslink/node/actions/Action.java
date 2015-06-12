@@ -19,6 +19,7 @@ public class Action {
 
     private Permission permission;
     private ResultType resultType;
+    private boolean hidden;
 
     private final Handler<ActionResult> handler;
     private final InvokeMode mode;
@@ -50,6 +51,17 @@ public class Action {
         this.permission = permission;
         this.handler = handler;
         this.mode = mode;
+    }
+
+    /**
+     * Used to the action as hidden from DSA. This allows the creation of
+     * action profiles
+     *
+     * @param hidden Whether to hide the action or not.
+     */
+    @SuppressWarnings("unused")
+    public void setHidden(boolean hidden) {
+        this.hidden = hidden;
     }
 
     /**
@@ -134,6 +146,15 @@ public class Action {
     }
 
     /**
+     * Hidden actions are used for action profiles.
+     *
+     * @return Whether the action is hidden or not.
+     */
+    public boolean isHidden() {
+        return hidden;
+    }
+
+    /**
      * @return Whether the user has permission to invoke
      */
     public boolean hasPermission() {
@@ -141,17 +162,17 @@ public class Action {
     }
 
     /**
-     * @return The result type this invocation returns.
-     */
-    public ResultType getResultType() {
-        return resultType;
-    }
-
-    /**
      * @return Permission level of this action.
      */
     public Permission getPermission() {
         return permission;
+    }
+
+    /**
+     * @return The result type this invocation returns.
+     */
+    public ResultType getResultType() {
+        return resultType;
     }
 
     /**
