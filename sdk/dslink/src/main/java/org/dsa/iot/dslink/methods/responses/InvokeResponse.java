@@ -65,7 +65,7 @@ public class InvokeResponse implements Response {
 
                     InvokeResponse.this.results = actionResult.getUpdates();
                     JsonArray cols = actionResult.getColumns();
-                    if (cols == null) {
+                    if (!action.isHidden() && cols == null) {
                         cols = action.getColumns();
                     }
 
@@ -74,7 +74,10 @@ public class InvokeResponse implements Response {
                     out.putNumber("rid", rid);
                     out.putString("stream", state.getJsonName());
 
-                    out.putArray("columns", cols);
+                    if (cols != null) {
+                        out.putArray("columns", cols);
+                    }
+
                     out.putArray("updates", InvokeResponse.this.results);
 
                     link.getWriter().writeResponse(out);
