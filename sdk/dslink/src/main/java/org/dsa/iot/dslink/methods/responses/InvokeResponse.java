@@ -64,20 +64,11 @@ public class InvokeResponse implements Response {
                     action.invoke(actionResult);
 
                     InvokeResponse.this.results = actionResult.getUpdates();
-                    JsonArray cols = actionResult.getColumns();
-                    if (!action.isHidden() && cols == null) {
-                        cols = action.getColumns();
-                    }
-
                     StreamState state = actionResult.getStreamState();
                     JsonObject out = new JsonObject();
                     out.putNumber("rid", rid);
                     out.putString("stream", state.getJsonName());
-
-                    if (cols != null) {
-                        out.putArray("columns", cols);
-                    }
-
+                    processColumns(action, out);
                     out.putArray("updates", InvokeResponse.this.results);
 
                     link.getWriter().writeResponse(out);
@@ -92,11 +83,7 @@ public class InvokeResponse implements Response {
             this.results = actionResult.getUpdates();
             streamState = actionResult.getStreamState();
 
-            JsonArray cols = actionResult.getColumns();
-            if (cols == null) {
-                cols = action.getColumns();
-            }
-            out.putArray("columns", cols);
+            processColumns(action, out);
             out.putArray("updates", this.results);
         } else {
             throw new RuntimeException("Action has invalid mode: " + mode);
@@ -119,5 +106,15 @@ public class InvokeResponse implements Response {
         obj.putNumber("rid", rid);
         obj.putString("stream", StreamState.CLOSED.getJsonName());
         return obj;
+    }
+
+    private void processColumns(Action act, JsonObject obj) {
+        JsonArray cols = actionResult.getColumns();
+        if (!act.isHidden() && cols == null) {
+            cols = act.getColumns();
+        }
+        if (cols != null) {
+            obj.putArray("columns", cols);
+        }
     }
 }
