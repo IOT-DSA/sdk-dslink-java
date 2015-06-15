@@ -18,7 +18,7 @@ import java.util.*;
 public class Node {
 
     static final String[] BANNED_CHARS = new String[] {
-            ".", "/", "\\", "?", "%", "*", ":", "|", "<", ">", "$", "@"
+            ".", "/", "\\", "?", "*", ":", "|", "<", ">", "$", "@"
     };
 
     private final Object roConfigLock = new Object();
