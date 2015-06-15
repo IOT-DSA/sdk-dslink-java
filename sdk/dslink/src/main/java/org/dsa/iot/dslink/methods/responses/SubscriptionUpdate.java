@@ -6,6 +6,7 @@ import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.value.SubscriptionValue;
 import org.dsa.iot.dslink.node.value.Value;
+import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
@@ -82,10 +83,14 @@ public class SubscriptionUpdate implements Response {
                 Node node = manager.getNode(path, true).getNode();
                 {
                     Value val = value.getValue();
-                    if (node.getValueType() == null) {
-                        node.setValueType(val.getType());
+                    ValueType type = node.getValueType();
+                    if (type == null && val != null) {
+                        type = val.getType();
+                        node.setValueType(type);
                     }
-                    node.setValue(val);
+                    if (type != null) {
+                        node.setValue(val);
+                    }
                 }
                 Handler<SubscriptionValue> handler = handlers.get(rid);
                 if (handler != null) {
