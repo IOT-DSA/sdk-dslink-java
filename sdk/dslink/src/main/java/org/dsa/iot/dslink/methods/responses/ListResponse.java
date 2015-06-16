@@ -228,14 +228,6 @@ public class ListResponse implements Response {
         JsonArray updates = new JsonArray();
         {
             // Special configurations
-            String name = node.getDisplayName();
-            if (name != null) {
-                JsonArray update = new JsonArray();
-                update.addString("$name");
-                update.addString(name);
-                updates.addArray(update);
-            }
-
             String profile = node.getProfile();
             if (profile != null) {
                 JsonArray update = new JsonArray();
@@ -244,79 +236,89 @@ public class ListResponse implements Response {
                 updates.addArray(update);
             } else {
                 String err = "Profile not set on node: "
-                            + node.getPath();
+                        + node.getPath();
                 throw new RuntimeException(err);
             }
 
-            Set<String> interfaces = node.getInterfaces();
-            if (interfaces != null && interfaces.size() > 0) {
-                JsonArray update = new JsonArray();
-                update.addString("$interface");
-                update.addString(StringUtils.join(interfaces, "|"));
-                updates.addArray(update);
-            }
+            if (node.isVisible()) {
+                String name = node.getDisplayName();
+                if (name != null) {
+                    JsonArray update = new JsonArray();
+                    update.addString("$name");
+                    update.addString(name);
+                    updates.addArray(update);
+                }
 
-            ValueType type = node.getValueType();
-            if (type != null) {
-                JsonArray update = new JsonArray();
-                update.addString("$type");
-                update.addString(type.toJsonString());
-                updates.addArray(update);
-            }
+                Set<String> interfaces = node.getInterfaces();
+                if (interfaces != null && interfaces.size() > 0) {
+                    JsonArray update = new JsonArray();
+                    update.addString("$interface");
+                    update.addString(StringUtils.join(interfaces, "|"));
+                    updates.addArray(update);
+                }
 
-            char[] password = node.getPassword();
-            if (password != null) {
-                JsonArray update = new JsonArray();
-                update.addString("$$password");
-                update.addString(null);
-                updates.addArray(update);
-            }
+                ValueType type = node.getValueType();
+                if (type != null) {
+                    JsonArray update = new JsonArray();
+                    update.addString("$type");
+                    update.addString(type.toJsonString());
+                    updates.addArray(update);
+                }
 
-            Writable writable = node.getWritable();
-            if (!(writable == null || writable == Writable.NEVER)) {
-                JsonArray update = new JsonArray();
-                update.addString("$writable");
-                update.addString(writable.toJsonName());
-                updates.addArray(update);
-            }
+                char[] password = node.getPassword();
+                if (password != null) {
+                    JsonArray update = new JsonArray();
+                    update.addString("$$password");
+                    update.addString(null);
+                    updates.addArray(update);
+                }
 
-            // Action
-            Action action = node.getAction();
-            if (action != null
-                    && !action.isHidden()
-                    && action.hasPermission()) {
-                JsonArray update = new JsonArray();
-                update.addString("$invokable");
-                update.addString(action.getPermission().getJsonName());
-                updates.addArray(update);
+                Writable writable = node.getWritable();
+                if (!(writable == null || writable == Writable.NEVER)) {
+                    JsonArray update = new JsonArray();
+                    update.addString("$writable");
+                    update.addString(writable.toJsonName());
+                    updates.addArray(update);
+                }
 
-                update = new JsonArray();
-                update.addString("$params");
-                update.addArray(action.getParams());
-                updates.addArray(update);
+                // Action
+                Action action = node.getAction();
+                if (action != null
+                        && !action.isHidden()
+                        && action.hasPermission()) {
+                    JsonArray update = new JsonArray();
+                    update.addString("$invokable");
+                    update.addString(action.getPermission().getJsonName());
+                    updates.addArray(update);
 
-                update = new JsonArray();
-                update.addString("$columns");
-                update.addArray(action.getColumns());
-                updates.addArray(update);
+                    update = new JsonArray();
+                    update.addString("$params");
+                    update.addArray(action.getParams());
+                    updates.addArray(update);
 
-                update = new JsonArray();
-                update.addString("$result");
-                update.addString(action.getResultType().getJsonName());
-                updates.addArray(update);
-            }
+                    update = new JsonArray();
+                    update.addString("$columns");
+                    update.addArray(action.getColumns());
+                    updates.addArray(update);
 
-            // Attributes and configurations
-            add("$$", updates, node.getRoConfigurations());
-            add("$", updates, node.getConfigurations());
-            add("@", updates, node.getAttributes());
+                    update = new JsonArray();
+                    update.addString("$result");
+                    update.addString(action.getResultType().getJsonName());
+                    updates.addArray(update);
+                }
 
-            // Children
-            Map<String, Node> children = node.getChildren();
-            if (children != null) {
-                for (Node child : children.values()) {
-                    JsonElement update = getChildUpdate(child, false);
-                    updates.addElement(update);
+                // Attributes and configurations
+                add("$$", updates, node.getRoConfigurations());
+                add("$", updates, node.getConfigurations());
+                add("@", updates, node.getAttributes());
+
+                // Children
+                Map<String, Node> children = node.getChildren();
+                if (children != null) {
+                    for (Node child : children.values()) {
+                        JsonElement update = getChildUpdate(child, false);
+                        updates.addElement(update);
+                    }
                 }
             }
         }

@@ -22,6 +22,22 @@ public class NodeTest {
     }
 
     @Test
+    public void visibilityTest() {
+        NodeManager manager = new NodeManager(null, "node");
+        Node node = manager.createRootNode("Test").build();
+        NodeBuilder builder = node.createChild("a");
+        builder.setVisible(false);
+        node = builder.build(false);
+        Assert.assertFalse(node.isVisible());
+
+        node = manager.getNode("/Test/a").getNode();
+        Assert.assertFalse(node.isVisible());
+
+        node = manager.getNode("/Test/a", true).getNode();
+        Assert.assertTrue(node.isVisible());
+    }
+
+    @Test
     public void profileTest() {
         Node node = new Node("Test", null, null);
         node = node.createChild("test", "test").build();

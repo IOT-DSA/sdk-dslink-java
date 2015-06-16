@@ -57,30 +57,37 @@ public class NodeManager {
         if (parts.length == 1 && StringUtils.isReference(parts[0])) {
             return new NodePair(superRoot, parts[0]);
         }
-        Node current = superRoot.getChild(parts[0]);
-        if (create && current == null) {
-            NodeBuilder b = superRoot.createChild(Node.checkName(parts[0]));
-            b.setProfile(defaultProfile);
-            current = b.build();
-        }
+
+        Node temp = superRoot.getChild(parts[0]);
+        Node current = handleBuilding(create, superRoot, temp, parts[0]);
         for (int i = 1; i < parts.length; i++) {
             if (current == null) {
                 break;
             } else if (i + 1 == parts.length && StringUtils.isReference(parts[i])) {
                 return new NodePair(current, parts[i]);
             } else {
-                Node temp = current.getChild(parts[i]);
-                if (create && temp == null) {
-                    NodeBuilder b = current.createChild(Node.checkName(parts[i]));
-                    b.setProfile(defaultProfile);
-                    temp = b.build();
-                }
-                current = temp;
+                temp = current.getChild(parts[i]);
+                current = handleBuilding(create, current, temp, parts[i]);
             }
         }
+
         if (current == null)
             throw new NoSuchPathException(path);
         return new NodePair(current, null);
+    }
+
+    private Node handleBuilding(boolean create, Node parent,
+                                Node child, String name) {
+        if (create) {
+            if (child != null && !child.isVisible()) {
+                child.setVisible(true);
+            } else if (child == null) {
+                NodeBuilder b = parent.createChild(Node.checkName(name));
+                b.setProfile(defaultProfile);
+                child = b.build();
+            }
+        }
+        return child;
     }
 
     public static String[] splitPath(String path) {
