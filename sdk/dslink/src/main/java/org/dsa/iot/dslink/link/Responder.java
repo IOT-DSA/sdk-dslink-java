@@ -58,16 +58,19 @@ public class Responder extends Linkable {
                     throw new NullPointerException("path");
                 }
 
-                String[] split = NodeManager.splitPath(path);
-                Node node = nodeManager.getSuperRoot().getChild(split[0]);
-                for (int i = 1; i < split.length; ++i) {
-                    Node tmp = node.getChild(split[i]);
-                    if (tmp == null) {
-                        NodeBuilder b = node.createChild(split[i]);
-                        b.setVisible(false);
-                        tmp = b.build();
+                Node node = nodeManager.getSuperRoot();
+                if (!"/".equals(path)) {
+                    String[] split = NodeManager.splitPath(path);
+                    node = nodeManager.getSuperRoot().getChild(split[0]);
+                    for (int i = 1; i < split.length; ++i) {
+                        Node tmp = node.getChild(split[i]);
+                        if (tmp == null) {
+                            NodeBuilder b = node.createChild(split[i]);
+                            b.setVisible(false);
+                            tmp = b.build();
+                        }
+                        node = tmp;
                     }
-                    node = tmp;
                 }
 
                 node.getListener().postListUpdate();
