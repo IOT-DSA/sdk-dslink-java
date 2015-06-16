@@ -36,8 +36,6 @@ public class Node {
     private final String name;
 
     private boolean serializable = true;
-    private boolean visible = true;
-
     private NodeListener listener;
     private Map<String, Node> children;
     private Writable writable;
@@ -256,16 +254,10 @@ public class Node {
         }
     }
 
-    /**
-     * @param type New value type of the node.
-     */
     public void setValueType(ValueType type) {
         this.valueType = type;
     }
 
-    /**
-     * @return The value type of the node.
-     */
     public ValueType getValueType() {
         return valueType;
     }
@@ -346,24 +338,14 @@ public class Node {
     }
 
     /**
-     * @param node Child node to add.
-     * @return The node.
-     */
-    @SuppressWarnings("unused")
-    public Node addChild(Node node) {
-        return addChild(node, true);
-    }
-
-    /**
      * The child will be added if the node doesn't exist. If the child
      * already exists then it will be returned and no new node will be
      * created. This can be used as a special getter.
      *
      * @param node Child node to add.
-     * @param ignoreVisibility Whether to ignore invisibility or not.
      * @return The node
      */
-    public Node addChild(Node node, boolean ignoreVisibility) {
+    public Node addChild(Node node) {
         synchronized (childrenLock) {
             String name = node.getName();
             if (children == null) {
@@ -381,9 +363,6 @@ public class Node {
                 node.setProfile(profile);
             }
             children.put(name, node);
-            if (ignoreVisibility) {
-                node.setVisible(true);
-            }
             if (manager != null) {
                 manager.postChildUpdate(node, false);
             }
@@ -695,21 +674,6 @@ public class Node {
     @SuppressWarnings("unused")
     public void setSerializable(boolean serializable) {
         this.serializable = serializable;
-    }
-
-    /**
-     * @return Whether this node is visible to any requester.
-     */
-    public boolean isVisible() {
-        return visible;
-    }
-
-    /**
-     *
-     * @param visible Whether this node is visible to any requester.
-     */
-    public void setVisible(boolean visible) {
-        this.visible = visible;
     }
 
     /**

@@ -5,7 +5,10 @@ import org.dsa.iot.dslink.DSLinkHandler;
 import org.dsa.iot.dslink.methods.Response;
 import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.methods.responses.*;
-import org.dsa.iot.dslink.node.*;
+import org.dsa.iot.dslink.node.Node;
+import org.dsa.iot.dslink.node.NodeManager;
+import org.dsa.iot.dslink.node.NodePair;
+import org.dsa.iot.dslink.node.SubscriptionManager;
 import org.vertx.java.core.json.JsonObject;
 
 import java.util.Map;
@@ -57,22 +60,7 @@ public class Responder extends Linkable {
                 if (path == null) {
                     throw new NullPointerException("path");
                 }
-
-                Node node = nodeManager.getSuperRoot();
-                if (!"/".equals(path)) {
-                    String[] split = NodeManager.splitPath(path);
-                    node = nodeManager.getSuperRoot().getChild(split[0]);
-                    for (int i = 1; i < split.length; ++i) {
-                        Node tmp = node.getChild(split[i]);
-                        if (tmp == null) {
-                            NodeBuilder b = node.createChild(split[i]);
-                            b.setVisible(false);
-                            tmp = b.build();
-                        }
-                        node = tmp;
-                    }
-                }
-
+                Node node = nodeManager.getNode(path).getNode();
                 node.getListener().postListUpdate();
                 SubscriptionManager subs = link.getSubscriptionManager();
                 response = new ListResponse(link, subs, rid, node);

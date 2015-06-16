@@ -78,11 +78,6 @@ public class NodeBuilder {
         return this;
     }
 
-    public NodeBuilder setVisible(boolean visible) {
-        child.setVisible(visible);
-        return this;
-    }
-
     public NodeListener getListener() {
         return child.getListener();
     }
@@ -91,21 +86,14 @@ public class NodeBuilder {
         return child;
     }
 
-    public Node build() {
-        return build(true);
-    }
-
     /**
      * The child will then be added to the parent with the set data. Any
      * subscriptions will then be notified. Note that the parent must not
      * have the child already added or it will just act as a getter.
-     *
-     * @param ignoreVisibility Whether to ignore the visibility rules when
-     *                         adding the child node.
      * @return Child node
      */
-    public Node build(boolean ignoreVisibility) {
-        Node node = parent.addChild(child, ignoreVisibility);
+    public Node build() {
+        Node node = parent.addChild(child);
         // addChild can be used as a getter, which is useful in scenarios
         // where serialization takes place. However, setting the action
         // before building the node may remove the action override, so in
