@@ -226,14 +226,6 @@ public class ListResponse implements Response {
         JsonArray updates = new JsonArray();
         if (node != null) {
             // Special configurations
-            String name = node.getDisplayName();
-            if (name != null) {
-                JsonArray update = new JsonArray();
-                update.addString("$name");
-                update.addString(name);
-                updates.addArray(update);
-            }
-
             String profile = node.getProfile();
             if (profile != null) {
                 JsonArray update = new JsonArray();
@@ -244,6 +236,14 @@ public class ListResponse implements Response {
                 String err = "Profile not set on node: "
                             + node.getPath();
                 throw new RuntimeException(err);
+            }
+
+            String name = node.getDisplayName();
+            if (name != null) {
+                JsonArray update = new JsonArray();
+                update.addString("$name");
+                update.addString(name);
+                updates.addArray(update);
             }
 
             Set<String> interfaces = node.getInterfaces();
@@ -381,11 +381,6 @@ public class ListResponse implements Response {
 
         JsonObject childData = new JsonObject();
         {
-            String displayName = child.getDisplayName();
-            if (displayName != null) {
-                childData.putString("$name", displayName);
-            }
-
             String profile = child.getProfile();
             if (profile == null) {
                 String err = "Profile not set on node: "
@@ -393,6 +388,11 @@ public class ListResponse implements Response {
                 throw new RuntimeException(err);
             }
             childData.putString("$is", profile);
+
+            String displayName = child.getDisplayName();
+            if (displayName != null) {
+                childData.putString("$name", displayName);
+            }
 
             Action action = child.getAction();
             if (action != null) {
