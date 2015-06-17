@@ -82,6 +82,10 @@ public class NodeBuilder {
         return child.getListener();
     }
 
+    public Node getParent() {
+        return parent;
+    }
+
     public Node getChild() {
         return child;
     }
