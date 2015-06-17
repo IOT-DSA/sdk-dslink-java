@@ -18,9 +18,6 @@ public class NodePair {
     private final String reference;
 
     public NodePair(Node node, String reference) {
-        if (node == null) {
-            throw new NullPointerException("node");
-        }
         this.node = node;
         this.reference = reference;
     }
