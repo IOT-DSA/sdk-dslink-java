@@ -38,8 +38,6 @@ public class ListResponse implements Response {
             throw new NullPointerException("manager");
         else if (rid <= 0)
             throw new IllegalArgumentException("rid <= 0");
-        else if (node == null)
-            throw new NullPointerException("node");
         this.link = link;
         this.manager = manager;
         this.rid = rid;
@@ -226,7 +224,7 @@ public class ListResponse implements Response {
         out.putString("stream", StreamState.OPEN.getJsonName());
 
         JsonArray updates = new JsonArray();
-        {
+        if (node != null) {
             // Special configurations
             String name = node.getDisplayName();
             if (name != null) {
@@ -322,7 +320,10 @@ public class ListResponse implements Response {
         }
         out.putArray("updates", updates);
 
-        manager.addPathSub(node, this);
+        if (node != null) {
+            manager.addPathSub(node, this);
+        }
+
         return out;
     }
 

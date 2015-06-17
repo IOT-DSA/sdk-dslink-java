@@ -49,6 +49,10 @@ public class NodeManager {
     }
 
     public NodePair getNode(String path, boolean create) {
+        return getNode(path, create, true);
+    }
+
+    public NodePair getNode(String path, boolean create, boolean willThrow) {
         if (path == null)
             throw new NullPointerException("path");
         else if ("/".equals(path))
@@ -78,8 +82,9 @@ public class NodeManager {
                 current = temp;
             }
         }
-        if (current == null)
+        if (current == null && willThrow) {
             throw new NoSuchPathException(path);
+        }
         return new NodePair(current, null);
     }
 

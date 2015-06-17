@@ -60,8 +60,10 @@ public class Responder extends Linkable {
                 if (path == null) {
                     throw new NullPointerException("path");
                 }
-                Node node = nodeManager.getNode(path).getNode();
-                node.getListener().postListUpdate();
+                Node node = nodeManager.getNode(path, false, false).getNode();
+                if (node != null) {
+                    node.getListener().postListUpdate();
+                }
                 SubscriptionManager subs = link.getSubscriptionManager();
                 response = new ListResponse(link, subs, rid, node);
                 break;
