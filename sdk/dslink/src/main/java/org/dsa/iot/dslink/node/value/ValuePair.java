@@ -12,7 +12,7 @@ import org.dsa.iot.dslink.node.NodeListener;
 public class ValuePair {
 
     private final Value previous;
-    private final Value current;
+    private Value current;
     private boolean reject;
 
     /**
@@ -39,8 +39,19 @@ public class ValuePair {
     }
 
     /**
+     * This allows for dynamic value control when being set from an external
+     * source but the value is still valid and does not need to be rejected.
+     *
+     * @param value New value to set.
+     */
+    public void setCurrent(Value value) {
+
+    }
+
+    /**
      * @param reject Whether to reject the new value or not.
      */
+    @SuppressWarnings("unused")
     public void setReject(boolean reject) {
         this.reject = reject;
     }

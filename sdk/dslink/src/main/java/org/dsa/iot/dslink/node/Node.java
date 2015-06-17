@@ -4,6 +4,7 @@ import org.dsa.iot.dslink.link.Linkable;
 import org.dsa.iot.dslink.node.NodeListener.ValueUpdate;
 import org.dsa.iot.dslink.node.actions.Action;
 import org.dsa.iot.dslink.node.value.Value;
+import org.dsa.iot.dslink.node.value.ValuePair;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.util.StringUtils;
 
@@ -208,6 +209,13 @@ public class Node {
                 String err = "Value type not set on node (" + getPath() + ")";
                 throw new RuntimeException(err);
             }
+
+            ValuePair pair = new ValuePair(this.value, value);
+            if (listener.postValueUpdate(pair)) {
+                return;
+            }
+
+            value = pair.getCurrent();
             if (value != null) {
                 if (type.compare(ValueType.ENUM)) {
                     if (!value.getType().compare(ValueType.STRING)) {
@@ -226,7 +234,7 @@ public class Node {
                         throw new RuntimeException(err);
                     }
                 } else if (!type.compare(ValueType.DYNAMIC)
-                            && type != value.getType()) {
+                        && type != value.getType()) {
                     String err = "[" + getPath() + "] ";
                     err += "Expected value type ";
                     err += "'" + type.toJsonString() + "' ";
@@ -237,11 +245,7 @@ public class Node {
                 value.setImmutable();
             }
 
-            if (listener.postValueUpdate(this.value, value)) {
-                return;
-            }
-
-            this.value = value;
+            this.value = pair.getCurrent();
             if (link != null) {
                 SubscriptionManager manager = link.getSubscriptionManager();
                 if (manager != null) {

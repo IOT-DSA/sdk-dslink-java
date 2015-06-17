@@ -38,14 +38,12 @@ public class NodeListener {
     /**
      * Posts a value update calling all the value handler callbacks.
      *
-     * @param previous Old value.
-     * @param current Updated value.
+     * @param pair The value pair of the previous and new values.
      * @return Whether the new value was rejected or not.
      */
-    protected boolean postValueUpdate(Value previous, Value current) {
+    protected boolean postValueUpdate(ValuePair pair) {
         Handler<ValuePair> handler = valueHandler;
         if (handler != null) {
-            ValuePair pair = new ValuePair(previous, current);
             handler.handle(pair);
             return pair.isRejected();
         }
@@ -205,6 +203,7 @@ public class NodeListener {
         /**
          * @return Whether the value was removed or not.
          */
+        @SuppressWarnings("unused")
         public boolean removed() {
             return removed;
         }
