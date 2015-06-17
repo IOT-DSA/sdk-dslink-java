@@ -245,7 +245,7 @@ public class Node {
                 value.setImmutable();
             }
 
-            this.value = pair.getCurrent();
+            this.value = value;
             if (link != null) {
                 SubscriptionManager manager = link.getSubscriptionManager();
                 if (manager != null) {
