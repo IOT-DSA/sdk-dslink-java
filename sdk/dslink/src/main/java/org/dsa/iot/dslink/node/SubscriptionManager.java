@@ -18,7 +18,9 @@ public class SubscriptionManager {
 
     private final Object valueLock = new Object();
 
-    private final Map<Node, ListResponse> pathSubs = new ConcurrentHashMap<>();
+    private final Map<Node, ListResponse> pathSubsMap = new ConcurrentHashMap<>();
+    private final Map<String, Integer> pathSubs = new ConcurrentHashMap<>();
+
     private final Map<Node, Integer> valueSubsNodes = new ConcurrentHashMap<>();
     private final Map<Integer, Node> valueSubsSids = new ConcurrentHashMap<>();
     private final DSLink link;
@@ -34,6 +36,7 @@ public class SubscriptionManager {
      * @param node Node to test.
      * @return Whether the node has a value subscription.
      */
+    @SuppressWarnings("unused")
     public boolean hasValueSub(Node node) {
         return valueSubsNodes.containsKey(node);
     }
@@ -45,8 +48,9 @@ public class SubscriptionManager {
      * @param node Node to test.
      * @return Whether the onde has a path subscription.
      */
+    @SuppressWarnings("unused")
     public boolean hasPathSub(Node node) {
-        return pathSubs.containsKey(node);
+        return pathSubsMap.containsKey(node);
     }
 
     /**
@@ -105,6 +109,16 @@ public class SubscriptionManager {
     }
 
     /**
+     * Adds a path subscription to node that does not yet exist.
+     *
+     * @param path Path subscription to add.
+     * @param rid Request ID of the path subscription.
+     */
+    public void addPathSub(String path, int rid) {
+        pathSubs.put(NodeManager.normalizePath(path), rid);
+    }
+
+    /**
      * Adds a path subscription to the designated node. This will allow a node
      * to publish a child update and have it updated to the remote endpoint if
      * it is subscribed.
@@ -113,7 +127,7 @@ public class SubscriptionManager {
      * @param resp Response to send updates to
      */
     public void addPathSub(Node node, ListResponse resp) {
-        pathSubs.put(node, resp);
+        pathSubsMap.put(node, resp);
     }
 
     /**
@@ -122,12 +136,12 @@ public class SubscriptionManager {
      * @param node Node to unsubscribe to.
      */
     public void removePathSub(Node node) {
-        ListResponse resp = pathSubs.remove(node);
+        ListResponse resp = pathSubsMap.remove(node);
         if (resp != null) {
             Map<String, Node> children = node.getChildren();
             if (children != null) {
                 for (Node child : children.values()) {
-                    resp = pathSubs.get(child);
+                    resp = pathSubsMap.get(child);
                     if (resp != null) {
                         resp.getCloseResponse();
                     }
@@ -143,7 +157,19 @@ public class SubscriptionManager {
      * @param removed Whether the child was removed or not.
      */
     public void postChildUpdate(Node child, boolean removed) {
-        ListResponse resp = pathSubs.get(child.getParent());
+        ListResponse resp = null;
+        Integer i = pathSubs.remove(child.getPath());
+        if (i != null) {
+            SubscriptionManager man = link.getSubscriptionManager();
+            Node parent = child.getParent();
+            resp = new ListResponse(link, man, 0, parent);
+            addPathSub(parent, resp);
+        }
+
+        if (resp == null) {
+            resp = pathSubsMap.get(child.getParent());
+        }
+
         if (resp != null) {
             resp.childUpdate(child, removed);
         }
