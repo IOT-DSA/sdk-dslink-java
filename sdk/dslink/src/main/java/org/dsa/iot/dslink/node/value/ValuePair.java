@@ -44,8 +44,9 @@ public class ValuePair {
      *
      * @param value New value to set.
      */
+    @SuppressWarnings("unused")
     public void setCurrent(Value value) {
-
+        this.current = value;
     }
 
     /**
