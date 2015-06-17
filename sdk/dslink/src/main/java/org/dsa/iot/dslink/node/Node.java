@@ -219,6 +219,12 @@ public class Node {
                         err += "New value does not contain a valid enum value";
                         throw new RuntimeException(err);
                     }
+                } else if (type.compare(ValueType.TIME)) {
+                    if (!value.getType().compare(ValueType.STRING)) {
+                        String err = "[" + getPath() + "] ";
+                        err += "Node has time value type, value must be string";
+                        throw new RuntimeException(err);
+                    }
                 } else if (!type.compare(ValueType.DYNAMIC)
                             && type != value.getType()) {
                     String err = "[" + getPath() + "] ";
