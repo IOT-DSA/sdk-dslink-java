@@ -136,6 +136,9 @@ public class SubscriptionManager {
      * @param node Node to unsubscribe to.
      */
     public void removePathSub(Node node) {
+        if (node == null) {
+            return;
+        }
         ListResponse resp = pathSubsMap.remove(node);
         if (resp != null) {
             Map<String, Node> children = node.getChildren();
