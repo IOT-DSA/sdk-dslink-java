@@ -39,15 +39,17 @@ public final class ValueType {
     }
 
     private ValueType(String rawName, String builtName) {
+        this(rawName, builtName, null);
+    }
+
+    private ValueType(String rawName, String builtName, Set<String> enums) {
         this.rawName = rawName;
         this.builtName = builtName;
-        this.enums = null;
+        this.enums = enums;
     }
 
     private ValueType(Set<String> enums) {
-        this.rawName = JSON_ENUM;
-        this.builtName = "enum[" + StringUtils.join(enums, ",") + "]";
-        this.enums = enums;
+        this(JSON_ENUM, "enum[" + StringUtils.join(enums, ",") + "]", enums);
     }
 
     /**
@@ -84,6 +86,10 @@ public final class ValueType {
         return new ValueType(enums);
     }
 
+    public static ValueType makeBool(String true_, String false_) {
+        return new ValueType(JSON_BOOL, "bool[" + true_ + "," + false_ + "]", null);
+    }
+
     /**
      * @param type Type to convert
      * @return Converted type
@@ -105,7 +111,9 @@ public final class ValueType {
             case JSON_DYNAMIC:
                 return DYNAMIC;
             default:
-                if (type.startsWith(JSON_ENUM + "[") && type.endsWith("]")) {
+                if (type.startsWith(JSON_BOOL + "[") && type.endsWith("]")) {
+                    return new ValueType(JSON_BOOL, type);
+                } else if (type.startsWith(JSON_ENUM + "[") && type.endsWith("]")) {
                     type = type.substring(JSON_ENUM.length() + 1);
                     type = type.substring(0, type.length() - 1);
                     String[] split = type.split(",");

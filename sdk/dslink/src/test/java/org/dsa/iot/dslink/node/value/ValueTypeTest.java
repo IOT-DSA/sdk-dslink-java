@@ -19,6 +19,12 @@ public class ValueTypeTest {
     }
 
     @Test
+    public void bool() {
+        ValueType type = ValueType.makeBool("enabled", "disabled");
+        Assert.assertEquals(type.toJsonString(), "bool[enabled,disabled]");
+    }
+
+    @Test
     public void validEnum() {
         Node node = new Node("root", null, null);
         node.setValueType(ValueType.makeEnum("a", "b", "c"));
