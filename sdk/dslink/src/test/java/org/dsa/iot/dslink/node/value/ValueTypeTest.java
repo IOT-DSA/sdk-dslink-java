@@ -21,7 +21,7 @@ public class ValueTypeTest {
     @Test
     public void bool() {
         ValueType type = ValueType.makeBool("enabled", "disabled");
-        Assert.assertEquals(type.toJsonString(), "bool[enabled,disabled]");
+        Assert.assertEquals(type.toJsonString(), "bool[disabled,enabled]");
     }
 
     @Test

@@ -222,7 +222,8 @@ public class Node {
                         String err = "[" + getPath() + "] ";
                         err += "Node has enum value type, value must be string";
                         throw new RuntimeException(err);
-                    } else if (!type.getEnums().contains(value.getString())) {
+                    } else if (type.getEnums() == null
+                            || !type.getEnums().contains(value.getString())) {
                         String err = "[" + getPath() + "] ";
                         err += "New value does not contain a valid enum value";
                         throw new RuntimeException(err);
@@ -233,8 +234,8 @@ public class Node {
                         err += "Node has time value type, value must be string";
                         throw new RuntimeException(err);
                     }
-                } else if (!type.compare(ValueType.DYNAMIC)
-                        && type != value.getType()) {
+                } else if (!(type.compare(ValueType.DYNAMIC)
+                        || type.compare(value.getType()))) {
                     String err = "[" + getPath() + "] ";
                     err += "Expected value type ";
                     err += "'" + type.toJsonString() + "' ";

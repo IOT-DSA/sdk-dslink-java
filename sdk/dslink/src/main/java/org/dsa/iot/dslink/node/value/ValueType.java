@@ -87,7 +87,7 @@ public final class ValueType {
     }
 
     public static ValueType makeBool(String true_, String false_) {
-        return new ValueType(JSON_BOOL, "bool[" + true_ + "," + false_ + "]", null);
+        return new ValueType(JSON_BOOL, "bool[" + false_ + "," + true_ + "]", null);
     }
 
     /**
