@@ -22,9 +22,17 @@ public class Objects {
         return VERTX;
     }
 
+    public static ScheduledThreadPoolExecutor createThreadPool() {
+        return createThreadPool(POOL_SIZE);
+    }
+
+    public static ScheduledThreadPoolExecutor createThreadPool(int size) {
+        return new ScheduledThreadPool(size);
+    }
+
     public static ScheduledThreadPoolExecutor getThreadPool() {
         if (THREAD_POOL == null) {
-            THREAD_POOL = new ScheduledThreadPool(POOL_SIZE);
+            THREAD_POOL = createThreadPool();
         }
         return THREAD_POOL;
     }
@@ -34,10 +42,18 @@ public class Objects {
         THREAD_POOL = stpe;
     }
 
+    public static ScheduledThreadPoolExecutor createDaemonThreadPool() {
+        return createDaemonThreadPool(POOL_SIZE);
+    }
+
+    public static ScheduledThreadPoolExecutor createDaemonThreadPool(int size) {
+        ThreadFactory factory = getDaemonFactory();
+        return new ScheduledThreadPool(size, factory);
+    }
+
     public static ScheduledThreadPoolExecutor getDaemonThreadPool() {
         if (DAEMON_THREAD_POOL == null) {
-            ThreadFactory factory = getDaemonFactory();
-            DAEMON_THREAD_POOL = new ScheduledThreadPool(POOL_SIZE, factory);
+            DAEMON_THREAD_POOL = createDaemonThreadPool();
         }
         return DAEMON_THREAD_POOL;
     }
