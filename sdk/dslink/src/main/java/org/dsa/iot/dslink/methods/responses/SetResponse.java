@@ -72,7 +72,7 @@ public class SetResponse implements Response {
             }
         } else {
             checkValue(current, value);
-            node.setValue(value);
+            node.setValue(value, true);
         }
     }
 

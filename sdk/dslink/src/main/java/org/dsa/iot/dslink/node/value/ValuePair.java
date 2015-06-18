@@ -11,6 +11,7 @@ import org.dsa.iot.dslink.node.NodeListener;
  */
 public class ValuePair {
 
+    private final boolean externalSource;
     private final Value previous;
     private Value current;
     private boolean reject;
@@ -18,10 +19,20 @@ public class ValuePair {
     /**
      * @param previous Previous value.
      * @param current The new current value.
+     * @param externalSource Whether the new value is being set from an
+     *                       external source or not.
      */
-    public ValuePair(Value previous, Value current) {
+    public ValuePair(Value previous, Value current, boolean externalSource) {
         this.previous = previous;
         this.current = current;
+        this.externalSource = externalSource;
+    }
+
+    /**
+     * @return Whether the new value came from an external source.
+     */
+    public boolean isFromExternalSource() {
+        return externalSource;
     }
 
     /**

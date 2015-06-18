@@ -203,6 +203,15 @@ public class Node {
     }
 
     public void setValue(Value value) {
+        setValue(value, false);
+    }
+
+    /**
+     * @param value Value to set.
+     * @param externalSource Whether the value was set from an external source
+     *                       like an action that got invoked.
+     */
+    public void setValue(Value value, boolean externalSource) {
         synchronized (valueLock) {
             ValueType type = valueType;
             if (type == null) {
@@ -210,7 +219,7 @@ public class Node {
                 throw new RuntimeException(err);
             }
 
-            ValuePair pair = new ValuePair(this.value, value);
+            ValuePair pair = new ValuePair(this.value, value, externalSource);
             if (listener.postValueUpdate(pair)) {
                 return;
             }

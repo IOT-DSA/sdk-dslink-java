@@ -51,17 +51,19 @@ public class Responder {
      */
     private static void initSettableNode(Node node) {
         NodeBuilder builder = node.createChild("settable");
+        builder.setWritable(Writable.WRITE);
+        builder.setValueType(ValueType.STRING);
+        builder.setValue(new Value("UNSET"));
         builder.getListener().setValueHandler(new Handler<ValuePair>() {
             @Override
             public void handle(ValuePair event) {
-                String val = event.toString();
+                String val = event.getCurrent().getString();
                 LOGGER.info("Responder has a new value set from requester: {}", val);
+                LOGGER.info("External source? " + event.isFromExternalSource());
             }
         });
         node = builder.build();
-        node.setWritable(Writable.WRITE);
-        node.setValueType(ValueType.STRING);
-        node.setValue(new Value("UNSET"));
+        node.setSerializable(false);
         LOGGER.info("Responder has a current value of {}", node.getValue().toString());
     }
 
