@@ -26,7 +26,7 @@ public class Action {
 
     public Action(Permission permission,
                   Handler<ActionResult> handler) {
-        this(permission, handler, InvokeMode.SYNC);
+        this(permission, handler, InvokeMode.ASYNC);
     }
 
     /**
