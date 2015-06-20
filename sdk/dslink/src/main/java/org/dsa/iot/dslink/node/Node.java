@@ -456,6 +456,12 @@ public class Node {
                 ValueUpdate update = new ValueUpdate(name, ret, true);
                 listener.postConfigUpdate(update);
             }
+
+            SubscriptionManager man = link.getSubscriptionManager();
+            if (man != null) {
+                man.postMetaUpdate(this, "$" + name, null);
+            }
+
             return ret;
         }
     }
@@ -499,6 +505,12 @@ public class Node {
             if (listener != null) {
                 listener.postConfigUpdate(update);
             }
+
+            SubscriptionManager man = link.getSubscriptionManager();
+            if (man != null) {
+                man.postMetaUpdate(this, "$" + name, value);
+            }
+
             return configs.put(name, value);
         }
     }
@@ -516,11 +528,18 @@ public class Node {
      * Removes a read-only configuration.
      *
      * @param name Name of the configuration.
-     * @return Previous value of the configuration.
+     * @return Previous value of the configuration, if any.
      */
     public Value removeRoConfig(String name) {
         synchronized (roConfigLock) {
-            return roConfigs != null ? roConfigs.remove(name) : null;
+            Value tmp = roConfigs != null ? roConfigs.remove(name) : null;
+            if (tmp != null) {
+                SubscriptionManager man = link.getSubscriptionManager();
+                if (man != null) {
+                    man.postMetaUpdate(this, "$$" + name, null);
+                }
+            }
+            return tmp;
         }
     }
 
@@ -560,6 +579,11 @@ public class Node {
                     throw new IllegalArgumentException(err);
             }
 
+            SubscriptionManager man = link.getSubscriptionManager();
+            if (man != null) {
+                man.postMetaUpdate(this, "$$" + name, value);
+            }
+
             return roConfigs.put(name, value);
         }
     }
@@ -574,6 +598,16 @@ public class Node {
     }
 
     /**
+     * @param name Attribute name to get
+     * @return Value of the attribute, if it exists
+     */
+    public Value getAttribute(String name) {
+        synchronized (attributeLock) {
+            return attribs != null ? attribs.get(name) : null;
+        }
+    }
+
+    /**
      * @param name Attribute name to remove.
      * @return Attribute value or null if it didn't exist
      */
@@ -583,19 +617,14 @@ public class Node {
             if (ret != null) {
                 ValueUpdate update = new ValueUpdate(name, ret, true);
                 listener.postAttributeUpdate(update);
+
+                SubscriptionManager man = link.getSubscriptionManager();
+                if (man != null) {
+                    man.postMetaUpdate(this, "@" + name, null);
+                }
             }
 
             return ret;
-        }
-    }
-
-    /**
-     * @param name Attribute name to get
-     * @return Value of the attribute, if it exists
-     */
-    public Value getAttribute(String name) {
-        synchronized (attributeLock) {
-            return attribs != null ? attribs.get(name) : null;
         }
     }
 
@@ -615,6 +644,12 @@ public class Node {
             value.setImmutable();
             ValueUpdate update = new ValueUpdate(name, value, false);
             listener.postAttributeUpdate(update);
+
+            SubscriptionManager man = link.getSubscriptionManager();
+            if (man != null) {
+                man.postMetaUpdate(this, "@" + name, value);
+            }
+
             return attribs.put(name, value);
         }
     }
@@ -633,6 +668,18 @@ public class Node {
      */
     public void setAction(Action action) {
         this.action = action;
+        if (link != null) {
+            SubscriptionManager man = link.getSubscriptionManager();
+            if (man != null) {
+                if (!(action == null || action.isHidden())) {
+                    man.postMetaUpdate(this, "$params", new Value(action.getParams()));
+                    man.postMetaUpdate(this, "$columns", new Value(action.getColumns()));
+                } else {
+                    man.postMetaUpdate(this, "$params", null);
+                    man.postMetaUpdate(this, "$columns", null);
+                }
+            }
+        }
     }
 
     /**

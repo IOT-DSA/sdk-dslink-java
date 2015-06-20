@@ -342,6 +342,29 @@ public class ListResponse implements Response {
         link.getWriter().writeResponse(resp);
     }
 
+    public void metaUpdate(String name, Value value) {
+        JsonArray updates = new JsonArray();
+        {
+            JsonArray update = new JsonArray();
+            update.addString(name);
+
+            if (value != null) {
+                ValueUtils.toJson(update, value);
+                update.addString(value.getTimeStamp());
+            } else {
+                update.add(null);
+            }
+
+            updates.addArray(update);
+        }
+
+        JsonObject resp = new JsonObject();
+        resp.putNumber("rid", getRid());
+        resp.putString("stream", StreamState.OPEN.getJsonName());
+        resp.putArray("updates", updates);
+        link.getWriter().writeResponse(resp);
+    }
+
     @Override
     public JsonObject getCloseResponse() {
         manager.removePathSub(node);

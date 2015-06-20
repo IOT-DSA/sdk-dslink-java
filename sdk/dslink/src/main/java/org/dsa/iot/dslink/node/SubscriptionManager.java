@@ -109,16 +109,6 @@ public class SubscriptionManager {
     }
 
     /**
-     * Adds a path subscription to node that does not yet exist.
-     *
-     * @param path Path subscription to add.
-     * @param rid Request ID of the path subscription.
-     */
-    public void addPathSub(String path, int rid) {
-        pathSubs.put(NodeManager.normalizePath(path), rid);
-    }
-
-    /**
      * Adds a path subscription to the designated node. This will allow a node
      * to publish a child update and have it updated to the remote endpoint if
      * it is subscribed.
@@ -207,6 +197,13 @@ public class SubscriptionManager {
             resp.putNumber("rid", 0);
             resp.putArray("updates", updates);
             link.getWriter().writeResponse(resp);
+        }
+    }
+
+    public void postMetaUpdate(Node node, String name, Value value) {
+        ListResponse resp = pathSubsMap.get(node);
+        if (resp != null) {
+            resp.metaUpdate(name, value);
         }
     }
 }
