@@ -38,6 +38,7 @@ public class Action {
      * @param mode       Determines how the action should be invoked
      * @see #setResultType(ResultType) For changing the invocation results.
      */
+    @Deprecated
     public Action(Permission permission,
                   Handler<ActionResult> handler,
                   InvokeMode mode) {
@@ -227,6 +228,7 @@ public class Action {
     /**
      * Determines how to invoke the action handler.
      */
+    @Deprecated
     public enum InvokeMode {
         SYNC,
         ASYNC
