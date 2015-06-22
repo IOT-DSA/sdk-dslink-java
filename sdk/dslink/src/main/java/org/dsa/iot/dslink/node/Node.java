@@ -38,9 +38,10 @@ public class Node {
     private final String name;
 
     private boolean serializable = true;
-    private NodeListener listener;
     private Map<String, Node> children;
+    private NodeListener listener;
     private Writable writable;
+    private Object metaData;
 
     private Map<String, Value> roConfigs;
     private Map<String, Value> configs;
@@ -735,6 +736,26 @@ public class Node {
      */
     public void setSerializable(boolean serializable) {
         this.serializable = serializable;
+    }
+
+    /**
+     * Sets the meta data of the node. Used for attaching extra information
+     * to a node. This meta data is not serialized. The sole purpose of meta
+     * data is to attach a custom instance that operates on this node.
+     *
+     * @param object Meta data object.
+     */
+    public void setMetaData(Object object) {
+        this.metaData = object;
+    }
+
+    /**
+     * @param <T> Meta data to cast to.
+     * @return The attached meta data of this node.
+     */
+    @SuppressWarnings("unchecked")
+    public <T> T getMetaData() {
+        return (T) metaData;
     }
 
     /**
