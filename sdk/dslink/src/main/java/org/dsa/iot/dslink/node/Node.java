@@ -30,6 +30,7 @@ public class Node {
     private final Object childrenLock = new Object();
     private final Object passwordLock = new Object();
     private final Object valueLock = new Object();
+    private final Object actLock = new Object();
 
     private final WeakReference<Node> parent;
     private final Linkable link;
@@ -197,9 +198,8 @@ public class Node {
     }
 
     public Set<String> getInterfaces() {
-        synchronized (interfaceLock) {
-            return interfaces != null ? new HashSet<>(interfaces) : null;
-        }
+        Set<String> i = this.interfaces;
+        return i != null ? Collections.unmodifiableSet(i) : null;
     }
 
     public void setValue(Value value) {
@@ -269,9 +269,7 @@ public class Node {
      * @return The value of the node.
      */
     public Value getValue() {
-        synchronized (valueLock) {
-            return value;
-        }
+        return value;
     }
 
     public void setValueType(ValueType type) {
@@ -300,9 +298,8 @@ public class Node {
      * @return Children of the node, can be null
      */
     public Map<String, Node> getChildren() {
-        synchronized (childrenLock) {
-            return children != null ? new HashMap<>(children) : null;
-        }
+        Map<String, Node> children = this.children;
+        return children != null ? Collections.unmodifiableMap(children) : null;
     }
 
     /**
@@ -324,9 +321,8 @@ public class Node {
      * @return Child, or null if non-existent
      */
     public Node getChild(String name) {
-        synchronized (childrenLock) {
-            return children != null ? children.get(name) : null;
-        }
+        Map<String, Node> children = this.children;
+        return children != null ? children.get(name) : null;
     }
 
     /**
@@ -430,9 +426,8 @@ public class Node {
      * @return The configurations in this node.
      */
     public Map<String, Value> getConfigurations() {
-        synchronized (configLock) {
-            return configs != null ? new HashMap<>(configs) : null;
-        }
+        Map<String, Value> c = this.configs;
+        return c != null ? Collections.unmodifiableMap(c) : null;
     }
 
     /**
@@ -519,9 +514,8 @@ public class Node {
      * @return The read-only configurations in this node.
      */
     public Map<String, Value> getRoConfigurations() {
-        synchronized (roConfigLock) {
-            return roConfigs != null ? new HashMap<>(roConfigs) : null;
-        }
+        Map<String, Value> c = this.roConfigs;
+        return c != null ? Collections.unmodifiableMap(c) : null;
     }
 
     /**
@@ -551,9 +545,8 @@ public class Node {
      */
     @SuppressWarnings("unused")
     public Value getRoConfig(String name) {
-        synchronized (roConfigLock) {
-            return roConfigs != null ? roConfigs.get(name) : null;
-        }
+        Map<String, Value> c = roConfigs;
+        return c != null ? c.get(name) : null;
     }
 
     /**
@@ -592,9 +585,8 @@ public class Node {
      * @return The attributes in this node.
      */
     public Map<String, Value> getAttributes() {
-        synchronized (attributeLock) {
-            return attribs != null ? new HashMap<>(attribs) : null;
-        }
+        Map<String, Value> a = attribs;
+        return a != null ? Collections.unmodifiableMap(a) : null;
     }
 
     /**
@@ -602,9 +594,8 @@ public class Node {
      * @return Value of the attribute, if it exists
      */
     public Value getAttribute(String name) {
-        synchronized (attributeLock) {
-            return attribs != null ? attribs.get(name) : null;
-        }
+        Map<String, Value> a = attribs;
+        return a != null ? a.get(name) : null;
     }
 
     /**
@@ -671,12 +662,16 @@ public class Node {
         if (link != null) {
             SubscriptionManager man = link.getSubscriptionManager();
             if (man != null) {
-                if (!(action == null || action.isHidden())) {
-                    man.postMetaUpdate(this, "$params", new Value(action.getParams()));
-                    man.postMetaUpdate(this, "$columns", new Value(action.getColumns()));
-                } else {
-                    man.postMetaUpdate(this, "$params", null);
-                    man.postMetaUpdate(this, "$columns", null);
+                synchronized (actLock) {
+                    if (!(action == null || action.isHidden())) {
+                        Value params = new Value(action.getParams());
+                        Value cols = new Value(action.getColumns());
+                        man.postMetaUpdate(this, "$params", params);
+                        man.postMetaUpdate(this, "$columns", cols);
+                    } else {
+                        man.postMetaUpdate(this, "$params", null);
+                        man.postMetaUpdate(this, "$columns", null);
+                    }
                 }
             }
         }
@@ -738,7 +733,6 @@ public class Node {
      *
      * @param serializable Whether this node can be serialized.
      */
-    @SuppressWarnings("unused")
     public void setSerializable(boolean serializable) {
         this.serializable = serializable;
     }
