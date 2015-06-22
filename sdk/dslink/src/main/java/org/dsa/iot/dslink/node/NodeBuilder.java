@@ -78,6 +78,11 @@ public class NodeBuilder {
         return this;
     }
 
+    public NodeBuilder setMetaData(Object object) {
+        child.setMetaData(object);
+        return this;
+    }
+
     public NodeListener getListener() {
         return child.getListener();
     }
@@ -106,6 +111,7 @@ public class NodeBuilder {
 
         // addChild can return a deserialized node. This results in the action
         // being removed
+        node.setMetaData(child.getMetaData());
         node.setAction(child.getAction());
         node.setListener(child.getListener());
         return node;

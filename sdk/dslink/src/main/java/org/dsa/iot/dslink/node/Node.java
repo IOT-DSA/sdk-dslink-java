@@ -746,6 +746,9 @@ public class Node {
      * @param object Meta data object.
      */
     public void setMetaData(Object object) {
+        if (object instanceof MetaData) {
+            ((MetaData) object).setNode(this);
+        }
         this.metaData = object;
     }
 
