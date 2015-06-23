@@ -436,6 +436,11 @@ public class ListResponse implements Response {
             if (type != null) {
                 childData.putString("$type", type.toJsonString());
             }
+
+            Boolean hasChildren = child.getHasChildren();
+            if (hasChildren != null) {
+                childData.putBoolean("$hasChildren", hasChildren);
+            }
         }
         update.addObject(childData);
         return update;

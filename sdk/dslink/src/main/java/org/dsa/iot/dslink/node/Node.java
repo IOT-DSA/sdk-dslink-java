@@ -46,6 +46,7 @@ public class Node {
     private Map<String, Value> roConfigs;
     private Map<String, Value> configs;
     private Map<String, Value> attribs;
+    private Boolean hasChildren;
 
     private ValueType valueType;
     private Value value;
@@ -310,7 +311,8 @@ public class Node {
     public void clearChildren() {
         synchronized (childrenLock) {
             if (children != null) {
-                for (Node child : getChildren().values()) {
+                Map<String, Node> children = new HashMap<>(getChildren());
+                for (Node child : children.values()) {
                     removeChild(child);
                 }
             }
@@ -701,6 +703,23 @@ public class Node {
         synchronized (passwordLock) {
             this.pass = password != null ? password.clone() : null;
         }
+    }
+
+    /**
+     * Forcibly sets whether the node has children or not. This does *NOT*
+     * affect whether the node has children internally.
+     *
+     * @param hasChildren Whether the node hsa children or not.
+     */
+    public void setHasChildren(Boolean hasChildren) {
+        this.hasChildren = hasChildren;
+    }
+
+    /**
+     * @return Whether the node has children or not.
+     */
+    public Boolean getHasChildren() {
+        return hasChildren;
     }
 
     /**
