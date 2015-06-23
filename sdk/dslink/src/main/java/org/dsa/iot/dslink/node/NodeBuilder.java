@@ -83,6 +83,11 @@ public class NodeBuilder {
         return this;
     }
 
+    public NodeBuilder setHasChildren(Boolean hasChildren) {
+        child.setHasChildren(hasChildren);
+        return this;
+    }
+
     public NodeListener getListener() {
         return child.getListener();
     }
