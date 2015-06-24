@@ -309,6 +309,15 @@ public class ListResponse implements Response {
             add("$", updates, node.getConfigurations());
             add("@", updates, node.getAttributes());
 
+            // Whether this node "has children"
+            Boolean hasChildren = node.getHasChildren();
+            if (hasChildren != null) {
+                JsonArray update = new JsonArray();
+                update.addString("$hasChildren");
+                update.addBoolean(hasChildren);
+                updates.addArray(update);
+            }
+
             // Children
             Map<String, Node> children = node.getChildren();
             if (children != null) {
