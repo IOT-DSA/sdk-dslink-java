@@ -4,6 +4,8 @@ import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValuePair;
 import org.vertx.java.core.Handler;
 
+import java.lang.ref.WeakReference;
+
 /**
  * Handles listening to node updates.
  *
@@ -11,18 +13,19 @@ import org.vertx.java.core.Handler;
  */
 public class NodeListener {
 
-    private final Node node;
+    private final WeakReference<Node> node;
 
     private Handler<ValuePair> valueHandler;
     private Handler<ValueUpdate> configHandler;
     private Handler<ValueUpdate> attribHandler;
 
     private Handler<Node> listHandler;
+    private Handler<Node> listClosedHandler;
     private Handler<Node> onSubscribedHandler;
     private Handler<Node> onUnsubscribedHandler;
 
     public NodeListener(Node node) {
-        this.node = node;
+        this.node = new WeakReference<>(node);
     }
 
     /**
@@ -105,12 +108,34 @@ public class NodeListener {
     }
 
     /**
+     * Sets a list stream closed handler listener. The handler will be called
+     * every time
+     *
+     * @param handler Callback.
+     */
+    @SuppressWarnings("unused")
+    public void setOnListClosedHandler(Handler<Node> handler) {
+        listClosedHandler = handler;
+    }
+
+    /**
      * Posts an update that the node is currently being listed.
      */
     public void postListUpdate() {
         Handler<Node> handler = listHandler;
         if (handler != null) {
-            handler.handle(node);
+            handler.handle(node.get());
+        }
+    }
+
+    /**
+     * Posts a list closed update. The responder no longer wants the list
+     * stream to remain open.
+     */
+    public void postListClosed() {
+        Handler<Node> handler = listClosedHandler;
+        if (handler != null) {
+            handler.handle(node.get());
         }
     }
 
@@ -131,7 +156,7 @@ public class NodeListener {
     protected void postOnSubscription() {
         Handler<Node> handler = onSubscribedHandler;
         if (handler != null) {
-            handler.handle(node);
+            handler.handle(node.get());
         }
     }
 
@@ -152,7 +177,7 @@ public class NodeListener {
     protected void postOnUnsubscription() {
         Handler<Node> handler = onUnsubscribedHandler;
         if (handler != null) {
-            handler.handle(node);
+            handler.handle(node.get());
         }
     }
 
