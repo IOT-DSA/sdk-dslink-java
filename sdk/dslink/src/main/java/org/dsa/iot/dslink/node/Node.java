@@ -9,7 +9,11 @@ import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.util.StringUtils;
 
 import java.lang.ref.WeakReference;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Contains information about a node and its data.
@@ -311,7 +315,7 @@ public class Node {
     public void clearChildren() {
         synchronized (childrenLock) {
             if (children != null) {
-                Map<String, Node> children = new HashMap<>(getChildren());
+                Map<String, Node> children = getChildren();
                 for (Node child : children.values()) {
                     removeChild(child);
                 }
@@ -368,7 +372,7 @@ public class Node {
         synchronized (childrenLock) {
             String name = node.getName();
             if (children == null) {
-                children = new HashMap<>();
+                children = new ConcurrentHashMap<>();
             } else if (children.containsKey(name)) {
                 return children.get(name);
             }
@@ -480,7 +484,7 @@ public class Node {
             if (value == null) {
                 throw new NullPointerException("value");
             } else if (configs == null) {
-                configs = new HashMap<>();
+                configs = new ConcurrentHashMap<>();
             }
             switch (name) {
                 case "params":
@@ -565,7 +569,7 @@ public class Node {
             if (value == null) {
                 throw new NullPointerException("value");
             } else if (roConfigs == null) {
-                roConfigs = new HashMap<>();
+                roConfigs = new ConcurrentHashMap<>();
             }
 
             switch (name) {
@@ -633,7 +637,7 @@ public class Node {
             if (value == null) {
                 throw new NullPointerException("value");
             } else if (attribs == null) {
-                attribs = new HashMap<>();
+                attribs = new ConcurrentHashMap<>();
             }
             value.setImmutable();
             ValueUpdate update = new ValueUpdate(name, value, false);
