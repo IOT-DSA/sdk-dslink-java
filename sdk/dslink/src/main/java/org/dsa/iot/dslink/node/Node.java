@@ -121,6 +121,10 @@ public class Node {
      */
     public void setDisplayName(String name) {
         displayName = checkName(name);
+        if (link != null) {
+            SubscriptionManager man = link.getSubscriptionManager();
+            man.postMetaUpdate(this, "$name", new Value(displayName));
+        }
     }
 
     /**
