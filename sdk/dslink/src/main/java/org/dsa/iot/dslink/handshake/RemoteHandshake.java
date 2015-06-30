@@ -38,7 +38,11 @@ public class RemoteHandshake {
      */
     public RemoteHandshake(LocalKeys keys, JsonObject in) {
         String tempKey = in.getString("tempKey");
-        this.remoteKey = RemoteKey.generate(keys, tempKey);
+        if (tempKey != null) {
+            this.remoteKey = RemoteKey.generate(keys, tempKey);
+        } else {
+            this.remoteKey = null;
+        }
         this.dsId = in.getString("dsId");
         this.publicKey = in.getString("publicKey");
         this.wsUri = in.getString("wsUri");

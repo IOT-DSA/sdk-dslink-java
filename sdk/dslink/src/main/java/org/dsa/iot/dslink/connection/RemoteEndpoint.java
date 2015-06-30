@@ -78,17 +78,23 @@ public abstract class RemoteEndpoint extends NetworkHandlers implements NetworkC
         RemoteHandshake handshake = remoteHandshake;
         String uri = handshake.getWsUri() + "?auth=";
         try {
-            byte[] salt = handshake.getSalt().getBytes("UTF-8");
-            byte[] sharedSecret = handshake.getRemoteKey().getSharedSecret();
+            String s = handshake.getSalt();
+            if (s != null) {
+                byte[] salt = handshake.getSalt().getBytes("UTF-8");
+                byte[] sharedSecret = handshake.getRemoteKey().getSharedSecret();
 
-            Buffer buffer = new Buffer(salt.length + sharedSecret.length);
-            buffer.appendBytes(salt);
-            buffer.appendBytes(sharedSecret);
+                Buffer buffer = new Buffer(salt.length + sharedSecret.length);
+                buffer.appendBytes(salt);
+                buffer.appendBytes(sharedSecret);
 
-            SHA256.Digest sha = new SHA256.Digest();
-            byte[] digested = sha.digest(buffer.getBytes());
-            String encoded = UrlBase64.encode(digested);
-            uri += encoded + "&dsId=" + getLocalHandshake().getDsId();
+                SHA256.Digest sha = new SHA256.Digest();
+                byte[] digested = sha.digest(buffer.getBytes());
+                uri += UrlBase64.encode(digested);
+            } else {
+                // Fake auth parameter
+                uri += "_";
+            }
+            uri += "&dsId=" + getLocalHandshake().getDsId();
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }
