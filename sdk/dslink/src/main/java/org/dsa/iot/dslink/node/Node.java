@@ -284,6 +284,15 @@ public class Node {
 
     public void setValueType(ValueType type) {
         this.valueType = type;
+        if (link != null) {
+            SubscriptionManager man = link.getSubscriptionManager();
+            if (type != null) {
+                String t = type.toJsonString();
+                man.postMetaUpdate(this, "$type", new Value(t));
+            } else {
+                man.postMetaUpdate(this, "$type", null);
+            }
+        }
     }
 
     public ValueType getValueType() {
