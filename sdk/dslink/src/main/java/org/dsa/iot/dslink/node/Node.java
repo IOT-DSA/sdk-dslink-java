@@ -120,10 +120,14 @@ public class Node {
      * @param name Display name of the node to set
      */
     public void setDisplayName(String name) {
-        displayName = checkName(name);
+        displayName = name;
         if (link != null) {
             SubscriptionManager man = link.getSubscriptionManager();
-            man.postMetaUpdate(this, "$name", new Value(displayName));
+            if (name != null) {
+                man.postMetaUpdate(this, "$name", new Value(displayName));
+            } else {
+                man.postMetaUpdate(this, "$name", null);
+            }
         }
     }
 
