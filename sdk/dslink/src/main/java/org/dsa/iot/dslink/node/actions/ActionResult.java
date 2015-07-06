@@ -100,6 +100,7 @@ public class ActionResult {
      * @param type Value type the parameter must have.
      * @return Returns a value.
      */
+    @SuppressWarnings("unused")
     public Value getParameter(String name, ValueType type) {
         Value ret = getParameter(name);
         if (ret == null) {
@@ -143,6 +144,7 @@ public class ActionResult {
      *
      * @return Columns of the result
      */
+    @Deprecated
     public JsonArray getColumns() {
         return columns;
     }
@@ -153,6 +155,7 @@ public class ActionResult {
      *
      * @param columns Dynamic columns to set.
      */
+    @Deprecated
     public void setColumns(JsonArray columns) {
         this.columns = columns;
     }
@@ -160,6 +163,7 @@ public class ActionResult {
     /**
      * @return JSON updates as a result of the invocation
      */
+    @Deprecated
     public JsonArray getUpdates() {
         return updates;
     }
@@ -167,6 +171,7 @@ public class ActionResult {
     /**
      * @param updates The invocation results.
      */
+    @Deprecated
     public void setUpdates(JsonArray updates) {
         this.updates = updates;
     }
