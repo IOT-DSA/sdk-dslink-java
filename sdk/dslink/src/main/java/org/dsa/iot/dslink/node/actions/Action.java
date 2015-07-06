@@ -22,12 +22,6 @@ public class Action {
     private boolean hidden;
 
     private final Handler<ActionResult> handler;
-    private final InvokeMode mode;
-
-    public Action(Permission permission,
-                  Handler<ActionResult> handler) {
-        this(permission, handler, InvokeMode.ASYNC);
-    }
 
     /**
      * The default result type is {@link ResultType#VALUES}. This value must
@@ -35,23 +29,16 @@ public class Action {
      *
      * @param permission Minimum required permission to invoke
      * @param handler    Handler for invocation
-     * @param mode       Determines how the action should be invoked
-     * @see #setResultType(ResultType) For changing the invocation results.
      */
-    @Deprecated
     public Action(Permission permission,
-                  Handler<ActionResult> handler,
-                  InvokeMode mode) {
+                  Handler<ActionResult> handler) {
         if (permission == null)
             throw new NullPointerException("permission");
         else if (handler == null)
             throw new NullPointerException("handler");
-        else if (mode == null)
-            throw new NullPointerException("mode");
         this.resultType = ResultType.VALUES;
         this.permission = permission;
         this.handler = handler;
-        this.mode = mode;
     }
 
     /**
@@ -124,16 +111,6 @@ public class Action {
             results.addObject(result);
         }
         return this;
-    }
-
-    /**
-     * Determines whether to synchronously or asynchronously invoke
-     * the action.
-     *
-     * @return How the action is invoked.
-     */
-    public InvokeMode getInvokeMode() {
-        return mode;
     }
 
     /**
@@ -223,14 +200,5 @@ public class Action {
         }
 
         return obj;
-    }
-
-    /**
-     * Determines how to invoke the action handler.
-     */
-    @Deprecated
-    public enum InvokeMode {
-        SYNC,
-        ASYNC
     }
 }
