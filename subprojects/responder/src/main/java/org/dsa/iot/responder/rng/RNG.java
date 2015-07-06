@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class RNG implements MetaData {
 
-    private static final Random RANDOM = new Random();
+    public static final Random RANDOM = new Random();
     private static final Logger LOGGER;
 
     private final Map<Node, ScheduledFuture<?>> futures;
@@ -162,6 +162,10 @@ public class RNG implements MetaData {
 
         builder = parent.createChild("removeRNG");
         builder.setAction(Actions.getRemoveAction());
+        builder.build();
+
+        builder = parent.createChild("tableStream");
+        builder.setAction(Actions.getTableAction());
         builder.build();
 
         rng.initChildren();

@@ -1,6 +1,7 @@
 package org.dsa.iot.dslink.methods.responses;
 
 import org.dsa.iot.dslink.DSLink;
+import org.dsa.iot.dslink.connection.DataHandler;
 import org.dsa.iot.dslink.methods.Response;
 import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.node.Node;
@@ -17,6 +18,7 @@ import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -94,19 +96,22 @@ public class InvokeResponse implements Response {
                 JsonArray results = new JsonArray();
                 Table table = actionResult.getTable();
                 List<Row> rows = table.getRows();
-                for (Row r : rows) {
-                    JsonArray row = new JsonArray();
-                    List<Value> values = r.getValues();
-                    if (values != null) {
-                        for (Value v : values) {
-                            if (v != null) {
-                                ValueUtils.toJson(row, v);
-                            } else {
-                                row.add(null);
+                if (rows != null) {
+                    rows = new LinkedList<>(rows);
+                    for (Row r : rows) {
+                        JsonArray row = new JsonArray();
+                        List<Value> values = r.getValues();
+                        if (values != null) {
+                            for (Value v : values) {
+                                if (v != null) {
+                                    ValueUtils.toJson(row, v);
+                                } else {
+                                    row.add(null);
+                                }
                             }
                         }
+                        results.addArray(row);
                     }
-                    results.addArray(row);
                 }
 
                 StreamState state = actionResult.getStreamState();
@@ -116,9 +121,12 @@ public class InvokeResponse implements Response {
                 processColumns(action, out);
                 out.putArray("updates", results);
 
-                link.getWriter().writeResponse(out);
+                DataHandler writer = link.getWriter();
+                writer.writeResponse(out);
                 if (state == StreamState.CLOSED) {
                     link.getResponder().removeResponse(rid);
+                } else {
+                    table.setStreaming(rid, writer);
                 }
             }
         });
