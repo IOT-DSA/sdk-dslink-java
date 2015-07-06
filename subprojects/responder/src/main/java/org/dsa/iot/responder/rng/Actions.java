@@ -5,10 +5,11 @@ import org.dsa.iot.dslink.node.Permission;
 import org.dsa.iot.dslink.node.actions.Action;
 import org.dsa.iot.dslink.node.actions.ActionResult;
 import org.dsa.iot.dslink.node.actions.Parameter;
+import org.dsa.iot.dslink.node.actions.table.Row;
+import org.dsa.iot.dslink.node.actions.table.Table;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.vertx.java.core.Handler;
-import org.vertx.java.core.json.JsonArray;
 
 /**
  * @author Samuel Grenier
@@ -51,11 +52,8 @@ public class Actions {
                     RNG rng = event.getNode().getParent().getMetaData();
                     count = rng.addRNG(count);
 
-                    JsonArray updates = new JsonArray();
-                    JsonArray update = new JsonArray();
-                    update.addNumber(count);
-                    updates.addArray(update);
-                    event.setUpdates(updates);
+                    Table t = event.getTable();
+                    t.addRow(Row.make(new Value(count)));
                 }
             });
 
@@ -78,11 +76,8 @@ public class Actions {
                     RNG rng = event.getNode().getParent().getMetaData();
                     count = rng.removeRNG(count);
 
-                    JsonArray updates = new JsonArray();
-                    JsonArray update = new JsonArray();
-                    update.addNumber(count);
-                    updates.addArray(update);
-                    event.setUpdates(updates);
+                    Table t = event.getTable();
+                    t.addRow(Row.make(new Value(count)));
                 }
             });
 

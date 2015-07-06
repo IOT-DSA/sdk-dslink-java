@@ -6,10 +6,17 @@ import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.actions.Action;
 import org.dsa.iot.dslink.node.actions.ActionResult;
+import org.dsa.iot.dslink.node.actions.Parameter;
+import org.dsa.iot.dslink.node.actions.table.Row;
+import org.dsa.iot.dslink.node.actions.table.Table;
+import org.dsa.iot.dslink.node.value.Value;
+import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.dsa.iot.dslink.util.Objects;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
+
+import java.util.List;
 
 /**
  * @author Samuel Grenier
@@ -59,7 +66,24 @@ public class InvokeResponse implements Response {
                 actionResult = new ActionResult(node, in);
                 action.invoke(actionResult);
 
-                InvokeResponse.this.results = actionResult.getUpdates();
+                results = new JsonArray();
+                Table table = actionResult.getTable();
+                List<Row> rows = table.getRows();
+                for (Row r : rows) {
+                    JsonArray row = new JsonArray();
+                    List<Value> values = r.getValues();
+                    if (values != null) {
+                        for (Value v : values) {
+                            if (v != null) {
+                                ValueUtils.toJson(row, v);
+                            } else {
+                                row.add(null);
+                            }
+                        }
+                    }
+                    results.addArray(row);
+                }
+
                 StreamState state = actionResult.getStreamState();
                 JsonObject out = new JsonObject();
                 out.putNumber("rid", rid);
@@ -94,12 +118,22 @@ public class InvokeResponse implements Response {
     }
 
     private void processColumns(Action act, JsonObject obj) {
-        JsonArray cols = actionResult.getColumns();
+        Table table = actionResult.getTable();
+        List<Parameter> cols = table.getColumns();
+        JsonArray array;
         if (!act.isHidden() && cols == null) {
-            cols = act.getColumns();
+            array = act.getColumns();
+        } else {
+            array = new JsonArray();
+            for (Parameter p : cols) {
+                JsonObject o = new JsonObject();
+                o.putString("name", p.getName());
+                o.putString("type", p.getType().toJsonString());
+                array.addObject(o);
+            }
         }
         if (cols != null) {
-            obj.putArray("columns", cols);
+            obj.putArray("columns", array);
         }
     }
 }

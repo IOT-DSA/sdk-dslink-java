@@ -2,11 +2,11 @@ package org.dsa.iot.dslink.node.actions;
 
 import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.node.Node;
+import org.dsa.iot.dslink.node.actions.table.Table;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.vertx.java.core.Handler;
-import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 /**
@@ -27,16 +27,9 @@ public class ActionResult {
     private final JsonObject jsonIn;
 
     /**
-     * If the action result has dynamic columns this can be set. If the columns
-     * remains {@code null} then the default columns from the defined action
-     * will be used.
+     * Table of results returned from the action.
      */
-    private JsonArray columns;
-
-    /**
-     * Updates returned from the list response
-     */
-    private JsonArray updates;
+    private Table table;
 
     /**
      * Stream state can be set to prevent a closing stream after invocation.
@@ -138,42 +131,25 @@ public class ActionResult {
         return ret;
     }
 
+    public Table getTable() {
+        if (table == null) {
+            return table = new Table();
+        }
+        return table;
+    }
+
     /**
-     * Gets the columns of the result. If no columns were set then the
-     * default columns sent will be from the defined action.
+     * Sets the table of results to be returned. This method is not necessary
+     * if a custom {@link Table} instance is not being used.
+     * {@link #getTable()} is sufficient for a standard table.
      *
-     * @return Columns of the result
+     * @param table Table to set.
      */
-    @Deprecated
-    public JsonArray getColumns() {
-        return columns;
-    }
-
-    /**
-     * When the columns are sent, these columns override the default columns
-     * of the action. This allows for dynamic columns to be sent.
-     *
-     * @param columns Dynamic columns to set.
-     */
-    @Deprecated
-    public void setColumns(JsonArray columns) {
-        this.columns = columns;
-    }
-
-    /**
-     * @return JSON updates as a result of the invocation
-     */
-    @Deprecated
-    public JsonArray getUpdates() {
-        return updates;
-    }
-
-    /**
-     * @param updates The invocation results.
-     */
-    @Deprecated
-    public void setUpdates(JsonArray updates) {
-        this.updates = updates;
+    public void setTable(Table table) {
+        if (table == null) {
+            throw new NullPointerException("table");
+        }
+        this.table = table;
     }
 
     /**

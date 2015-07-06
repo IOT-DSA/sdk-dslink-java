@@ -8,6 +8,8 @@ import org.dsa.iot.dslink.node.Writable;
 import org.dsa.iot.dslink.node.actions.Action;
 import org.dsa.iot.dslink.node.actions.ActionResult;
 import org.dsa.iot.dslink.node.actions.Parameter;
+import org.dsa.iot.dslink.node.actions.table.Row;
+import org.dsa.iot.dslink.node.actions.table.Table;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValuePair;
 import org.dsa.iot.dslink.node.value.ValueType;
@@ -15,7 +17,6 @@ import org.dsa.iot.dslink.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
-import org.vertx.java.core.json.JsonArray;
 
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
@@ -99,14 +100,8 @@ public class Responder {
             @Override
             public void handle(ActionResult event) {
                 LOGGER.info("Responder action invoked from requester");
-
-                JsonArray updates = new JsonArray();
-                {
-                    JsonArray update = new JsonArray();
-                    update.addString("Hello world");
-                    updates.addArray(update);
-                }
-                event.setUpdates(updates);
+                Table t = event.getTable();
+                t.addRow(Row.make(new Value("Hello world")));
             }
         }).addResult(new Parameter("response", ValueType.STRING)));
         builder.build();

@@ -6,10 +6,11 @@ import org.dsa.iot.dslink.node.Permission;
 import org.dsa.iot.dslink.node.actions.Action;
 import org.dsa.iot.dslink.node.actions.ActionResult;
 import org.dsa.iot.dslink.node.actions.Parameter;
+import org.dsa.iot.dslink.node.actions.table.Row;
+import org.dsa.iot.dslink.node.actions.table.Table;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.vertx.java.core.Handler;
-import org.vertx.java.core.json.JsonArray;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -37,11 +38,9 @@ public class Echo {
         Action a = new Action(Permission.READ, new Handler<ActionResult>() {
             @Override
             public void handle(ActionResult event) {
-                JsonArray updates = new JsonArray();
-                JsonArray update = new JsonArray();
-                update.addString(event.getParameter("text", new Value("")).getString());
-                updates.addArray(update);
-                event.setUpdates(updates);
+                Value v = event.getParameter("text", new Value(""));
+                Table t = event.getTable();
+                t.addRow(Row.make(v));
             }
         });
         a.addParameter(new Parameter("text", ValueType.STRING)
@@ -55,11 +54,9 @@ public class Echo {
         Action a = new Action(Permission.READ, new Handler<ActionResult>() {
             @Override
             public void handle(ActionResult event) {
-                JsonArray updates = new JsonArray();
-                JsonArray update = new JsonArray();
-                update.addString(event.getParameter("type", new Value("")).getString());
-                updates.addArray(update);
-                event.setUpdates(updates);
+                Value v = event.getParameter("type", new Value(""));
+                Table t = event.getTable();
+                t.addRow(Row.make(v));
             }
         });
         Set<String> enums = new LinkedHashSet<>();
