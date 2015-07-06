@@ -211,7 +211,8 @@ public class ActionResult {
         if (type != ValueType.DYNAMIC) {
             if (type != value.getType()) {
                 String t = value.getType().toJsonString();
-                throw new RuntimeException("Parameter " + name + " has a bad type of " + t);
+                String msg = "Parameter " + name + " has a bad type of " + t;
+                throw new RuntimeException(msg);
             }
         }
     }
