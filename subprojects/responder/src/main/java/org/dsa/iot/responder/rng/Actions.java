@@ -119,13 +119,9 @@ public class Actions {
                     future = stpe.scheduleWithFixedDelay(new Runnable() {
                         @Override
                         public void run() {
-                            try {
-                                Table t = event.getTable();
-                                int i = RNG.RANDOM.nextInt();
-                                t.addRow(Row.make(new Value(i)));
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
+                            Table t = event.getTable();
+                            int i = RNG.RANDOM.nextInt();
+                            t.addRow(Row.make(new Value(i)));
                         }
                     }, 0, 2, TimeUnit.SECONDS);
                 }
