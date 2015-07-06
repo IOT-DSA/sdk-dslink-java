@@ -353,18 +353,19 @@ public class ListResponse implements Response {
 
     public void metaUpdate(String name, Value value) {
         JsonArray updates = new JsonArray();
-        {
+        if (value != null) {
             JsonArray update = new JsonArray();
             update.addString(name);
 
-            if (value != null) {
-                ValueUtils.toJson(update, value);
-                update.addString(value.getTimeStamp());
-            } else {
-                update.add(null);
-            }
+            ValueUtils.toJson(update, value);
+            update.addString(value.getTimeStamp());
 
             updates.addArray(update);
+        } else {
+            JsonObject obj = new JsonObject();
+            obj.putString("name", name);
+            obj.putString("change", "remove");
+            updates.addObject(obj);
         }
 
         JsonObject resp = new JsonObject();
