@@ -10,6 +10,7 @@ import org.dsa.iot.dslink.node.actions.Parameter;
 import org.dsa.iot.dslink.node.actions.table.Row;
 import org.dsa.iot.dslink.node.actions.table.Table;
 import org.dsa.iot.dslink.node.value.Value;
+import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.dsa.iot.dslink.util.Objects;
 import org.vertx.java.core.Handler;
@@ -27,7 +28,7 @@ public class InvokeResponse implements Response {
 
     private final Node node;
     private final int rid;
-    private JsonArray results;
+    private Table results;
     private ActionResult actionResult;
 
     public InvokeResponse(DSLink link, int rid, Node node) {
@@ -43,11 +44,35 @@ public class InvokeResponse implements Response {
 
     @Override
     public void populate(JsonObject in) {
-        // TODO: Table API
-        results = in.getArray("updates");
+        results = new Table();
+        {
+            JsonArray cols = in.getArray("columns");
+            if (cols != null) {
+                for (Object object : cols) {
+                    JsonObject col = (JsonObject) object;
+                    String name = col.getString("name");
+                    String type = col.getString("type");
+                    ValueType vt = ValueType.toValueType(type);
+                    results.addColumn(new Parameter(name, vt));
+                }
+            }
+        }
+        {
+            JsonArray updates = in.getArray("updates");
+            if (updates != null) {
+                for (Object object : updates) {
+                    Row row = new Row();
+                    JsonArray rowArray = (JsonArray) object;
+                    for (Object rowValue : rowArray) {
+                        row.addValue(ValueUtils.toValue(rowValue));
+                    }
+                    results.addRow(row);
+                }
+            }
+        }
     }
 
-    public JsonArray getResults() {
+    public Table getTable() {
         return results;
     }
 
@@ -66,7 +91,7 @@ public class InvokeResponse implements Response {
                 actionResult = new ActionResult(node, in);
                 action.invoke(actionResult);
 
-                results = new JsonArray();
+                JsonArray results = new JsonArray();
                 Table table = actionResult.getTable();
                 List<Row> rows = table.getRows();
                 for (Row r : rows) {
@@ -89,7 +114,7 @@ public class InvokeResponse implements Response {
                 out.putNumber("rid", rid);
                 out.putString("stream", state.getJsonName());
                 processColumns(action, out);
-                out.putArray("updates", InvokeResponse.this.results);
+                out.putArray("updates", results);
 
                 link.getWriter().writeResponse(out);
                 if (state == StreamState.CLOSED) {

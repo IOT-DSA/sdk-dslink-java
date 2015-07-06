@@ -9,6 +9,8 @@ import org.dsa.iot.dslink.methods.responses.InvokeResponse;
 import org.dsa.iot.dslink.methods.responses.ListResponse;
 import org.dsa.iot.dslink.methods.responses.SetResponse;
 import org.dsa.iot.dslink.node.Node;
+import org.dsa.iot.dslink.node.actions.table.Row;
+import org.dsa.iot.dslink.node.actions.table.Table;
 import org.dsa.iot.dslink.node.value.SubscriptionValue;
 import org.dsa.iot.dslink.node.value.Value;
 import org.slf4j.Logger;
@@ -107,7 +109,11 @@ public class Requester extends DSLinkHandler {
             @Override
             public void handle(InvokeResponse event) {
                 LOGGER.info("Successfully invoked the responder action");
-                LOGGER.info("Received response: " + event.getResults().encode());
+
+                Table t = event.getTable();
+                Row row = t.getRows().get(0);
+                Value value = row.getValues().get(0);
+                LOGGER.info("Received response: {}", value.toString());
             }
         });
     }
