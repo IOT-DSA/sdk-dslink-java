@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class RNG implements MetaData {
 
-    public static final Random RANDOM = new Random();
+    private static final Random RANDOM = new Random();
     private static final Logger LOGGER;
 
     private final Map<Node, ScheduledFuture<?>> futures;

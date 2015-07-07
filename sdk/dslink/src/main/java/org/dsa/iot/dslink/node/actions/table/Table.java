@@ -37,13 +37,13 @@ public class Table {
     }
 
     public void addRow(Row row) {
+        DataHandler writer = this.writer;
         if (row == null) {
             throw new NullPointerException("row");
-        } else if (rows == null) {
+        } else if (rows == null && writer == null) {
             rows = new LinkedList<>();
         }
 
-        DataHandler writer = this.writer;
         if (writer == null) {
             rows.add(row);
         } else {

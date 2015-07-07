@@ -123,13 +123,12 @@ public class Actions {
                         @Override
                         public void run() {
                             Table t = event.getTable();
-                            int i = RNG.RANDOM.nextInt();
-                            t.addRow(Row.make(new Value(i)));
-                            if (counter++ > 10) {
+                            t.addRow(Row.make(new Value(counter)));
+                            if (counter++ == 10) {
                                 t.close();
                             }
                         }
-                    }, 0, 2, TimeUnit.SECONDS);
+                    }, 0, 300, TimeUnit.MILLISECONDS);
                 }
             });
             TABLE_ACTION.addResult(new Parameter("number", ValueType.STRING));
