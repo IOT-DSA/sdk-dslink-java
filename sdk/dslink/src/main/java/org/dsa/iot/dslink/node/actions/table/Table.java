@@ -27,6 +27,11 @@ public class Table {
     private DataHandler writer;
     private Handler<Void> closeHandler;
 
+    /**
+     * Adds a column to the table.
+     *
+     * @param parameter Column to add.
+     */
     public void addColumn(Parameter parameter) {
         if (parameter == null) {
             throw new NullPointerException("parameter");
@@ -36,6 +41,12 @@ public class Table {
         columns.add(parameter);
     }
 
+    /**
+     * Adds a row to the internal row buffer or streams it directly to
+     * the requester.
+     *
+     * @param row Row to add to the table.
+     */
     public void addRow(Row row) {
         DataHandler writer = this.writer;
         if (row == null) {
@@ -71,6 +82,14 @@ public class Table {
         }
     }
 
+    /**
+     * Used to set the table to streaming mode. This is called automatically
+     * for any tables that keep their stream open.
+     *
+     * @param rid Request ID
+     * @param writer Writer endpoint
+     * @param closeHandler Close handler
+     */
     public void setStreaming(int rid,
                              DataHandler writer,
                              Handler<Void> closeHandler) {
@@ -82,6 +101,10 @@ public class Table {
         columns = null;
     }
 
+    /**
+     * Closes a streaming table. This is not necessary to call for one-shot
+     * tables.
+     */
     public void close() {
         DataHandler writer = this.writer;
         if (writer != null) {
@@ -98,10 +121,18 @@ public class Table {
         }
     }
 
+    /**
+     *
+     * @return Columns of the table.
+     */
     public List<Parameter> getColumns() {
         return columns != null ? Collections.unmodifiableList(columns) : null;
     }
 
+    /**
+     *
+     * @return Rows of the table.
+     */
     public List<Row> getRows() {
         return rows != null ? Collections.unmodifiableList(rows) : null;
     }
