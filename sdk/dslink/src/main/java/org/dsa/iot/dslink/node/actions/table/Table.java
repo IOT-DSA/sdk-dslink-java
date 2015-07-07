@@ -42,6 +42,8 @@ public class Table {
         } else if (rows == null) {
             rows = new LinkedList<>();
         }
+
+        DataHandler writer = this.writer;
         if (writer == null) {
             rows.add(row);
         } else {
