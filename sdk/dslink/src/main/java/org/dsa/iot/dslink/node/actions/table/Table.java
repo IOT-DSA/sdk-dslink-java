@@ -5,6 +5,7 @@ import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.node.actions.Parameter;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueUtils;
+import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
@@ -24,6 +25,7 @@ public class Table {
 
     private int rid;
     private DataHandler writer;
+    private Handler<Void> closeHandler;
 
     public void addColumn(Parameter parameter) {
         if (parameter == null) {
@@ -67,12 +69,31 @@ public class Table {
         }
     }
 
-    public void setStreaming(int rid, DataHandler writer) {
+    public void setStreaming(int rid,
+                             DataHandler writer,
+                             Handler<Void> closeHandler) {
         this.rid = rid;
         this.writer = writer;
+        this.closeHandler = closeHandler;
 
         rows = null;
         columns = null;
+    }
+
+    public void close() {
+        DataHandler writer = this.writer;
+        if (writer != null) {
+            JsonObject obj = new JsonObject();
+            obj.putNumber("rid", rid);
+            obj.putString("stream", StreamState.CLOSED.getJsonName());
+            writer.writeResponse(obj);
+            this.writer = null;
+            Handler<Void> closeHandler = this.closeHandler;
+            if (closeHandler != null) {
+                this.closeHandler = null;
+                closeHandler.handle(null);
+            }
+        }
     }
 
     public List<Parameter> getColumns() {

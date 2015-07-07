@@ -117,11 +117,17 @@ public class Actions {
                     });
                     ScheduledThreadPoolExecutor stpe = Objects.getDaemonThreadPool();
                     future = stpe.scheduleWithFixedDelay(new Runnable() {
+
+                        private int counter = 0;
+
                         @Override
                         public void run() {
                             Table t = event.getTable();
                             int i = RNG.RANDOM.nextInt();
                             t.addRow(Row.make(new Value(i)));
+                            if (counter++ > 10) {
+                                t.close();
+                            }
                         }
                     }, 0, 2, TimeUnit.SECONDS);
                 }

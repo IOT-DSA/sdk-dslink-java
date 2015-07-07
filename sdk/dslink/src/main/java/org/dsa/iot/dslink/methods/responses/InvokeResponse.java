@@ -126,7 +126,8 @@ public class InvokeResponse implements Response {
                 if (state == StreamState.CLOSED) {
                     link.getResponder().removeResponse(rid);
                 } else {
-                    table.setStreaming(rid, writer);
+                    Handler<Void> ch = actionResult.getCloseHandler();
+                    table.setStreaming(rid, writer, ch);
                 }
             }
         });
