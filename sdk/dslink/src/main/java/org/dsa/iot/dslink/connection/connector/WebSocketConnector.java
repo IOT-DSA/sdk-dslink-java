@@ -135,7 +135,7 @@ public class WebSocketConnector extends RemoteEndpoint {
                     }
                 }
             }
-        }, 30, 30, TimeUnit.SECONDS);
+        }, 0, 30, TimeUnit.SECONDS);
     }
 
     private void checkConnected() {
