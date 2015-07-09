@@ -28,6 +28,11 @@ public class Main extends DSLinkHandler {
         LOGGER.info("Responder initialized");
     }
 
+    @Override
+    public void onResponderConnected(DSLink link) {
+        LOGGER.info("Responder connected");
+    }
+
     public static void main(String[] args) {
         DSLinkFactory.startResponder("responder", args, new Main());
     }

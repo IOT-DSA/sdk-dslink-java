@@ -77,6 +77,7 @@ public class IntervalUpdateManager {
         if (obj == null) {
             tasks.put(rid, content);
         } else {
+            // Merge in updates
             JsonArray oldUpdates = obj.getField("updates");
             if (oldUpdates != null) {
                 Object newUpdates = content.removeField("updates");
@@ -92,10 +93,18 @@ public class IntervalUpdateManager {
                         }
                     }
                 }
-                obj.mergeIn(content);
-            } else {
-                obj.mergeIn(content);
             }
+
+            // Merge in meta
+            JsonObject oldMeta = obj.getField("meta");
+            if (oldMeta != null) {
+                Object newMetaObj = content.removeField("meta");
+                Map<String, Object> map = (Map<String, Object>) newMetaObj;
+                JsonObject newMeta = new JsonObject(map);
+                oldMeta.mergeIn(newMeta);
+            }
+
+            obj.mergeIn(content);
         }
     }
 }

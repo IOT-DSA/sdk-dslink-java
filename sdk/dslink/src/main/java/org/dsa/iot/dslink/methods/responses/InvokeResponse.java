@@ -119,6 +119,15 @@ public class InvokeResponse implements Response {
                 out.putNumber("rid", rid);
                 out.putString("stream", state.getJsonName());
                 processColumns(action, out);
+                {
+                    Table.Mode mode = table.getMode();
+                    if (mode != null) {
+                        JsonObject def = new JsonObject();
+                        JsonObject meta = out.getObject("meta", def);
+                        meta.putString("mode", mode.getName());
+                        out.putObject("meta", meta);
+                    }
+                }
                 out.putArray("updates", results);
 
                 DataHandler writer = link.getWriter();
@@ -144,6 +153,9 @@ public class InvokeResponse implements Response {
             if (handler != null) {
                 handler.handle(null);
             }
+
+            Table table = actionResult.getTable();
+            table.setClosed();
         }
         JsonObject obj = new JsonObject();
         obj.putNumber("rid", rid);

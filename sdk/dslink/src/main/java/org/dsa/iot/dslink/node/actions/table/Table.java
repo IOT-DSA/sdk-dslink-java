@@ -22,6 +22,7 @@ public class Table {
 
     private List<Parameter> columns;
     private List<Row> rows;
+    private Mode mode;
 
     private int rid;
     private DataHandler writer;
@@ -42,6 +43,37 @@ public class Table {
     }
 
     /**
+     * Batch metadata is ignored if the table is not streaming.
+     *
+     * @param batch Batch of rows.
+     */
+    public void addBatchRows(BatchRow batch) {
+        DataHandler writer = this.writer;
+        if (batch == null) {
+            throw new NullPointerException("batch");
+        } else if (rows == null && writer == null) {
+            rows = new LinkedList<>();
+        }
+
+        if (writer == null) {
+            rows.addAll(batch.getRows());
+        } else {
+            JsonArray updates = new JsonArray();
+            for (Row r : batch.getRows()) {
+                updates.addArray(processRow(r));
+            }
+
+            BatchRow.Modifier m = batch.getModifier();
+            JsonObject meta = null;
+            if (m != null) {
+                meta = new JsonObject();
+                meta.putString("modify", batch.getModifier().get());
+            }
+            write(writer, updates, meta);
+        }
+    }
+
+    /**
      * Adds a row to the internal row buffer or streams it directly to
      * the requester.
      *
@@ -58,28 +90,32 @@ public class Table {
         if (writer == null) {
             rows.add(row);
         } else {
-            JsonObject obj = new JsonObject();
-            obj.putNumber("rid", rid);
-            obj.putString("stream", StreamState.OPEN.getJsonName());
-            {
-                JsonArray rowArray = new JsonArray();
-                List<Value> values = row.getValues();
-                if (values != null) {
-                    for (Value v : values) {
-                        if (v != null) {
-                            ValueUtils.toJson(rowArray, v);
-                        } else {
-                            rowArray.add(null);
-                        }
-                    }
-                }
-
-                JsonArray updates = new JsonArray();
-                updates.addArray(rowArray);
-                obj.putArray("updates", updates);
-            }
-            writer.writeResponse(obj);
+            JsonArray updates = new JsonArray();
+            updates.addArray(processRow(row));
+            write(writer, updates, null);
         }
+    }
+
+    /**
+     * Sets the mode of the table.
+     *
+     * @param mode Mode to set.
+     */
+    public void setMode(Mode mode) {
+        DataHandler writer = this.writer;
+        if (mode == null) {
+            throw new NullPointerException("mode");
+        } else if (writer == null) {
+            this.mode = mode;
+        } else {
+            JsonObject meta = new JsonObject();
+            meta.putString("mode", mode.getName());
+            write(writer, null, meta);
+        }
+    }
+
+    public Mode getMode() {
+        return mode;
     }
 
     /**
@@ -99,6 +135,7 @@ public class Table {
 
         rows = null;
         columns = null;
+        mode = null;
     }
 
     /**
@@ -119,6 +156,20 @@ public class Table {
                 closeHandler.handle(null);
             }
         }
+        setClosed();
+    }
+
+    /**
+     * Sets the table to closed if it was streaming without notifying the
+     * network. Automatically called when {@link #close} is called or the
+     * requester closes the table to prevent unnecessary updates.
+     */
+    public void setClosed() {
+        this.writer = null;
+        this.columns = null;
+        this.rows = null;
+        this.mode = null;
+        this.closeHandler = null;
     }
 
     /**
@@ -135,5 +186,51 @@ public class Table {
      */
     public List<Row> getRows() {
         return rows != null ? Collections.unmodifiableList(rows) : null;
+    }
+
+    private void write(DataHandler writer,
+                       JsonArray updates,
+                       JsonObject meta) {
+        JsonObject obj = new JsonObject();
+        obj.putNumber("rid", rid);
+        obj.putString("stream", StreamState.OPEN.getJsonName());
+        if (meta != null) {
+            obj.putObject("meta", meta);
+        }
+        if (updates != null) {
+            obj.putArray("updates", updates);
+        }
+        writer.writeResponse(obj);
+    }
+
+    private JsonArray processRow(Row row) {
+        JsonArray rowArray = new JsonArray();
+        List<Value> values = row.getValues();
+        if (values != null) {
+            for (Value v : values) {
+                if (v != null) {
+                    ValueUtils.toJson(rowArray, v);
+                } else {
+                    rowArray.add(null);
+                }
+            }
+        }
+        return rowArray;
+    }
+
+    public enum Mode {
+        REFRESH("refresh"),
+        APPEND("append"),
+        STREAM("stream");
+
+        private final String mode;
+
+        Mode(String mode) {
+            this.mode = mode;
+        }
+
+        public String getName() {
+            return mode;
+        }
     }
 }
