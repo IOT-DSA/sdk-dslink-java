@@ -1,14 +1,2 @@
-apply plugin: 'application'
-
+apply from: '../build.gradle'
 mainClassName = 'org.dsa.iot.dual.Main'
-
-dependencies {
-    compile project(':sdk/dslink')
-}
-
-run {
-    args System.getProperty("exec.args", "").split() + "-d" + "../dslink.json"
-    workingDir project.buildDir
-}
-
-applicationDistribution.from new File(project.projectDir, "/dslink.json")
