@@ -1,0 +1,17 @@
+apply from: '../build.gradle'
+
+dependencies {
+    compile project(':sdk/dslink')
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            pom.project {
+                name = 'Historian SDK'
+                artifactId = 'historian'
+                description = 'SDK for creating Historian DSLinks'
+            }
+        }
+    }
+}

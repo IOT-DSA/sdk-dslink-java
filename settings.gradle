@@ -1,3 +1,4 @@
+include 'sdk/historian'
 include 'sdk/dslink'
 
 include 'subprojects/requester'
