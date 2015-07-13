@@ -10,7 +10,7 @@ public class Parameter {
 
     private final String name;
     private final ValueType type;
-    private final Value defVal;
+    private Value defVal;
 
     private EditorType editorType;
     private String description;
@@ -35,6 +35,17 @@ public class Parameter {
         this.name = name;
         this.type = type;
         this.defVal = def;
+    }
+
+    /**
+     * Sets the default value of the parameter.
+     *
+     * @param def Default value.
+     * @return This object for daisy chaining.
+     */
+    public Parameter setDefaultValue(Value def) {
+        this.defVal = def;
+        return this;
     }
 
     /**

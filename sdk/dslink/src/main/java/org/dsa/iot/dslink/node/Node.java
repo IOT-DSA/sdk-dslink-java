@@ -447,6 +447,15 @@ public class Node {
     }
 
     /**
+     * @param name Name of the child.
+     * @return Whether this node has the child or not.
+     */
+    public boolean hasChild(String name) {
+        Map<String, Node> children = this.children;
+        return children != null && children.containsKey(name);
+    }
+
+    /**
      * @return The configurations in this node.
      */
     public Map<String, Value> getConfigurations() {
@@ -692,6 +701,7 @@ public class Node {
                         Value cols = new Value(action.getColumns());
                         man.postMetaUpdate(this, "$params", params);
                         man.postMetaUpdate(this, "$columns", cols);
+                        action.setSubscriptionManager(this, man);
                     } else {
                         man.postMetaUpdate(this, "$params", null);
                         man.postMetaUpdate(this, "$columns", null);

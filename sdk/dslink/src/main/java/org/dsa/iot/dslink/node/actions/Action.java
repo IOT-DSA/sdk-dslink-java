@@ -1,11 +1,15 @@
 package org.dsa.iot.dslink.node.actions;
 
+import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.Permission;
+import org.dsa.iot.dslink.node.SubscriptionManager;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
+
+import java.util.List;
 
 /**
  * Action API for handling invocations, parameters, and results.
@@ -14,8 +18,11 @@ import org.vertx.java.core.json.JsonObject;
  */
 public class Action {
 
-    private final JsonArray params = new JsonArray();
-    private final JsonArray results = new JsonArray();
+    private JsonArray params = new JsonArray();
+    private JsonArray results = new JsonArray();
+
+    private SubscriptionManager manager;
+    private Node node;
 
     private Permission permission;
     private ResultType resultType;
@@ -111,6 +118,28 @@ public class Action {
             results.addObject(result);
         }
         return this;
+    }
+
+    /**
+     * Clears the existing parameters and adds the new parameters.
+     *
+     * @param newParams Parameters to set.
+     */
+    public void setParams(List<Parameter> newParams) {
+        this.params = new JsonArray();
+        for (Parameter p : newParams) {
+            addParameter(p);
+        }
+        if (node != null && manager != null) {
+            Value v = new Value(getParams());
+            manager.postMetaUpdate(node, "$params", v);
+        }
+    }
+
+    public void setSubscriptionManager(Node node,
+                                       SubscriptionManager manager) {
+        this.node = node;
+        this.manager = manager;
     }
 
     /**
