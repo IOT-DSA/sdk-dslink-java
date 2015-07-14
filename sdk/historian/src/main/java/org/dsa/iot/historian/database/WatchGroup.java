@@ -20,6 +20,7 @@ import java.util.Set;
  */
 public class WatchGroup {
 
+    private final Permission permission;
     private final Database db;
     private final Node node;
 
@@ -28,12 +29,21 @@ public class WatchGroup {
     //private long interval;
 
     /**
+     * @param perm Permission all actions should be set to.
      * @param node Watch group node.
      * @param db Database the group writes to.
      */
-    public WatchGroup(Node node, Database db) {
+    public WatchGroup(Permission perm, Node node, Database db) {
+        this.permission = perm;
         this.node = node;
         this.db = db;
+    }
+
+    /**
+     * @return The database the group operates on.
+     */
+    public Database getDb() {
+        return db;
     }
 
     /**
@@ -46,12 +56,15 @@ public class WatchGroup {
         {
             NodeBuilder b = node.createChild(path.replaceAll("/", "%2F"));
             Node n = b.build();
-            watch.initData(n);
+            watch.init(permission, n);
             n.setMetaData(watch);
         }
         db.getProvider().getPool().subscribe(path, watch);
     }
 
+    /**
+     * Subscribes to the entire watch group.
+     */
     public void subscribe() {
         Map<String, Node> children = node.getChildren();
         for (Node n : children.values()) {
@@ -61,6 +74,9 @@ public class WatchGroup {
         }
     }
 
+    /**
+     * Unsubscribes from the entire watch group.
+     */
     public void unsubscribe() {
         SubscriptionPool pool = db.getProvider().getPool();
         Map<String, Node> children = node.getChildren();
@@ -76,15 +92,13 @@ public class WatchGroup {
     /**
      * All settings must be as actions and their default parameters should be
      * updated when changed. Be sure to call {@code super} on this method.
-     *
-     * @param perm Permissions to modify settings.
      */
-    protected void initSettings(Permission perm) {
+    protected void initSettings() {
         {
             NodeBuilder b = node.createChild("addWatchPath");
             b.setDisplayName("Add Watch Path");
             {
-                Action a = new Action(perm, new Handler<ActionResult>() {
+                Action a = new Action(permission, new Handler<ActionResult>() {
                     @Override
                     public void handle(ActionResult event) {
                         ValueType vt = ValueType.STRING;
@@ -157,7 +171,7 @@ public class WatchGroup {
                 handler.setLoggingTypeParam(lt);
                 handler.setIntervalParam(i);
 
-                Action a = new Action(perm, handler);
+                Action a = new Action(permission, handler);
                 a.addParameter(bft);
                 a.addParameter(lt);
                 a.addParameter(i);
@@ -171,7 +185,7 @@ public class WatchGroup {
         {
             NodeBuilder b = node.createChild("delete");
             b.setDisplayName("Delete");
-            b.setAction(new Action(perm, new Handler<ActionResult>() {
+            b.setAction(new Action(permission, new Handler<ActionResult>() {
                 @Override
                 public void handle(ActionResult event) {
                     Node node = event.getNode().getParent();

@@ -127,9 +127,9 @@ public abstract class DatabaseProvider {
     }
 
     private void createAndInitWatchGroup(Node node, Database db) {
-        WatchGroup group = new WatchGroup(node, db);
+        WatchGroup group = new WatchGroup(dbPermission(), node, db);
         node.setMetaData(group);
-        group.initSettings(dbPermission());
+        group.initSettings();
     }
 
     private void initCreateWatchGroupAct(final Node node) {
