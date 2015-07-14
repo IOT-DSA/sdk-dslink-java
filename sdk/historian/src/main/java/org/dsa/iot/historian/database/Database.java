@@ -89,9 +89,10 @@ public abstract class Database {
      *
      * @param path Path to query.
      * @param value Value received from the server.
+     * @param ts Converted time in UTC.
      * @see TimeParser
      */
-    public abstract void write(String path, Value value);
+    public abstract void write(String path, Value value, long ts);
 
     /**
      * Times must be in UTC.

@@ -6,14 +6,19 @@ import org.dsa.iot.dslink.node.Permission;
 import org.dsa.iot.dslink.node.actions.Action;
 import org.dsa.iot.dslink.node.actions.ActionResult;
 import org.dsa.iot.dslink.node.actions.Parameter;
+import org.dsa.iot.dslink.node.value.SubscriptionValue;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
+import org.dsa.iot.dslink.util.Objects;
+import org.dsa.iot.historian.utils.TimeParser;
+import org.dsa.iot.historian.utils.WatchUpdate;
 import org.vertx.java.core.Handler;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Samuel Grenier
@@ -24,9 +29,12 @@ public class WatchGroup {
     private final Database db;
     private final Node node;
 
-    //private LoggingType type;
-    //private int flushTime;
-    //private long interval;
+    private final Queue<WatchUpdate> queue = new ConcurrentLinkedDeque<>();
+    private final Object writeLoopLock = new Object();
+    private ScheduledFuture<?> bufferFut;
+
+    private LoggingType loggingType;
+    private long interval;
 
     /**
      * @param perm Permission all actions should be set to.
@@ -40,10 +48,73 @@ public class WatchGroup {
     }
 
     /**
+     * Watches should never write data to the database directly
+     * unless absolutely necessary.
+     *
      * @return The database the group operates on.
      */
     public Database getDb() {
         return db;
+    }
+
+    /**
+     * Writes to the database based on the watch group settings.
+     *
+     * @param watch Watch to write from.
+     * @param sv Subscription update received from the server.
+     */
+    public void write(Watch watch, SubscriptionValue sv) {
+        boolean doWrite = false;
+        switch (loggingType) {
+            case ALL_DATA: {
+                doWrite = true;
+                break;
+            }
+            case INTERVAL: {
+                long currTime = sv.getValue().getDate().getTime();
+                long lastTime = watch.getLastWrittenTime();
+                if (currTime - lastTime > interval) {
+                    doWrite = true;
+                    watch.setLastWrittenTime(currTime);
+                }
+                break;
+            }
+            case POINT_CHANGE: {
+                Value curr = watch.getLastValue();
+                Value update = sv.getValue();
+                if ((curr != null && update == null)
+                        || (curr == null && update != null)
+                        || (curr != null && !curr.equals(update))) {
+                    doWrite = true;
+                    watch.setLastValue(update);
+                }
+                break;
+            }
+            case POINT_TIME: {
+                Value vCurr = watch.getLastValue();
+                Value vUpdate = sv.getValue();
+                long curr = (vCurr == null) ? 0 : vCurr.getDate().getTime();
+                long update = (vUpdate == null) ? 0 : vUpdate.getDate().getTime();
+
+                if ((vCurr != null) && (curr < update)) {
+                    doWrite = true;
+                    watch.setLastValue(vUpdate);
+                }
+                break;
+            }
+        }
+
+        if (doWrite) {
+            WatchUpdate update = new WatchUpdate(watch, sv);
+            if (bufferFut != null) {
+                queue.add(update);
+                return;
+            } else if (!queue.isEmpty()) {
+                handleQueue();
+            }
+            dbWrite(update);
+            watch.handleLastWritten(sv.getValue());
+        }
     }
 
     /**
@@ -170,8 +241,13 @@ public class WatchGroup {
             EditSettingsHandler handler = new EditSettingsHandler();
             {
                 handler.setBufferFlushTimeParam(bft);
+                setupTimer(bft.getDefault().getNumber().intValue());
+
                 handler.setLoggingTypeParam(lt);
+                loggingType = LoggingType.toEnum(lt.getDefault().getString());
+
                 handler.setIntervalParam(i);
+                setInterval(i.getDefault().getNumber().longValue());
 
                 Action a = new Action(permission, handler);
                 a.addParameter(bft);
@@ -207,7 +283,53 @@ public class WatchGroup {
         return b.getChild().getRoConfig(name);
     }
 
-    private static class EditSettingsHandler implements Handler<ActionResult> {
+    private void setupTimer(int time) {
+        synchronized (writeLoopLock) {
+            if (bufferFut != null) {
+                bufferFut.cancel(false);
+                bufferFut = null;
+            }
+
+            if (time <= 0) {
+                return;
+            }
+
+            ScheduledThreadPoolExecutor stpe = Objects.getDaemonThreadPool();
+            bufferFut = stpe.scheduleWithFixedDelay(new Runnable() {
+                @Override
+                public void run() {
+                    handleQueue();
+                }
+            }, time, time, TimeUnit.SECONDS);
+        }
+    }
+
+    private void handleQueue() {
+        int size = queue.size();
+
+        WatchUpdate update = null;
+        for (int i = 0; i < size; ++i) {
+            update = queue.poll();
+            dbWrite(update);
+        }
+
+        if (update != null) {
+            Value value = update.getUpdate().getValue();
+            update.getWatch().handleLastWritten(value);
+        }
+    }
+
+    private void dbWrite(WatchUpdate update) {
+        Value value = update.getUpdate().getValue();
+        long time = TimeParser.parse(value.getTimeStamp());
+        db.write(update.getWatch().getPath(), value, time);
+    }
+
+    private void setInterval(long interval) {
+        this.interval = TimeUnit.SECONDS.toMillis(interval);
+    }
+
+    private class EditSettingsHandler implements Handler<ActionResult> {
 
         private Action action;
 
@@ -248,12 +370,15 @@ public class WatchGroup {
 
             node.setRoConfig("bft", vBft);
             bft.setDefaultValue(vBft);
+            setupTimer(vBft.getNumber().intValue());
 
             node.setRoConfig("lt", vLt);
+            loggingType = LoggingType.toEnum(vLt.getString());
             lt.setDefaultValue(vLt);
 
             node.setRoConfig("i", vI);
             i.setDefaultValue(vI);
+            setInterval(vI.getNumber().longValue());
 
             Set<String> enums = LoggingType.buildEnums(vLt.getString());
             lt.setValueType(ValueType.makeEnum(enums));

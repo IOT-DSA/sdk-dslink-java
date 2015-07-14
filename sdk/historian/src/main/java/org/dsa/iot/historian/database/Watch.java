@@ -21,8 +21,16 @@ public class Watch {
 
     private final WatchGroup group;
     private Node realTimeValue;
-    private boolean enabled;
     private String path;
+
+    private Node lastWrittenValue;
+    private Node startDate;
+    private Node endDate;
+    private boolean enabled;
+
+    // Values that must be handled before the buffer queue
+    private long lastWrittenTime;
+    private Value lastValue;
 
     public Watch(WatchGroup group) {
         this.group = group;
@@ -30,6 +38,38 @@ public class Watch {
 
     public boolean isEnabled() {
         return enabled;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public void handleLastWritten(Value value) {
+        lastWrittenValue.setValue(value);
+        value = new Value(value.getTimeStamp());
+        if (startDate != null) {
+            startDate.setValue(value);
+            startDate = null;
+        }
+
+        endDate.setValue(value);
+        lastWrittenTime = value.getDate().getTime();
+    }
+
+    public void setLastWrittenTime(long time) {
+        lastWrittenTime = time;
+    }
+
+    public long getLastWrittenTime() {
+        return lastWrittenTime;
+    }
+
+    public void setLastValue(Value value) {
+        lastValue = value;
+    }
+
+    public Value getLastValue() {
+        return lastValue;
     }
 
     public void init(Permission perm, Node node) {
@@ -85,28 +125,32 @@ public class Watch {
             NodeBuilder b = node.createChild("startDate");
             b.setDisplayName("Start Date");
             b.setValueType(ValueType.TIME);
+            boolean needsDate = false;
             {
                 QueryData data = group.getDb().queryFirst(path);
                 if (data != null) {
                     Value v = new Value(TimeParser.parse(data.getTimestamp()));
                     b.setValue(v);
+                } else {
+                    needsDate = true;
                 }
-                // TODO: set start date when it never existed.
             }
-            b.build();
+            Node n = b.build();
+            if (needsDate) {
+                startDate = n;
+            }
         }
 
         {
             NodeBuilder b = node.createChild("endDate");
             b.setDisplayName("End Date");
             b.setValueType(ValueType.TIME);
-            // TODO: provide a value setter for this node
-            Node n = b.build();
+            endDate = b.build();
             {
                 QueryData data = group.getDb().queryLast(path);
                 if (data != null) {
                     Value v = new Value(TimeParser.parse(data.getTimestamp()));
-                    n.setValue(v);
+                    endDate.setValue(v);
                 }
             }
         }
@@ -115,8 +159,7 @@ public class Watch {
             NodeBuilder b = node.createChild("lwv");
             b.setDisplayName("Last Written Value");
             b.setValueType(ValueType.DYNAMIC);
-            // TODO: provide a value setter for this node
-            b.build();
+            lastWrittenValue = b.build();
         }
     }
 
@@ -128,5 +171,6 @@ public class Watch {
     public void onData(SubscriptionValue sv) {
         Value v = sv.getValue();
         realTimeValue.setValue(v);
+        group.write(this, sv);
     }
 }
