@@ -9,7 +9,10 @@ import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.util.StringUtils;
 
 import java.lang.ref.WeakReference;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -386,8 +389,7 @@ public class Node {
         synchronized (childrenLock) {
             String name = node.getName();
             if (children == null) {
-                Map<String, Node> coll = new LinkedHashMap<>();
-                children = Collections.synchronizedMap(coll);
+                children = new ConcurrentHashMap<>();
             } else if (children.containsKey(name)) {
                 return children.get(name);
             }
