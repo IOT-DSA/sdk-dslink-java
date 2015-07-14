@@ -7,6 +7,9 @@ import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeBuilder;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.historian.database.DatabaseProvider;
+import org.dsa.iot.historian.database.SubscriptionPool;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
@@ -15,7 +18,9 @@ import java.util.Map;
  */
 public abstract class Historian extends DSLinkHandler {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(Historian.class);
     private final DatabaseProvider provider;
+    private Node reqSuperRoot;
 
     /**
      * Constructs a historian DSLink.
@@ -31,13 +36,16 @@ public abstract class Historian extends DSLinkHandler {
 
     @Override
     public final void onResponderInitialized(DSLink link) {
-        Node superRoot = link.getNodeManager().getSuperRoot();
-        initialize(superRoot);
+        reqSuperRoot = link.getNodeManager().getSuperRoot();
+        initialize(reqSuperRoot);
     }
 
     @Override
     public final void onRequesterConnected(DSLink link) {
-
+        provider.setPool(new SubscriptionPool(link.getRequester()));
+        provider.getPool().clear();
+        provider.subscribe(reqSuperRoot);
+        LOGGER.info("Connected");
     }
 
     /**
@@ -46,7 +54,7 @@ public abstract class Historian extends DSLinkHandler {
      * @param node Historian root node.
      */
     public void initialize(Node node) {
-        initCreateDb(node);
+        initAddDb(node);
         iterateDatabaseChildren(node);
     }
 
@@ -55,9 +63,10 @@ public abstract class Historian extends DSLinkHandler {
      *
      * @param node Node to initialize database creation.
      */
-    protected void initCreateDb(Node node) {
-        NodeBuilder b = node.createChild("createDb");
-        b.setDisplayName("Create Database");
+    protected void initAddDb(Node node) {
+        NodeBuilder b = node.createChild("addDb");
+        b.setSerializable(false);
+        b.setDisplayName("Add Database");
         b.setAction(provider.createDbAction(provider.dbPermission()));
         b.build();
     }

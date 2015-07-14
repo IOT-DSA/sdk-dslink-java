@@ -17,6 +17,16 @@ import java.util.Map;
  */
 public abstract class DatabaseProvider {
 
+    private SubscriptionPool pool;
+
+    public void setPool(SubscriptionPool pool) {
+        this.pool = pool;
+    }
+
+    public SubscriptionPool getPool() {
+        return pool;
+    }
+
     /**
      * The action handler must set the database settings onto the node
      * configurations.
@@ -83,7 +93,7 @@ public abstract class DatabaseProvider {
             for (Node child : children.values()) {
                 Value v = child.getRoConfig("wg");
                 if (v != null && v.getBool()) {
-                    createAndInitWatchGroup(child);
+                    createAndInitWatchGroup(child, db);
                 }
             }
         }
@@ -91,9 +101,35 @@ public abstract class DatabaseProvider {
         return db;
     }
 
-    private void createAndInitWatchGroup(Node node) {
-        WatchGroup group = new WatchGroup();
-        group.initSettings(dbPermission(), node);
+    /**
+     * When the requester is connected, subscribe to all the paths.
+     * @param node Database node.
+     */
+    public void subscribe(final Node node) {
+        Map<String, Node> children = node.getChildren();
+        if (children != null) {
+            for (Node child : children.values()) {
+                Value v = child.getRoConfig("db");
+                if (v != null && v.getBool()) {
+                    Map<String, Node> dbChildren = child.getChildren();
+                    if (dbChildren != null) {
+                        for (Node n : dbChildren.values()) {
+                            v = n.getRoConfig("wg");
+                            if (v != null && v.getBool()) {
+                                WatchGroup g = n.getMetaData();
+                                g.subscribe();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void createAndInitWatchGroup(Node node, Database db) {
+        WatchGroup group = new WatchGroup(node, db);
+        node.setMetaData(group);
+        group.initSettings(dbPermission());
     }
 
     private void initCreateWatchGroupAct(final Node node) {
@@ -110,7 +146,9 @@ public abstract class DatabaseProvider {
                 Node node = event.getNode().getParent();
                 NodeBuilder b = node.createChild(name);
                 b.setRoConfig("wg", new Value(true));
-                createAndInitWatchGroup(b.build());
+
+                Database db = node.getMetaData();
+                createAndInitWatchGroup(b.build(), db);
             }
         });
         {
@@ -137,6 +175,16 @@ public abstract class DatabaseProvider {
                 }
                 Node child = event.getNode().getParent();
                 child.getParent().removeChild(child);
+
+                Map<String, Node> children = child.getChildren();
+                if (children != null) {
+                    for (Node n : children.values()) {
+                        WatchGroup g = n.getMetaData();
+                        if (g != null) {
+                            g.unsubscribe();
+                        }
+                    }
+                }
             }
         }));
         b.build();

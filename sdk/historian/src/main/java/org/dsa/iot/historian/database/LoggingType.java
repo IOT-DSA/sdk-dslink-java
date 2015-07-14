@@ -42,9 +42,13 @@ public enum LoggingType {
 
     public static Set<String> buildEnums(String newType) {
         Set<String> enums = new LinkedHashSet<>();
-        enums.add(newType);
+        if (newType != null) {
+            enums.add(newType);
+        }
         for (LoggingType t : LoggingType.values()) {
-            if (!enums.contains(t.getName())) {
+            if (newType == null) {
+                enums.add(t.getName());
+            } else if (!enums.contains(t.getName())) {
                 enums.add(t.getName());
             }
         }

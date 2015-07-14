@@ -16,6 +16,7 @@ public abstract class Database {
 
     private static final ScheduledThreadPoolExecutor STPE;
 
+    private final DatabaseProvider provider;
     private final Logger logger;
 
     private final Object connectedLock = new Object();
@@ -23,13 +24,15 @@ public abstract class Database {
     private int delay = 1;
     private boolean running;
 
-    public Database(String name) {
+    public Database(String name, DatabaseProvider provider) {
+        this.provider = provider;
+
         name = getClass().getName() + "::" + name;
         logger = LoggerFactory.getLogger(name);
     }
 
-    public Logger getLogger() {
-        return logger;
+    public DatabaseProvider getProvider() {
+        return provider;
     }
 
     /**

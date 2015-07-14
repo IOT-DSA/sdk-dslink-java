@@ -9,7 +9,7 @@ import org.dsa.iot.dslink.node.value.ValueType;
 public class Parameter {
 
     private final String name;
-    private final ValueType type;
+    private ValueType type;
     private Value defVal;
 
     private EditorType editorType;
@@ -35,6 +35,19 @@ public class Parameter {
         this.name = name;
         this.type = type;
         this.defVal = def;
+    }
+
+    /**
+     *
+     * @param type Value type of the parameter.
+     * @return THis object for daisy chaining.
+     */
+    public Parameter setValueType(ValueType type) {
+        if (type == null) {
+            throw new NullPointerException("type");
+        }
+        this.type = type;
+        return this;
     }
 
     /**

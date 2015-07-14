@@ -7,30 +7,79 @@ import org.dsa.iot.dslink.node.actions.Action;
 import org.dsa.iot.dslink.node.actions.ActionResult;
 import org.dsa.iot.dslink.node.actions.Parameter;
 import org.dsa.iot.dslink.node.value.Value;
-import org.dsa.iot.dslink.node.value.ValuePair;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.vertx.java.core.Handler;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Samuel Grenier
  */
 public class WatchGroup {
 
+    private final Database db;
+    private final Node node;
+
     //private LoggingType type;
     //private int flushTime;
-    //private int interval;
+    //private long interval;
+
+    /**
+     * @param node Watch group node.
+     * @param db Database the group writes to.
+     */
+    public WatchGroup(Node node, Database db) {
+        this.node = node;
+        this.db = db;
+    }
+
+    /**
+     * Initializes the watch for the group.
+     *
+     * @param path Watch path.
+     */
+    protected void initWatch(String path) {
+        Watch watch = new Watch(this);
+        {
+            NodeBuilder b = node.createChild(path.replaceAll("/", "%2F"));
+            Node n = b.build();
+            watch.initData(n);
+            n.setMetaData(watch);
+        }
+        db.getProvider().getPool().subscribe(path, watch);
+    }
+
+    public void subscribe() {
+        Map<String, Node> children = node.getChildren();
+        for (Node n : children.values()) {
+            if (n.getAction() == null) {
+                initWatch(n.getName().replaceAll("%2F", "/"));
+            }
+        }
+    }
+
+    public void unsubscribe() {
+        SubscriptionPool pool = db.getProvider().getPool();
+        Map<String, Node> children = node.getChildren();
+        for (Node n : children.values()) {
+            if (n.getAction() == null) {
+                String path = n.getName().replaceAll("%2F", "/");
+                Watch w = n.getMetaData();
+                pool.unsubscribe(path, w);
+            }
+        }
+    }
 
     /**
      * All settings must be as actions and their default parameters should be
      * updated when changed. Be sure to call {@code super} on this method.
      *
      * @param perm Permissions to modify settings.
-     * @param node Watch group node to add settings to.
      */
-    public void initSettings(Permission perm, Node node) {
+    protected void initSettings(Permission perm) {
         {
             NodeBuilder b = node.createChild("addWatchPath");
             b.setDisplayName("Add Watch Path");
@@ -38,7 +87,10 @@ public class WatchGroup {
                 Action a = new Action(perm, new Handler<ActionResult>() {
                     @Override
                     public void handle(ActionResult event) {
-                        // TODO: create watch
+                        ValueType vt = ValueType.STRING;
+                        Value v = event.getParameter("Path", vt);
+                        String path = v.getString();
+                        initWatch(path);
                     }
                 });
                 {
@@ -51,146 +103,150 @@ public class WatchGroup {
             b.build();
         }
         {
-            String childName = "bufferFlushTime";
-            NodeBuilder b = node.createChild(childName);
-            b.setDisplayName("Buffer Flush Time");
-            b.setValueType(ValueType.NUMBER);
-            Value def = new Value(5);
-            b.setValue(def);
+            NodeBuilder b = node.createChild("edit");
+            b.setDisplayName("Edit");
+            // Buffer flush time
+            b.setRoConfig("bft", new Value(5));
+            // Logging type
+            b.setRoConfig("lt", new Value(LoggingType.ALL_DATA.getName()));
+            // Interval
+            b.setRoConfig("i", new Value(5));
 
-            final Action act = new Action(perm, new Handler<ActionResult>() {
-                @Override
-                public void handle(ActionResult event) {
-                    Value val = event.getParameter("Time", ValueType.NUMBER);
-                    Node node = event.getNode();
-                    node.setValue(val);
-                }
-            });
-
-            final Parameter p;
+            final Parameter bft;
             {
-                Node n = b.getParent().getChild(childName);
-                if (n != null) {
-                    def = n.getValue();
-                }
-
-                p = new Parameter("Time", ValueType.NUMBER, def);
-                String desc = "Buffer flush time controls the interval when ";
-                desc += "data gets written into the database\n";
-                desc += "Setting a time to 0 means to record data immediately";
-                p.setDescription(desc);
-                act.addParameter(p);
-            }
-            b.getListener().setValueHandler(new Handler<ValuePair>() {
-                @Override
-                public void handle(ValuePair event) {
-                    if (event.getCurrent().getNumber().intValue() < 0) {
-                        event.setCurrent(new Value(0));
-                    }
-                    p.setDefaultValue(event.getCurrent());
-                    List<Parameter> params = new ArrayList<>();
-                    params.add(p);
-                    act.setParams(params);
-                }
-            });
-            b.setAction(act);
-            b.build();
-        }
-        {
-            String childName = "loggingType";
-            NodeBuilder b = node.createChild(childName);
-            b.setDisplayName("Logging Type");
-            b.setValueType(ValueType.STRING);
-            b.setValue(new Value(LoggingType.ALL_DATA.getName()));
-
-            final Action act = new Action(perm, new Handler<ActionResult>() {
-                @Override
-                public void handle(ActionResult event) {
-                    Node node = event.getNode();
-                    Value v = event.getParameter("Type", ValueType.STRING);
-                    node.setValue(v);
-                }
-            });
-
-            final Parameter p;
-            {
-                Value def;
+                bft = new Parameter("Buffer Flush Time", ValueType.NUMBER);
                 {
-                    Node n = b.getParent().getChild(childName);
-                    if (n != null) {
-                        def = n.getValue();
-                    } else {
-                        def = new Value(LoggingType.ALL_DATA.getName());
-                    }
+                    String desc = "Buffer flush time controls the interval ";
+                    desc += "when data gets written into the database\n";
+                    desc += "Setting a time to 0 means to record data ";
+                    desc += "immediately";
+                    bft.setDescription(desc);
                 }
-                ValueType type = ValueType.makeEnum(def.getString());
-                p = new Parameter("Type", type, def);
-                act.addParameter(p);
+                bft.setDefaultValue(getValue(b, "bft"));
             }
 
-            b.getListener().setValueHandler(new Handler<ValuePair>() {
-                @Override
-                public void handle(ValuePair event) {
-                    String s = event.getCurrent().getString();
-                    //type = LoggingType.toEnum(s);
-                    {
-                        p.setDefaultValue(new Value(s));
-                        List<Parameter> params = new ArrayList<>();
-                        params.add(p);
-                        act.setParams(params);
-                    }
+            final Parameter lt;
+            {
+                Value v = getValue(b, "lt");
+                Set<String> enums = LoggingType.buildEnums(v.getString());
+                lt = new Parameter("Logging Type", ValueType.makeEnum(enums));
+                lt.setDefaultValue(v);
+                {
+                    String desc = "Logging type controls what kind of data ";
+                    desc += "gets stored into the database";
+                    lt.setDescription(desc);
                 }
-            });
+            }
 
-            b.setAction(act);
+            final Parameter i;
+            {
+                i = new Parameter("Interval", ValueType.NUMBER);
+                {
+                    String desc = "Interval controls how long to wait before ";
+                    desc += "buffering the next value update.\n";
+                    desc += "This setting has no effect when logging type is ";
+                    desc += "not interval.";
+                    i.setDescription(desc);
+                }
+                i.setDefaultValue(getValue(b, "i"));
+            }
+
+            EditSettingsHandler handler = new EditSettingsHandler();
+            {
+                handler.setBufferFlushTimeParam(bft);
+                handler.setLoggingTypeParam(lt);
+                handler.setIntervalParam(i);
+
+                Action a = new Action(perm, handler);
+                a.addParameter(bft);
+                a.addParameter(lt);
+                a.addParameter(i);
+                handler.setAction(a);
+
+                b.setAction(a);
+            }
+
             b.build();
         }
         {
-            String childName = "interval";
-            NodeBuilder b = node.createChild(childName);
-            b.setDisplayName("Interval");
-            b.setValueType(ValueType.NUMBER);
-            Value def = new Value(5);
-            b.setValue(def);
-
-            final Action act = new Action(perm, new Handler<ActionResult>() {
+            NodeBuilder b = node.createChild("delete");
+            b.setDisplayName("Delete");
+            b.setAction(new Action(perm, new Handler<ActionResult>() {
                 @Override
                 public void handle(ActionResult event) {
-                    Value val = event.getParameter("Time", ValueType.NUMBER);
-                    Node node = event.getNode();
-                    node.setValue(val);
+                    Node node = event.getNode().getParent();
+                    node.getParent().removeChild(node);
+                    unsubscribe();
                 }
-            });
-
-            final Parameter p;
-            {
-                Node n = b.getParent().getChild(childName);
-                if (n != null) {
-                    def = n.getValue();
-                }
-
-                p = new Parameter("Time", ValueType.NUMBER, def);
-                String desc = "Interval controls how long to wait before ";
-                desc += "buffering the next value update.\n";
-                desc += "This setting has no effect when logging type is not ";
-                desc += "interval.";
-                p.setDescription(desc);
-                act.addParameter(p);
-            }
-            b.getListener().setValueHandler(new Handler<ValuePair>() {
-                @Override
-                public void handle(ValuePair event) {
-                    if (event.getCurrent().getNumber().intValue() < 0) {
-                        event.setCurrent(new Value(0));
-                    }
-                    p.setDefaultValue(event.getCurrent());
-                    List<Parameter> params = new ArrayList<>();
-                    params.add(p);
-                    act.setParams(params);
-                }
-            });
-            b.setAction(act);
+            }));
             b.build();
+        }
+    }
+
+    private Value getValue(NodeBuilder b, String name) {
+        Node n = b.getParent().getChild(b.getChild().getName());
+        if (n != null) {
+            return n.getRoConfig(name);
+        }
+        return b.getChild().getRoConfig(name);
+    }
+
+    private static class EditSettingsHandler implements Handler<ActionResult> {
+
+        private Action action;
+
+        private Parameter bft;
+        private Parameter lt;
+        private Parameter i;
+
+        public void setAction(Action a) {
+            this.action = a;
+        }
+
+        public void setBufferFlushTimeParam(Parameter bft) {
+            this.bft = bft;
+        }
+
+        public void setLoggingTypeParam(Parameter lt) {
+            this.lt = lt;
+        }
+
+        public void setIntervalParam(Parameter i) {
+            this.i = i;
+        }
+
+        @Override
+        public void handle(ActionResult event) {
+            Node node = event.getNode();
+
+            Value vLt = event.getParameter(lt.getName(), ValueType.STRING);
+            Value vBft = event.getParameter(bft.getName(), bft.getType());
+            if (vBft.getNumber().intValue() < 0) {
+                vBft.set(0);
+            }
+
+            Value vI = event.getParameter(i.getName(), i.getType());
+            if (vI.getNumber().intValue() < 0) {
+                vI.set(0);
+            }
+
+            node.setRoConfig("bft", vBft);
+            bft.setDefaultValue(vBft);
+
+            node.setRoConfig("lt", vLt);
+            lt.setDefaultValue(vLt);
+
+            node.setRoConfig("i", vI);
+            i.setDefaultValue(vI);
+
+            Set<String> enums = LoggingType.buildEnums(vLt.getString());
+            lt.setValueType(ValueType.makeEnum(enums));
+
+            List<Parameter> params = new LinkedList<>();
+            params.add(bft);
+            params.add(lt);
+            params.add(i);
+            action.setParams(params);
         }
     }
 }
