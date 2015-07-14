@@ -33,11 +33,6 @@ public abstract class DatabaseProvider {
     protected abstract Database createDb(Node node);
 
     /**
-     * @return A provided watch group.
-     */
-    protected abstract WatchGroup createWatchGroup();
-
-    /**
      * Required permission level to create and modify databases.
      *
      * @return Required permission level.
@@ -97,7 +92,7 @@ public abstract class DatabaseProvider {
     }
 
     private void createAndInitWatchGroup(Node node) {
-        WatchGroup group = createWatchGroup();
+        WatchGroup group = new WatchGroup();
         group.initSettings(dbPermission(), node);
     }
 
