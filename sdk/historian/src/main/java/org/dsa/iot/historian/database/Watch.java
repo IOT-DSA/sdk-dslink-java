@@ -10,6 +10,8 @@ import org.dsa.iot.dslink.node.value.SubscriptionValue;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValuePair;
 import org.dsa.iot.dslink.node.value.ValueType;
+import org.dsa.iot.historian.utils.QueryData;
+import org.dsa.iot.historian.utils.TimeParser;
 import org.vertx.java.core.Handler;
 
 /**
@@ -20,6 +22,7 @@ public class Watch {
     private final WatchGroup group;
     private Node realTimeValue;
     private boolean enabled;
+    private String path;
 
     public Watch(WatchGroup group) {
         this.group = group;
@@ -30,6 +33,7 @@ public class Watch {
     }
 
     public void init(Permission perm, Node node) {
+        path = node.getName().replaceAll("%2F", "/");
         initData(node);
 
         NodeBuilder b = node.createChild("unsubscribe");
@@ -41,7 +45,6 @@ public class Watch {
                 Node node = event.getNode().getParent();
                 node.getParent().removeChild(node);
 
-                String path = node.getName().replaceAll("%2F", "/");
                 SubscriptionPool pool = group.getDb().getProvider().getPool();
                 pool.unsubscribe(path, Watch.this);
             }
@@ -82,7 +85,14 @@ public class Watch {
             NodeBuilder b = node.createChild("startDate");
             b.setDisplayName("Start Date");
             b.setValueType(ValueType.TIME);
-            // TODO: query the database
+            {
+                QueryData data = group.getDb().queryFirst(path);
+                if (data != null) {
+                    Value v = new Value(TimeParser.parse(data.getTimestamp()));
+                    b.setValue(v);
+                }
+                // TODO: set start date when it never existed.
+            }
             b.build();
         }
 
@@ -90,9 +100,15 @@ public class Watch {
             NodeBuilder b = node.createChild("endDate");
             b.setDisplayName("End Date");
             b.setValueType(ValueType.TIME);
-            // TODO: query the database
             // TODO: provide a value setter for this node
-            b.build();
+            Node n = b.build();
+            {
+                QueryData data = group.getDb().queryLast(path);
+                if (data != null) {
+                    Value v = new Value(TimeParser.parse(data.getTimestamp()));
+                    n.setValue(v);
+                }
+            }
         }
 
         {

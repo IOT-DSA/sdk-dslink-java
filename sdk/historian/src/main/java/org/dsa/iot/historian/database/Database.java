@@ -1,7 +1,10 @@
 package org.dsa.iot.historian.database;
 
 import org.dsa.iot.dslink.node.Node;
+import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.util.Objects;
+import org.dsa.iot.historian.utils.QueryData;
+import org.dsa.iot.historian.utils.TimeParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
@@ -80,6 +83,40 @@ public abstract class Database {
         }, delay, TimeUnit.SECONDS);
 
     }
+
+    /**
+     * Values must be written into the database in UTC.
+     *
+     * @param path Path to query.
+     * @param value Value received from the server.
+     * @see TimeParser
+     */
+    public abstract void write(String path, Value value);
+
+    /**
+     * Times must be in UTC.
+     *
+     * @param path Path to query.
+     * @param from Beginning search time.
+     * @param to End search time.
+     * @param handler Handler callback for incoming data.
+     */
+    public abstract void query(String path,
+                               long from,
+                               long to,
+                               Handler<QueryData> handler);
+
+    /**
+     * @param path Path to query.
+     * @return The first value stored in the database.
+     */
+    public abstract QueryData queryFirst(String path);
+
+    /**
+     * @param path Path to query.
+     * @return The last value stored in the database.
+     */
+    public abstract QueryData queryLast(String path);
 
     /**
      * Performs a raw connection to the database endpoint.
