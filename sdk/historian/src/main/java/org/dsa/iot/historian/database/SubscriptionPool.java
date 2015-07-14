@@ -59,7 +59,9 @@ public class SubscriptionPool {
         }
 
         public synchronized void addWatch(Watch watch) {
-            watches.add(watch);
+            if (!watches.contains(watch)) {
+                watches.add(watch);
+            }
         }
 
         public synchronized void removeWatch(Watch watch) {

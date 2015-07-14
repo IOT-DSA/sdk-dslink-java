@@ -59,7 +59,9 @@ public class WatchGroup {
             watch.init(permission, n);
             n.setMetaData(watch);
         }
-        db.getProvider().getPool().subscribe(path, watch);
+        if (watch.isEnabled()) {
+            db.getProvider().getPool().subscribe(path, watch);
+        }
     }
 
     /**
