@@ -142,6 +142,8 @@ public class ListResponse implements Response {
                 node.setValueType(type);
             } else if ("name".equals(name)) {
                 node.setDisplayName((String) v);
+            } else if ("hidden".equals(name)) {
+                node.setHidden((Boolean) v);
             } else {
                 node.setConfig(name, ValueUtils.toValue(v));
             }
@@ -206,6 +208,15 @@ public class ListResponse implements Response {
                     builder.setAction(action);
                 } else {
                     child.setAction(action);
+                }
+            }
+
+            Boolean hidden = childData.getBoolean("$hidden");
+            if (hidden != null) {
+                if (builder != null) {
+                    builder.setHidden(hidden);
+                } else {
+                    child.setHidden(hidden);
                 }
             }
 
@@ -315,6 +326,14 @@ public class ListResponse implements Response {
                 JsonArray update = new JsonArray();
                 update.addString("$hasChildren");
                 update.addBoolean(hasChildren);
+                updates.addArray(update);
+            }
+
+            // Whether this node should be be visible to the UI
+            if (node.isHidden()) {
+                JsonArray update = new JsonArray();
+                update.addString("$hidden");
+                update.addBoolean(true);
                 updates.addArray(update);
             }
 
@@ -451,6 +470,10 @@ public class ListResponse implements Response {
             Boolean hasChildren = child.getHasChildren();
             if (hasChildren != null) {
                 childData.putBoolean("$hasChildren", hasChildren);
+            }
+
+            if (child.isHidden()) {
+                childData.putBoolean("$hidden", true);
             }
         }
         update.addObject(childData);

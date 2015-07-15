@@ -34,15 +34,14 @@ public class Action {
      * The default result type is {@link ResultType#VALUES}. This value must
      * be changed accordingly.
      *
-     * @param permission Minimum required permission to invoke
-     * @param handler    Handler for invocation
+     * @param permission Minimum required permission to invoke.
+     * @param handler    Handler for invocation. Allowed to be {@code null}
+     *                   for profiles.
      */
     public Action(Permission permission,
                   Handler<ActionResult> handler) {
         if (permission == null)
             throw new NullPointerException("permission");
-        else if (handler == null)
-            throw new NullPointerException("handler");
         this.resultType = ResultType.VALUES;
         this.permission = permission;
         this.handler = handler;

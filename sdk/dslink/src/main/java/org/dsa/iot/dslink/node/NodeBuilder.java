@@ -88,6 +88,11 @@ public class NodeBuilder {
         return this;
     }
 
+    public NodeBuilder setHidden(boolean hidden) {
+        child.setHidden(hidden);
+        return this;
+    }
+
     public NodeBuilder setSerializable(boolean serializable) {
         child.setSerializable(serializable);
         return this;

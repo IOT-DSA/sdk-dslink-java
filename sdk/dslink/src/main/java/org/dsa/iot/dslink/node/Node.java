@@ -51,6 +51,7 @@ public class Node {
     private Map<String, Value> configs;
     private Map<String, Value> attribs;
     private Boolean hasChildren;
+    private boolean hidden;
 
     private ValueType valueType;
     private Value value;
@@ -523,6 +524,7 @@ public class Node {
                 case "result":
                 case "type":
                 case "writable":
+                case "hidden":
                     String err = "Config `" + name + "` has special methods"
                             + " for setting these properties";
                     throw new IllegalArgumentException(err);
@@ -751,6 +753,23 @@ public class Node {
      */
     public Boolean getHasChildren() {
         return hasChildren;
+    }
+
+    /**
+     * @param hidden Whether the node is marked as hidden.
+     */
+    public void setHidden(boolean hidden) {
+        this.hidden = hidden;
+    }
+
+    /**
+     * When a node is marked as hidden the UI should not display
+     * the node.
+     *
+     * @return Whether the node is marked as hidden.
+     */
+    public boolean isHidden() {
+        return hidden;
     }
 
     /**

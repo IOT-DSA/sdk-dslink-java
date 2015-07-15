@@ -60,9 +60,9 @@ public class GetHistory implements Handler<ActionResult> {
             }
         }
 
-
-        final String sInterval = event.getParameter("Interval").getString();
-        final String sRollup = event.getParameter("Rollup").getString();
+        final Value def = new Value("none");
+        final String sInterval = event.getParameter("Interval", def).getString();
+        final String sRollup = event.getParameter("Rollup", def).getString();
         final Interval interval = Interval.parse(sInterval, sRollup);
 
         final Table table = event.getTable();
@@ -91,14 +91,15 @@ public class GetHistory implements Handler<ActionResult> {
     public static void initAction(Node node, Database db) {
         String path = node.getName().replaceAll("%2F", "/");
         Action a =  new Action(Permission.READ, new GetHistory(path, db));
-        initProfile(a);
+        a.setHidden(true);
 
         NodeBuilder b = node.createChild("getHistory", "getHistory");
+        b.setDisplayName("Get History");
         b.setAction(a);
         b.build();
     }
 
-    private static void initProfile(Action act) {
+    public static void initProfile(Action act) {
         {
             Parameter param = new Parameter("Timerange", ValueType.STRING);
             param.setEditorType(EditorType.DATE_RANGE);

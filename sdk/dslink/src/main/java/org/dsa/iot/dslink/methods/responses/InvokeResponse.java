@@ -166,10 +166,10 @@ public class InvokeResponse implements Response {
     private void processColumns(Action act, JsonObject obj) {
         Table table = actionResult.getTable();
         List<Parameter> cols = table.getColumns();
-        JsonArray array;
+        JsonArray array = null;
         if (!act.isHidden() && cols == null) {
             array = act.getColumns();
-        } else {
+        } else if (cols != null) {
             array = new JsonArray();
             for (Parameter p : cols) {
                 JsonObject o = new JsonObject();

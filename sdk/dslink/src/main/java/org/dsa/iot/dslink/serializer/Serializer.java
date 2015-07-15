@@ -74,6 +74,10 @@ public class Serializer {
             out.putString("$writable", writable.toJsonName());
         }
 
+        if (parent.isHidden()) {
+            out.putBoolean("$hidden", true);
+        }
+
         addValues("$$", out, parent.getRoConfigurations());
         addValues("$", out, parent.getConfigurations());
         addValues("@", out, parent.getAttributes());

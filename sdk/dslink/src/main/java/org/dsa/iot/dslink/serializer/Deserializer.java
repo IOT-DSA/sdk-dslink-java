@@ -60,6 +60,8 @@ public class Deserializer {
                 node.setDisplayName((String) value);
             } else if ("$writable".equals(name)) {
                 node.setWritable(Writable.toEnum((String) value));
+            } else if ("$hidden".equals(name)) {
+                node.setHidden((Boolean) value);
             } else if ("$$password".equals(name)) {
                 node.setPassword(((String) value).toCharArray());
             } else if ("?value".equals(name)) {
