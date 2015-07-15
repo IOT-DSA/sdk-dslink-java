@@ -124,12 +124,14 @@ public class WatchGroup {
      * @param path Watch path.
      */
     protected void initWatch(String path) {
-        Watch watch = new Watch(this);
+        Watch watch;
         {
             NodeBuilder b = node.createChild(path.replaceAll("/", "%2F"));
             Node n = b.build();
-            watch.init(permission, n);
+            watch = new Watch(this, n);
+            watch.init(permission);
             n.setMetaData(watch);
+            db.getProvider().onWatchAdded(watch);
         }
         if (watch.isEnabled()) {
             db.getProvider().getPool().subscribe(path, watch);

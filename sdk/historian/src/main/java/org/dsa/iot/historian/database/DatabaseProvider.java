@@ -50,6 +50,16 @@ public abstract class DatabaseProvider {
     public abstract Permission dbPermission();
 
     /**
+     * Override to handle newly created watches. Can be used to add custom
+     * actions to the watch.
+     *
+     * @param watch Watch that was added.
+     */
+    @SuppressWarnings("UnusedParameters")
+    protected void onWatchAdded(Watch watch) {
+    }
+
+    /**
      * Called before actually creating the database and typically used in the
      * action handler of {@link #createDbAction}.
      *

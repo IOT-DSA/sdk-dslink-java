@@ -21,6 +21,8 @@ import org.vertx.java.core.Handler;
 public class Watch {
 
     private final WatchGroup group;
+    private final Node node;
+
     private Node realTimeValue;
     private String path;
 
@@ -33,8 +35,17 @@ public class Watch {
     private long lastWrittenTime;
     private Value lastValue;
 
-    public Watch(WatchGroup group) {
+    public Watch(WatchGroup group, Node node) {
         this.group = group;
+        this.node = node;
+    }
+
+    public Node getNode() {
+        return node;
+    }
+
+    public WatchGroup getGroup() {
+        return group;
     }
 
     public boolean isEnabled() {
@@ -73,10 +84,17 @@ public class Watch {
         return lastValue;
     }
 
-    public void init(Permission perm, Node node) {
+    public void unsubscribe() {
+        node.getParent().removeChild(node);
+        DatabaseProvider provider = group.getDb().getProvider();
+        SubscriptionPool pool = provider.getPool();
+        pool.unsubscribe(path, Watch.this);
+    }
+
+    public void init(Permission perm) {
         path = node.getName().replaceAll("%2F", "/");
         initData(node);
-        GetHistory.initAction(node, group.getDb());
+        GetHistory.initAction(node, getGroup().getDb());
 
         {
             NodeBuilder b = node.createChild("unsubscribe");
@@ -85,12 +103,7 @@ public class Watch {
             b.setAction(new Action(perm, new Handler<ActionResult>() {
                 @Override
                 public void handle(ActionResult event) {
-                    Node node = event.getNode().getParent();
-                    node.getParent().removeChild(node);
-
-                    DatabaseProvider provider = group.getDb().getProvider();
-                    SubscriptionPool pool = provider.getPool();
-                    pool.unsubscribe(path, Watch.this);
+                    unsubscribe();
                 }
             }));
             b.build();
