@@ -134,9 +134,11 @@ public abstract class Database {
     protected abstract void close() throws Exception;
 
     /**
-     * Initialize additional top level database data.
+     * Initialize additional top level database data and settings. All
+     * settings should be stored in the "edit" action for consistency.
      *
      * @param node Node to initialize data, usually database node.
+     * @see DatabaseProvider#dbPermission() For action permission level.
      */
     public abstract void initExtensions(Node node);
 

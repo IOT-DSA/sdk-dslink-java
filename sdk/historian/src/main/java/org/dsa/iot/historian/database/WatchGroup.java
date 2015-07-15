@@ -9,6 +9,7 @@ import org.dsa.iot.dslink.node.actions.Parameter;
 import org.dsa.iot.dslink.node.value.SubscriptionValue;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
+import org.dsa.iot.dslink.util.NodeUtils;
 import org.dsa.iot.dslink.util.Objects;
 import org.dsa.iot.historian.utils.TimeParser;
 import org.dsa.iot.historian.utils.WatchUpdate;
@@ -209,12 +210,12 @@ public class WatchGroup {
                     desc += "immediately";
                     bft.setDescription(desc);
                 }
-                bft.setDefaultValue(getValue(b, "bft"));
+                bft.setDefaultValue(NodeUtils.getRoConfig(b, "bft"));
             }
 
             final Parameter lt;
             {
-                Value v = getValue(b, "lt");
+                Value v = NodeUtils.getRoConfig(b, "lt");
                 Set<String> enums = LoggingType.buildEnums(v.getString());
                 lt = new Parameter("Logging Type", ValueType.makeEnum(enums));
                 lt.setDefaultValue(v);
@@ -235,7 +236,7 @@ public class WatchGroup {
                     desc += "not interval.";
                     i.setDescription(desc);
                 }
-                i.setDefaultValue(getValue(b, "i"));
+                i.setDefaultValue(NodeUtils.getRoConfig(b, "i"));
             }
 
             EditSettingsHandler handler = new EditSettingsHandler();
@@ -273,14 +274,6 @@ public class WatchGroup {
             }));
             b.build();
         }
-    }
-
-    private Value getValue(NodeBuilder b, String name) {
-        Node n = b.getParent().getChild(b.getChild().getName());
-        if (n != null) {
-            return n.getRoConfig(name);
-        }
-        return b.getChild().getRoConfig(name);
     }
 
     private void setupTimer(int time) {

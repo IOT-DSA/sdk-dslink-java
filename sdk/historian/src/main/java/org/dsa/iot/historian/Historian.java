@@ -23,7 +23,7 @@ public abstract class Historian extends DSLinkHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Historian.class);
     private final DatabaseProvider provider;
-    private Node reqSuperRoot;
+    private Node respSuperRoot;
 
     /**
      * Constructs a historian DSLink.
@@ -38,17 +38,17 @@ public abstract class Historian extends DSLinkHandler {
     }
 
     @Override
-    public final void onResponderInitialized(DSLink link) {
-        reqSuperRoot = link.getNodeManager().getSuperRoot();
-        initialize(reqSuperRoot);
+    public void onResponderInitialized(DSLink link) {
+        respSuperRoot = link.getNodeManager().getSuperRoot();
+        initialize(respSuperRoot);
         initHistoryProfile();
     }
 
     @Override
-    public final void onRequesterConnected(DSLink link) {
+    public void onRequesterConnected(DSLink link) {
         provider.setPool(new SubscriptionPool(link.getRequester()));
         provider.getPool().clear();
-        provider.subscribe(reqSuperRoot);
+        provider.subscribe(respSuperRoot);
         LOGGER.info("Connected");
     }
 
@@ -63,7 +63,7 @@ public abstract class Historian extends DSLinkHandler {
     }
 
     protected void initHistoryProfile() {
-        NodeBuilder b = reqSuperRoot.createChild("defs");
+        NodeBuilder b = respSuperRoot.createChild("defs");
         b.setSerializable(false);
         b.setHidden(true);
         Node node = b.build();
