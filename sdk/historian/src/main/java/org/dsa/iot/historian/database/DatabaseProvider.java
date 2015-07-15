@@ -136,6 +136,25 @@ public abstract class DatabaseProvider {
         }
     }
 
+    public void deleteDb(Node node) {
+        Database db = node.getMetaData();
+        try {
+            db.close();
+        } catch (Exception ignored) {
+        }
+        node.getParent().removeChild(node);
+
+        Map<String, Node> children = node.getChildren();
+        if (children != null) {
+            for (Node n : children.values()) {
+                WatchGroup g = n.getMetaData();
+                if (g != null) {
+                    g.unsubscribe();
+                }
+            }
+        }
+    }
+
     private void createAndInitWatchGroup(Node node, Database db) {
         WatchGroup group = new WatchGroup(dbPermission(), node, db);
         node.setMetaData(group);
@@ -173,28 +192,12 @@ public abstract class DatabaseProvider {
 
     private void initDeleteAct(final Node node) {
         NodeBuilder b = node.createChild("deleteDb");
-        b.setDisplayName("Delete Database");
+        b.setDisplayName("Delete");
         b.setSerializable(false);
         b.setAction(new Action(dbPermission(), new Handler<ActionResult>() {
             @Override
             public void handle(ActionResult event) {
-                Database db = node.getMetaData();
-                try {
-                    db.close();
-                } catch (Exception ignored) {
-                }
-                Node child = event.getNode().getParent();
-                child.getParent().removeChild(child);
-
-                Map<String, Node> children = child.getChildren();
-                if (children != null) {
-                    for (Node n : children.values()) {
-                        WatchGroup g = n.getMetaData();
-                        if (g != null) {
-                            g.unsubscribe();
-                        }
-                    }
-                }
+                deleteDb(node);
             }
         }));
         b.build();
