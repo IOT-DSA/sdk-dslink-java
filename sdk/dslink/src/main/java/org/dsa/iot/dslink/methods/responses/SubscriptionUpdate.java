@@ -80,21 +80,23 @@ public class SubscriptionUpdate implements Response {
                     String err = "Invalid subscription update: " + in.encode();
                     throw new RuntimeException(err);
                 }
-                Node node = manager.getNode(path, true).getNode();
-                {
-                    Value val = value.getValue();
-                    ValueType type = node.getValueType();
-                    if (type == null && val != null) {
-                        type = val.getType();
-                        node.setValueType(type);
+                if (path != null) {
+                    Node node = manager.getNode(path, true).getNode();
+                    {
+                        Value val = value.getValue();
+                        ValueType type = node.getValueType();
+                        if (type == null && val != null) {
+                            type = val.getType();
+                            node.setValueType(type);
+                        }
+                        if (type != null) {
+                            node.setValue(val);
+                        }
                     }
-                    if (type != null) {
-                        node.setValue(val);
+                    Handler<SubscriptionValue> handler = handlers.get(rid);
+                    if (handler != null) {
+                        handler.handle(value);
                     }
-                }
-                Handler<SubscriptionValue> handler = handlers.get(rid);
-                if (handler != null) {
-                    handler.handle(value);
                 }
             }
         }
