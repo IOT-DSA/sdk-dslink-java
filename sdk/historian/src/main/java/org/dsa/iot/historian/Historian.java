@@ -22,23 +22,18 @@ import java.util.Map;
 public abstract class Historian extends DSLinkHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Historian.class);
-    private final DatabaseProvider provider;
+    private DatabaseProvider provider;
     private Node respSuperRoot;
 
     /**
-     * Constructs a historian DSLink.
      *
-     * @param provider Database provider.
+     * @return A database provider.
      */
-    public Historian(DatabaseProvider provider) {
-        if (provider == null) {
-            throw new NullPointerException("provider");
-        }
-        this.provider = provider;
-    }
+    public abstract DatabaseProvider createProvider();
 
     @Override
     public void onResponderInitialized(DSLink link) {
+        provider = createProvider();
         respSuperRoot = link.getNodeManager().getSuperRoot();
         initialize(respSuperRoot);
         initHistoryProfile();
