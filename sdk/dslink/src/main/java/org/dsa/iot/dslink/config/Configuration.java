@@ -1,14 +1,22 @@
 package org.dsa.iot.dslink.config;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.dsa.iot.dslink.connection.ConnectionType;
 import org.dsa.iot.dslink.handshake.LocalKeys;
-import org.dsa.iot.dslink.util.FileUtils;
 import org.dsa.iot.dslink.util.LogManager;
 import org.dsa.iot.dslink.util.URLInfo;
+import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * Holds the configuration of a DSLink.
@@ -16,6 +24,8 @@ import java.io.IOException;
  * @author Samuel Grenier
  */
 public class Configuration {
+
+    private static final ObjectMapper MAPPER;
 
     private URLInfo authEndpoint;
     private String dsId;
@@ -235,16 +245,16 @@ public class Configuration {
         defaults.setRequester(requester);
         defaults.setResponder(responder);
 
-        Arguments parsed = Arguments.parse(args);
-        if (parsed == null) {
+        Arguments parsedArgs = Arguments.parse(args);
+        if (parsedArgs == null) {
             return null;
         }
 
-        JsonObject json = getAndValidateJson(parsed.getDslinkJson());
-        String logLevel = getFieldValue(parsed.getLogLevel(), json, "log");
-        String brokerHost = parsed.getBrokerHost();
-        String keyPath = getFieldValue(parsed.getKeyPath(), json, "key");
-        String nodePath = getFieldValue(parsed.getNodesPath(), json, "nodes");
+        JsonObject json = getAndValidateJson(parsedArgs.getDslinkJson());
+        String logLevel = getFieldValue(parsedArgs.getLogLevel(), json, "log");
+        String brokerHost = parsedArgs.getBrokerHost();
+        String keyPath = getFieldValue(parsedArgs.getKeyPath(), json, "key");
+        String nodePath = getFieldValue(parsedArgs.getNodesPath(), json, "nodes");
 
         LogManager.configure();
         LogManager.setLevel(logLevel);
@@ -259,11 +269,21 @@ public class Configuration {
     }
 
     private static JsonObject getAndValidateJson(String jsonPath) {
-        try {
-            byte[] read = FileUtils.readAllBytes(new File(jsonPath));
-            String content = new String(read, "UTF-8");
-            JsonObject json = new JsonObject(content);
-            if (!json.containsField("configs")) {
+        JsonFactory factory = MAPPER.getFactory();
+        File file = new File(jsonPath);
+        try (JsonParser parser = factory.createParser(file)) {
+            JsonObject json = null;
+            parser.nextToken();
+            while (parser.nextToken() != null) {
+                String name = parser.getText();
+                if ("configs".equals(name)) {
+                    //noinspection unchecked
+                    json = new JsonObject(parser.readValueAs(Map.class));
+                    break;
+                }
+            }
+
+            if (json == null) {
                 throw new RuntimeException("Missing `configs` field");
             } else {
                 JsonObject configs = json.getObject("configs");
@@ -301,5 +321,28 @@ public class Configuration {
         } else if (conf.getString("default") == null) {
             throw new RuntimeException("Missing default value in config of " + param);
         }
+    }
+
+    private static class JsonObjectSerializer extends JsonSerializer<JsonObject> {
+        @Override
+        public void serialize(JsonObject value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
+            jgen.writeObject(value.toMap());
+        }
+    }
+
+    private static class JsonArraySerializer extends JsonSerializer<JsonArray> {
+        @Override
+        public void serialize(JsonArray value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
+            jgen.writeObject(value.toList());
+        }
+    }
+
+    static {
+        MAPPER = new ObjectMapper();
+
+        SimpleModule module = new SimpleModule();
+        module.addSerializer(JsonObject.class, new JsonObjectSerializer());
+        module.addSerializer(JsonArray.class, new JsonArraySerializer());
+        MAPPER.registerModule(module);
     }
 }

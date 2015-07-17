@@ -2,7 +2,6 @@ package org.dsa.iot.dslink.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.vertx.java.core.buffer.Buffer;
 
 import java.io.*;
 
@@ -22,25 +21,22 @@ public class FileUtils {
      */
     public static byte[] readAllBytes(File src) throws IOException {
         try (InputStream stream = new FileInputStream(src)) {
-            return readAllBytes(stream);
-        }
-    }
+            int length = (int) src.length();
+            if (length < 0) {
+                // Handle overflow
+                length = Integer.MAX_VALUE;
+            }
 
-    /**
-     * Reads all the bytes from the input stream.
-     *
-     * @param input The stream input to read
-     * @return Bytes of the stream
-     * @throws IOException IO Exception occurred
-     */
-    public static byte[] readAllBytes(InputStream input) throws IOException {
-        Buffer buffer = new Buffer();
-        byte[] buf = new byte[1024];
-        int read;
-        while ((read = input.read(buf)) > 0) {
-            buffer.appendBytes(buf, 0, read);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            byte[] bytes = new byte[length];
+            int read = stream.read(bytes);
+            while (read != -1) {
+                baos.write(bytes, 0, read);
+                read = stream.read(bytes);
+            }
+            baos.flush();
+            return baos.toByteArray();
         }
-        return buffer.getBytes();
     }
 
     /**
