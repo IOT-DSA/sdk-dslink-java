@@ -9,8 +9,8 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.dsa.iot.dslink.connection.ConnectionType;
 import org.dsa.iot.dslink.handshake.LocalKeys;
-import org.dsa.iot.dslink.util.LogManager;
 import org.dsa.iot.dslink.util.URLInfo;
+import org.dsa.iot.dslink.util.log.LogManager;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 

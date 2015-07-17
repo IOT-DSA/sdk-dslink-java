@@ -1,6 +1,7 @@
 package org.dsa.iot.dslink.util;
 
-import ch.qos.logback.classic.Level;
+import org.dsa.iot.dslink.util.log.LogLevel;
+import org.dsa.iot.dslink.util.log.LogManager;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -12,19 +13,19 @@ public class LogManagerTest {
     @Test
     public void logLevelSetting() {
         LogManager.setLevel("debug");
-        Assert.assertEquals(Level.DEBUG, LogManager.getLevel());
+        Assert.assertEquals(LogLevel.DEBUG, LogManager.getLevel());
 
         LogManager.setLevel("info");
-        Assert.assertEquals(Level.INFO, LogManager.getLevel());
+        Assert.assertEquals(LogLevel.INFO, LogManager.getLevel());
 
         LogManager.setLevel("warn");
-        Assert.assertEquals(Level.WARN, LogManager.getLevel());
+        Assert.assertEquals(LogLevel.WARN, LogManager.getLevel());
 
         LogManager.setLevel("error");
-        Assert.assertEquals(Level.ERROR, LogManager.getLevel());
+        Assert.assertEquals(LogLevel.ERROR, LogManager.getLevel());
 
         LogManager.setLevel("none");
-        Assert.assertEquals(Level.OFF, LogManager.getLevel());
+        Assert.assertEquals(LogLevel.OFF, LogManager.getLevel());
     }
 
     @Test(expected = RuntimeException.class)
@@ -39,6 +40,6 @@ public class LogManagerTest {
 
     @Test(expected = NullPointerException.class)
     public void nullLevelLogLevel() {
-        LogManager.setLevel((Level) null);
+        LogManager.setLevel((LogLevel) null);
     }
 }
