@@ -26,7 +26,7 @@ public class LogManager {
 
     private static LogBridge getBridge() {
         if (instance == null) {
-            instance = new LogbackBridge();
+            instance = new LoggingBridge();
         }
         return instance;
     }

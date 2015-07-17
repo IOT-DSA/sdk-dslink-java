@@ -1,16 +1,12 @@
 apply from: '../build.gradle'
 
-dependencies {
-    compile project(':sdk/logging')
-}
-
 uploadArchives {
     repositories {
         mavenDeployer {
             pom.project {
                 name = 'DSLink SDK'
-                artifactId = 'dslink'
-                description = 'SDK for the IoT DSA protocol'
+                artifactId = 'logging'
+                description = 'Lightweight SLF4J binding'
             }
         }
     }
