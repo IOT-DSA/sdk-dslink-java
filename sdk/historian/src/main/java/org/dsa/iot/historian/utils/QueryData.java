@@ -34,4 +34,8 @@ public class QueryData {
     public long getTimestamp() {
         return ts;
     }
+
+    public boolean isDefined() {
+        return ts > -1;
+    }
 }

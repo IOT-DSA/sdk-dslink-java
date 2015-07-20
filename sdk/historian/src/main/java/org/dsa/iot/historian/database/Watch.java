@@ -146,7 +146,7 @@ public class Watch {
             boolean needsDate = false;
             {
                 QueryData data = group.getDb().queryFirst(path);
-                if (data != null) {
+                if (data != null && data.isDefined()) {
                     Value v = new Value(TimeParser.parse(data.getTimestamp()));
                     b.setValue(v);
                 } else {
@@ -166,7 +166,7 @@ public class Watch {
             endDate = b.build();
             {
                 QueryData data = group.getDb().queryLast(path);
-                if (data != null) {
+                if (data != null && data.isDefined()) {
                     Value v = new Value(TimeParser.parse(data.getTimestamp()));
                     endDate.setValue(v);
                 }
