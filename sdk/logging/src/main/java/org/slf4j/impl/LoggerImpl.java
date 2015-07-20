@@ -343,17 +343,20 @@ public class LoggerImpl implements Logger {
             while (matcher.find()) {
                 if (args.length > index) {
                     Object obj = args[index];
+                    String string;
                     if (obj instanceof String) {
-                        matcher.appendReplacement(sb, (String) obj);
+                        string = (String) obj;
                     } else if (obj instanceof Throwable) {
                         StringWriter writer = new StringWriter();
                         t.printStackTrace(new PrintWriter(writer));
-                        matcher.appendReplacement(sb, writer.toString());
+                        string = writer.toString();
                     } else if (obj != null) {
-                        matcher.appendReplacement(sb, obj.toString());
+                        string = obj.toString();
                     } else {
-                        matcher.appendReplacement(sb, "null");
+                        string = "null";
                     }
+                    string = Matcher.quoteReplacement(string);
+                    matcher.appendReplacement(sb, string);
                 } else {
                     break;
                 }
