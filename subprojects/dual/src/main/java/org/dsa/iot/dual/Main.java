@@ -19,6 +19,16 @@ public class Main extends DSLinkHandler {
     private CountDownLatch latch;
 
     @Override
+    public boolean isRequester() {
+        return true;
+    }
+
+    @Override
+    public boolean isResponder() {
+        return true;
+    }
+
+    @Override
     public void preInit() {
         // Latch is used to ensure responder is initialized first
         latch = new CountDownLatch(1);
