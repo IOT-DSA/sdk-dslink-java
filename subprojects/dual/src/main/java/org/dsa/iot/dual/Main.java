@@ -44,6 +44,6 @@ public class Main extends DSLinkHandler {
     }
 
     public static void main(String[] args) {
-        DSLinkFactory.startDual("dual", args, new Main());
+        DSLinkFactory.start(args, new Main());
     }
 }

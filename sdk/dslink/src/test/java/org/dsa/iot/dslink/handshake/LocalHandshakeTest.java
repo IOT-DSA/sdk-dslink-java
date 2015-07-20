@@ -24,6 +24,7 @@ public class LocalHandshakeTest {
         config.setAuthEndpoint("http://localhost");
         config.setKeys(LocalKeys.generate());
         config.setDsId("test");
+        config.setResponder(true);
 
         LocalHandshake handshake = new LocalHandshake(config);
 

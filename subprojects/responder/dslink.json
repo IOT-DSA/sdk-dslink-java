@@ -16,6 +16,10 @@
     "url": "https://github.com/IOT-DSA/sdk-dslink-java/issues"
   },
   "configs": {
+    "name": {
+      "type": "string",
+      "default": "responder"
+    },
     "broker": {
       "type": "url"
     },

@@ -17,6 +17,11 @@ public class Main extends DSLinkHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
 
     @Override
+    public boolean isResponder() {
+        return true;
+    }
+
+    @Override
     public void onResponderInitialized(DSLink link) {
         NodeManager manager = link.getNodeManager();
         Node superRoot = manager.getSuperRoot();
@@ -34,6 +39,6 @@ public class Main extends DSLinkHandler {
     }
 
     public static void main(String[] args) {
-        DSLinkFactory.startResponder("responder", args, new Main());
+        DSLinkFactory.start(args, new Main());
     }
 }

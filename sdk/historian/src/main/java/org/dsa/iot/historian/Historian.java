@@ -25,6 +25,16 @@ public abstract class Historian extends DSLinkHandler {
     private DatabaseProvider provider;
     private Node respSuperRoot;
 
+    @Override
+    public final boolean isRequester() {
+        return true;
+    }
+
+    @Override
+    public final boolean isResponder() {
+        return true;
+    }
+
     /**
      *
      * @return A database provider.
@@ -106,10 +116,9 @@ public abstract class Historian extends DSLinkHandler {
     /**
      * Starts the DSLink.
      *
-     * @param name Name of the historian.
      * @param args Arguments passed in from the program start.
      */
-    public void start(String name, String[] args) {
-        DSLinkFactory.startDual(name, args, this);
+    public void start(String[] args) {
+        DSLinkFactory.start(args, this);
     }
 }

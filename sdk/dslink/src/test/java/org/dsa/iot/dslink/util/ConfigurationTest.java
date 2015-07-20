@@ -76,7 +76,7 @@ public class ConfigurationTest {
         config.setConnectionType(ConnectionType.WEB_SOCKET);
         config.setAuthEndpoint("http://localhost");
         config.setKeys(LocalKeys.generate());
-        config.setRequester(false);
+        config.setRequester(true);
         config.setResponder(false);
         config.validate();
     }

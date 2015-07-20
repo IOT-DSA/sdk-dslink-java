@@ -232,15 +232,15 @@ public class Configuration {
             throw new RuntimeException("authentication endpoint not set");
         } else if (keys == null) {
             throw new RuntimeException("keys not set");
+        } else if (!(isRequester || isResponder)) {
+            throw new RuntimeException("Neither a requester nor a responder");
         }
     }
 
-    public static Configuration autoConfigure(String name,
-                                     String[] args,
-                                     boolean requester,
-                                     boolean responder) {
+    public static Configuration autoConfigure(String[] args,
+                                                boolean requester,
+                                                boolean responder) {
         Configuration defaults = new Configuration();
-        defaults.setDsId(name);
         defaults.setConnectionType(ConnectionType.WEB_SOCKET);
         defaults.setRequester(requester);
         defaults.setResponder(responder);
@@ -251,10 +251,13 @@ public class Configuration {
         }
 
         JsonObject json = getAndValidateJson(parsedArgs.getDslinkJson());
+        String name = getFieldValue(parsedArgs.getName(), json, "name");
         String logLevel = getFieldValue(parsedArgs.getLogLevel(), json, "log");
         String brokerHost = parsedArgs.getBrokerHost();
         String keyPath = getFieldValue(parsedArgs.getKeyPath(), json, "key");
         String nodePath = getFieldValue(parsedArgs.getNodesPath(), json, "nodes");
+
+        defaults.setDsId(name);
 
         LogManager.configure();
         LogManager.setLevel(logLevel);
@@ -288,6 +291,7 @@ public class Configuration {
             } else {
                 JsonObject configs = json.getObject("configs");
                 checkField(configs, "broker");
+                checkParam(configs, "name");
                 checkParam(configs, "log");
                 checkParam(configs, "key");
                 checkParam(configs, "nodes");

@@ -39,6 +39,11 @@ public class Arguments {
                 arity = 1)
     private String dslinkJson = "dslink.json";
 
+    @Parameter(names = { "--name" },
+                description = "Sets the name of the dslink",
+                arity = 1)
+    private String name;
+
     @Parameter(names = { "--help", "-h" },
                 description = "Displays the help menu",
                 help = true)
@@ -88,6 +93,15 @@ public class Arguments {
      */
     public String getLogLevel() {
         return log;
+    }
+
+    /**
+     * Overrides the name configured in the dslink.json file.
+     *
+     * @return Name of the DSLink.
+     */
+    public String getName() {
+        return name;
     }
 
     /**

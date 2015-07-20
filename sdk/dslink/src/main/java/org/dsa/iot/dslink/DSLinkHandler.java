@@ -17,6 +17,28 @@ public abstract class DSLinkHandler {
     private Configuration configuration;
 
     /**
+     * The default setting from here is what is used in the
+     * {@link Configuration} instance during an auto configuration. The result
+     * must be strictly static.
+     *
+     * @return Whether this DSLink is a responder or not.
+     */
+    public boolean isResponder() {
+        return false;
+    }
+
+    /**
+     * The default setting from here is what is used in the
+     * {@link Configuration} instance during an auto configuration. The result
+     * must be strictly static.
+     *
+     * @return Whether this DSLink is a requester or not.
+     */
+    public boolean isRequester() {
+        return false;
+    }
+
+    /**
      * Sets the configuration of the handler.
      *
      * @param configuration Configuration of the link

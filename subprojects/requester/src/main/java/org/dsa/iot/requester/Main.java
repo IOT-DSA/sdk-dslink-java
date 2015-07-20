@@ -40,7 +40,7 @@ public class Main extends DSLinkHandler {
 
     public static void main(String[] args) {
         Main main = new Main();
-        main.provider = DSLinkFactory.generateRequester("requester", args, main);
+        main.provider = DSLinkFactory.generate(args, main);
         main.provider.start();
         main.provider.sleep();
     }
