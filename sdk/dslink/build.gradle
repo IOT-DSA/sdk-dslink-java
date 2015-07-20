@@ -2,6 +2,11 @@ apply from: '../build.gradle'
 
 dependencies {
     compile project(':sdk/logging')
+    compile ('io.vertx:vertx-core:2.1.5') {
+        exclude group: 'log4j'
+    }
+    compile 'org.bouncycastle:bcprov-jdk15on:1.51'
+    compile 'com.beust:jcommander:1.47'
 }
 
 uploadArchives {
