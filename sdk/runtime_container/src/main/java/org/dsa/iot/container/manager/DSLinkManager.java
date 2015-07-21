@@ -1,7 +1,5 @@
 package org.dsa.iot.container.manager;
 
-import org.dsa.iot.container.wrapper.DSLink;
-
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -14,31 +12,47 @@ import java.util.Map;
  */
 public class DSLinkManager {
 
-    private final Map<String, DSLink> links = new HashMap<>();
+    private final Map<String, DSLinkHandler> links = new HashMap<>();
 
-    public void loadDirectory(Path path) {
+    public synchronized void loadDirectory(Path path, String brokerUrl) {
+        if (!Files.isDirectory(path)) {
+            System.err.println(path.toString() + " is not a directory");
+            return;
+        }
         try (DirectoryStream<Path> ds = Files.newDirectoryStream(path)) {
             for (Path dslinkRoot : ds) {
-
+                if (!Files.isDirectory(dslinkRoot)) {
+                    continue;
+                }
+                DSLinkInfo info = DSLinkInfo.load(dslinkRoot, brokerUrl);
+                if (info == null) {
+                    continue;
+                }
+                start(dslinkRoot, info);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public void start(Path path, Map<String, Object> configs) {
+    public synchronized void start(Path path, DSLinkInfo info) {
         String name = path.toString();
-        DSLink link = links.get(name);
+        DSLinkHandler link = links.get(name);
         if (link == null) {
-            link = new DSLink();
+            link = new DSLinkHandler(info);
             links.put(name, link);
         }
-        link.start();
+        try {
+            link.start();
+        } catch (IOException e) {
+            links.remove(name);
+            e.printStackTrace();
+        }
     }
 
-    public void stop(Path path) {
+    public synchronized void stop(Path path) {
         String name = path.toString();
-        DSLink link = links.get(name);
+        DSLinkHandler link = links.remove(name);
         if (link != null) {
             link.stop();
         }

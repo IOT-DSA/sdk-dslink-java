@@ -1,0 +1,23 @@
+apply plugin: 'idea'
+
+configurations {
+    provided
+}
+
+idea {
+    module {
+        scopes.PROVIDED.plus += [ configurations.provided ]
+    }
+}
+
+compileJava {
+    sourceSets.main.compileClasspath += configurations.provided
+}
+
+dependencies {
+    provided 'com.google.code.findbugs:annotations:3.0.0'
+
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.6.0'
+    compile 'com.fasterxml.jackson.core:jackson-core:2.6.0'
+    compile 'com.beust:jcommander:1.48'
+}
