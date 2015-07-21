@@ -6,7 +6,7 @@ dependencies {
         exclude group: 'log4j'
     }
     compile 'org.bouncycastle:bcprov-jdk15on:1.51'
-    compile 'com.beust:jcommander:1.47'
+    compile 'com.beust:jcommander:1.48'
 }
 
 uploadArchives {
