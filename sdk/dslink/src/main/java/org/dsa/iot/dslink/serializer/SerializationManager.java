@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Handles automatic serialization and deserialization.
@@ -29,6 +30,8 @@ public class SerializationManager {
     private final Serializer serializer;
     private ScheduledFuture<?> future;
 
+    private final AtomicBoolean changed = new AtomicBoolean(false);
+
     /**
      * Handles serialization based on the file path.
      *
@@ -42,13 +45,24 @@ public class SerializationManager {
         this.serializer = new Serializer(manager);
     }
 
+    public void markChanged() {
+        changed.set(true);
+    }
+
+    public void markChangedOverride(boolean bool) {
+        changed.set(bool);
+    }
+
     public synchronized void start() {
         stop();
         ScheduledThreadPoolExecutor daemon = Objects.getDaemonThreadPool();
         future = daemon.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
-                serialize();
+                boolean c = changed.getAndSet(false);
+                if (c) {
+                    serialize();
+                }
             }
         }, 5, 5, TimeUnit.SECONDS);
     }

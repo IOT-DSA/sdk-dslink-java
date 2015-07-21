@@ -6,6 +6,7 @@ import org.dsa.iot.dslink.link.Responder;
 import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.SubscriptionManager;
+import org.dsa.iot.dslink.serializer.SerializationManager;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
@@ -24,6 +25,8 @@ public class DSLink {
     private final NodeManager nodeManager;
     private final Requester requester;
     private final Responder responder;
+
+    private SerializationManager serialManager;
     private DataHandler handler;
 
     /**
@@ -59,6 +62,22 @@ public class DSLink {
             responder = null;
             nodeManager = null;
         }
+    }
+
+    /**
+     * Sets the serialization manager on the dslink.
+     *
+     * @param manager Serialization manager
+     */
+    public void setSerialManager(SerializationManager manager) {
+        if (this.serialManager != null) {
+            this.serialManager.stop();
+        }
+        this.serialManager = manager;
+    }
+
+    public SerializationManager getSerialManager() {
+        return serialManager;
     }
 
     /**
@@ -157,6 +176,16 @@ public class DSLink {
                     getWriter().writeResponses(responses);
                 }
             });
+        }
+    }
+
+    /**
+     * Stops the DSLink.
+     */
+    public void stop() {
+        SerializationManager manager = getSerialManager();
+        if (manager != null) {
+            manager.stop();
         }
     }
 }

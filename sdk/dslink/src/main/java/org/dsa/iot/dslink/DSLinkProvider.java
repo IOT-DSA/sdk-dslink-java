@@ -100,7 +100,9 @@ public class DSLinkProvider {
                                         } catch (Exception e) {
                                             LOGGER.error("Failed to deserialize nodes", e);
                                         }
+                                        manager.markChangedOverride(false);
                                         manager.start();
+                                        tmp.setSerialManager(manager);
                                     }
 
                                     tmp.setDefaultDataHandlers(false, true);
@@ -136,6 +138,12 @@ public class DSLinkProvider {
         running = false;
         manager.stop();
         handler.stop();
+        for (DSLink link : linkRequesterCache.values()) {
+            link.stop();
+        }
+        for (DSLink link : linkResponderCache.values()) {
+            link.stop();
+        }
     }
 
     /**

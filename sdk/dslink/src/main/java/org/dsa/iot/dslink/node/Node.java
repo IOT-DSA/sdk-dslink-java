@@ -6,6 +6,7 @@ import org.dsa.iot.dslink.node.actions.Action;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValuePair;
 import org.dsa.iot.dslink.node.value.ValueType;
+import org.dsa.iot.dslink.serializer.SerializationManager;
 import org.dsa.iot.dslink.util.StringUtils;
 
 import java.lang.ref.WeakReference;
@@ -122,6 +123,7 @@ public class Node {
      */
     public void setDisplayName(String name) {
         displayName = name;
+        markChanged();
         if (link != null) {
             SubscriptionManager man = link.getSubscriptionManager();
             if (name != null) {
@@ -146,6 +148,7 @@ public class Node {
      */
     public void setProfile(String profile) {
         this.profile = profile;
+        markChanged();
     }
 
     /**
@@ -186,6 +189,7 @@ public class Node {
                 interfaces = new HashSet<>();
             }
             interfaces.add(_interface);
+            markChanged();
         }
     }
 
@@ -196,6 +200,7 @@ public class Node {
                 throw new NullPointerException("_interface");
             } else if (interfaces != null) {
                 interfaces.remove(_interface);
+                markChanged();
             }
         }
     }
@@ -209,6 +214,7 @@ public class Node {
             }
             String[] split = _interface.split("\\|");
             Collections.addAll(interfaces, split);
+            markChanged();
         }
     }
 
@@ -271,6 +277,7 @@ public class Node {
             }
 
             this.value = value;
+            markChanged();
             if (link != null) {
                 SubscriptionManager manager = link.getSubscriptionManager();
                 if (manager != null) {
@@ -289,6 +296,7 @@ public class Node {
 
     public void setValueType(ValueType type) {
         this.valueType = type;
+        markChanged();
         if (link != null) {
             SubscriptionManager man = link.getSubscriptionManager();
             if (type != null) {
@@ -309,6 +317,7 @@ public class Node {
      */
     public void setWritable(Writable writable) {
         this.writable = writable;
+        markChanged();
     }
 
     /**
@@ -338,6 +347,7 @@ public class Node {
                     removeChild(child);
                 }
             }
+            markChanged();
         }
     }
 
@@ -407,6 +417,9 @@ public class Node {
             if (manager != null) {
                 manager.postChildUpdate(node, false);
             }
+            if (node.isSerializable()) {
+                markChanged();
+            }
             return node;
         }
     }
@@ -441,6 +454,9 @@ public class Node {
                     manager.postChildUpdate(child, true);
                     manager.removeValueSub(child);
                     manager.removePathSub(child);
+                }
+                if (isSerializable()) {
+                    markChanged();
                 }
             }
             return child;
@@ -491,6 +507,7 @@ public class Node {
                 man.postMetaUpdate(this, "$" + name, null);
             }
 
+            markChanged();
             return ret;
         }
     }
@@ -541,6 +558,7 @@ public class Node {
                 man.postMetaUpdate(this, "$" + name, value);
             }
 
+            markChanged();
             return configs.put(name, value);
         }
     }
@@ -568,6 +586,7 @@ public class Node {
                     man.postMetaUpdate(this, "$$" + name, null);
                 }
             }
+            markChanged();
             return tmp;
         }
     }
@@ -612,6 +631,7 @@ public class Node {
                 man.postMetaUpdate(this, "$$" + name, value);
             }
 
+            markChanged();
             return roConfigs.put(name, value);
         }
     }
@@ -650,6 +670,7 @@ public class Node {
                 }
             }
 
+            markChanged();
             return ret;
         }
     }
@@ -676,6 +697,7 @@ public class Node {
                 man.postMetaUpdate(this, "@" + name, value);
             }
 
+            markChanged();
             return attribs.put(name, value);
         }
     }
@@ -694,6 +716,7 @@ public class Node {
      */
     public void setAction(Action action) {
         this.action = action;
+        markChanged();
         if (link != null) {
             SubscriptionManager man = link.getSubscriptionManager();
             if (man != null) {
@@ -735,6 +758,7 @@ public class Node {
     public void setPassword(char[] password) {
         synchronized (passwordLock) {
             this.pass = password != null ? password.clone() : null;
+            markChanged();
         }
     }
 
@@ -746,6 +770,7 @@ public class Node {
      */
     public void setHasChildren(Boolean hasChildren) {
         this.hasChildren = hasChildren;
+        markChanged();
     }
 
     /**
@@ -760,6 +785,7 @@ public class Node {
      */
     public void setHidden(boolean hidden) {
         this.hidden = hidden;
+        markChanged();
     }
 
     /**
@@ -805,6 +831,7 @@ public class Node {
      */
     public void setSerializable(boolean serializable) {
         this.serializable = serializable;
+        markChanged();
     }
 
     /**
@@ -828,6 +855,19 @@ public class Node {
     @SuppressWarnings("unchecked")
     public <T> T getMetaData() {
         return (T) metaData;
+    }
+
+    private void markChanged() {
+        if (!isSerializable()) {
+            return;
+        }
+        Linkable link = getLink();
+        if (link != null) {
+            SerializationManager sm = link.getSerialManager();
+            if (sm != null) {
+                sm.markChanged();
+            }
+        }
     }
 
     /**
