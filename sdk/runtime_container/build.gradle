@@ -21,3 +21,14 @@ dependencies {
     compile 'com.fasterxml.jackson.core:jackson-core:2.6.0'
     compile 'com.beust:jcommander:1.48'
 }
+
+jar {
+    from {
+        (configurations.runtime).collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+    manifest {
+        attributes("Main-Class": "org.dsa.iot.container.Main")
+    }
+}

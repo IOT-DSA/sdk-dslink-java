@@ -1,6 +1,7 @@
 package org.dsa.iot.dslink;
 
 import org.dsa.iot.dslink.config.Configuration;
+import org.dsa.iot.dslink.util.Objects;
 
 /**
  * Top level API for handling the configuration of nodes and responses to
@@ -39,13 +40,25 @@ public abstract class DSLinkHandler {
     }
 
     /**
+     * Stops the entire DSLink. The DSLink is expected to close all resources
+     * and stop all threads. This method is called when {@link DSLinkProvider}
+     * is stopped. Ensure to call {@code super} after overriding.
+     */
+    public void stop() {
+        Objects.getVertx().stop();
+        Objects.getDaemonThreadPool().shutdownNow();
+        Objects.getThreadPool().shutdownNow();
+    }
+
+    /**
      * Sets the configuration of the handler.
      *
      * @param configuration Configuration of the link
      */
     public void setConfig(Configuration configuration) {
-        if (configuration == null)
+        if (configuration == null) {
             throw new NullPointerException("configuration");
+        }
         this.configuration = configuration;
     }
 

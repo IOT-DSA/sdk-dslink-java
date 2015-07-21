@@ -135,6 +135,7 @@ public class DSLinkProvider {
     public void stop() {
         running = false;
         manager.stop();
+        handler.stop();
     }
 
     /**
@@ -150,7 +151,9 @@ public class DSLinkProvider {
                 Thread.sleep(500);
             }
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            if (running) {
+                throw new RuntimeException(e);
+            }
         }
     }
 

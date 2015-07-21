@@ -18,6 +18,9 @@ public class DSLinkHandler {
 
     private final DSLinkInfo info;
 
+    private ThreadGroup group;
+    private Thread thread;
+
     private DSLinkProvider provider;
     private ClassLoader loader;
 
@@ -47,24 +50,46 @@ public class DSLinkHandler {
         manager.setLevel(info.getLogLevel());
 
         provider = new DSLinkProvider(loader, info);
-        Thread thread = new Thread(new Runnable() {
+        group = new ThreadGroup(info.getName());
+        group.setMaxPriority(Thread.NORM_PRIORITY);
+        thread = new Thread(group, new Runnable() {
             @Override
             public void run() {
                 // Set security manager per dslink thread
-                System.setSecurityManager(new SecMan());
+                System.setSecurityManager(new SecMan(group));
                 provider.start();
                 provider.sleep();
             }
         }, info.getName());
         thread.start();
-
-        // TODO: stop vert.x and thread pools
     }
 
     @SuppressFBWarnings("DM_GC")
     public synchronized void stop() {
         if (isRunning()) {
-            provider.stop();
+            try {
+                provider.stop();
+            } catch (Exception e) {
+                e.printStackTrace(System.err);
+            }
+            try {
+                thread.interrupt();
+                group.interrupt();
+                Thread[] threads = new Thread[group.activeCount()];
+                int count = group.enumerate(threads);
+                for (int i = 0; i < count; ++i) {
+                    threads[i].join(5000);
+                }
+
+                group.destroy();
+            } catch (Exception e) {
+                String err = "!!!!!!!! SEVERE !!!!!!!! ";
+                err += "DSLink `" + info.getName() + "` IS LEAKING THREADS.";
+                System.err.println(err);
+            } finally {
+                thread = null;
+                group = null;
+            }
             provider = null;
             loader = null;
             System.gc();
