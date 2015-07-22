@@ -25,6 +25,11 @@ public class SecMan extends SecurityManager {
 
     @Override
     public void checkPermission(Permission perm) {
-        // no-op
+        if (perm instanceof RuntimePermission) {
+            if ("setSecurityManager".equals(perm.getName())) {
+                String err = "Setting a security manager is not allowed";
+                throw new SecurityException(err);
+            }
+        }
     }
 }
