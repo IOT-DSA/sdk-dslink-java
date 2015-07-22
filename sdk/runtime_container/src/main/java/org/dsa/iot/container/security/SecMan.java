@@ -8,11 +8,6 @@ import java.security.Permission;
 public class SecMan extends SecurityManager {
 
     @Override
-    public ThreadGroup getThreadGroup() {
-        return super.getThreadGroup();
-    }
-
-    @Override
     public void checkExit(int status) {
         throw new SecurityException("Exit not allowed");
     }

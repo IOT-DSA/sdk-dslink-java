@@ -3,9 +3,6 @@ package org.dsa.iot.container;
 import org.dsa.iot.container.manager.DSLinkManager;
 import org.dsa.iot.container.manager.StdinHandler;
 import org.dsa.iot.container.security.SecMan;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.nio.file.Paths;
 
 /**

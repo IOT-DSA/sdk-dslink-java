@@ -56,6 +56,7 @@ public class StdinHandler {
                 }
             }
         });
+        thread.setPriority(Thread.MAX_PRIORITY);
         thread.start();
     }
 
