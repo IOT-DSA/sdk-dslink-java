@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import org.dsa.iot.dslink.DSLinkHandler;
 import org.dsa.iot.dslink.connection.ConnectionType;
 import org.dsa.iot.dslink.handshake.LocalKeys;
 import org.dsa.iot.dslink.util.URLInfo;
@@ -256,8 +257,21 @@ public class Configuration {
         String brokerHost = parsedArgs.getBrokerHost();
         String keyPath = getFieldValue(parsedArgs.getKeyPath(), json, "key");
         String nodePath = getFieldValue(parsedArgs.getNodesPath(), json, "nodes");
+        String handlerClass = getFieldValue(null, json, "handler_class");
 
         defaults.setDsId(name);
+        try {
+            // Validate handler class
+            Class<?> clazz = Class.forName(handlerClass);
+            if (!DSLinkHandler.class.isAssignableFrom(clazz)) {
+                String err = "Class `" + handlerClass + "` does not extend";
+                err += " " + DSLinkHandler.class.getName();
+                throw new RuntimeException(err);
+            }
+        } catch (ClassNotFoundException e) {
+            String err = "Handler class not found: " + handlerClass;
+            throw new RuntimeException(err);
+        }
 
         LogManager.configure();
         LogManager.setLevel(logLevel);
@@ -295,6 +309,7 @@ public class Configuration {
                 checkParam(configs, "log");
                 checkParam(configs, "key");
                 checkParam(configs, "nodes");
+                checkParam(configs, "handler_class");
                 return configs;
             }
         } catch (IOException e) {
