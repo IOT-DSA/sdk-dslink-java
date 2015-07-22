@@ -7,15 +7,9 @@ import java.security.Permission;
  */
 public class SecMan extends SecurityManager {
 
-    private final ThreadGroup group;
-
-    public SecMan(ThreadGroup group) {
-        this.group = group;
-    }
-
     @Override
     public ThreadGroup getThreadGroup() {
-        return group;
+        return super.getThreadGroup();
     }
 
     @Override

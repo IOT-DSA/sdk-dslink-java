@@ -1,7 +1,6 @@
 package org.dsa.iot.container.manager;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import org.dsa.iot.container.security.SecMan;
 import org.dsa.iot.container.wrapper.DSLinkProvider;
 import org.dsa.iot.container.wrapper.log.LogManager;
 
@@ -55,8 +54,6 @@ public class DSLinkHandler {
         thread = new Thread(group, new Runnable() {
             @Override
             public void run() {
-                // Set security manager per dslink thread
-                System.setSecurityManager(new SecMan(group));
                 provider.start();
                 provider.sleep();
             }
