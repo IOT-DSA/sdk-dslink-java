@@ -28,7 +28,11 @@ public class DSLinkManager {
                 if (info == null) {
                     continue;
                 }
-                start(dslinkRoot, info);
+                try {
+                    start(dslinkRoot, info);
+                } catch (Exception e) {
+                    System.err.println("Failed to start: " + info.getName());
+                }
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -46,7 +50,7 @@ public class DSLinkManager {
             link.start();
         } catch (IOException e) {
             links.remove(name);
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 

@@ -1,7 +1,10 @@
 package org.dsa.iot.container;
 
 import org.dsa.iot.container.manager.DSLinkManager;
+import org.dsa.iot.container.manager.StdinHandler;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.file.Paths;
 
 /**
@@ -15,13 +18,14 @@ public class Main {
             return;
         }
 
+        DSLinkManager manager = new DSLinkManager();
         String dslinksFolder = parsed.getDslinksFolder();
         if (dslinksFolder != null) {
             String brokerUrl = parsed.getBrokerUrl();
-            DSLinkManager manager = new DSLinkManager();
             manager.loadDirectory(Paths.get(dslinksFolder), brokerUrl);
         } else {
-            // TODO: handle stdin from the dslink manager
+            StdinHandler handler = new StdinHandler(manager);
+            handler.start();
         }
     }
 }

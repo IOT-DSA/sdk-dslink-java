@@ -3,6 +3,7 @@ package org.dsa.iot.container.manager;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.dsa.iot.container.utils.Json;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -89,7 +90,7 @@ public class DSLinkInfo {
         final String logLevel;
         final String handler;
         {
-            ObjectMapper mapper = new ObjectMapper();
+            ObjectMapper mapper = Json.getMapper();
             byte[] readJson = Files.readAllBytes(dslinkJson);
             ObjectNode node = mapper.readValue(readJson, ObjectNode.class);
             JsonNode config = node.path("configs");
