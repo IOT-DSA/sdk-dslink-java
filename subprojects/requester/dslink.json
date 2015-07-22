@@ -34,6 +34,10 @@
     "log": {
       "type": "enum",
       "default": "info"
+    },
+    "handler_class": {
+      "type": "string",
+      "default": "org.dsa.iot.requester.Main"
     }
   }
 }
