@@ -262,7 +262,8 @@ public class Configuration {
         defaults.setDsId(name);
         try {
             // Validate handler class
-            Class<?> clazz = Class.forName(handlerClass);
+            ClassLoader loader = Configuration.class.getClassLoader();
+            Class<?> clazz = loader.loadClass(handlerClass);
             if (!DSLinkHandler.class.isAssignableFrom(clazz)) {
                 String err = "Class `" + handlerClass + "` does not extend";
                 err += " " + DSLinkHandler.class.getName();
