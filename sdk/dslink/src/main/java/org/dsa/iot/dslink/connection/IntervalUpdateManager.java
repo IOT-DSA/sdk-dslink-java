@@ -99,9 +99,11 @@ public class IntervalUpdateManager {
             JsonObject oldMeta = obj.getField("meta");
             if (oldMeta != null) {
                 Object newMetaObj = content.removeField("meta");
-                Map<String, Object> map = (Map<String, Object>) newMetaObj;
-                JsonObject newMeta = new JsonObject(map);
-                oldMeta.mergeIn(newMeta);
+                if (newMetaObj != null) {
+                    Map<String, Object> map = (Map<String, Object>) newMetaObj;
+                    JsonObject newMeta = new JsonObject(map);
+                    oldMeta.mergeIn(newMeta);
+                }
             }
 
             obj.mergeIn(content);
