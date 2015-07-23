@@ -2,7 +2,7 @@ subprojects {
     apply plugin: 'findbugs'
     apply plugin: 'java'
 
-    version = '0.6.0'
+    version = '0.7.0-SNAPSHOT'
     sourceCompatibility = 1.7
     targetCompatibility = 1.7
 
