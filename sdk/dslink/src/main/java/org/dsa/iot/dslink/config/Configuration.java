@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.dsa.iot.dslink.DSLinkHandler;
 import org.dsa.iot.dslink.connection.ConnectionType;
 import org.dsa.iot.dslink.handshake.LocalKeys;
+import org.dsa.iot.dslink.util.PropertyReference;
 import org.dsa.iot.dslink.util.URLInfo;
 import org.dsa.iot.dslink.util.log.LogManager;
 import org.vertx.java.core.json.JsonArray;
@@ -258,20 +259,24 @@ public class Configuration {
         String keyPath = getFieldValue(parsedArgs.getKeyPath(), json, "key");
         String nodePath = getFieldValue(parsedArgs.getNodesPath(), json, "nodes");
         String handlerClass = getFieldValue(null, json, "handler_class");
-
         defaults.setDsId(name);
-        try {
-            // Validate handler class
-            ClassLoader loader = Configuration.class.getClassLoader();
-            Class<?> clazz = loader.loadClass(handlerClass);
-            if (!DSLinkHandler.class.isAssignableFrom(clazz)) {
-                String err = "Class `" + handlerClass + "` does not extend";
-                err += " " + DSLinkHandler.class.getName();
+
+        String prop = System.getProperty(PropertyReference.VALIDATE_HANDLER, "true");
+        boolean validate = Boolean.parseBoolean(prop);
+        if (validate) {
+            try {
+                // Validate handler class
+                ClassLoader loader = Configuration.class.getClassLoader();
+                Class<?> clazz = loader.loadClass(handlerClass);
+                if (!DSLinkHandler.class.isAssignableFrom(clazz)) {
+                    String err = "Class `" + handlerClass + "` does not extend";
+                    err += " " + DSLinkHandler.class.getName();
+                    throw new RuntimeException(err);
+                }
+            } catch (ClassNotFoundException e) {
+                String err = "Handler class not found: " + handlerClass;
                 throw new RuntimeException(err);
             }
-        } catch (ClassNotFoundException e) {
-            String err = "Handler class not found: " + handlerClass;
-            throw new RuntimeException(err);
         }
 
         LogManager.configure();
@@ -305,6 +310,16 @@ public class Configuration {
                 throw new RuntimeException("Missing `configs` field");
             } else {
                 JsonObject configs = json.getObject("configs");
+
+                String prop = System.getProperty(PropertyReference.VALIDATE, "true");
+                if (!Boolean.parseBoolean(prop)) {
+                    return configs;
+                }
+                prop = System.getProperty(PropertyReference.VALIDATE_JSON, "true");
+                if (!Boolean.parseBoolean(prop)) {
+                    return configs;
+                }
+
                 checkField(configs, "broker");
                 checkParam(configs, "name");
                 checkParam(configs, "log");
@@ -323,6 +338,9 @@ public class Configuration {
                                         String field) {
         if (argsVal == null) {
             JsonObject param = json.getObject(field);
+            if (param == null) {
+                return null;
+            }
             return param.getString("default");
         }
         return argsVal;
