@@ -127,6 +127,8 @@ public class WatchGroup {
         Watch watch;
         {
             NodeBuilder b = node.createChild(path.replaceAll("/", "%2F"));
+            b.setValueType(ValueType.DYNAMIC);
+            b.setValue(null);
             Node n = b.build();
             watch = new Watch(this, n);
             watch.init(permission);
@@ -316,8 +318,10 @@ public class WatchGroup {
 
     private void dbWrite(WatchUpdate update) {
         Value value = update.getUpdate().getValue();
-        long time = TimeParser.parse(value.getTimeStamp());
-        db.write(update.getWatch().getPath(), value, time);
+        if (value != null) {
+            long time = TimeParser.parse(value.getTimeStamp());
+            db.write(update.getWatch().getPath(), value, time);
+        }
     }
 
     private void setInterval(long interval) {

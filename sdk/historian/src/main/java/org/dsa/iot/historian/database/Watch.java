@@ -111,10 +111,7 @@ public class Watch {
     }
 
     protected void initData(final Node node) {
-        {
-            realTimeValue = node;
-            realTimeValue.setValueType(ValueType.DYNAMIC);
-        }
+        realTimeValue = node;
 
         {
             NodeBuilder b = node.createChild("enabled");
