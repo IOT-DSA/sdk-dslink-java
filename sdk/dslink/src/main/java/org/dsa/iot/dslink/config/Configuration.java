@@ -261,8 +261,13 @@ public class Configuration {
         String handlerClass = getFieldValue(null, json, "handler_class");
         defaults.setDsId(name);
 
-        String prop = System.getProperty(PropertyReference.VALIDATE_HANDLER, "true");
+        String prop = System.getProperty(PropertyReference.VALIDATE, "true");
         boolean validate = Boolean.parseBoolean(prop);
+        if (validate) {
+            prop = PropertyReference.VALIDATE_HANDLER;
+            prop = System.getProperty(prop, "true");
+            validate = Boolean.parseBoolean(prop);
+        }
         if (validate) {
             try {
                 // Validate handler class
