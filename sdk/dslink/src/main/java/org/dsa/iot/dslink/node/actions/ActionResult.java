@@ -66,15 +66,6 @@ public class ActionResult {
     }
 
     /**
-     * @return Original invocation request.
-     * @see #getParameter
-     */
-    @Deprecated
-    public JsonObject getJsonIn() {
-        return jsonIn;
-    }
-
-    /**
      * Gets a parameter from the incoming parameters from the endpoint. The
      * returned parameter is unchecked.
      *
