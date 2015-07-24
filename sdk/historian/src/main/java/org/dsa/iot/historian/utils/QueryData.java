@@ -10,6 +10,7 @@ public class QueryData {
     private Value value;
     private long ts;
 
+    @SuppressWarnings("unused")
     public QueryData() {
         this(null, -1);
     }
@@ -27,6 +28,7 @@ public class QueryData {
         return value;
     }
 
+    @SuppressWarnings("unused")
     public void setTimestamp(long ts) {
         this.ts = ts;
     }

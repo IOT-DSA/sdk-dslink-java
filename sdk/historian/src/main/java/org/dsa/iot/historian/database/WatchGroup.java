@@ -48,6 +48,12 @@ public class WatchGroup {
         this.db = db;
     }
 
+    public void close() {
+        if (bufferFut != null) {
+            bufferFut.cancel(true);
+        }
+    }
+
     /**
      * Watches should never write data to the database directly
      * unless absolutely necessary.

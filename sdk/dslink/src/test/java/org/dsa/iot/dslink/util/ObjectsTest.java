@@ -1,7 +1,6 @@
 package org.dsa.iot.dslink.util;
 
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.lang.Thread.UncaughtExceptionHandler;
@@ -11,12 +10,6 @@ import java.util.concurrent.*;
  * @author Samuel Grenier
  */
 public class ObjectsTest {
-
-    @Before
-    public void setup() {
-        // Coverage
-        new Objects();
-    }
 
     @Test
     public void nonNullObjects() {
@@ -88,35 +81,6 @@ public class ObjectsTest {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-
-        Objects.ScheduledThreadPool pool = new Objects.ScheduledThreadPool(1);
-        boolean exception = false;
-        try {
-            pool.afterExecute(null, new RuntimeException("test"));
-        } catch (RuntimeException e) {
-            exception = true;
-            Assert.assertEquals("test", e.getMessage());
-        }
-        Assert.assertTrue(exception);
-
-        exception = false;
-        try {
-            pool.afterExecute(new FakeFuture(), null);
-        } catch (RuntimeException e) {
-            exception = true;
-            Assert.assertEquals("test", e.getCause().getMessage());
-        }
-        Assert.assertTrue(exception);
-
-        exception = false;
-        try {
-            pool.afterExecute(null, new Throwable("test"));
-        } catch (RuntimeException e) {
-            exception = true;
-            Assert.assertEquals("test", e.getCause().getMessage());
-        }
-        Assert.assertTrue(exception);
-
     }
 
     @Test
@@ -127,39 +91,5 @@ public class ObjectsTest {
             }
         }, 10, TimeUnit.SECONDS);
         fut.cancel(true);
-    }
-
-    private static class FakeFuture implements Runnable, Future<Object> {
-
-        @Override
-        public void run() {
-
-        }
-
-        @Override
-        public boolean cancel(boolean mayInterruptIfRunning) {
-            return false;
-        }
-
-        @Override
-        public boolean isCancelled() {
-            return false;
-        }
-
-        @Override
-        public boolean isDone() {
-            return false;
-        }
-
-        @Override
-        public Object get() throws InterruptedException, ExecutionException {
-            return null;
-        }
-
-        @Override
-        public Object get(long timeout, TimeUnit unit)
-                throws InterruptedException, ExecutionException, TimeoutException {
-            throw new ExecutionException("", new Throwable("test"));
-        }
     }
 }

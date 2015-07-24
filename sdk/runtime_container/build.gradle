@@ -16,10 +16,7 @@ compileJava {
 
 dependencies {
     provided 'com.google.code.findbugs:annotations:3.0.0'
-
-    compile 'com.fasterxml.jackson.core:jackson-databind:2.6.0'
-    compile 'com.fasterxml.jackson.core:jackson-core:2.6.0'
-    compile 'com.beust:jcommander:1.48'
+    compile project(':sdk/runtime_shared')
 }
 
 jar {

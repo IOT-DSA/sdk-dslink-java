@@ -42,12 +42,11 @@ public abstract class DSLinkHandler {
     /**
      * Stops the entire DSLink. The DSLink is expected to close all resources
      * and stop all threads. This method is called when {@link DSLinkProvider}
-     * is stopped. Ensure to call {@code super} after overriding.
+     * is stopped. SDK resources such as {@link Objects} should not be shut
+     * down here. However, all locally created thread pools must be shut down.
+     * Any scheduled tasks created in any thread pool must be shut down.
      */
     public void stop() {
-        Objects.getVertx().stop();
-        Objects.getDaemonThreadPool().shutdownNow();
-        Objects.getThreadPool().shutdownNow();
     }
 
     /**

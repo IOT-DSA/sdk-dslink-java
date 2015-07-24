@@ -48,7 +48,7 @@ public class FileUtils {
      * @throws IOException IO Exception occurred
      */
     public static void write(File path, byte[] bytes) throws IOException {
-        if (path.delete()) {
+        if (path.delete() && LOGGER.isDebugEnabled()) {
             LOGGER.debug("Removed " + path.getPath() + " during writing");
         }
         try (OutputStream stream = new FileOutputStream(path)) {
@@ -85,9 +85,11 @@ public class FileUtils {
                     input.close();
                 }
             } catch (IOException e) {
-                StringWriter writer = new StringWriter();
-                e.printStackTrace(new PrintWriter(writer));
-                LOGGER.debug(writer.toString());
+                if (LOGGER.isDebugEnabled()) {
+                    StringWriter writer = new StringWriter();
+                    e.printStackTrace(new PrintWriter(writer));
+                    LOGGER.debug(writer.toString());
+                }
             }
 
             try {
@@ -95,9 +97,11 @@ public class FileUtils {
                     output.close();
                 }
             } catch (IOException e) {
-                StringWriter writer = new StringWriter();
-                e.printStackTrace(new PrintWriter(writer));
-                LOGGER.debug(writer.toString());
+                if (LOGGER.isDebugEnabled()) {
+                    StringWriter writer = new StringWriter();
+                    e.printStackTrace(new PrintWriter(writer));
+                    LOGGER.debug(writer.toString());
+                }
             }
         }
     }

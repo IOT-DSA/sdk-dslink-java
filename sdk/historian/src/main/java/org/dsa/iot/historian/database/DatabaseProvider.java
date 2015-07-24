@@ -150,6 +150,7 @@ public abstract class DatabaseProvider {
                 WatchGroup g = n.getMetaData();
                 if (g != null) {
                     g.unsubscribe();
+                    g.close();
                 }
             }
         }

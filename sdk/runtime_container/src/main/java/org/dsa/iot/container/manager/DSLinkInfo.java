@@ -111,12 +111,30 @@ public class DSLinkInfo {
 
     private static class JarWalker extends SimpleFileVisitor<Path> {
 
+        private static final String[] BLACKLIST = new String[] {
+                "bcprov-jdk15on-",
+                "jackson-",
+                "jcommander-",
+                "vertx-",
+                "netty-"
+        };
+
         private List<URL> urls = new ArrayList<>();
 
         @Override
         public FileVisitResult visitFile(Path file,
                                          BasicFileAttributes attr) {
-            if (attr.isRegularFile() && file.toString().endsWith(".jar")) {
+            Path pathFileName;
+            if (file == null || (pathFileName = file.getFileName()) == null) {
+                return FileVisitResult.CONTINUE;
+            }
+            String fileName = pathFileName.toString();
+            if (attr.isRegularFile() && fileName.endsWith(".jar")) {
+                for (String ignore : BLACKLIST) {
+                    if (fileName.startsWith(ignore)) {
+                        return FileVisitResult.CONTINUE;
+                    }
+                }
                 try {
                     urls.add(file.toUri().toURL());
                 } catch (MalformedURLException e) {

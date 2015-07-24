@@ -8,8 +8,10 @@ import org.dsa.iot.dslink.node.NodeBuilder;
 import org.dsa.iot.dslink.node.Permission;
 import org.dsa.iot.dslink.node.actions.Action;
 import org.dsa.iot.dslink.node.value.Value;
+import org.dsa.iot.historian.database.Database;
 import org.dsa.iot.historian.database.DatabaseProvider;
 import org.dsa.iot.historian.database.SubscriptionPool;
+import org.dsa.iot.historian.database.WatchGroup;
 import org.dsa.iot.historian.stats.GetHistory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +35,37 @@ public abstract class Historian extends DSLinkHandler {
     @Override
     public final boolean isResponder() {
         return true;
+    }
+
+    @Override
+    public void stop() {
+        if (respSuperRoot != null) {
+            Map<String, Node> children = respSuperRoot.getChildren();
+            if (children != null) {
+                for (final Node n : children.values()) {
+                    Database db = n.getMetaData();
+                    if (db == null) {
+                        continue;
+                    }
+
+                    try {
+                        db.close();
+                    } catch (Exception ignored) {
+                    }
+
+                    Map<String, Node> wgs = n.getChildren();
+                    if (wgs == null) {
+                        continue;
+                    }
+                    for (Node wg : wgs.values()) {
+                        WatchGroup g = wg.getMetaData();
+                        if (g != null) {
+                            g.close();
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /**

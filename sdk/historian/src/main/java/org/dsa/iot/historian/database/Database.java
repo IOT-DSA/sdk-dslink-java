@@ -120,18 +120,18 @@ public abstract class Database {
     public abstract QueryData queryLast(String path);
 
     /**
+     * Closes the database connection and frees any resources.
+     *
+     * @throws Exception Convenience for a failed close.
+     */
+    public abstract void close() throws Exception;
+
+    /**
      * Performs a raw connection to the database endpoint.
      *
      * @throws Exception Connection failed.
      */
     protected abstract void performConnect() throws Exception;
-
-    /**
-     * Closes the database connection and frees any resources.
-     *
-     * @throws Exception Convenience for a failed close.
-     */
-    protected abstract void close() throws Exception;
 
     /**
      * Initialize additional top level database data and settings. All
