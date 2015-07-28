@@ -397,7 +397,12 @@ public class ListResponse implements Response {
     @Override
     public JsonObject getCloseResponse() {
         manager.removePathSub(node);
-        node.getListener().postListClosed();
+        if (node != null) {
+            NodeListener listener = node.getListener();
+            if (listener != null) {
+                node.getListener().postListClosed();
+            }
+        }
         JsonObject resp = new JsonObject();
         resp.putNumber("rid", getRid());
         resp.putString("stream", StreamState.CLOSED.getJsonName());
