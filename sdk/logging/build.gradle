@@ -8,7 +8,7 @@ uploadArchives {
     repositories {
         mavenDeployer {
             pom.project {
-                name = 'DSLink SDK'
+                name = 'DSLink Logging'
                 artifactId = 'logging'
                 description = 'Lightweight SLF4J binding'
             }

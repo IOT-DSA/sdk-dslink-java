@@ -12,9 +12,9 @@ uploadArchives {
     repositories {
         mavenDeployer {
             pom.project {
-                name = 'DSLink SDK'
-                artifactId = 'dslink'
-                description = 'SDK for the IoT DSA protocol'
+                name = 'DSLink Shared Runtime'
+                artifactId = 'runtime_shared'
+                description = 'Shared Runtime for the SDK'
             }
         }
     }
