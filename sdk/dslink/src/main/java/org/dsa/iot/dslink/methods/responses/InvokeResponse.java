@@ -54,8 +54,12 @@ public class InvokeResponse implements Response {
                     JsonObject col = (JsonObject) object;
                     String name = col.getString("name");
                     String type = col.getString("type");
+                    JsonObject meta = col.getObject("meta");
                     ValueType vt = ValueType.toValueType(type);
-                    results.addColumn(new Parameter(name, vt));
+
+                    Parameter p = new Parameter(name, vt);
+                    p.setMetaData(meta);
+                    results.addColumn(p);
                 }
             }
         }
@@ -175,6 +179,10 @@ public class InvokeResponse implements Response {
                 JsonObject o = new JsonObject();
                 o.putString("name", p.getName());
                 o.putString("type", p.getType().toJsonString());
+                JsonObject meta = p.getMetaData();
+                if (meta != null) {
+                    o.putObject("meta", meta);
+                }
                 array.addObject(o);
             }
         }

@@ -2,6 +2,7 @@ package org.dsa.iot.dslink.node.actions;
 
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
+import org.vertx.java.core.json.JsonObject;
 
 /**
  * @author Samuel Grenier
@@ -15,6 +16,7 @@ public class Parameter {
     private EditorType editorType;
     private String description;
     private String placeHolder;
+    private JsonObject meta;
 
     public Parameter(String name, ValueType type) {
         this(name, type, null);
@@ -112,6 +114,24 @@ public class Parameter {
     public Parameter setPlaceHolder(String placeHolder) {
         this.placeHolder = placeHolder;
         return this;
+    }
+
+    /**
+     * This is used for the metadata of a column.
+     *
+     * @param meta Column metadata.
+     * @return This object for daisy chaining.
+     */
+    public Parameter setMetaData(JsonObject meta) {
+        this.meta = meta;
+        return this;
+    }
+
+    /**
+     * @return Column metadata
+     */
+    public JsonObject getMetaData() {
+        return meta;
     }
 
     /**
