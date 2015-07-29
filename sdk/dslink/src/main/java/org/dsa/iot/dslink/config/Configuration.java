@@ -296,6 +296,7 @@ public class Configuration {
         return defaults;
     }
 
+    @SuppressWarnings("unchecked")
     private static JsonObject getAndValidateJson(String jsonPath) {
         JsonFactory factory = MAPPER.getFactory();
         File file = new File(jsonPath);
@@ -305,7 +306,6 @@ public class Configuration {
             while (parser.nextToken() != null) {
                 String name = parser.getText();
                 if ("configs".equals(name)) {
-                    //noinspection unchecked
                     json = new JsonObject(parser.readValueAs(Map.class));
                     break;
                 }

@@ -4,6 +4,8 @@ import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.methods.Response;
 import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.node.Node;
+import org.dsa.iot.dslink.node.NodeManager;
+import org.dsa.iot.dslink.node.NodePair;
 import org.dsa.iot.dslink.node.SubscriptionManager;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
@@ -40,8 +42,15 @@ public class SubscribeResponse implements Response {
                 JsonObject subData = (JsonObject) obj;
                 String path = subData.getString("path");
                 int sid = subData.getInteger("sid");
-                Node node = link.getNodeManager().getNode(path).getNode();
-                manager.addValueSub(node, sid);
+
+                NodeManager nm = link.getNodeManager();
+                NodePair pair = nm.getNode(path, false, false);
+                if (pair != null) {
+                    Node node = pair.getNode();
+                    if (node != null) {
+                        manager.addValueSub(node, sid);
+                    }
+                }
             }
         }
 
