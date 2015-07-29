@@ -15,6 +15,8 @@ import org.dsa.iot.dslink.util.Objects;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonObject;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -96,24 +98,38 @@ public class Requester extends Linkable {
         int min = currentSubID.getAndAdd(paths.size());
         int max = min + paths.size();
         Iterator<String> it = paths.iterator();
+        StringBuilder error = null;
         while (min < max) {
-            String path = NodeManager.normalizePath(it.next(), true);
-            subs.put(path, min);
-            Integer prev = subPaths.put(path, min);
-            if (prev != null) {
-                String err = "Path " + path + " already subscribed";
-                throw new RuntimeException(err);
+            try {
+                String path = NodeManager.normalizePath(it.next(), true);
+                subs.put(path, min);
+                Integer prev = subPaths.put(path, min);
+                if (prev != null) {
+                    String err = "Path " + path + " already subscribed";
+                    throw new RuntimeException(err);
+                }
+                subSids.put(min, path);
+                if (onUpdate != null) {
+                    subUpdates.put(min, onUpdate);
+                }
+                min++;
+            } catch (IllegalArgumentException e) {
+                if (error == null) {
+                    error = new StringBuilder();
+                }
+                StringWriter writer = new StringWriter();
+                e.printStackTrace(new PrintWriter(writer));
+                error.append(writer.toString());
+                error.append("\n\n");
             }
-            subSids.put(min, path);
-            if (onUpdate != null) {
-                subUpdates.put(min, onUpdate);
-            }
-            min++;
         }
         SubscribeRequest req = new SubscribeRequest(subs);
 
         RequestWrapper wrapper = new RequestWrapper(req);
         sendRequest(wrapper, currentReqID.incrementAndGet());
+        if (error != null) {
+            throw new RuntimeException(error.toString());
+        }
     }
 
     public void unsubscribe(String path, Handler<UnsubscribeResponse> onResponse) {
