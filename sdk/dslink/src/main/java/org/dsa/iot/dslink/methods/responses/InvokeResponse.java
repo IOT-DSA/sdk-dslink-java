@@ -129,6 +129,13 @@ public class InvokeResponse implements Response {
                         JsonObject def = new JsonObject();
                         JsonObject meta = out.getObject("meta", def);
                         meta.putString("mode", mode.getName());
+                        {
+                            JsonObject obj = table.getTableMeta();
+                            if (obj != null) {
+                                meta.putObject("meta", obj);
+                            }
+                            table.setTableMeta(null);
+                        }
                         out.putObject("meta", meta);
                     }
                 }

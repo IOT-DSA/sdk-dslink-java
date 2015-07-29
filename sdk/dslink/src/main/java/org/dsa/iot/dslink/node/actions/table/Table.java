@@ -23,6 +23,7 @@ public class Table {
     private List<Parameter> columns;
     private List<Row> rows;
     private Mode mode;
+    private JsonObject meta;
 
     private int rid;
     private DataHandler writer;
@@ -40,6 +41,15 @@ public class Table {
             columns = new LinkedList<>();
         }
         columns.add(parameter);
+    }
+
+    /**
+     * Sets the metadata of the table.
+     *
+     * @param meta Metadata to set.
+     */
+    public void setTableMeta(JsonObject meta) {
+        this.meta = meta;
     }
 
     /**
@@ -170,6 +180,13 @@ public class Table {
         this.rows = null;
         this.mode = null;
         this.closeHandler = null;
+    }
+
+    /**
+     * @return Table metadata.
+     */
+    public JsonObject getTableMeta() {
+        return meta;
     }
 
     /**
