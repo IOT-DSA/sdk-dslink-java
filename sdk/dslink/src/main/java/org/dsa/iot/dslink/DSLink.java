@@ -31,36 +31,37 @@ public class DSLink {
 
     /**
      * @param linkHandler DSLink handler
-     * @param dataHandler Endpoint for reading/writing data from an endpoint.
-     * @param isRequester Whether to initialize a requester, otherwise
-     *                    a responder is initialized. The initialize
-     *                    param must be true.
-     * @param initialize Whether to initialize a requester or link
+     * @param isRequester Whether to initialize a requester.
+     * @param isResponder Whether to initialize a responder.
      */
     protected DSLink(DSLinkHandler linkHandler,
-                     DataHandler dataHandler,
                      boolean isRequester,
-                     boolean initialize) {
+                     boolean isResponder) {
         if (linkHandler == null)
             throw new NullPointerException("linkHandler");
-        else if (dataHandler == null)
-            throw new NullPointerException("dataHandler");
-        this.handler = dataHandler;
+        else if (isRequester && isResponder) {
+            String err = "DSLink instance cannot be a requester and responder";
+            throw new RuntimeException(err);
+        }
 
-        if (initialize && isRequester) {
+        if (isRequester) {
             requester = new Requester(linkHandler);
-            responder = null;
             requester.setDSLink(this);
-            nodeManager = new NodeManager(requester, "node");
-        } else if (initialize) {
-            requester = null;
-            responder = new Responder(linkHandler);
-            responder.setDSLink(this);
-            nodeManager = new NodeManager(responder, "node");
         } else {
             requester = null;
+        }
+
+        if (isResponder) {
+            responder = new Responder(linkHandler);
+            responder.setDSLink(this);
+        } else {
             responder = null;
-            nodeManager = null;
+        }
+
+        if (isRequester) {
+            nodeManager = new NodeManager(requester, "node");
+        } else {
+            nodeManager = new NodeManager(responder, "node");
         }
     }
 

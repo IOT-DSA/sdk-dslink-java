@@ -45,12 +45,14 @@ public class SubscribeResponse implements Response {
 
                 NodeManager nm = link.getNodeManager();
                 NodePair pair = nm.getNode(path, false, false);
-                if (pair != null) {
-                    Node node = pair.getNode();
-                    if (node != null) {
-                        manager.addValueSub(node, sid);
-                    }
+                if (pair == null) {
+                    continue;
                 }
+                Node node = pair.getNode();
+                if (node == null) {
+                    continue;
+                }
+                manager.addValueSub(node, sid);
             }
         }
 
