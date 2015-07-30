@@ -19,6 +19,20 @@ public class StringUtilsTest {
     }
 
     @Test
+    public void encode() {
+        String s = ". / \\ ? * : | < > $ @";
+        s = StringUtils.encodeName(s);
+        Assert.assertEquals("%2E %2F %5C %3F %2A %3A %7C %3C %3E %24 %40", s);
+    }
+
+    @Test
+    public void decode() {
+        String s = "%2E %2F %5C %3F %2A %3A %7C %3C %3E %24 %40";
+        s = StringUtils.decodeName(s);
+        Assert.assertEquals(". / \\ ? * : | < > $ @", s);
+    }
+
+    @Test
     public void references() {
         Assert.assertTrue(StringUtils.isReference("$test"));
         Assert.assertTrue(StringUtils.isReference("@test"));
@@ -60,11 +74,10 @@ public class StringUtilsTest {
             Assert.assertEquals("chars", e.getMessage());
         }
 
-        final String[] test = new String[] {
-                "a",
-                "b",
-                "c",
-                "abc"
+        final char[] test = new char[] {
+                'a',
+                'b',
+                'c',
         };
 
         Assert.assertFalse(StringUtils.contains("", test));

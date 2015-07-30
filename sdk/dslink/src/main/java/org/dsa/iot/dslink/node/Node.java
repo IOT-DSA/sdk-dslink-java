@@ -23,8 +23,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class Node {
 
-    static final String[] BANNED_CHARS = new String[] {
-            ".", "/", "\\", "?", "*", ":", "|", "<", ">", "$", "@"
+    static final char[] BANNED_CHARS = new char[] {
+            '.', '/', '\\', '?', '*', ':', '|', '<', '>', '$', '@'
     };
 
     private final Object roConfigLock = new Object();
@@ -889,7 +889,7 @@ public class Node {
     /**
      * @return The banned characters not allowed to be in names.
      */
-    public static String[] getBannedCharacters() {
+    public static char[] getBannedCharacters() {
         return BANNED_CHARS.clone();
     }
 }
