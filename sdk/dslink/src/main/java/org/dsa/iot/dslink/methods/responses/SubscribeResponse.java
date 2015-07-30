@@ -1,6 +1,7 @@
 package org.dsa.iot.dslink.methods.responses;
 
 import org.dsa.iot.dslink.DSLink;
+import org.dsa.iot.dslink.DSLinkHandler;
 import org.dsa.iot.dslink.methods.Response;
 import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.node.Node;
@@ -41,14 +42,16 @@ public class SubscribeResponse implements Response {
             for (Object obj : paths) {
                 JsonObject subData = (JsonObject) obj;
                 String path = subData.getString("path");
+                path = NodeManager.normalizePath(path, false);
                 int sid = subData.getInteger("sid");
 
                 NodeManager nm = link.getNodeManager();
                 NodePair pair = nm.getNode(path, false, false);
-                if (pair == null) {
-                    continue;
-                }
                 Node node = pair.getNode();
+                if (node == null) {
+                    DSLinkHandler h = link.getLinkHandler();
+                    node = h.onSubscriptionFail(path);
+                }
                 if (node == null) {
                     continue;
                 }

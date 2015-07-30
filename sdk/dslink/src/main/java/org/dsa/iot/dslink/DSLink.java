@@ -22,15 +22,16 @@ import java.util.List;
 public class DSLink {
 
     private final SubscriptionManager manager = new SubscriptionManager(this);
+    private final DSLinkHandler linkHandler;
     private final NodeManager nodeManager;
     private final Requester requester;
     private final Responder responder;
 
     private SerializationManager serialManager;
-    private DataHandler handler;
+    private DataHandler dataHandler;
 
     /**
-     * @param linkHandler DSLink handler
+     * @param linkHandler DSLink dataHandler
      * @param isRequester Whether to initialize a requester.
      * @param isResponder Whether to initialize a responder.
      */
@@ -44,6 +45,7 @@ public class DSLink {
             throw new RuntimeException(err);
         }
 
+        this.linkHandler = linkHandler;
         if (isRequester) {
             requester = new Requester(linkHandler);
             requester.setDSLink(this);
@@ -77,17 +79,27 @@ public class DSLink {
         this.serialManager = manager;
     }
 
+    /**
+     * @return The serialization manager this instance is attached to.
+     */
     public SerializationManager getSerialManager() {
         return serialManager;
     }
 
     /**
+     * @return The link handler this instance is attached to.
+     */
+    public DSLinkHandler getLinkHandler() {
+        return linkHandler;
+    }
+
+    /**
      * Sets a new writer for the link to utilize.
      *
-     * @param handler New handler to set.
+     * @param handler New data handler to set.
      */
     public void setWriter(DataHandler handler) {
-        this.handler = handler;
+        this.dataHandler = handler;
     }
 
     /**
@@ -96,7 +108,7 @@ public class DSLink {
      * @return The writer to write responses to a remote endpoint.
      */
     public DataHandler getWriter() {
-        return handler;
+        return dataHandler;
     }
 
     /**

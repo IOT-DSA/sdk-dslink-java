@@ -1,6 +1,7 @@
 package org.dsa.iot.dslink;
 
 import org.dsa.iot.dslink.config.Configuration;
+import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.util.Objects;
 
 /**
@@ -109,5 +110,18 @@ public abstract class DSLinkHandler {
      * @param link The link that has completed a connection.
      */
     public void onResponderConnected(DSLink link) {
+    }
+
+    /**
+     * Callback when a subscription fails as a result of trying to
+     * subscribing to a non-existent node.
+     *
+     * @param path Path the requester wants to subscribe to. The path is
+     *             normalized without a leading forward-slash.
+     * @return A created node to force a subscription to succeed or
+     *         {@code null} to let the subscription fail.
+     */
+    public Node onSubscriptionFail(String path) {
+        return null;
     }
 }
