@@ -28,4 +28,9 @@ jar {
     manifest {
         attributes("Main-Class": "org.dsa.iot.container.Main")
     }
+    exclude 'META-INF/INDEX.LIST'
+    exclude 'META-INF/BCKEY.*'
+    exclude 'META-INF/LICENSE'
+    exclude 'META-INF/NOTICE'
+    exclude 'META-INF/maven/**'
 }
