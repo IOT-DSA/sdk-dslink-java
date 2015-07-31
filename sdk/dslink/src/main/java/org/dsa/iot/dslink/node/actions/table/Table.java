@@ -57,7 +57,17 @@ public class Table {
      *
      * @param batch Batch of rows.
      */
-    public synchronized void addBatchRows(BatchRow batch) {
+    public void addBatchRows(BatchRow batch) {
+        addBatchRows(null, batch);
+    }
+
+    /**
+     * Batch metadata is ignored if the table is not streaming.
+     *
+     * @param cols Columns to dynamically adjust columns of the table.
+     * @param batch Batch of rows.
+     */
+    public synchronized void addBatchRows(List<Parameter> cols, BatchRow batch) {
         DataHandler writer = this.writer;
         if (batch == null) {
             throw new NullPointerException("batch");
@@ -66,6 +76,11 @@ public class Table {
         }
 
         if (writer == null) {
+            if (columns == null) {
+                columns = new LinkedList<>(cols);
+            } else {
+                columns.addAll(cols);
+            }
             rows.addAll(batch.getRows());
         } else {
             JsonArray updates = new JsonArray();
@@ -79,7 +94,7 @@ public class Table {
                 meta = new JsonObject();
                 meta.putString("modify", batch.getModifier().get());
             }
-            write(writer, updates, meta);
+            write(writer, cols, updates, meta);
         }
     }
 
@@ -89,7 +104,18 @@ public class Table {
      *
      * @param row Row to add to the table.
      */
-    public synchronized void addRow(Row row) {
+    public void addRow(Row row) {
+        addRow(null, row);
+    }
+
+    /**
+     * Adds a row to the internal row buffer or streams it directly to
+     * the requester.
+     *
+     * @param cols Columns to dynamically adjust columns of the table.
+     * @param row Row to add to the table.
+     */
+    public synchronized void addRow(List<Parameter> cols, Row row) {
         DataHandler writer = this.writer;
         if (row == null) {
             throw new NullPointerException("row");
@@ -98,11 +124,16 @@ public class Table {
         }
 
         if (writer == null) {
+            if (columns == null) {
+                columns = new LinkedList<>(cols);
+            } else {
+                columns.addAll(cols);
+            }
             rows.add(row);
         } else {
             JsonArray updates = new JsonArray();
             updates.addArray(processRow(row));
-            write(writer, updates, null);
+            write(writer, cols, updates, null);
         }
     }
 
@@ -120,7 +151,7 @@ public class Table {
         } else {
             JsonObject meta = new JsonObject();
             meta.putString("mode", mode.getName());
-            write(writer, null, meta);
+            write(writer, null, null, meta);
         }
     }
 
@@ -218,6 +249,7 @@ public class Table {
     }
 
     private void write(DataHandler writer,
+                       List<Parameter> cols,
                        JsonArray updates,
                        JsonObject meta) {
         JsonObject obj = new JsonObject();
@@ -225,6 +257,12 @@ public class Table {
         obj.putString("stream", StreamState.OPEN.getJsonName());
         if (meta != null) {
             obj.putObject("meta", meta);
+        }
+        if (cols != null) {
+            JsonArray array = processColumns(cols);
+            if (array != null) {
+                obj.putArray("columns", array);
+            }
         }
         if (updates != null) {
             obj.putArray("updates", updates);
@@ -245,6 +283,24 @@ public class Table {
             }
         }
         return rowArray;
+    }
+
+    private JsonArray processColumns(List<Parameter> cols) {
+        if (cols == null || cols.isEmpty()) {
+            return null;
+        }
+        JsonArray array = new JsonArray();
+        for (Parameter p : cols) {
+            JsonObject o = new JsonObject();
+            o.putString("name", p.getName());
+            o.putString("type", p.getType().toJsonString());
+            JsonObject meta = p.getMetaData();
+            if (meta != null) {
+                o.putObject("meta", meta);
+            }
+            array.addObject(o);
+        }
+        return array;
     }
 
     public enum Mode {
