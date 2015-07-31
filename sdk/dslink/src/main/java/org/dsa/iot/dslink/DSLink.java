@@ -32,37 +32,23 @@ public class DSLink {
 
     /**
      * @param linkHandler DSLink dataHandler
-     * @param isRequester Whether to initialize a requester.
-     * @param isResponder Whether to initialize a responder.
+     * @param isReqOrResp {@code true} for requester, otherwise {@code false}.
      */
     protected DSLink(DSLinkHandler linkHandler,
-                     boolean isRequester,
-                     boolean isResponder) {
+                     boolean isReqOrResp) {
         if (linkHandler == null)
             throw new NullPointerException("linkHandler");
-        else if (isRequester && isResponder) {
-            String err = "DSLink instance cannot be a requester and responder";
-            throw new RuntimeException(err);
-        }
 
         this.linkHandler = linkHandler;
-        if (isRequester) {
+        if (isReqOrResp) {
             requester = new Requester(linkHandler);
             requester.setDSLink(this);
-        } else {
-            requester = null;
-        }
-
-        if (isResponder) {
-            responder = new Responder(linkHandler);
-            responder.setDSLink(this);
-        } else {
             responder = null;
-        }
-
-        if (isRequester) {
             nodeManager = new NodeManager(requester, "node");
         } else {
+            responder = new Responder(linkHandler);
+            responder.setDSLink(this);
+            requester = null;
             nodeManager = new NodeManager(responder, "node");
         }
     }

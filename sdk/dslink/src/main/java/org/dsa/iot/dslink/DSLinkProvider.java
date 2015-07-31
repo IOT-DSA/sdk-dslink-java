@@ -61,7 +61,7 @@ public class DSLinkProvider {
                             synchronized (lock) {
                                 DSLink tmp = linkRequesterCache.get(dsId);
                                 if (tmp == null) {
-                                    tmp = new DSLink(handler, true, true);
+                                    tmp = new DSLink(handler, true);
                                     tmp.setWriter(writer);
                                     tmp.setDefaultDataHandlers(true, false);
                                     handler.onRequesterInitialized(tmp);
@@ -90,7 +90,7 @@ public class DSLinkProvider {
                             synchronized (lock) {
                                 DSLink tmp = linkResponderCache.get(dsId);
                                 if (tmp == null) {
-                                    tmp = new DSLink(handler, false, true);
+                                    tmp = new DSLink(handler, false);
                                     tmp.setWriter(writer);
                                     File path = handler.getConfig().getSerializationPath();
                                     if (path != null) {
