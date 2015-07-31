@@ -86,8 +86,7 @@ public class Responder extends Linkable {
                 if (path == null) {
                     throw new NullPointerException("path");
                 }
-                node = nodeManager.getNode(path).getNode();
-                response = new InvokeResponse(link, rid, node);
+                response = new InvokeResponse(link, rid, path);
                 break;
             case "close":
                 Response resp = resps.remove(rid);

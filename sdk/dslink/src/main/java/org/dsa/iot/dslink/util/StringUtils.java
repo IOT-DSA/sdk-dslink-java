@@ -104,11 +104,30 @@ public class StringUtils {
             throw new NullPointerException("delimiter");
         }
 
-        StringBuilder builder = new StringBuilder();
         int size = strings.size();
         String[] array = strings.toArray(new String[size]);
+        return join(array, delimiter);
+    }
+
+    /**
+     * Joins strings together into a single string using a designated
+     * builder.
+     *
+     * @param strings Strings to join
+     * @param delimiter Delimiter to join them by
+     * @return A single built string
+     */
+    public static String join(String[] strings, String delimiter) {
+        if (strings == null) {
+            throw new NullPointerException("strings");
+        } else if (delimiter == null) {
+            throw new NullPointerException("delimiter");
+        }
+
+        StringBuilder builder = new StringBuilder();
+        int size = strings.length;
         for (int i = 0;;) {
-            builder.append(array[i]);
+            builder.append(strings[i]);
             if (++i < size) {
                 builder.append(delimiter);
             } else {

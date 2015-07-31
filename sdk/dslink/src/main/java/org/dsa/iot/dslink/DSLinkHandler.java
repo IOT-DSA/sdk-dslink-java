@@ -124,4 +124,17 @@ public abstract class DSLinkHandler {
     public Node onSubscriptionFail(String path) {
         return null;
     }
+
+    /**
+     * Callback when an invocation fails as a result of trying to
+     * invoke a non-existent node.
+     *
+     * @param path Path the requester is trying to invoke. The path is
+     *             normalized without a leading forward-flash.
+     * @return A created node with an action set on it to force an
+     *         invocation.
+     */
+    public Node onInvocationFail(String path) {
+        return null;
+    }
 }

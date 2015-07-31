@@ -48,7 +48,13 @@ public class StringUtilsTest {
     @Test
     public void join() {
         try {
-            StringUtils.join(null, null);
+            StringUtils.join((Set<String>) null, null);
+        } catch (NullPointerException e) {
+            Assert.assertEquals("strings", e.getMessage());
+        }
+
+        try {
+            StringUtils.join((String[]) null, null);
         } catch (NullPointerException e) {
             Assert.assertEquals("strings", e.getMessage());
         }

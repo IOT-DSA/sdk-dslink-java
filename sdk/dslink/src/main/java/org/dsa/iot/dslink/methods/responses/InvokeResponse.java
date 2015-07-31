@@ -1,10 +1,12 @@
 package org.dsa.iot.dslink.methods.responses;
 
 import org.dsa.iot.dslink.DSLink;
+import org.dsa.iot.dslink.DSLinkHandler;
 import org.dsa.iot.dslink.connection.DataHandler;
 import org.dsa.iot.dslink.methods.Response;
 import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.node.Node;
+import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.actions.Action;
 import org.dsa.iot.dslink.node.actions.ActionResult;
 import org.dsa.iot.dslink.node.actions.Parameter;
@@ -27,15 +29,16 @@ public class InvokeResponse implements Response {
 
     private final DSLink link;
 
-    private final Node node;
+    private final String path;
     private final int rid;
+
     private Table results;
     private ActionResult actionResult;
 
-    public InvokeResponse(DSLink link, int rid, Node node) {
+    public InvokeResponse(DSLink link, int rid, String path) {
         this.link = link;
         this.rid = rid;
-        this.node = node;
+        this.path = NodeManager.normalizePath(path, false);
     }
 
     @Override
@@ -81,11 +84,23 @@ public class InvokeResponse implements Response {
         return results;
     }
 
+    public String getPath() {
+        return path;
+    }
+
     @Override
     public JsonObject getJsonResponse(final JsonObject in) {
-        final Action action = node.getAction();
-        if (action == null) {
-            throw new RuntimeException("Node not invokable");
+        NodeManager man = link.getNodeManager();
+        Node tmp = man.getNode(path, false, false).getNode();
+        if (tmp == null) {
+            DSLinkHandler handler = link.getLinkHandler();
+            tmp = handler.onInvocationFail(path);
+        }
+
+        final Node node = tmp;
+        final Action action;
+        if (node == null || (action = node.getAction()) == null) {
+            throw new RuntimeException("Node not invokable at " + path);
         }
 
         JsonObject out = new JsonObject();

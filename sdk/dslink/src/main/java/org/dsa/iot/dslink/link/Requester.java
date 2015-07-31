@@ -171,7 +171,9 @@ public class Requester extends Linkable {
         sendRequest(wrapper, rid);
 
         reqs.remove(rid);
-        onResponse.handle(new CloseResponse(rid, null));
+        if (onResponse != null) {
+            wrapper.getCloseHandler().handle(new CloseResponse(rid, null));
+        }
     }
 
     /**
@@ -329,8 +331,9 @@ public class Requester extends Linkable {
                 break;
             case "invoke":
                 InvokeRequest inReq = (InvokeRequest) request;
-                node = manager.getNode(inReq.getPath(), true).getNode();
-                InvokeResponse inResp = new InvokeResponse(link, rid, node);
+                String path = inReq.getPath();
+                manager.getNode(inReq.getPath(), true);
+                InvokeResponse inResp = new InvokeResponse(link, rid, path);
                 inResp.populate(in);
                 if (wrapper.getInvokeHandler() != null) {
                     wrapper.getInvokeHandler().handle(inResp);
