@@ -32,7 +32,8 @@ public class DSLink {
 
     /**
      * @param linkHandler DSLink dataHandler
-     * @param isReqOrResp {@code true} for requester, otherwise {@code false}.
+     * @param isReqOrResp {@code true} for requester, otherwise {@code false}
+     *                    for a responder.
      */
     protected DSLink(DSLinkHandler linkHandler,
                      boolean isReqOrResp) {
