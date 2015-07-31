@@ -34,7 +34,7 @@ public class Table {
      *
      * @param parameter Column to add.
      */
-    public void addColumn(Parameter parameter) {
+    public synchronized void addColumn(Parameter parameter) {
         if (parameter == null) {
             throw new NullPointerException("parameter");
         } else if (columns == null) {
@@ -48,7 +48,7 @@ public class Table {
      *
      * @param meta Metadata to set.
      */
-    public void setTableMeta(JsonObject meta) {
+    public synchronized void setTableMeta(JsonObject meta) {
         this.meta = meta;
     }
 
@@ -57,7 +57,7 @@ public class Table {
      *
      * @param batch Batch of rows.
      */
-    public void addBatchRows(BatchRow batch) {
+    public synchronized void addBatchRows(BatchRow batch) {
         DataHandler writer = this.writer;
         if (batch == null) {
             throw new NullPointerException("batch");
@@ -89,7 +89,7 @@ public class Table {
      *
      * @param row Row to add to the table.
      */
-    public void addRow(Row row) {
+    public synchronized void addRow(Row row) {
         DataHandler writer = this.writer;
         if (row == null) {
             throw new NullPointerException("row");
@@ -111,7 +111,7 @@ public class Table {
      *
      * @param mode Mode to set.
      */
-    public void setMode(Mode mode) {
+    public synchronized void setMode(Mode mode) {
         DataHandler writer = this.writer;
         if (mode == null) {
             throw new NullPointerException("mode");
@@ -124,7 +124,7 @@ public class Table {
         }
     }
 
-    public Mode getMode() {
+    public synchronized Mode getMode() {
         return mode;
     }
 
@@ -136,7 +136,7 @@ public class Table {
      * @param writer Writer endpoint
      * @param closeHandler Close handler
      */
-    public void setStreaming(int rid,
+    public synchronized void setStreaming(int rid,
                              DataHandler writer,
                              Handler<Void> closeHandler) {
         this.rid = rid;
@@ -152,7 +152,7 @@ public class Table {
      * Closes a streaming table. This is not necessary to call for one-shot
      * tables.
      */
-    public void close() {
+    public synchronized void close() {
         DataHandler writer = this.writer;
         if (writer != null) {
             JsonObject obj = new JsonObject();
@@ -174,18 +174,19 @@ public class Table {
      * network. Automatically called when {@link #close} is called or the
      * requester closes the table to prevent unnecessary updates.
      */
-    public void setClosed() {
+    public synchronized void setClosed() {
         this.writer = null;
         this.columns = null;
         this.rows = null;
         this.mode = null;
         this.closeHandler = null;
+        this.meta = null;
     }
 
     /**
      * @return Table metadata.
      */
-    public JsonObject getTableMeta() {
+    public synchronized JsonObject getTableMeta() {
         return meta;
     }
 
@@ -193,15 +194,26 @@ public class Table {
      *
      * @return Columns of the table.
      */
-    public List<Parameter> getColumns() {
+    public synchronized List<Parameter> getColumns() {
         return columns != null ? Collections.unmodifiableList(columns) : null;
     }
 
     /**
-     *
-     * @return Rows of the table.
+     * @return The rows in the table.
      */
     public List<Row> getRows() {
+        return getRows(false);
+    }
+
+    /**
+     *
+     * @param copy Whether to copy all the rows into a new list.
+     * @return Rows of the table.
+     */
+    public synchronized List<Row> getRows(boolean copy) {
+        if (copy) {
+            return rows != null ? new LinkedList<>(rows) : null;
+        }
         return rows != null ? Collections.unmodifiableList(rows) : null;
     }
 

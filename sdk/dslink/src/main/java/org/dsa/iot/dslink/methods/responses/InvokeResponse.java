@@ -18,7 +18,6 @@ import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -99,9 +98,8 @@ public class InvokeResponse implements Response {
 
                 JsonArray results = new JsonArray();
                 Table table = actionResult.getTable();
-                List<Row> rows = table.getRows();
+                List<Row> rows = table.getRows(true);
                 if (rows != null) {
-                    rows = new LinkedList<>(rows);
                     for (Row r : rows) {
                         JsonArray row = new JsonArray();
                         List<Value> values = r.getValues();
