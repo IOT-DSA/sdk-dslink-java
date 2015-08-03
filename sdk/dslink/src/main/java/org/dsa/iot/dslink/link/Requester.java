@@ -99,7 +99,7 @@ public class Requester extends Linkable {
         int max = min + paths.size();
         Iterator<String> it = paths.iterator();
         StringBuilder error = null;
-        while (min < max) {
+        while (min < max && it.hasNext()) {
             try {
                 String path = NodeManager.normalizePath(it.next(), true);
                 subs.put(path, min);
