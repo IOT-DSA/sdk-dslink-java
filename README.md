@@ -10,10 +10,10 @@ In order to run any examples a broker must be running. All the examples can
 quickly be ran through Gradle.
 
 Running the requester: <br />
-`./gradlew :subprojects/requester:run -Dexec.args="-b http://localhost:8080/conn`
+`./gradlew :subprojects/requester:run -Dexec.args="-b http://localhost:8080/conn"`
 
 Running the responder: <br />
-`./gradlew :subprojects/responder:run -Dexec.args="-b http://localhost:8080/conn`
+`./gradlew :subprojects/responder:run -Dexec.args="-b http://localhost:8080/conn"`
 
 ## Acknowledgements
 
