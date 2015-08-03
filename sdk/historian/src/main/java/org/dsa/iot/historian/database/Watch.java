@@ -57,6 +57,10 @@ public class Watch {
     }
 
     public void handleLastWritten(Value value) {
+        if (value == null) {
+            return;
+        }
+
         lastWrittenValue.setValue(value);
         value = new Value(value.getTimeStamp());
         if (startDate != null) {
