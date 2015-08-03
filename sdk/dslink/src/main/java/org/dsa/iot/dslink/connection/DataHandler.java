@@ -24,6 +24,7 @@ public class DataHandler {
     private NetworkClient client;
     private Handler<JsonArray> reqHandler;
     private Handler<JsonArray> respHandler;
+    private Handler<Void> closeHandler;
 
     public DataHandler(int updateInterval) {
         requests = getIntervalHandler(updateInterval, "requests");
@@ -40,6 +41,10 @@ public class DataHandler {
 
     public void setRespHandler(Handler<JsonArray> handler) {
         this.respHandler = handler;
+    }
+
+    public void setCloseHandler(Handler<Void> handler) {
+        this.closeHandler = handler;
     }
 
     /**
@@ -60,6 +65,13 @@ public class DataHandler {
         JsonArray responses = obj.getArray("responses");
         if (!(respHandler == null || responses == null)) {
             respHandler.handle(responses);
+        }
+    }
+
+    public void close() {
+        Handler<Void> closeHandler = this.closeHandler;
+        if (closeHandler != null) {
+            closeHandler.handle(null);
         }
     }
 

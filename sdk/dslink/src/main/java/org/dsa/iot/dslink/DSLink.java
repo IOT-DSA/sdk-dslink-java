@@ -142,6 +142,13 @@ public class DSLink {
                     }
                 }
             });
+
+            getWriter().setCloseHandler(new Handler<Void>() {
+                @Override
+                public void handle(Void event) {
+                    DSLink.this.requester.clearSubscriptions();
+                }
+            });
         }
         if (responder) {
             getWriter().setReqHandler(new Handler<JsonArray>() {

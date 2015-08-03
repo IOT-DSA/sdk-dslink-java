@@ -348,6 +348,16 @@ public class Requester extends Linkable {
         }
     }
 
+    /**
+     * Forcibly clears all subscriptions and handlers. This does not call
+     * unsubscribe to the server.
+     */
+    public void clearSubscriptions() {
+        subPaths.clear();
+        subSids.clear();
+        subUpdates.clear();
+    }
+
     private static class RequestWrapper {
 
         private final Request request;

@@ -39,10 +39,6 @@ public class ConnectionManager {
         this.localHandshake = localHandshake;
     }
 
-    public DataHandler getHandler() {
-        return handler;
-    }
-
     /**
      * The pre initialization handler allows the dslink to be configured
      * before the link is actually connected to the server.
@@ -115,6 +111,7 @@ public class ConnectionManager {
                             public void handle(Void event) {
                                 if (running) {
                                     LOGGER.warn("WebSocket connection failed");
+                                    handler.close();
                                     reconnect();
                                 }
                             }
@@ -130,7 +127,7 @@ public class ConnectionManager {
                         connector.setOnData(new Handler<JsonObject>() {
                             @Override
                             public void handle(JsonObject event) {
-                                getHandler().processData(event);
+                                handler.processData(event);
                             }
                         });
 
