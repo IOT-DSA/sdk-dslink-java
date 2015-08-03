@@ -76,11 +76,7 @@ public class Table {
         }
 
         if (writer == null) {
-            if (columns == null) {
-                columns = new LinkedList<>(cols);
-            } else {
-                columns.addAll(cols);
-            }
+            setColumns(cols);
             rows.addAll(batch.getRows());
         } else {
             JsonArray updates = new JsonArray();
@@ -124,11 +120,7 @@ public class Table {
         }
 
         if (writer == null) {
-            if (columns == null) {
-                columns = new LinkedList<>(cols);
-            } else {
-                columns.addAll(cols);
-            }
+            setColumns(cols);
             rows.add(row);
         } else {
             JsonArray updates = new JsonArray();
@@ -246,6 +238,19 @@ public class Table {
             return rows != null ? new LinkedList<>(rows) : null;
         }
         return rows != null ? Collections.unmodifiableList(rows) : null;
+    }
+
+    private void setColumns(List<Parameter> cols) {
+        if (cols == null) {
+            return;
+        }
+        synchronized (this) {
+            if (columns == null) {
+                columns = new LinkedList<>(cols);
+            } else {
+                columns.addAll(cols);
+            }
+        }
     }
 
     private void write(DataHandler writer,
