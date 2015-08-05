@@ -51,8 +51,13 @@ public class FileUtils {
         if (path.delete() && LOGGER.isDebugEnabled()) {
             LOGGER.debug("Removed " + path.getPath() + " during writing");
         }
-        try (OutputStream stream = new FileOutputStream(path)) {
+        try (FileOutputStream stream = new FileOutputStream(path)) {
             stream.write(bytes);
+            stream.flush();
+            try {
+                stream.getFD().sync();
+            } catch (SyncFailedException ignored) {
+            }
         }
     }
 
@@ -68,7 +73,7 @@ public class FileUtils {
             LOGGER.debug("Removed " + dest.getPath() + " during copying");
         }
         InputStream input = null;
-        OutputStream output = null;
+        FileOutputStream output = null;
 
         try {
             input = new FileInputStream(src);
@@ -78,6 +83,11 @@ public class FileUtils {
             int read;
             while ((read = input.read(buf)) > 0) {
                 output.write(buf, 0, read);
+            }
+            output.flush();
+            try {
+                output.getFD().sync();
+            } catch (SyncFailedException ignored) {
             }
         } finally {
             try {
