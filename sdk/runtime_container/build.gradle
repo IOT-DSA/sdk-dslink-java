@@ -17,6 +17,7 @@ compileJava {
 dependencies {
     provided 'com.google.code.findbugs:annotations:3.0.0'
     compile project(':sdk/runtime_shared')
+    compile project(':sdk/logging')
 }
 
 jar {

@@ -58,21 +58,16 @@ public class DSLinkProvider {
         }
     }
 
-    public void stop() {
-        try {
-            Method method = providerClass.getMethod("stop");
-            method.invoke(instance);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public void stop() throws Exception {
+        Method method = providerClass.getMethod("stop");
+        method.invoke(instance);
     }
 
     public void sleep() {
         try {
             Method method = providerClass.getMethod("sleep");
             method.invoke(instance);
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception ignored) {
         }
     }
 

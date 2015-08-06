@@ -62,35 +62,49 @@ public class DSLinkHandler {
     }
 
     @SuppressFBWarnings("DM_GC")
+    @SuppressWarnings("deprecation")
     public synchronized void stop() {
-        if (isRunning()) {
-            try {
-                provider.stop();
-            } catch (Exception e) {
-                e.printStackTrace(System.err);
-            }
+        if (!isRunning()) {
+            return;
+        }
+        try {
+            provider.stop();
+        } catch (Throwable ignored) {
+        }
+        try {
             try {
                 thread.interrupt();
+            } catch (Throwable ignored) {
+            }
+            try {
                 group.interrupt();
-                Thread[] threads = new Thread[group.activeCount()];
-                int count = group.enumerate(threads);
-                for (int i = 0; i < count; ++i) {
-                    threads[i].join(5000);
+            } catch (Throwable ignored) {
+            }
+
+            Thread[] threads = new Thread[group.activeCount()];
+            int count = group.enumerate(threads);
+            for (int i = 0; i < count; ++i) {
+                Thread t = threads[i];
+                try {
+                    t.interrupt();
+                } catch (Throwable ignored) {
                 }
 
-                group.destroy();
-            } catch (Exception e) {
-                String err = "!!!!!!!! SEVERE !!!!!!!! ";
-                err += "DSLink `" + info.getName() + "` IS LEAKING THREADS.";
-                System.err.println(err);
-            } finally {
-                thread = null;
-                group = null;
+                try {
+                    t.stop();
+                } catch (Throwable ignored) {
+                }
             }
-            provider = null;
-            loader = null;
-            System.gc();
+
+            group.destroy();
+        } catch (Throwable ignored) {
+        } finally {
+            thread = null;
+            group = null;
         }
+        provider = null;
+        loader = null;
+        System.gc();
     }
 
     public synchronized boolean isRunning() {
