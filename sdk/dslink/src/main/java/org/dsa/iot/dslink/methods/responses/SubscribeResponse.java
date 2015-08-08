@@ -11,6 +11,9 @@ import org.dsa.iot.dslink.node.SubscriptionManager;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 /**
  * @author Samuel Grenier
  */
@@ -39,23 +42,38 @@ public class SubscribeResponse implements Response {
     public JsonObject getJsonResponse(JsonObject in) {
         JsonArray paths = in.getArray("paths");
         if (paths != null && paths.size() > 0) {
+            StringBuilder builder = null;
             for (Object obj : paths) {
-                JsonObject subData = (JsonObject) obj;
-                String path = subData.getString("path");
-                path = NodeManager.normalizePath(path, false);
-                int sid = subData.getInteger("sid");
+                try {
+                    JsonObject subData = (JsonObject) obj;
+                    String path = subData.getString("path");
+                    path = NodeManager.normalizePath(path, false);
+                    int sid = subData.getInteger("sid");
 
-                NodeManager nm = link.getNodeManager();
-                NodePair pair = nm.getNode(path, false, false);
-                Node node = pair.getNode();
-                if (node == null) {
-                    DSLinkHandler h = link.getLinkHandler();
-                    node = h.onSubscriptionFail(path);
+                    NodeManager nm = link.getNodeManager();
+                    NodePair pair = nm.getNode(path, false, false);
+                    Node node = pair.getNode();
+                    if (node == null) {
+                        DSLinkHandler h = link.getLinkHandler();
+                        node = h.onSubscriptionFail(path);
+                    }
+                    if (node == null) {
+                        continue;
+                    }
+                    manager.addValueSub(node, sid);
+                } catch (Exception e) {
+                    if (builder == null) {
+                        builder = new StringBuilder();
+                    }
+
+                    StringWriter writer = new StringWriter();
+                    e.printStackTrace(new PrintWriter(writer));
+                    builder.append(writer.toString());
+                    builder.append("\n");
                 }
-                if (node == null) {
-                    continue;
-                }
-                manager.addValueSub(node, sid);
+            }
+            if (builder != null) {
+                throw new RuntimeException(builder.toString());
             }
         }
 
