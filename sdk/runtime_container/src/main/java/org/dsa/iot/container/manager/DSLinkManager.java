@@ -24,18 +24,26 @@ public class DSLinkManager {
                 if (!Files.isDirectory(dslinkRoot)) {
                     continue;
                 }
-                DSLinkInfo info = DSLinkInfo.load(dslinkRoot, brokerUrl);
-                if (info == null) {
-                    continue;
-                }
                 try {
-                    start(dslinkRoot, info);
+                    load(dslinkRoot, brokerUrl);
                 } catch (Exception e) {
-                    System.err.println("Failed to start: " + info.getName());
+                    e.printStackTrace(System.err);
                 }
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public synchronized void load(Path path, String brokerUrl) throws Exception {
+        DSLinkInfo info = DSLinkInfo.load(path, brokerUrl);
+        if (info == null) {
+            return;
+        }
+        try {
+            start(path, info);
+        } catch (Exception e) {
+            System.err.println("Failed to start: " + info.getName());
         }
     }
 

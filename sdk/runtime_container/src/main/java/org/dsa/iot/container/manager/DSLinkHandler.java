@@ -28,9 +28,13 @@ public class DSLinkHandler {
     }
 
     public synchronized void start() throws IOException {
+        final String name = info.getName();
         if (isRunning()) {
+            String msg = "DSLink `" + name + "` is already running";
+            System.err.println(msg);
             return;
         }
+        System.err.println("Starting DSLink `" + name + "`");
 
         AccessController.doPrivileged(new PrivilegedAction<Void>() {
             @Override
@@ -59,41 +63,32 @@ public class DSLinkHandler {
             }
         }, info.getName());
         thread.start();
+        System.err.println("Started dslink `" + name + "`");
     }
 
     @SuppressFBWarnings("DM_GC")
     @SuppressWarnings("deprecation")
     public synchronized void stop() {
+        final String name = info.getName();
         if (!isRunning()) {
+            String msg = "DSLink `" + name + "` is already stopped";
+            System.err.println(msg);
             return;
         }
+        System.err.println("Stopping DSLink `" + name + "`");
         try {
             provider.stop();
         } catch (Throwable ignored) {
         }
         try {
             try {
-                thread.interrupt();
-            } catch (Throwable ignored) {
-            }
-            try {
                 group.interrupt();
             } catch (Throwable ignored) {
             }
 
-            Thread[] threads = new Thread[group.activeCount()];
-            int count = group.enumerate(threads);
-            for (int i = 0; i < count; ++i) {
-                Thread t = threads[i];
-                try {
-                    t.interrupt();
-                } catch (Throwable ignored) {
-                }
-
-                try {
-                    t.stop();
-                } catch (Throwable ignored) {
-                }
+            try {
+                group.stop();
+            } catch (Throwable ignored) {
             }
 
             group.destroy();
@@ -105,9 +100,10 @@ public class DSLinkHandler {
         provider = null;
         loader = null;
         System.gc();
+        System.err.println("Stopped DSLink `" + name + "`");
     }
 
-    public synchronized boolean isRunning() {
+    private boolean isRunning() {
         return loader != null;
     }
 }
