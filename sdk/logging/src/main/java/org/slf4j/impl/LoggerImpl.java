@@ -348,7 +348,7 @@ public class LoggerImpl implements Logger {
                         string = (String) obj;
                     } else if (obj instanceof Throwable) {
                         StringWriter writer = new StringWriter();
-                        t.printStackTrace(new PrintWriter(writer));
+                        ((Throwable) obj).printStackTrace(new PrintWriter(writer));
                         string = writer.toString();
                     } else if (obj != null) {
                         string = obj.toString();
