@@ -108,29 +108,27 @@ public class SerializationManager {
 
     /**
      * Deserializes the data into the node manager based on the path.
+     *
+     * @throws Exception An error has occurred deserializing the nodes.
      */
-    public void deserialize() {
-        try {
-            byte[] bytes = null;
-            if (file.exists()) {
-                bytes = FileUtils.readAllBytes(file);
-            } else if (backup.exists()) {
-                bytes = FileUtils.readAllBytes(backup);
-                FileUtils.write(file, bytes);
-                LOGGER.debug("Restored backup data");
-            }
+    public void deserialize() throws Exception {
+        byte[] bytes = null;
+        if (file.exists()) {
+            bytes = FileUtils.readAllBytes(file);
+        } else if (backup.exists()) {
+            bytes = FileUtils.readAllBytes(backup);
+            FileUtils.write(file, bytes);
+            LOGGER.debug("Restored backup data");
+        }
 
-            if (bytes != null) {
-                String in = new String(bytes, "UTF-8");
-                JsonObject obj = new JsonObject(in);
-                if (LOGGER.isDebugEnabled()) {
-                    in = obj.encode();
-                    LOGGER.debug("Read serialized data: " + in);
-                }
-                deserializer.deserialize(obj);
+        if (bytes != null) {
+            String in = new String(bytes, "UTF-8");
+            JsonObject obj = new JsonObject(in);
+            if (LOGGER.isDebugEnabled()) {
+                in = obj.encode();
+                LOGGER.debug("Read serialized data: " + in);
             }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            deserializer.deserialize(obj);
         }
     }
 

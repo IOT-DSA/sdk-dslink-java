@@ -21,14 +21,8 @@ public class FileUtils {
      */
     public static byte[] readAllBytes(File src) throws IOException {
         try (InputStream stream = new FileInputStream(src)) {
-            int length = (int) src.length();
-            if (length < 0) {
-                // Handle overflow
-                length = Integer.MAX_VALUE;
-            }
-
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            byte[] bytes = new byte[length];
+            byte[] bytes = new byte[4096];
             int read = stream.read(bytes);
             while (read != -1) {
                 baos.write(bytes, 0, read);
