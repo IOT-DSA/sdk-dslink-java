@@ -49,7 +49,7 @@ public class Deserializer {
         for (Map.Entry<String, Object> entry : map.entrySet()) {
             String name = entry.getKey();
             Object value = entry.getValue();
-            if ("$type".equals(name)) {
+            if (value == null || "$type".equals(name)) {
                 continue;
             }
             if ("$is".equals(name)) {

@@ -23,8 +23,9 @@ public class ValueUtils {
      */
     @SuppressWarnings("unchecked")
     public static Value toValue(Object object) {
-        if (object == null)
-            throw new NullPointerException("object");
+        if (object == null) {
+            return null;
+        }
         Value val;
         if (object instanceof Number) {
             val = new Value((Number) object);
