@@ -83,11 +83,10 @@ public class SerializationManager {
         JsonObject json = serializer.serialize();
         try {
             if (file.exists()) {
-                if (backup.exists()) {
-                    if (!backup.delete()) {
-                        LOGGER.error("Failed to remove backup data");
-                    }
+                if (backup.exists() && !backup.delete()) {
+                    LOGGER.error("Failed to remove backup data");
                 }
+
                 if (!file.renameTo(backup)) {
                     LOGGER.error("Failed to create backup data");
                 }
@@ -112,24 +111,53 @@ public class SerializationManager {
      * @throws Exception An error has occurred deserializing the nodes.
      */
     public void deserialize() throws Exception {
+        deserialize(true);
+    }
+
+    private void deserialize(boolean cont) throws Exception {
         byte[] bytes = null;
         if (file.exists()) {
-            bytes = FileUtils.readAllBytes(file);
+            try {
+                bytes = FileUtils.readAllBytes(file);
+            } catch (Exception ignored) {
+            }
         } else if (backup.exists()) {
             bytes = FileUtils.readAllBytes(backup);
             FileUtils.write(file, bytes);
-            LOGGER.debug("Restored backup data");
+            LOGGER.warn("Restored backup data");
         }
 
+        boolean tryAgain = false;
         if (bytes != null) {
-            String in = new String(bytes, "UTF-8");
-            JsonObject obj = new JsonObject(in);
-            if (LOGGER.isDebugEnabled()) {
-                in = obj.encode();
-                LOGGER.debug("Read serialized data: " + in);
+            try {
+                handle(bytes);
+            } catch (Exception e) {
+                if (!cont) {
+                    throw e;
+                }
+                tryAgain = true;
             }
-            deserializer.deserialize(obj);
+        } else {
+            tryAgain = true;
         }
+
+        if (tryAgain && cont) {
+            // Force reading from the backup
+            if (!file.delete()) {
+                LOGGER.debug("Failed to delete original file");
+            }
+            deserialize(false);
+        }
+    }
+
+    private void handle(byte[] bytes) throws Exception {
+        String in = new String(bytes, "UTF-8");
+        JsonObject obj = new JsonObject(in);
+        if (LOGGER.isDebugEnabled()) {
+            in = obj.encode();
+            LOGGER.debug("Read serialized data: " + in);
+        }
+        deserializer.deserialize(obj);
     }
 
     static {
