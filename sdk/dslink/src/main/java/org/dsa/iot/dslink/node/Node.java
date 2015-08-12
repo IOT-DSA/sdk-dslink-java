@@ -24,7 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Node {
 
     static final char[] BANNED_CHARS = new char[] {
-            '.', '/', '\\', '?', '*', ':', '|', '<', '>', '$', '@'
+            '%', '.', '/', '\\', '?', '*', ':', '|', '<', '>', '$', '@'
     };
 
     private final Object roConfigLock = new Object();

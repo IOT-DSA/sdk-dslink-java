@@ -20,16 +20,16 @@ public class StringUtilsTest {
 
     @Test
     public void encode() {
-        String s = ". / \\ ? * : | < > $ @";
+        String s = "% . / \\ ? * : | < > $ @";
         s = StringUtils.encodeName(s);
-        Assert.assertEquals("%2E %2F %5C %3F %2A %3A %7C %3C %3E %24 %40", s);
+        Assert.assertEquals("%25 %2E %2F %5C %3F %2A %3A %7C %3C %3E %24 %40", s);
     }
 
     @Test
     public void decode() {
-        String s = "%2E %2F %5C %3F %2A %3A %7C %3C %3E %24 %40";
+        String s = "%25 %2E %2F %5C %3F %2A %3A %7C %3C %3E %24 %40 %25";
         s = StringUtils.decodeName(s);
-        Assert.assertEquals(". / \\ ? * : | < > $ @", s);
+        Assert.assertEquals("% . / \\ ? * : | < > $ @ %", s);
     }
 
     @Test
