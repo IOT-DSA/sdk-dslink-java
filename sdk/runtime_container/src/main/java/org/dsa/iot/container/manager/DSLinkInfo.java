@@ -3,6 +3,7 @@ package org.dsa.iot.container.manager;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.dsa.iot.container.utils.JarInfo;
 import org.dsa.iot.container.utils.Json;
 
 import java.io.IOException;
@@ -15,6 +16,8 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 /**
  * @author Samuel Grenier
@@ -70,10 +73,39 @@ public class DSLinkInfo {
         return brokerUrl;
     }
 
-    public URL[] collectJars() throws IOException {
+    public JarInfo[] collectJars() throws IOException {
         JarWalker walker = new JarWalker();
         Files.walkFileTree(root.resolve("lib"), walker);
-        return walker.getUrls();
+        URL[] urls = walker.getUrls();
+        JarInfo[] info = new JarInfo[urls.length];
+        for (int i = 0; i < info.length; i++) {
+            final URL url = urls[i];
+            boolean isNative = false;
+            try (ZipInputStream zis = new ZipInputStream(url.openStream())) {
+                ZipEntry entry;
+                while ((entry = zis.getNextEntry()) != null) {
+                    isNative = isEntryNative(entry);
+                    if (isNative) {
+                        System.err.println("Detected native library: " + url.toString());
+                        break;
+                    }
+                }
+            } catch (RuntimeException e) {
+                System.err.println("Failed to scan jar: " + url.toString());
+            }
+            info[i] = new JarInfo(url, isNative);
+        }
+        return info;
+    }
+
+    private boolean isEntryNative(ZipEntry entry) {
+        String name = entry.getName();
+        boolean isNative = !entry.isDirectory()
+                && (name.endsWith(".a")
+                    || name.endsWith(".so")
+                    || name.endsWith(".dylib")
+                    || name.endsWith(".dll"));
+        return isNative;
     }
 
     public static DSLinkInfo load(Path root, String brokerUrl)

@@ -1,6 +1,7 @@
 package org.dsa.iot.container.manager;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.dsa.iot.container.utils.JarInfo;
 import org.dsa.iot.container.wrapper.DSLinkProvider;
 import org.dsa.iot.container.wrapper.log.LogManager;
 
@@ -9,12 +10,15 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Samuel Grenier
  */
 public class DSLinkHandler {
 
+    private final DSLinkManager manager;
     private final DSLinkInfo info;
 
     private ThreadGroup group;
@@ -23,7 +27,8 @@ public class DSLinkHandler {
     private DSLinkProvider provider;
     private ClassLoader loader;
 
-    public DSLinkHandler(DSLinkInfo info) {
+    public DSLinkHandler(DSLinkManager manager, DSLinkInfo info) {
+        this.manager = manager;
         this.info = info;
     }
 
@@ -36,16 +41,25 @@ public class DSLinkHandler {
         }
         System.err.println("Starting DSLink `" + name + "`");
 
-        AccessController.doPrivileged(new PrivilegedAction<Void>() {
+        loader = AccessController.doPrivileged(
+                new PrivilegedAction<ClassLoader>() {
             @Override
-            public Void run() {
+            public ClassLoader run() {
                 try {
-                    URL[] urls = info.collectJars();
-                    loader = new URLClassLoader(urls);
+                    JarInfo[] jarCollection = info.collectJars();
+                    List<URL> urls = new ArrayList<>(jarCollection.length);
+                    for (JarInfo info : jarCollection) {
+                        if (!info.isNative()) {
+                            urls.add(info.getUrl());
+                        } else {
+                            manager.loadNative(info.getUrl());
+                        }
+                    }
+                    int size = urls.size();
+                    return new URLClassLoader(urls.toArray(new URL[size]));
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
-                return null;
             }
         });
 
