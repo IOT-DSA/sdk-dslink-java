@@ -65,11 +65,23 @@ public class StringUtilsTest {
             Assert.assertEquals("delimiter", e.getMessage());
         }
 
-        Set<String> strings = new LinkedHashSet<>();
-        strings.add("1");
-        strings.add("2");
-        strings.add("3");
-        Assert.assertEquals("1|2|3", StringUtils.join(strings, "|"));
+        {
+            String s = StringUtils.join(new String[0], "|");
+            Assert.assertEquals("", s);
+        }
+
+        {
+            String s = StringUtils.join(new LinkedHashSet<String>(), "|");
+            Assert.assertEquals("", s);
+        }
+
+        {
+            Set<String> strings = new LinkedHashSet<>();
+            strings.add("1");
+            strings.add("2");
+            strings.add("3");
+            Assert.assertEquals("1|2|3", StringUtils.join(strings, "|"));
+        }
     }
 
     @Test

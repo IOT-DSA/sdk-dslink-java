@@ -124,6 +124,10 @@ public class StringUtils {
             throw new NullPointerException("delimiter");
         }
 
+        if (strings.length <= 0) {
+            return "";
+        }
+
         StringBuilder builder = new StringBuilder();
         int size = strings.length;
         for (int i = 0;;) {
