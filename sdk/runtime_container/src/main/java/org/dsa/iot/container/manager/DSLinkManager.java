@@ -5,7 +5,10 @@ import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.file.*;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,12 +26,7 @@ public class DSLinkManager {
     public DSLinkManager() {
         temporaryDir = Paths.get("native-tmp");
         try {
-            if (Files.exists(temporaryDir)
-                    && !Files.isDirectory(temporaryDir)) {
-                if (!Files.deleteIfExists(temporaryDir)) {
-                    String err = "Failed to delete: ";
-                    throw new IOException(err + temporaryDir.toString());
-                }
+            if (!Files.isDirectory(temporaryDir)) {
                 Files.createDirectory(temporaryDir);
             }
         } catch (IOException e) {
@@ -126,8 +124,10 @@ public class DSLinkManager {
             loadedNatives.add(shortName);
         }
         try { // Copy the file
-            Path path = temporaryDir;
-            path = Files.copy(file, path, StandardCopyOption.REPLACE_EXISTING);
+            Path path = temporaryDir.resolve(shortName + ".jar");
+            if (!Files.exists(path)) {
+                Files.copy(file, path);
+            }
             url = path.toUri().toURL();
         } catch (IOException e) {
             e.printStackTrace();
