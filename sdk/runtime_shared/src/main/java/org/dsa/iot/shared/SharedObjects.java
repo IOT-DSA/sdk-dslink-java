@@ -68,12 +68,18 @@ public class SharedObjects {
 
         public ScheduledThreadPool(int corePoolSize) {
             super(corePoolSize);
-            setRemoveOnCancelPolicy(true);
+            configurePolicies();
         }
 
         public ScheduledThreadPool(int corePoolSize, ThreadFactory threadFactory) {
             super(corePoolSize, threadFactory);
+            configurePolicies();
+        }
+
+        private void configurePolicies() {
             setRemoveOnCancelPolicy(true);
+            setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
+            setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
         }
 
         @Override
