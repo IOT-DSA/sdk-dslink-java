@@ -35,6 +35,15 @@ public abstract class GuaranteedReceiver<T> {
     private boolean running = true;
 
     /**
+     * Constructs a {@link GuaranteedReceiver} with a default {@code delay}
+     * of 5 seconds.
+     * @see #GuaranteedReceiver(long)
+     */
+    public GuaranteedReceiver() {
+        this(5);
+    }
+
+    /**
      *
      * @param delay Delay, in seconds, to instantiate the instance if an
      *              error occurs.

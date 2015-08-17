@@ -11,7 +11,7 @@ public class GuaranteedReceiverTest {
 
     @Test(expected = IllegalStateException.class)
     public void checkedTest() {
-        GuaranteedReceiver<Object> gr = new GuaranteedReceiver<Object>(5) {
+        GuaranteedReceiver<Object> gr = new GuaranteedReceiver<Object>() {
             @Override
             protected Object instantiate() throws Exception {
                 return new Object();
