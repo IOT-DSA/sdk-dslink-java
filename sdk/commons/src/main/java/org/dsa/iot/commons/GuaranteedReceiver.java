@@ -185,7 +185,7 @@ public abstract class GuaranteedReceiver<T> {
             }
 
             ScheduledThreadPoolExecutor stpe = getSTPE();
-            final Boolean doBreak = new Boolean();
+            final Container<Boolean> doBreak = new Container<>();
             for (final Handler<T> handler : list) {
                 // latch is used to ensure the instance check is complete
                 final CountDownLatch latch = new CountDownLatch(1);
@@ -198,7 +198,7 @@ public abstract class GuaranteedReceiver<T> {
                             synchronized (GuaranteedReceiver.this) {
                                 inst = instance;
                                 if (inst == null) {
-                                    doBreak.value = true;
+                                    doBreak.setValue(true);
                                     latch.countDown();
                                     return;
                                 }
@@ -229,7 +229,7 @@ public abstract class GuaranteedReceiver<T> {
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
-                if (doBreak.value) {
+                if (doBreak.getValue()) {
                     break;
                 }
             }
@@ -238,10 +238,6 @@ public abstract class GuaranteedReceiver<T> {
 
     private static ScheduledThreadPoolExecutor getSTPE() {
         return Objects.getDaemonThreadPool();
-    }
-
-    private static class Boolean {
-        boolean value;
     }
 
     static {
