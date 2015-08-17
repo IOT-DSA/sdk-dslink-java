@@ -16,6 +16,9 @@ import java.util.concurrent.TimeUnit;
  * The {@link GuaranteedReceiver} is designed to guarantee retrieving an
  * instance of {@link T}. The instance will be instantiated as necessary.
  *
+ * A trivial use case is to support automatically reconnecting to servers
+ * in an elegant and standard fashion.
+ *
  * @author Samuel Grenier
  */
 public abstract class GuaranteedReceiver<T> {
