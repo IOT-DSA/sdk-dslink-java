@@ -1,6 +1,7 @@
 include 'sdk/runtime_container'
 include 'sdk/runtime_shared'
 include 'sdk/historian'
+include 'sdk/commons'
 include 'sdk/logging'
 include 'sdk/dslink'
 
