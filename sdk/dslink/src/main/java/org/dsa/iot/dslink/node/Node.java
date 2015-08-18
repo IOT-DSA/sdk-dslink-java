@@ -790,7 +790,7 @@ public class Node {
     }
 
     /**
-     * Forcibly sets whether the node has children or not. This does *NOT*
+     * Forcibly sets whether the node has children or not. This does <b>NOT</b>
      * affect whether the node has children internally.
      *
      * @param hasChildren Whether the node hsa children or not.
@@ -801,6 +801,10 @@ public class Node {
     }
 
     /**
+     * Checks whether the node is forced to have children or not. This does
+     * <b>NOT</b> check if the node has children internally. To check whether
+     * the node has children internally, use {@link #getChildren()}.
+     *
      * @return Whether the node has children or not.
      */
     public Boolean getHasChildren() {
