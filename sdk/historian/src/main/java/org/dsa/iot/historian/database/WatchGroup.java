@@ -132,7 +132,7 @@ public class WatchGroup {
     protected void initWatch(String path) {
         Watch watch;
         {
-            NodeBuilder b = node.createChild(path.replaceAll("/", "%2F"));
+            NodeBuilder b = node.createChild(path);
             b.setValueType(ValueType.DYNAMIC);
             b.setValue(null);
             Node n = b.build();

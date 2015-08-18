@@ -108,10 +108,11 @@ public class Node {
     }
 
     /**
-     * @return Name of the node
+     * @return Encoded name of the node.
+     * @see StringUtils#decodeName(String)
      */
     public String getName() {
-        return StringUtils.decodeName(name);
+        return name;
     }
 
     /**
