@@ -63,7 +63,7 @@ public class NodeManager {
         }
         Node current = superRoot.getChild(parts[0]);
         if (create && current == null) {
-            NodeBuilder b = superRoot.createChild(Node.checkName(parts[0]));
+            NodeBuilder b = superRoot.createChild(Node.checkAndEncodeName(parts[0]));
             b.setProfile(defaultProfile);
             current = b.build();
         }
@@ -75,7 +75,7 @@ public class NodeManager {
             } else {
                 Node temp = current.getChild(parts[i]);
                 if (create && temp == null) {
-                    NodeBuilder b = current.createChild(Node.checkName(parts[i]));
+                    NodeBuilder b = current.createChild(Node.checkAndEncodeName(parts[i]));
                     b.setProfile(defaultProfile);
                     temp = b.build();
                 }

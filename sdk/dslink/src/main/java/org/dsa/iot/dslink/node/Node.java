@@ -74,12 +74,15 @@ public class Node {
         this.parent = new WeakReference<>(parent);
         this.listener = new NodeListener(this);
         this.link = link;
+        name = StringUtils.encodeName(name);
         if (parent != null) {
-            this.name = checkName(name);
+            if (name == null || name.isEmpty()) {
+                throw new IllegalArgumentException("name");
+            }
+            this.name = name;
             this.path = parent.getPath() + "/" + name;
         } else {
             if (name != null) {
-                checkName(name);
                 this.path = "/" + name;
                 this.name = name;
             } else {
@@ -108,7 +111,7 @@ public class Node {
      * @return Name of the node
      */
     public String getName() {
-        return name;
+        return StringUtils.decodeName(name);
     }
 
     /**
@@ -357,7 +360,11 @@ public class Node {
      */
     public Node getChild(String name) {
         Map<String, Node> children = this.children;
-        return children != null ? children.get(name) : null;
+        if (children != null) {
+            name = StringUtils.encodeName(name);
+            return children.get(name);
+        }
+        return null;
     }
 
     /**
@@ -442,6 +449,7 @@ public class Node {
      */
     public Node removeChild(String name) {
         synchronized (childrenLock) {
+            name = StringUtils.encodeName(name);
             Node child = children != null ? children.remove(name) : null;
             SubscriptionManager manager = null;
             if (link != null) {
@@ -469,7 +477,11 @@ public class Node {
      */
     public boolean hasChild(String name) {
         Map<String, Node> children = this.children;
-        return children != null && children.containsKey(name);
+        if (children != null) {
+            name = StringUtils.encodeName(name);
+            return children.containsKey(name);
+        }
+        return false;
     }
 
     /**
@@ -485,9 +497,12 @@ public class Node {
      * @return Value of the configuration, if it exists
      */
     public Value getConfig(String name) {
-        synchronized (configLock) {
-            return configs != null ? configs.get(name) : null;
+        Map<String, Value> c = configs;
+        if (c != null) {
+            name = StringUtils.encodeName(name);
+            return c.get(name);
         }
+        return null;
     }
 
     /**
@@ -496,6 +511,7 @@ public class Node {
      */
     public Value removeConfig(String name) {
         synchronized (configLock) {
+            name = StringUtils.encodeName(name);
             Value ret = configs != null ? configs.remove(name) : null;
             if (ret != null) {
                 ValueUpdate update = new ValueUpdate(name, ret, true);
@@ -524,7 +540,7 @@ public class Node {
      */
     public Value setConfig(String name, Value value) {
         synchronized (configLock) {
-            name = checkName(name);
+            name = checkAndEncodeName(name);
             if (value == null) {
                 throw new NullPointerException("value");
             } else if (configs == null) {
@@ -579,6 +595,7 @@ public class Node {
      */
     public Value removeRoConfig(String name) {
         synchronized (roConfigLock) {
+            name = StringUtils.encodeName(name);
             Value tmp = roConfigs != null ? roConfigs.remove(name) : null;
             if (tmp != null) {
                 SubscriptionManager man = link.getSubscriptionManager();
@@ -600,7 +617,11 @@ public class Node {
     @SuppressWarnings("unused")
     public Value getRoConfig(String name) {
         Map<String, Value> c = roConfigs;
-        return c != null ? c.get(name) : null;
+        if (c != null) {
+            name = StringUtils.encodeName(name);
+            return c.get(name);
+        }
+        return null;
     }
 
     /**
@@ -612,7 +633,7 @@ public class Node {
      */
     public Value setRoConfig(String name, Value value) {
         synchronized (roConfigLock) {
-            name = checkName(name);
+            name = checkAndEncodeName(name);
             if (value == null) {
                 throw new NullPointerException("value");
             } else if (roConfigs == null) {
@@ -650,7 +671,11 @@ public class Node {
      */
     public Value getAttribute(String name) {
         Map<String, Value> a = attribs;
-        return a != null ? a.get(name) : null;
+        if (a != null) {
+            name = StringUtils.encodeName(name);
+            return a.get(name);
+        }
+        return null;
     }
 
     /**
@@ -659,6 +684,7 @@ public class Node {
      */
     public Value removeAttribute(String name) {
         synchronized (attributeLock) {
+            name = StringUtils.encodeName(name);
             Value ret = attribs != null ? attribs.remove(name) : null;
             if (ret != null) {
                 ValueUpdate update = new ValueUpdate(name, ret, true);
@@ -682,7 +708,7 @@ public class Node {
      */
     public Value setAttribute(String name, Value value) {
         synchronized (attributeLock) {
-            name = checkName(name);
+            name = checkAndEncodeName(name);
             if (value == null) {
                 throw new NullPointerException("value");
             } else if (attribs == null) {
@@ -877,13 +903,11 @@ public class Node {
      * @param name Name to check
      * @return Name
      */
-    public static String checkName(String name) {
+    public static String checkAndEncodeName(String name) {
         if (name == null || name.isEmpty()) {
             throw new IllegalArgumentException("name");
-        } else if (StringUtils.contains(name, BANNED_CHARS)) {
-            throw new IllegalArgumentException("invalid name: " + name);
         }
-        return name;
+        return StringUtils.encodeName(name);
     }
 
     /**

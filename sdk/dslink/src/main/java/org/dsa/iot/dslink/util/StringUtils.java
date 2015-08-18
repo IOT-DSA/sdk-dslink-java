@@ -2,8 +2,6 @@ package org.dsa.iot.dslink.util;
 
 import org.dsa.iot.dslink.node.Node;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -33,16 +31,51 @@ public class StringUtils {
      * @return Encoded name.
      */
     public static String encodeName(String name) {
-        for (char c : Node.getBannedCharacters()) {
-            String banned = String.valueOf(c);
-            if (name.contains(banned)) {
-                String replacement = "%";
-                replacement += Integer.toHexString(c).toUpperCase();
-                banned = Pattern.quote(banned);
-                name = name.replaceAll(banned, replacement);
-            }
+        if (name == null) {
+            return null;
         }
-        return name;
+        StringBuilder builder = new StringBuilder();
+        char[] nameChars = name.toCharArray();
+        char[] bannedChars = Node.getBannedCharacters();
+        nameLoop: for (int i = 0; i < nameChars.length; ++i) {
+            char nameChar = nameChars[i];
+            // Skip over already encoded characters
+            if (nameChar == '%' && i + 1 < nameChars.length) {
+                char hexA = nameChars[i + 1];
+                if ((hexA >= '0' && hexA <= '9')
+                        || (hexA >= 'a' && hexA <= 'f')
+                        || (hexA >= 'A' && hexA <= 'F')) {
+                    if (i + 2 < nameChars.length) {
+                        char hexB = nameChars[i + 2];
+                        if ((hexB >= '0' && hexB <= '9')
+                                || (hexB >= 'a' && hexB <= 'f')
+                                || (hexB >= 'A' && hexB <= 'F')) {
+                            i += 2;
+                            builder.append(nameChar);
+                            builder.append(hexA);
+                            builder.append(hexB);
+                            continue;
+                        } else {
+                            ++i;
+                            builder.append(nameChar);
+                            builder.append(hexA);
+                            continue;
+                        }
+                    }
+                }
+            }
+            for (char bannedChar : bannedChars) {
+                if (nameChar == bannedChar) {
+                    String re = Integer.toHexString(bannedChar);
+                    re = re.toUpperCase();
+                    builder.append('%');
+                    builder.append(re);
+                    continue nameLoop;
+                }
+            }
+            builder.append(nameChar);
+        }
+        return builder.toString();
     }
 
     /**
@@ -52,11 +85,39 @@ public class StringUtils {
      * @return Decoded name.
      */
     public static String decodeName(String name) {
-        try {
-            return URLDecoder.decode(name, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
+        if (name == null) {
+            return null;
         }
+        StringBuilder builder = new StringBuilder();
+        char[] nameChars = name.toCharArray();
+        for (int i = 0; i < nameChars.length; ++i) {
+            char nameChar = nameChars[i];
+            if (nameChar == '%') {
+                char hexA = nameChars[i + 1];
+                if ((hexA >= '0' && hexA <= '9')
+                        || (hexA >= 'a' && hexA <= 'f')
+                        || (hexA >= 'A' && hexA <= 'F')) {
+                    String s = String.valueOf(hexA);
+                    if (i + 2 < nameChars.length) {
+                        char hexB = nameChars[i + 2];
+                        if ((hexB >= '0' && hexB <= '9')
+                                || (hexB >= 'a' && hexB <= 'f')
+                                || (hexB >= 'A' && hexB <= 'F')) {
+                            ++i;
+                            s += String.valueOf(hexB);
+                        }
+                    }
+                    ++i;
+                    int c = Integer.parseInt(s, 16);
+                    builder.append((char) c);
+                    continue;
+                }
+            }
+
+            builder.append(nameChar);
+        }
+
+        return builder.toString();
     }
 
     /**

@@ -27,9 +27,9 @@ public class StringUtilsTest {
 
     @Test
     public void decode() {
-        String s = "%25 %2E %2F %5C %3F %2A %3A %7C %3C %3E %24 %40 %25";
+        String s = "% %25 %2E %2F %5C %3F %2A %3A %7C %3C %3E %24 %40 %25";
         s = StringUtils.decodeName(s);
-        Assert.assertEquals("% . / \\ ? * : | < > $ @ %", s);
+        Assert.assertEquals("% % . / \\ ? * : | < > $ @ %", s);
     }
 
     @Test
