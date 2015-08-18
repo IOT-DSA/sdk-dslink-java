@@ -64,8 +64,9 @@ public class Action {
      * @param permission New permission level
      */
     public void setPermission(Permission permission) {
-        if (permission == null)
+        if (permission == null) {
             throw new NullPointerException("permission");
+        }
         this.permission = permission;
     }
 
@@ -77,8 +78,9 @@ public class Action {
      * @return Current object for daisy chaining.
      */
     public Action setResultType(ResultType type) {
-        if (type == null)
+        if (type == null) {
             throw new NullPointerException("type");
+        }
         this.resultType = type;
         return this;
     }

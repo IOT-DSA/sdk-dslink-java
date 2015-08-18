@@ -292,27 +292,28 @@ public class ListResponse implements Response {
             // Action
             Action action = node.getAction();
             if (action != null
-                    && !action.isHidden()
                     && action.hasPermission()) {
                 JsonArray update = new JsonArray();
                 update.addString("$invokable");
                 update.addString(action.getPermission().getJsonName());
                 updates.addArray(update);
 
-                update = new JsonArray();
-                update.addString("$params");
-                update.addArray(action.getParams());
-                updates.addArray(update);
+                if (!action.isHidden()) {
+                    update = new JsonArray();
+                    update.addString("$params");
+                    update.addArray(action.getParams());
+                    updates.addArray(update);
 
-                update = new JsonArray();
-                update.addString("$columns");
-                update.addArray(action.getColumns());
-                updates.addArray(update);
+                    update = new JsonArray();
+                    update.addString("$columns");
+                    update.addArray(action.getColumns());
+                    updates.addArray(update);
 
-                update = new JsonArray();
-                update.addString("$result");
-                update.addString(action.getResultType().getJsonName());
-                updates.addArray(update);
+                    update = new JsonArray();
+                    update.addString("$result");
+                    update.addString(action.getResultType().getJsonName());
+                    updates.addArray(update);
+                }
             }
 
             // Attributes and configurations
