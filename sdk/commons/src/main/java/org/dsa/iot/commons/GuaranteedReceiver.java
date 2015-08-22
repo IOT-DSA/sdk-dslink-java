@@ -27,44 +27,58 @@ public abstract class GuaranteedReceiver<T> {
 
     private final TimeUnit timeUnit;
     private final long delay;
+    private final boolean loop;
 
     private final List<Handler<T>> list = new ArrayList<>();
-    private ScheduledFuture<?> fut;
+    private ScheduledFuture<?> instantiationFut;
+    private ScheduledFuture<?> loopFut;
     private T instance;
 
     private boolean running = true;
 
     /**
-     * Constructs a {@link GuaranteedReceiver} with a default {@code delay}
-     * of 5 seconds.
-     * @see #GuaranteedReceiver(long)
+     * Constructs a {@link GuaranteedReceiver} with a specified {@code delay}.
+     *
+     * @param delay Delay, in seconds, to instantiate the instance if an error
+     *              occurs.
+     * @see #GuaranteedReceiver(long, boolean)
      */
-    public GuaranteedReceiver() {
-        this(5);
+    public GuaranteedReceiver(long delay) {
+        this(delay, false);
     }
 
     /**
      *
-     * @param delay Delay, in seconds, to instantiate the instance if an
-     *              error occurs.
-     * @see #GuaranteedReceiver(long, TimeUnit)
+     * @param delay Delay, in seconds, to instantiate the instance if an error
+     *              occurs.
+     * @param loop Whether to enable looping or not.
+     * @see #GuaranteedReceiver(long, TimeUnit, boolean)
      */
-    public GuaranteedReceiver(long delay) {
-        this(delay, TimeUnit.SECONDS);
+    public GuaranteedReceiver(long delay, boolean loop) {
+        this(delay, TimeUnit.SECONDS, loop);
     }
 
     /**
      * The instance of {@link T} will not be initially initialized until
-     * {@link #get} is called.
+     * {@link #get} is called or looping is enabled. If looping is enabled then
+     * {@link #onLoop} will be called repeatedly when the {@code delay} time
+     * elapses based on the specified {@code unit} of time.
      *
      * @param delay Delay to instantiate the instance, in the specified
      *              {@link TimeUnit}, to instantiate the instance if an
      *              error occurs.
      * @param unit Unit of time the delay is in.
+     * @param loop Whether to enable looping or not.
      */
-    public GuaranteedReceiver(long delay, TimeUnit unit) {
+    public GuaranteedReceiver(long delay, TimeUnit unit, boolean loop) {
+        if (delay <= 0) {
+            String err = "Delay must be greater than zero";
+            throw new IllegalArgumentException(err);
+        }
         this.delay = delay;
         this.timeUnit = unit;
+        this.loop = loop;
+        initializeLoop();
     }
 
     /**
@@ -76,9 +90,11 @@ public abstract class GuaranteedReceiver<T> {
     protected abstract T instantiate() throws Exception;
 
     /**
-     * If the instance is invalidated, then it will be set to {@code null} and
-     * be re-instantiated, otherwise the current instance of {@link T} will
-     * not be set to {@code null}.
+     * If the instance of {@link T} is invalidated, then it will be set to
+     * {@code null} and be re-instantiated, otherwise the current instance
+     * of {@link T} will not be set to {@code null}. If the instance is not
+     * invalidated then it will be treated as an unhandled exception and will
+     * be logged.
      *
      * @param e Exception that occurred when instantiating or calling a
      *          handler.
@@ -88,7 +104,26 @@ public abstract class GuaranteedReceiver<T> {
     protected abstract boolean invalidateInstance(Exception e);
 
     /**
-     * Guarantees the instance of {@link T} is available for consumption.
+     * Called every time a loop occurs. The looping feature must be enabled. A
+     * loop is called based on the desired delay.
+     *
+     * The loop functionality is designed to test if a resource is still being
+     * held to determine a status as needed. A {@link RuntimeException} must
+     * be thrown in order to invalidate the instance. The implementation of
+     * {@link #invalidateInstance(Exception)} will determine if the instance
+     * should be invalidated.
+     *
+     * @param event Instantiated {@link T}.
+     * @see GuaranteedReceiver(long, TimeUnit, boolean)
+     * @see #invalidateInstance(Exception)
+     */
+    @SuppressWarnings("UnusedParameters")
+    protected void onLoop(T event) {
+    }
+
+    /**
+     * Guarantees the instance of {@link T} is available for consumption. The
+     * {@code handler} will persist by default.
      *
      * @param handler Called when the instance has been retrieved and is ready
      *                for consumption.
@@ -96,7 +131,24 @@ public abstract class GuaranteedReceiver<T> {
      *                {@code true} then {@link IllegalStateException} is
      *                thrown, otherwise the {@code handler} gets ignored.
      */
-    public final void get(final Handler<T> handler, boolean checked) {
+    public final void get(Handler<T> handler, boolean checked) {
+        get(handler, checked, true);
+    }
+
+    /**
+     * Guarantees the instance of {@link T} is available for consumption.
+     *
+     * @param handler Called when the instance has been retrieved and is ready
+     *                for consumption.
+     * @param checked If the receiver is shutdown and {@code checked} is
+     *                {@code true} then {@link IllegalStateException} is
+     *                thrown, otherwise the {@code handler} gets ignored.
+     * @param persist Whether to persist the handler in a cache if the instance
+     *                is not ready yet or an exception has occurred.
+     */
+    public final void get(final Handler<T> handler,
+                          final boolean checked,
+                          final boolean persist) {
         boolean reattempt = false;
         synchronized (this) {
             if (!running) {
@@ -108,15 +160,15 @@ public abstract class GuaranteedReceiver<T> {
             }
 
             if (instance == null) {
-                if (handler != null) {
+                if (handler != null && persist) {
                     list.add(handler);
                 }
-                if (fut != null) {
+                if (instantiationFut != null) {
                     return;
                 }
                 ScheduledThreadPoolExecutor stpe = getSTPE();
                 InstantiationRunner runner = new InstantiationRunner();
-                fut = stpe.scheduleWithFixedDelay(runner, 0, delay, timeUnit);
+                instantiationFut = stpe.scheduleWithFixedDelay(runner, 0, delay, timeUnit);
             } else if (handler != null) {
                 try {
                     handler.handle(instance);
@@ -130,36 +182,75 @@ public abstract class GuaranteedReceiver<T> {
                 }
             }
         }
-        if (reattempt) {
+        if (reattempt && persist) {
             get(handler, checked);
         }
     }
 
     /**
      * Shuts down the receiver from preventing any new instances to be created.
+     * If the looping feature is enabled then it will be shutdown as well.
      *
      * @return The underlying instance of {@link T}, which can be
      * {@code null}, to allow freeing any resources the instance holds.
      */
     public synchronized T shutdown() {
         running = false;
-        stop();
+        stopLoop();
+        stopRunner();
         T tmp = instance;
         instance = null;
+        list.clear();
         return tmp;
     }
 
     /**
-     * Cancels the scheduled future from running any further.
+     * Cancels the instantiation scheduled future from running any further.
      */
-    private synchronized void stop() {
-        if (fut != null) {
+    private synchronized void stopRunner() {
+        if (instantiationFut != null) {
             try {
-                fut.cancel(true);
+                instantiationFut.cancel(true);
             } catch (Exception ignored) {
             }
-            fut = null;
+            instantiationFut = null;
         }
+    }
+
+    private synchronized void stopLoop() {
+        if (loopFut != null) {
+            try {
+                loopFut.cancel(true);
+            } catch (Exception ignored) {
+            }
+            loopFut = null;
+        }
+    }
+
+    private synchronized void initializeLoop() {
+        stopLoop();
+        if (!(loop && running)) {
+            return;
+        }
+
+        ScheduledThreadPoolExecutor stpe = getSTPE();
+        loopFut = stpe.scheduleWithFixedDelay(new Runnable() {
+            @Override
+            public void run() {
+                synchronized (GuaranteedReceiver.this) {
+                    if (!running) {
+                        stopLoop();
+                        return;
+                    }
+                }
+                get(new Handler<T>() {
+                    @Override
+                    public void handle(T event) {
+                        onLoop(event);
+                    }
+                }, false, false);
+            }
+        }, 0, delay, timeUnit);
     }
 
     private class InstantiationRunner implements Runnable {
@@ -172,7 +263,7 @@ public abstract class GuaranteedReceiver<T> {
 
                 try {
                     instance = instantiate();
-                    stop();
+                    stopRunner();
                 } catch (Exception e) {
                     LOGGER.debug("Failed to instantiate", e);
                     return;
