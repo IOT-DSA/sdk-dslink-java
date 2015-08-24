@@ -60,6 +60,13 @@ public final class ValueType {
     }
 
     /**
+     * @return Raw value type that may not be suitable for JSON consumption.
+     */
+    public String getRawName() {
+        return rawName;
+    }
+
+    /**
      * Compares whether the 2 raw JSON types are equal or not. This is
      * necessary when comparing if a type is an enum or not.
      *

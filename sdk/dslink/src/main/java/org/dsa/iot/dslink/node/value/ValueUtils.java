@@ -120,4 +120,27 @@ public class ValueUtils {
                 throw new RuntimeException(ERROR_MSG + value.getType());
         }
     }
+
+    /**
+     * Tests the type of the {@code value} to see whether its type is valid
+     * or not.
+     *
+     * @param name Name of the parameter, used when throwing
+     *             {@link RuntimeException}.
+     * @param type The {@link ValueType} that {@code value} must be.
+     * @param value The {@link Value} to test.
+     */
+    public static void checkType(String name, ValueType type, Value value) {
+        ValueType vt = value.getType();
+        if (!type.compare(ValueType.DYNAMIC)
+                && (type.compare(ValueType.ENUM)
+                && !vt.compare(ValueType.STRING))) {
+            if (!type.compare(vt)) {
+                String t = value.getType().toJsonString();
+                String msg = "Parameter " + name + " has a bad type of " + t;
+                msg += " expected " + type.getRawName();
+                throw new RuntimeException(msg);
+            }
+        }
+    }
 }

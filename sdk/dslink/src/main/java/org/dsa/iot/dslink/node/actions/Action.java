@@ -18,8 +18,8 @@ import java.util.List;
  */
 public class Action {
 
-    private JsonArray params = new JsonArray();
-    private JsonArray results = new JsonArray();
+    protected JsonArray params = new JsonArray();
+    protected JsonArray results = new JsonArray();
 
     private SubscriptionManager manager;
     private Node node;
@@ -131,10 +131,7 @@ public class Action {
         for (Parameter p : newParams) {
             addParameter(p);
         }
-        if (node != null && manager != null) {
-            Value v = new Value(getParams());
-            manager.postMetaUpdate(node, "$params", v);
-        }
+        postParamsUpdate();
     }
 
     public void setSubscriptionManager(Node node,
@@ -198,12 +195,22 @@ public class Action {
     }
 
     /**
+     * Posts a parameter update.
+     */
+    protected final void postParamsUpdate() {
+        if (node != null && manager != null) {
+            Value v = new Value(getParams());
+            manager.postMetaUpdate(node, "$params", v);
+        }
+    }
+
+    /**
      * Converts all the parameters to JSON consumable format.
      *
      * @param param Parameter to convert.
      * @return JSON object of the converted parameter.
      */
-    private JsonObject paramToJson(Parameter param) {
+    protected JsonObject paramToJson(Parameter param) {
         if (param == null)
             return null;
         JsonObject obj = new JsonObject();

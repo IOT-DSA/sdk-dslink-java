@@ -90,7 +90,7 @@ public class ActionResult {
         if (ret == null) {
             throw new RuntimeException("Missing parameter: " + name);
         }
-        checkType(name, type, ret);
+        ValueUtils.checkType(name, type, ret);
         return ret;
     }
 
@@ -117,11 +117,16 @@ public class ActionResult {
 
         Value ret = ValueUtils.toValue(obj);
         if (def != null) {
-            checkType(name, def.getType(), ret);
+            ValueUtils.checkType(name, def.getType(), ret);
         }
         return ret;
     }
 
+    /**
+     * The table to add rows to.
+     *
+     * @return Table of the result.
+     */
     public Table getTable() {
         if (table == null) {
             return table = new Table();
@@ -177,15 +182,5 @@ public class ActionResult {
      */
     public Handler<Void> getCloseHandler() {
         return closeHandler;
-    }
-
-    private void checkType(String name, ValueType type, Value value) {
-        if (type != ValueType.DYNAMIC) {
-            if (type != value.getType()) {
-                String t = value.getType().toJsonString();
-                String msg = "Parameter " + name + " has a bad type of " + t;
-                throw new RuntimeException(msg);
-            }
-        }
     }
 }
