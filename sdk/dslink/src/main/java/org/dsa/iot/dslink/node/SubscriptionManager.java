@@ -200,6 +200,14 @@ public class SubscriptionManager {
         }
     }
 
+    /**
+     * Updates the internal data of a node such as a configuration or an
+     * attribute.
+     *
+     * @param node Updated node.
+     * @param name The name of what is being updated.
+     * @param value The new value of the update.
+     */
     public void postMetaUpdate(Node node, String name, Value value) {
         ListResponse resp = pathSubsMap.get(node);
         if (resp != null) {
