@@ -114,7 +114,7 @@ public abstract class GuaranteedReceiver<T> {
      * should be invalidated.
      *
      * @param event Instantiated {@link T}.
-     * @see GuaranteedReceiver(long, TimeUnit, boolean)
+     * @see #GuaranteedReceiver(long, TimeUnit, boolean)
      * @see #invalidateInstance(Exception)
      */
     @SuppressWarnings("UnusedParameters")
