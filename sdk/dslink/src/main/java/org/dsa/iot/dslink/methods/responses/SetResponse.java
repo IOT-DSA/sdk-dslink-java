@@ -1,5 +1,7 @@
 package org.dsa.iot.dslink.methods.responses;
 
+import org.dsa.iot.dslink.DSLink;
+import org.dsa.iot.dslink.DSLinkHandler;
 import org.dsa.iot.dslink.methods.Response;
 import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.node.Node;
@@ -18,11 +20,13 @@ import org.vertx.java.core.json.JsonObject;
 public class SetResponse implements Response {
 
     private final int rid;
-    private final NodePair pair;
+    private final DSLink link;
+    private final String path;
 
-    public SetResponse(int rid, NodePair pair) {
+    public SetResponse(int rid, DSLink link, String path) {
         this.rid = rid;
-        this.pair = pair;
+        this.link = link;
+        this.path = path;
     }
 
     @Override
@@ -50,14 +54,20 @@ public class SetResponse implements Response {
     }
 
     private void updateNode(JsonObject in) {
+        final Value value = ValueUtils.toValue(in.getField("value"));
+        NodePair pair = link.getNodeManager().getNode(path, false, false);
         Node node = pair.getNode();
+        if (node == null) {
+            DSLinkHandler handler = link.getLinkHandler();
+            handler.onSetFail(path, value);
+            return;
+        }
         Writable writable = node.getWritable();
         if (writable == null || writable == Writable.NEVER) {
             throw new RuntimeException("Not writable");
         }
 
         String ref = pair.getReference();
-        Value value = ValueUtils.toValue(in.getField("value"));
         Value current = node.getValue();
 
         if (ref != null) {

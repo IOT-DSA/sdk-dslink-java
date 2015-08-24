@@ -2,6 +2,8 @@ package org.dsa.iot.dslink;
 
 import org.dsa.iot.dslink.config.Configuration;
 import org.dsa.iot.dslink.node.Node;
+import org.dsa.iot.dslink.node.exceptions.NoSuchPathException;
+import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.util.Objects;
 
 /**
@@ -136,5 +138,16 @@ public abstract class DSLinkHandler {
      */
     public Node onInvocationFail(String path) {
         return null;
+    }
+
+    /**
+     * Callback when a set fails as a result of trying to set
+     * on a non-existent node. If the node
+     *
+     * @param path Path the requester wants to set.
+     * @param value Value the requester wants the path to have.
+     */
+    public void onSetFail(String path, Value value) {
+        throw new NoSuchPathException(path);
     }
 }

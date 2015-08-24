@@ -300,8 +300,9 @@ public class Requester extends Linkable {
                 break;
             case "set":
                 SetRequest setRequest = (SetRequest) request;
-                NodePair pair = manager.getNode(setRequest.getPath(), true);
-                SetResponse setResponse = new SetResponse(rid, pair);
+                String path = setRequest.getPath();
+                manager.getNode(path, true);
+                SetResponse setResponse = new SetResponse(rid, link, path);
                 setResponse.populate(in);
                 if (wrapper.getSetHandler() != null) {
                     wrapper.getSetHandler().handle(setResponse);
@@ -309,7 +310,7 @@ public class Requester extends Linkable {
                 break;
             case "remove":
                 RemoveRequest removeRequest = (RemoveRequest) request;
-                pair = manager.getNode(removeRequest.getPath(), true);
+                NodePair pair = manager.getNode(removeRequest.getPath(), true);
                 RemoveResponse removeResponse = new RemoveResponse(rid, pair);
                 removeResponse.populate(in);
                 if (wrapper.getRemoveHandler() != null) {
@@ -331,7 +332,7 @@ public class Requester extends Linkable {
                 break;
             case "invoke":
                 InvokeRequest inReq = (InvokeRequest) request;
-                String path = inReq.getPath();
+                path = inReq.getPath();
                 manager.getNode(inReq.getPath(), true);
                 InvokeResponse inResp = new InvokeResponse(link, rid, path);
                 inResp.populate(in);

@@ -7,7 +7,6 @@ import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.methods.responses.*;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
-import org.dsa.iot.dslink.node.NodePair;
 import org.dsa.iot.dslink.node.SubscriptionManager;
 import org.vertx.java.core.json.JsonObject;
 
@@ -72,8 +71,7 @@ public class Responder extends Linkable {
                 if (path == null) {
                     throw new NullPointerException("path");
                 }
-                NodePair pair = nodeManager.getNode(path);
-                response = new SetResponse(rid, pair);
+                response = new SetResponse(rid, link, path);
                 break;
             case "subscribe":
                 response = new SubscribeResponse(rid, link);
