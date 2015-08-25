@@ -9,7 +9,7 @@ import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
-import java.util.List;
+import java.util.Collection;
 
 /**
  * Action API for handling invocations, parameters, and results.
@@ -126,7 +126,7 @@ public class Action {
      *
      * @param newParams Parameters to set.
      */
-    public void setParams(List<Parameter> newParams) {
+    public void setParams(Collection<Parameter> newParams) {
         this.params = new JsonArray();
         for (Parameter p : newParams) {
             addParameter(p);
