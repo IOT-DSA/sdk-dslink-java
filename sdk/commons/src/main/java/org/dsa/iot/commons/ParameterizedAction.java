@@ -126,7 +126,7 @@ public abstract class ParameterizedAction extends Action {
      * {@inheritDoc}
      */
     @Override
-    public final void setParams(List<Parameter> newParams) {
+    public final void setParams(Collection<Parameter> newParams) {
         super.params = new JsonArray();
         for (Parameter p : newParams) {
             super.addParameter(p);
