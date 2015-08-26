@@ -23,8 +23,8 @@ public class DataHandler {
     private int msgId = 0;
     private int lastAckId = 0;
 
-    private final Object queueLock = new Object();
-    private final Queue<JsonObject> queue = new LinkedBlockingQueue<>();
+    private final Object responderLock = new Object();
+    private final Queue<JsonObject> responderQueue = new LinkedBlockingQueue<>();
 
     private NetworkClient client;
     private Handler<DataReceived> reqHandler;
@@ -65,7 +65,6 @@ public class DataHandler {
 
         JsonArray responses = obj.getArray("responses");
         if (!(respHandler == null || responses == null)) {
-            // TODO: handle ack
             respHandler.handle(new DataReceived(msgId, responses));
         }
 
@@ -77,14 +76,14 @@ public class DataHandler {
                 }
             }
 
-            synchronized (queueLock) {
+            synchronized (responderLock) {
                 while (true) {
                     synchronized (idLock) {
                         if (!(msgId - lastAckId < 8)) {
                             break;
                         }
                     }
-                    JsonObject data = queue.poll();
+                    JsonObject data = responderQueue.poll();
                     if (data == null) {
                         break;
                     }
@@ -112,6 +111,12 @@ public class DataHandler {
         client.write(top.encode());
     }
 
+    public void writeAck(int ack) {
+        JsonObject obj = new JsonObject();
+        obj.putNumber("ack", ack);
+        client.write(obj.encode());
+    }
+
     /**
      * Writes a response that is not tied to any message. These responses can
      * be throttled to prevent flooding.
@@ -137,8 +142,8 @@ public class DataHandler {
         }
 
         if (queue) {
-            synchronized (queueLock) {
-                this.queue.add(top);
+            synchronized (responderLock) {
+                this.responderQueue.add(top);
             }
         } else {
             client.write(top.encode());

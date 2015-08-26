@@ -138,12 +138,12 @@ public class DSLink {
             getWriter().setRespHandler(new Handler<DataReceived>() {
                 @Override
                 public void handle(DataReceived event) {
-                    // TODO: ack handling
                     JsonArray array = event.getData();
                     for (Object object : array) {
                         JsonObject json = (JsonObject) object;
                         DSLink.this.requester.parse(json);
                     }
+                    getWriter().writeAck(event.getMsgId());
                 }
             });
 
