@@ -74,7 +74,7 @@ public class DataHandler {
         Integer ack = obj.getInteger("ack");
         if (ack != null) {
             synchronized (idLock) {
-                if (lastAckId < ack) {
+                if (ack > lastAckId) {
                     lastAckId = ack;
                 }
             }
@@ -155,15 +155,14 @@ public class DataHandler {
         boolean write;
         if (ackId != null) {
             top.putNumber("ack", ackId);
-            write = true;
-        } else {
-            synchronized (idLock) {
-                int id = msgId++;
-                top.putNumber("msg", id);
-                // Compare whether the handler received enough acks to continue
-                // writing
-                write = id - lastAckId < MAX_MISSING_ACKS;
-            }
+        }
+
+        synchronized (idLock) {
+            int id = msgId++;
+            top.putNumber("msg", id);
+            // Compare whether the handler received enough acks to continue
+            // writing
+            write = id - lastAckId < MAX_MISSING_ACKS;
         }
 
         if (write) {
