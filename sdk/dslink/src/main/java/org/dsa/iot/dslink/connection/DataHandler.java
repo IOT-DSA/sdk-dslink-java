@@ -7,6 +7,7 @@ import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -130,26 +131,7 @@ public class DataHandler {
             throw new NullPointerException("object");
         }
 
-        JsonArray responses = new JsonArray();
-        responses.addObject(object);
-        JsonObject top = new JsonObject();
-        top.putArray("responses", responses);
-        boolean write;
-        synchronized (idLock) {
-            int id = msgId++;
-            top.putNumber("msg", id);
-            // Compare whether the handler received enough acks to continue
-            // writing
-            write = id - lastAckId < MAX_MISSING_ACKS;
-        }
-
-        if (write) {
-            client.write(top.encode());
-        } else {
-            synchronized (responderLock) {
-                this.responderQueue.add(top);
-            }
-        }
+        writeRequestResponses(null, Collections.singleton(object));
     }
 
     /**
@@ -170,10 +152,27 @@ public class DataHandler {
         }
         JsonObject top = new JsonObject();
         top.putArray("responses", responses);
+        boolean write;
         if (ackId != null) {
             top.putNumber("ack", ackId);
+            write = true;
+        } else {
+            synchronized (idLock) {
+                int id = msgId++;
+                top.putNumber("msg", id);
+                // Compare whether the handler received enough acks to continue
+                // writing
+                write = id - lastAckId < MAX_MISSING_ACKS;
+            }
         }
-        client.write(top.encode());
+
+        if (write) {
+            client.write(top.encode());
+        } else {
+            synchronized (responderLock) {
+                this.responderQueue.add(top);
+            }
+        }
     }
 
     public static class DataReceived {
