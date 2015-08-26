@@ -16,6 +16,8 @@ import java.io.StringWriter;
 import java.util.LinkedList;
 import java.util.List;
 
+import static org.dsa.iot.dslink.connection.DataHandler.DataReceived;
+
 /**
  * @author Samuel Grenier
  */
@@ -133,10 +135,12 @@ public class DSLink {
      */
     public void setDefaultDataHandlers(boolean requester, boolean responder) {
         if (requester) {
-            getWriter().setRespHandler(new Handler<JsonArray>() {
+            getWriter().setRespHandler(new Handler<DataReceived>() {
                 @Override
-                public void handle(JsonArray event) {
-                    for (Object object : event) {
+                public void handle(DataReceived event) {
+                    // TODO: ack handling
+                    JsonArray array = event.getData();
+                    for (Object object : array) {
                         JsonObject json = (JsonObject) object;
                         DSLink.this.requester.parse(json);
                     }
@@ -151,11 +155,12 @@ public class DSLink {
             });
         }
         if (responder) {
-            getWriter().setReqHandler(new Handler<JsonArray>() {
+            getWriter().setReqHandler(new Handler<DataReceived>() {
                 @Override
-                public void handle(JsonArray event) {
+                public void handle(DataReceived event) {
+                    final JsonArray data = event.getData();
                     List<JsonObject> responses = new LinkedList<>();
-                    for (Object object : event) {
+                    for (Object object : data) {
                         JsonObject json = (JsonObject) object;
                         try {
                             JsonObject resp = DSLink.this.responder.parse(json);
@@ -180,7 +185,8 @@ public class DSLink {
                         }
                     }
 
-                    getWriter().writeResponses(responses);
+                    Integer msgId = event.getMsgId();
+                    getWriter().writeRequestResponses(msgId, responses);
                 }
             });
         }

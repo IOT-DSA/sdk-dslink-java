@@ -110,6 +110,9 @@ public class WebSocketConnector extends RemoteEndpoint {
     @Override
     public void write(String data) {
         checkConnected();
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Sent data: {}", data);
+        }
         webSocket.writeTextFrame(data);
         lastSentMessage = System.currentTimeMillis();
     }

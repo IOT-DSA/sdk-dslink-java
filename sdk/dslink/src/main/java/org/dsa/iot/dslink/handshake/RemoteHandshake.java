@@ -21,14 +21,8 @@ import java.util.concurrent.CountDownLatch;
 public class RemoteHandshake {
 
     private final RemoteKey remoteKey;
-    private final String dsId;
-    private final String publicKey;
     private final String wsUri;
-    private final String httpUri;
     private final String salt;
-    private String saltS;
-    private String saltL;
-    private final int updateInterval;
 
     /**
      * Populates the handshake with data from the server.
@@ -43,20 +37,8 @@ public class RemoteHandshake {
         } else {
             this.remoteKey = null;
         }
-        this.dsId = in.getString("dsId");
-        this.publicKey = in.getString("publicKey");
         this.wsUri = in.getString("wsUri");
-        this.httpUri = in.getString("httpUri");
         this.salt = in.getString("salt");
-        this.saltS = in.getString("saltS");
-        this.saltL = in.getString("saltL");
-
-        Number ui = in.getNumber("updateInterval");
-        if (ui != null) {
-            updateInterval = ui.intValue();
-        } else {
-            updateInterval = 0;
-        }
     }
 
     /**
@@ -67,20 +49,6 @@ public class RemoteHandshake {
     }
 
     /**
-     * @return The ID of the remote.
-     */
-    public String getDsId() {
-        return dsId;
-    }
-
-    /**
-     * @return The public key of the remote
-     */
-    public String getPublicKey() {
-        return publicKey;
-    }
-
-    /**
      * @return The web socket data endpoint URI for connecting to the server.
      */
     public String getWsUri() {
@@ -88,39 +56,10 @@ public class RemoteHandshake {
     }
 
     /**
-     * @return The http data endpoint URI for connecting to the server.
-     */
-    public String getHttpUri() {
-        return httpUri;
-    }
-
-    /**
      * @return The salt used in the handshake data endpoint.
      */
     public String getSalt() {
         return salt;
-    }
-
-    /**
-     * @return The salt used in short polling.
-     */
-    public String getSaltS() {
-        return saltS;
-    }
-
-    /**
-     * @return The salt used in long polling.
-     */
-    public String getSaltL() {
-        return saltL;
-    }
-
-    /**
-     * @return The update interval which determines the delay before sending
-     * an update in the subscription stream.
-     */
-    public int getUpdateInterval() {
-        return updateInterval;
     }
 
     /**

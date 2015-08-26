@@ -75,9 +75,8 @@ public class ConnectionManager {
                     return;
                 }
 
-                int updateInterval = currentHandshake.getUpdateInterval();
                 if (handler == null) {
-                    handler = new DataHandler(updateInterval);
+                    handler = new DataHandler();
                 }
 
                 boolean req = localHandshake.isRequester();
