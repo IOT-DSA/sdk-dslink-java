@@ -17,7 +17,9 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class DataHandler {
 
+    private static final int MAX_MISSING_ACKS = 8;
     private static final Logger LOGGER;
+
 
     private final Object idLock = new Object();
     private int msgId = 0;
@@ -79,7 +81,7 @@ public class DataHandler {
             synchronized (responderLock) {
                 while (true) {
                     synchronized (idLock) {
-                        if (!(msgId - lastAckId < 8)) {
+                        if (!(this.msgId - lastAckId < MAX_MISSING_ACKS)) {
                             break;
                         }
                     }
@@ -132,21 +134,21 @@ public class DataHandler {
         responses.addObject(object);
         JsonObject top = new JsonObject();
         top.putArray("responses", responses);
-        boolean queue;
+        boolean write;
         synchronized (idLock) {
             int id = msgId++;
             top.putNumber("msg", id);
             // Compare whether the handler received enough acks to continue
             // writing
-            queue = id - lastAckId < 8;
+            write = id - lastAckId < MAX_MISSING_ACKS;
         }
 
-        if (queue) {
+        if (write) {
+            client.write(top.encode());
+        } else {
             synchronized (responderLock) {
                 this.responderQueue.add(top);
             }
-        } else {
-            client.write(top.encode());
         }
     }
 
