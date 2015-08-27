@@ -81,7 +81,9 @@ public class SetResponse implements Response {
                 throw new RuntimeException("Not a valid reference: " + ref);
             }
         } else {
-            checkValue(current, value);
+            if (!node.getValueType().compare(ValueType.DYNAMIC)) {
+                checkValue(current, value);
+            }
             node.setValue(value, true);
         }
     }
