@@ -8,8 +8,6 @@ import org.vertx.java.core.json.JsonObject;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Queue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Handles all incoming and outgoing data in a network endpoint.
@@ -18,16 +16,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class DataHandler {
 
-    private static final int MAX_MISSING_ACKS = 8;
     private static final Logger LOGGER;
-
-
-    private final Object idLock = new Object();
-    private int msgId = 0;
-    private int lastAckId = 0;
-
-    private final Object responderLock = new Object();
-    private final Queue<JsonObject> responderQueue = new LinkedBlockingQueue<>();
 
     private NetworkClient client;
     private Handler<DataReceived> reqHandler;
@@ -60,38 +49,16 @@ public class DataHandler {
             LOGGER.debug("Received data: {}", obj.encode());
         }
 
-        Integer msgId = obj.getInteger("msg");
-        JsonArray requests = obj.getArray("requests");
-        if (!(reqHandler == null || requests == null)) {
-            reqHandler.handle(new DataReceived(msgId, requests));
-        }
-
-        JsonArray responses = obj.getArray("responses");
-        if (!(respHandler == null || responses == null)) {
-            respHandler.handle(new DataReceived(msgId, responses));
-        }
-
-        Integer ack = obj.getInteger("ack");
-        if (ack != null) {
-            synchronized (idLock) {
-                if (ack > lastAckId) {
-                    lastAckId = ack;
-                }
+        {
+            Integer msgId = obj.getInteger("msg");
+            JsonArray requests = obj.getArray("requests");
+            if (!(reqHandler == null || requests == null)) {
+                reqHandler.handle(new DataReceived(msgId, requests));
             }
 
-            synchronized (responderLock) {
-                while (true) {
-                    synchronized (idLock) {
-                        if (!(this.msgId - lastAckId < MAX_MISSING_ACKS)) {
-                            break;
-                        }
-                    }
-                    JsonObject data = responderQueue.poll();
-                    if (data == null) {
-                        break;
-                    }
-                    client.write(data.encode());
-                }
+            JsonArray responses = obj.getArray("responses");
+            if (!(respHandler == null || responses == null)) {
+                respHandler.handle(new DataReceived(msgId, responses));
             }
         }
     }
@@ -152,26 +119,11 @@ public class DataHandler {
         }
         JsonObject top = new JsonObject();
         top.putArray("responses", responses);
-        boolean write;
         if (ackId != null) {
             top.putNumber("ack", ackId);
         }
 
-        synchronized (idLock) {
-            int id = msgId++;
-            top.putNumber("msg", id);
-            // Compare whether the handler received enough acks to continue
-            // writing
-            write = id - lastAckId < MAX_MISSING_ACKS;
-        }
-
-        if (write) {
-            client.write(top.encode());
-        } else {
-            synchronized (responderLock) {
-                this.responderQueue.add(top);
-            }
-        }
+        client.write(top.encode());
     }
 
     public static class DataReceived {
