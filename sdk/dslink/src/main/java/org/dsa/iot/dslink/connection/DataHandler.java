@@ -8,6 +8,7 @@ import org.vertx.java.core.json.JsonObject;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Handles all incoming and outgoing data in a network endpoint.
@@ -22,6 +23,8 @@ public class DataHandler {
     private Handler<DataReceived> reqHandler;
     private Handler<DataReceived> respHandler;
     private Handler<Void> closeHandler;
+
+    private final AtomicInteger msgId = new AtomicInteger();
 
     public void setClient(NetworkClient client) {
         this.client = client;
@@ -119,6 +122,7 @@ public class DataHandler {
         }
         JsonObject top = new JsonObject();
         top.putArray("responses", responses);
+        top.putNumber("msg", msgId.getAndIncrement());
         if (ackId != null) {
             top.putNumber("ack", ackId);
         }
