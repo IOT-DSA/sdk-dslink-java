@@ -57,6 +57,11 @@ public class Requester extends Linkable {
     private final Map<Integer, Handler<SubscriptionValue>> subUpdates = new ConcurrentHashMap<>();
 
     /**
+     * Mapping of rid->response
+     */
+    private final Map<Integer, InvokeResponse> invokeResponses = new HashMap<>();
+
+    /**
      * Constructs a requester
      *
      * @param handler Handler for callbacks and data handling
@@ -284,8 +289,11 @@ public class Requester extends Linkable {
         Request request = wrapper.getRequest();
         String method = request.getName();
 
-        final String stream = in.getString("stream");
-        boolean closed = StreamState.CLOSED.getJsonName().equals(stream);
+        final StreamState stream = StreamState.toEnum(in.getString("stream"));
+        if (stream == null) {
+            return;
+        }
+        final boolean closed = StreamState.CLOSED == stream;
 
         switch (method) {
             case "list":
@@ -333,10 +341,37 @@ public class Requester extends Linkable {
             case "invoke":
                 InvokeRequest inReq = (InvokeRequest) request;
                 path = inReq.getPath();
-                manager.getNode(inReq.getPath(), true);
-                InvokeResponse inResp = new InvokeResponse(link, rid, path);
+                manager.getNode(path, true);
+                InvokeResponse inResp;
+                synchronized (invokeResponses) {
+                    switch (stream) {
+                        case OPEN:
+                            inResp = invokeResponses.get(rid);
+                            break;
+                        case INITIALIZED:
+                            inResp = new InvokeResponse(link, rid, path);
+                            invokeResponses.put(rid, inResp);
+                            break;
+                        case CLOSED:
+                            inResp = invokeResponses.remove(rid);
+                            break;
+                        default:
+                            inResp = null;
+                    }
+                    if (inResp == null) {
+                        inResp = new InvokeResponse(link, rid, path);
+                    }
+                }
                 inResp.populate(in);
-                if (wrapper.getInvokeHandler() != null) {
+                boolean invoke = false;
+                if (inReq.waitForStreamClose()) {
+                    if (closed) {
+                        invoke = true;
+                    }
+                } else {
+                    invoke = true;
+                }
+                if (invoke && wrapper.getInvokeHandler() != null) {
                     wrapper.getInvokeHandler().handle(inResp);
                 }
                 break;

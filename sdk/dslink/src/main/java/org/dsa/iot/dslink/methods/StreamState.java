@@ -20,4 +20,20 @@ public enum StreamState {
     public String getJsonName() {
         return jsonName;
     }
+
+    public static StreamState toEnum(String stream) {
+        if (stream == null) {
+            return null;
+        }
+        switch (stream) {
+            case "initialize":
+                return INITIALIZED;
+            case "open":
+                return OPEN;
+            case "closed":
+                return CLOSED;
+            default:
+                throw new RuntimeException("Unknown stream type: " + stream);
+        }
+    }
 }

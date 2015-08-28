@@ -33,7 +33,7 @@ public class InvokeResponse implements Response {
     private final int rid;
 
     private Table results;
-    private ActionResult actionResult;
+    private ActionResult actRes;
 
     public InvokeResponse(DSLink link, int rid, String path) {
         this.link = link;
@@ -48,7 +48,9 @@ public class InvokeResponse implements Response {
 
     @Override
     public void populate(JsonObject in) {
-        results = new Table();
+        if (results == null) {
+            results = new Table();
+        }
         {
             JsonArray cols = in.getArray("columns");
             if (cols != null) {
@@ -108,11 +110,11 @@ public class InvokeResponse implements Response {
         Objects.getThreadPool().execute(new Runnable() {
             @Override
             public void run() {
-                actionResult = new ActionResult(node, in);
-                action.invoke(actionResult);
+                actRes = new ActionResult(node, in);
+                action.invoke(actRes);
 
                 JsonArray results = new JsonArray();
-                Table table = actionResult.getTable();
+                Table table = actRes.getTable();
                 List<Row> rows = table.getRows(true);
                 if (rows != null) {
                     for (Row r : rows) {
@@ -131,7 +133,7 @@ public class InvokeResponse implements Response {
                     }
                 }
 
-                StreamState state = actionResult.getStreamState();
+                StreamState state = actRes.getStreamState();
                 JsonObject out = new JsonObject();
                 out.putNumber("rid", rid);
                 out.putString("stream", state.getJsonName());
@@ -159,7 +161,7 @@ public class InvokeResponse implements Response {
                 if (state == StreamState.CLOSED) {
                     link.getResponder().removeResponse(rid);
                 } else {
-                    Handler<Void> ch = actionResult.getCloseHandler();
+                    Handler<Void> ch = actRes.getCloseHandler();
                     table.setStreaming(rid, writer, ch);
                 }
             }
@@ -172,13 +174,13 @@ public class InvokeResponse implements Response {
 
     @Override
     public JsonObject getCloseResponse() {
-        if (actionResult != null) {
-            Handler<Void> handler = actionResult.getCloseHandler();
+        if (actRes != null) {
+            Handler<Void> handler = actRes.getCloseHandler();
             if (handler != null) {
                 handler.handle(null);
             }
 
-            Table table = actionResult.getTable();
+            Table table = actRes.getTable();
             table.setClosed();
         }
         JsonObject obj = new JsonObject();
@@ -188,7 +190,7 @@ public class InvokeResponse implements Response {
     }
 
     private void processColumns(Action act, JsonObject obj) {
-        Table table = actionResult.getTable();
+        Table table = actRes.getTable();
         List<Parameter> cols = table.getColumns();
         JsonArray array = null;
         if (!act.isHidden() && cols == null) {

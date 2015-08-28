@@ -12,6 +12,7 @@ public class InvokeRequest implements Request {
 
     private final String path;
     private final JsonObject params;
+    private boolean waitForStreamClose;
 
     public InvokeRequest(String path) {
         this(path, null);
@@ -32,6 +33,21 @@ public class InvokeRequest implements Request {
 
     public String getPath() {
         return path;
+    }
+
+    /**
+     * The invocation response handler will not be called until the stream
+     * for the invocation is closed, if {@code wait} is {@code true}.
+     *
+     * @param wait Whether to wait or not.
+     */
+    @SuppressWarnings("unused")
+    public void setWaitForStreamClose(boolean wait) {
+        this.waitForStreamClose = wait;
+    }
+
+    public boolean waitForStreamClose() {
+        return waitForStreamClose;
     }
 
     @Override
