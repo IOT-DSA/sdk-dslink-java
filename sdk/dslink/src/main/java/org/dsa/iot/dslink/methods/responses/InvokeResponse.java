@@ -2,6 +2,7 @@ package org.dsa.iot.dslink.methods.responses;
 
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.DSLinkHandler;
+import org.dsa.iot.dslink.connection.DataHandler;
 import org.dsa.iot.dslink.methods.Response;
 import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.node.Node;
@@ -14,6 +15,7 @@ import org.dsa.iot.dslink.node.actions.table.Table;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.node.value.ValueUtils;
+import org.dsa.iot.dslink.util.Objects;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
@@ -31,7 +33,7 @@ public class InvokeResponse implements Response {
     private final int rid;
 
     private Table results;
-    private ActionResult actRes;
+    private ActionResult actionResult;
 
     public InvokeResponse(DSLink link, int rid, String path) {
         this.link = link;
@@ -101,76 +103,82 @@ public class InvokeResponse implements Response {
             throw new RuntimeException("Node not invokable at " + path);
         }
 
-        actRes = new ActionResult(node, in);
-        action.invoke(actRes);
-
-        StreamState state = actRes.getStreamState();
         JsonObject out = new JsonObject();
-        {
-            out.putNumber("rid", rid);
-            out.putString("stream", actRes.getStreamState().getJsonName());
-            processColumns(action, out);
-        }
+        StreamState streamState = StreamState.INITIALIZED;
+        Objects.getThreadPool().execute(new Runnable() {
+            @Override
+            public void run() {
+                actionResult = new ActionResult(node, in);
+                action.invoke(actionResult);
 
-        final Table table = actRes.getTable();
-        {
-            Table.Mode mode = table.getMode();
-            if (mode != null) {
-                JsonObject def = new JsonObject();
-                JsonObject meta = out.getObject("meta", def);
-                meta.putString("mode", mode.getName());
-                {
-                    JsonObject obj = table.getTableMeta();
-                    if (obj != null) {
-                        meta.putObject("meta", obj);
-                    }
-                    table.setTableMeta(null);
-                }
-                out.putObject("meta", meta);
-            }
-        }
-
-        {
-            JsonArray results = new JsonArray();
-            List<Row> rows = table.getRows(true);
-            if (rows != null) {
-                for (Row r : rows) {
-                    JsonArray row = new JsonArray();
-                    List<Value> values = r.getValues();
-                    if (values != null) {
-                        for (Value v : values) {
-                            if (v != null) {
-                                ValueUtils.toJson(row, v);
-                            } else {
-                                row.add(null);
+                JsonArray results = new JsonArray();
+                Table table = actionResult.getTable();
+                List<Row> rows = table.getRows(true);
+                if (rows != null) {
+                    for (Row r : rows) {
+                        JsonArray row = new JsonArray();
+                        List<Value> values = r.getValues();
+                        if (values != null) {
+                            for (Value v : values) {
+                                if (v != null) {
+                                    ValueUtils.toJson(row, v);
+                                } else {
+                                    row.add(null);
+                                }
                             }
                         }
+                        results.addArray(row);
                     }
-                    results.addArray(row);
+                }
+
+                StreamState state = actionResult.getStreamState();
+                JsonObject out = new JsonObject();
+                out.putNumber("rid", rid);
+                out.putString("stream", state.getJsonName());
+                processColumns(action, out);
+                {
+                    Table.Mode mode = table.getMode();
+                    if (mode != null) {
+                        JsonObject def = new JsonObject();
+                        JsonObject meta = out.getObject("meta", def);
+                        meta.putString("mode", mode.getName());
+                        {
+                            JsonObject obj = table.getTableMeta();
+                            if (obj != null) {
+                                meta.putObject("meta", obj);
+                            }
+                            table.setTableMeta(null);
+                        }
+                        out.putObject("meta", meta);
+                    }
+                }
+                out.putArray("updates", results);
+
+                DataHandler writer = link.getWriter();
+                writer.writeResponse(out);
+                if (state == StreamState.CLOSED) {
+                    link.getResponder().removeResponse(rid);
+                } else {
+                    Handler<Void> ch = actionResult.getCloseHandler();
+                    table.setStreaming(rid, writer, ch);
                 }
             }
-            out.putArray("updates", results);
-        }
+        });
 
-        if (state == StreamState.CLOSED) {
-            link.getResponder().removeResponse(rid);
-        } else {
-            Handler<Void> ch = actRes.getCloseHandler();
-            table.setStreaming(rid, link.getWriter(), ch);
-        }
-
+        out.putNumber("rid", rid);
+        out.putString("stream", streamState.getJsonName());
         return out;
     }
 
     @Override
     public JsonObject getCloseResponse() {
-        if (actRes != null) {
-            Handler<Void> handler = actRes.getCloseHandler();
+        if (actionResult != null) {
+            Handler<Void> handler = actionResult.getCloseHandler();
             if (handler != null) {
                 handler.handle(null);
             }
 
-            Table table = actRes.getTable();
+            Table table = actionResult.getTable();
             table.setClosed();
         }
         JsonObject obj = new JsonObject();
@@ -180,7 +188,7 @@ public class InvokeResponse implements Response {
     }
 
     private void processColumns(Action act, JsonObject obj) {
-        Table table = actRes.getTable();
+        Table table = actionResult.getTable();
         List<Parameter> cols = table.getColumns();
         JsonArray array = null;
         if (!act.isHidden() && cols == null) {

@@ -164,9 +164,7 @@ public class DSLink {
                         JsonObject json = (JsonObject) object;
                         try {
                             JsonObject resp = DSLink.this.responder.parse(json);
-                            if (resp != null) {
-                                responses.add(resp);
-                            }
+                            responses.add(resp);
                         } catch (Exception e) {
                             JsonObject resp = new JsonObject();
                             Integer rid = json.getInteger("rid");
