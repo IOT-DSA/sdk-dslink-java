@@ -31,7 +31,7 @@ public class InvokeResponse implements Response {
     private final int rid;
 
     private Table results;
-    private ActionResult actionResult;
+    private ActionResult actRes;
 
     public InvokeResponse(DSLink link, int rid, String path) {
         this.link = link;
@@ -101,35 +101,18 @@ public class InvokeResponse implements Response {
             throw new RuntimeException("Node not invokable at " + path);
         }
 
-        StreamState streamState = StreamState.INITIALIZED;
-        actionResult = new ActionResult(node, in);
-        action.invoke(actionResult);
+        actRes = new ActionResult(node, in);
+        action.invoke(actRes);
 
-        JsonArray results = new JsonArray();
-        Table table = actionResult.getTable();
-        List<Row> rows = table.getRows(true);
-        if (rows != null) {
-            for (Row r : rows) {
-                JsonArray row = new JsonArray();
-                List<Value> values = r.getValues();
-                if (values != null) {
-                    for (Value v : values) {
-                        if (v != null) {
-                            ValueUtils.toJson(row, v);
-                        } else {
-                            row.add(null);
-                        }
-                    }
-                }
-                results.addArray(row);
-            }
+        StreamState state = actRes.getStreamState();
+        JsonObject out = new JsonObject();
+        {
+            out.putNumber("rid", rid);
+            out.putString("stream", actRes.getStreamState().getJsonName());
+            processColumns(action, out);
         }
 
-        StreamState state = actionResult.getStreamState();
-        JsonObject out = new JsonObject();
-        out.putNumber("rid", rid);
-        out.putString("stream", state.getJsonName());
-        processColumns(action, out);
+        final Table table = actRes.getTable();
         {
             Table.Mode mode = table.getMode();
             if (mode != null) {
@@ -146,29 +129,48 @@ public class InvokeResponse implements Response {
                 out.putObject("meta", meta);
             }
         }
-        out.putArray("updates", results);
+
+        {
+            JsonArray results = new JsonArray();
+            List<Row> rows = table.getRows(true);
+            if (rows != null) {
+                for (Row r : rows) {
+                    JsonArray row = new JsonArray();
+                    List<Value> values = r.getValues();
+                    if (values != null) {
+                        for (Value v : values) {
+                            if (v != null) {
+                                ValueUtils.toJson(row, v);
+                            } else {
+                                row.add(null);
+                            }
+                        }
+                    }
+                    results.addArray(row);
+                }
+            }
+            out.putArray("updates", results);
+        }
 
         if (state == StreamState.CLOSED) {
             link.getResponder().removeResponse(rid);
         } else {
-            Handler<Void> ch = actionResult.getCloseHandler();
+            Handler<Void> ch = actRes.getCloseHandler();
             table.setStreaming(rid, link.getWriter(), ch);
         }
 
-        out.putNumber("rid", rid);
-        out.putString("stream", streamState.getJsonName());
         return out;
     }
 
     @Override
     public JsonObject getCloseResponse() {
-        if (actionResult != null) {
-            Handler<Void> handler = actionResult.getCloseHandler();
+        if (actRes != null) {
+            Handler<Void> handler = actRes.getCloseHandler();
             if (handler != null) {
                 handler.handle(null);
             }
 
-            Table table = actionResult.getTable();
+            Table table = actRes.getTable();
             table.setClosed();
         }
         JsonObject obj = new JsonObject();
@@ -178,7 +180,7 @@ public class InvokeResponse implements Response {
     }
 
     private void processColumns(Action act, JsonObject obj) {
-        Table table = actionResult.getTable();
+        Table table = actRes.getTable();
         List<Parameter> cols = table.getColumns();
         JsonArray array = null;
         if (!act.isHidden() && cols == null) {
