@@ -95,7 +95,8 @@ public class Responder extends Linkable {
         }
 
         JsonObject resp = response.getJsonResponse(in);
-        if (!StreamState.CLOSED.getJsonName().equals(resp.getString("stream"))) {
+        String closedName = StreamState.CLOSED.getJsonName();
+        if (resp != null && !closedName.equals(resp.getString("stream"))) {
             resps.put(rid, response);
         }
         return resp;
