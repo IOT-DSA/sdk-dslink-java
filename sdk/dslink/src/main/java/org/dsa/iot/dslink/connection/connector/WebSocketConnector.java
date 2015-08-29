@@ -1,5 +1,6 @@
 package org.dsa.iot.dslink.connection.connector;
 
+import io.netty.channel.Channel;
 import org.dsa.iot.dslink.connection.DataHandler;
 import org.dsa.iot.dslink.connection.RemoteEndpoint;
 import org.dsa.iot.dslink.util.HttpClientUtils;
@@ -10,8 +11,11 @@ import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.http.HttpClient;
 import org.vertx.java.core.http.WebSocket;
+import org.vertx.java.core.http.impl.WebSocketImplBase;
 import org.vertx.java.core.json.JsonObject;
+import org.vertx.java.core.net.impl.ConnectionBase;
 
+import java.lang.reflect.Field;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -27,6 +31,7 @@ public class WebSocketConnector extends RemoteEndpoint {
     private ScheduledFuture<?> pingHandler;
     private long lastSentMessage;
     private WebSocket webSocket;
+    private Channel channel;
 
     public WebSocketConnector(DataHandler handler) {
         super(handler);
@@ -39,6 +44,18 @@ public class WebSocketConnector extends RemoteEndpoint {
             @Override
             public void handle(final WebSocket webSocket) {
                 WebSocketConnector.this.webSocket = webSocket;
+                try {
+                    Field f = WebSocketImplBase.class.getDeclaredField("conn");
+                    f.setAccessible(true);
+                    ConnectionBase base = (ConnectionBase) f.get(webSocket);
+
+                    f = ConnectionBase.class.getDeclaredField("channel");
+                    f.setAccessible(true);
+                    channel = (Channel) f.get(base);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+
                 setupPingHandler();
 
                 Handler<Void> onConnected = getOnConnected();
@@ -96,6 +113,7 @@ public class WebSocketConnector extends RemoteEndpoint {
             }
 
             webSocket = null;
+            channel = null;
         }
 
         if (pingHandler != null) {
@@ -114,6 +132,7 @@ public class WebSocketConnector extends RemoteEndpoint {
             LOGGER.debug("Sent data: {}", data);
         }
         webSocket.writeTextFrame(data);
+        channel.flush();
         lastSentMessage = System.currentTimeMillis();
     }
 
