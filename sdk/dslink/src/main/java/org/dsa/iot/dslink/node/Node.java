@@ -237,49 +237,48 @@ public class Node {
      *                       like an action that got invoked.
      */
     public void setValue(Value value, boolean externalSource) {
+        ValueType type = valueType;
+        if (type == null) {
+            String err = "Value type not set on node (" + getPath() + ")";
+            throw new RuntimeException(err);
+        }
+
+        ValuePair pair;
         synchronized (valueLock) {
-            ValueType type = valueType;
-            if (type == null) {
-                String err = "Value type not set on node (" + getPath() + ")";
-                throw new RuntimeException(err);
-            }
-
-            ValuePair pair = new ValuePair(this.value, value, externalSource);
-            if (listener.postValueUpdate(pair)) {
-                return;
-            }
-
-            value = pair.getCurrent();
-            if (value != null) {
-                if (type.compare(ValueType.ENUM)) {
-                    if (!value.getType().compare(ValueType.STRING)) {
-                        String err = "[" + getPath() + "] ";
-                        err += "Node has enum value type, value must be string";
-                        throw new RuntimeException(err);
-                    } else if (type.getEnums() == null
-                            || !type.getEnums().contains(value.getString())) {
-                        String err = "[" + getPath() + "] ";
-                        err += "New value does not contain a valid enum value";
-                        throw new RuntimeException(err);
-                    }
-                } else if (type.compare(ValueType.TIME)) {
-                    if (!value.getType().compare(ValueType.STRING)) {
-                        String err = "[" + getPath() + "] ";
-                        err += "Node has time value type, value must be string";
-                        throw new RuntimeException(err);
-                    }
-                } else if (!(type.compare(ValueType.DYNAMIC)
-                        || type.compare(value.getType()))) {
+            pair = new ValuePair(this.value, value, externalSource);
+        }
+        if (listener.postValueUpdate(pair)) {
+            return;
+        }
+        if (value != null) {
+            value.setImmutable();
+            if (type.compare(ValueType.ENUM)) {
+                if (!value.getType().compare(ValueType.STRING)) {
                     String err = "[" + getPath() + "] ";
-                    err += "Expected value type ";
-                    err += "'" + type.toJsonString() + "' ";
-                    err += "got '" + value.getType().toJsonString() + "'";
+                    err += "Node has enum value type, value must be string";
+                    throw new RuntimeException(err);
+                } else if (type.getEnums() == null
+                        || !type.getEnums().contains(value.getString())) {
+                    String err = "[" + getPath() + "] ";
+                    err += "New value does not contain a valid enum value";
                     throw new RuntimeException(err);
                 }
-
-                value.setImmutable();
+            } else if (type.compare(ValueType.TIME)) {
+                if (!value.getType().compare(ValueType.STRING)) {
+                    String err = "[" + getPath() + "] ";
+                    err += "Node has time value type, value must be string";
+                    throw new RuntimeException(err);
+                }
+            } else if (!(type.compare(ValueType.DYNAMIC)
+                    || type.compare(value.getType()))) {
+                String err = "[" + getPath() + "] ";
+                err += "Expected value type ";
+                err += "'" + type.toJsonString() + "' ";
+                err += "got '" + value.getType().toJsonString() + "'";
+                throw new RuntimeException(err);
             }
-
+        }
+        synchronized (valueLock) {
             this.value = value;
             markChanged();
             if (link != null) {
