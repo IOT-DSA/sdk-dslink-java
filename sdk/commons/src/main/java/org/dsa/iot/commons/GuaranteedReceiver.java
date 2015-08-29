@@ -27,7 +27,6 @@ public abstract class GuaranteedReceiver<T> {
 
     private final TimeUnit timeUnit;
     private final long delay;
-    private final boolean loop;
 
     private final List<Handler<T>> list = new ArrayList<>();
     private ScheduledFuture<?> instantiationFut;
@@ -77,8 +76,9 @@ public abstract class GuaranteedReceiver<T> {
         }
         this.delay = delay;
         this.timeUnit = unit;
-        this.loop = loop;
-        initializeLoop();
+        if (loop) {
+            initializeLoop();
+        }
     }
 
     /**
@@ -169,18 +169,27 @@ public abstract class GuaranteedReceiver<T> {
                 ScheduledThreadPoolExecutor stpe = getSTPE();
                 InstantiationRunner runner = new InstantiationRunner();
                 instantiationFut = stpe.scheduleWithFixedDelay(runner, 0, delay, timeUnit);
-            } else if (handler != null) {
-                try {
-                    handler.handle(instance);
-                } catch (Exception e) {
-                    if (invalidateInstance(e)) {
+            }
+        }
+        T tmp;
+        synchronized (this) {
+            tmp = instance;
+        }
+        if (tmp != null && handler != null) {
+            try {
+                handler.handle(tmp);
+            } catch (Exception e) {
+                if (invalidateInstance(e)) {
+                    synchronized (this) {
                         instance = null;
-                        reattempt = true;
-                    } else {
-                        LOGGER.error("Unhandled exception", e);
                     }
+                    reattempt = true;
+                } else {
+                    LOGGER.error("Unhandled exception", e);
                 }
             }
+        } else if (tmp == null) {
+            reattempt = true;
         }
         if (reattempt && persist) {
             get(handler, checked);
@@ -194,20 +203,33 @@ public abstract class GuaranteedReceiver<T> {
      * @return The underlying instance of {@link T}, which can be
      * {@code null}, to allow freeing any resources the instance holds.
      */
-    public synchronized T shutdown() {
-        running = false;
-        stopLoop();
+    public T shutdown() {
+        synchronized (this) {
+            running = false;
+        }
+
+        if (loopFut != null) {
+            try {
+                loopFut.cancel(true);
+            } catch (Exception ignored) {
+            }
+            loopFut = null;
+        }
+
+        T tmp;
+        synchronized (this) {
+            tmp = instance;
+            list.clear();
+            instance = null;
+        }
         stopRunner();
-        T tmp = instance;
-        instance = null;
-        list.clear();
         return tmp;
     }
 
     /**
      * Cancels the instantiation scheduled future from running any further.
      */
-    private synchronized void stopRunner() {
+    private void stopRunner() {
         if (instantiationFut != null) {
             try {
                 instantiationFut.cancel(true);
@@ -217,32 +239,11 @@ public abstract class GuaranteedReceiver<T> {
         }
     }
 
-    private synchronized void stopLoop() {
-        if (loopFut != null) {
-            try {
-                loopFut.cancel(true);
-            } catch (Exception ignored) {
-            }
-            loopFut = null;
-        }
-    }
-
-    private synchronized void initializeLoop() {
-        stopLoop();
-        if (!(loop && running)) {
-            return;
-        }
-
+    private void initializeLoop() {
         ScheduledThreadPoolExecutor stpe = getSTPE();
         loopFut = stpe.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
-                synchronized (GuaranteedReceiver.this) {
-                    if (!running) {
-                        stopLoop();
-                        return;
-                    }
-                }
                 get(new Handler<T>() {
                     @Override
                     public void handle(T event) {
@@ -257,10 +258,6 @@ public abstract class GuaranteedReceiver<T> {
         @Override
         public void run() {
             synchronized (GuaranteedReceiver.this) {
-                if (!running) {
-                    return;
-                }
-
                 try {
                     instance = instantiate();
                     stopRunner();
@@ -288,13 +285,13 @@ public abstract class GuaranteedReceiver<T> {
                             T inst;
                             synchronized (GuaranteedReceiver.this) {
                                 inst = instance;
-                                if (inst == null) {
-                                    doBreak.setValue(true);
-                                    latch.countDown();
-                                    return;
-                                }
-                                latch.countDown();
                             }
+                            if (inst == null) {
+                                doBreak.setValue(true);
+                                latch.countDown();
+                                return;
+                            }
+                            latch.countDown();
                             handler.handle(inst);
                         } catch (Exception e) {
                             if (invalidateInstance(e)) {
