@@ -46,7 +46,7 @@ public class SubscriptionManager {
      * is listening to.
      *
      * @param node Node to test.
-     * @return Whether the onde has a path subscription.
+     * @return Whether the node has a path subscription.
      */
     @SuppressWarnings("unused")
     public boolean hasPathSub(Node node) {
@@ -58,16 +58,21 @@ public class SubscriptionManager {
      * to publish a value update and have it updated to the remote endpoint if
      * it is subscribed.
      *
-     * @param node Node to subscribe to
+     * @param path Path to subscribe to
      * @param sid Subscription ID to send back to the client
      */
-    public void addValueSub(Node node, int sid) {
+    public void addValueSub(String path, int sid) {
+        path = NodeManager.normalizePath(path, true);
         synchronized (valueLock) {
-            valueSubsPaths.put(node.getPath(), sid);
-            valueSubsSids.put(sid, node.getPath());
+            valueSubsPaths.put(path, sid);
+            valueSubsSids.put(sid, path);
         }
-        postValueUpdate(node);
-        node.getListener().postOnSubscription();
+        NodeManager man = link.getNodeManager();
+        Node node = man.getNode(path, false, false).getNode();
+        if (node != null) {
+            postValueUpdate(node);
+            node.getListener().postOnSubscription();
+        }
     }
 
     /**
