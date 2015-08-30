@@ -21,8 +21,8 @@ public class SubscriptionManager {
     private final Map<Node, ListResponse> pathSubsMap = new ConcurrentHashMap<>();
     private final Map<String, Integer> pathSubs = new ConcurrentHashMap<>();
 
-    private final Map<Node, Integer> valueSubsNodes = new ConcurrentHashMap<>();
-    private final Map<Integer, Node> valueSubsSids = new ConcurrentHashMap<>();
+    private final Map<String, Integer> valueSubsPaths = new ConcurrentHashMap<>();
+    private final Map<Integer, String> valueSubsSids = new ConcurrentHashMap<>();
     private final DSLink link;
 
     public SubscriptionManager(DSLink link) {
@@ -38,7 +38,7 @@ public class SubscriptionManager {
      */
     @SuppressWarnings("unused")
     public boolean hasValueSub(Node node) {
-        return valueSubsNodes.containsKey(node);
+        return valueSubsPaths.containsKey(node.getPath());
     }
 
     /**
@@ -63,8 +63,8 @@ public class SubscriptionManager {
      */
     public void addValueSub(Node node, int sid) {
         synchronized (valueLock) {
-            valueSubsNodes.put(node, sid);
-            valueSubsSids.put(sid, node);
+            valueSubsPaths.put(node.getPath(), sid);
+            valueSubsSids.put(sid, node.getPath());
         }
         postValueUpdate(node);
         node.getListener().postOnSubscription();
@@ -77,11 +77,17 @@ public class SubscriptionManager {
      * @param sid Subscription ID to unsubscribe
      */
     public void removeValueSub(int sid) {
-        Node node;
+        String path;
         synchronized (valueLock) {
-            node = valueSubsSids.remove(sid);
-            if (node != null) {
-                valueSubsNodes.remove(node);
+            path = valueSubsSids.remove(sid);
+            valueSubsPaths.remove(path);
+        }
+
+        Node node = null;
+        {
+            NodeManager man = link.getNodeManager();
+            if (man != null) {
+                node = man.getNode(path, false, false).getNode();
             }
         }
         if (node != null) {
@@ -98,7 +104,7 @@ public class SubscriptionManager {
     public void removeValueSub(Node node) {
         Integer sid;
         synchronized (valueLock) {
-            sid = valueSubsNodes.remove(node);
+            sid = valueSubsPaths.remove(node.getPath());
             if (sid != null) {
                 valueSubsSids.remove(sid);
             }
@@ -153,9 +159,8 @@ public class SubscriptionManager {
         ListResponse resp = null;
         Integer i = pathSubs.remove(child.getPath());
         if (i != null) {
-            SubscriptionManager man = link.getSubscriptionManager();
             Node parent = child.getParent();
-            resp = new ListResponse(link, man, 0, parent);
+            resp = new ListResponse(link, this, 0, parent);
             addPathSub(parent, resp);
         }
 
@@ -175,7 +180,7 @@ public class SubscriptionManager {
      * @param node Updated node.
      */
     public void postValueUpdate(Node node) {
-        Integer sid = valueSubsNodes.get(node);
+        Integer sid = valueSubsPaths.get(node.getPath());
         if (sid != null) {
             JsonArray updates = new JsonArray();
             {
