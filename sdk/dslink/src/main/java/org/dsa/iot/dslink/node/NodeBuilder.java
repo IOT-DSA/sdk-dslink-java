@@ -124,10 +124,19 @@ public class NodeBuilder {
         // order to ensure that the action is preserved after serialization,
         // the action must be reset on the child node.
 
-        // addChild can return a deserialized node. This results in the action
-        // being removed
         node.setMetaData(child.getMetaData());
-        node.setAction(child.getAction());
+        {
+            // addChild can return a pre-existing node. This results in the
+            // action being removed. The action is preserved to ensure that
+            // deserialized nodes can keep their actions without constantly
+            // being set. The actions are compared to their previous action
+            // to prevent unnecessary updates to the network.
+            Action parentAct = node.getAction();
+            Action childAct = child.getAction();
+            if (parentAct != childAct) {
+                node.setAction(child.getAction());
+            }
+        }
         node.setListener(child.getListener());
         return node;
     }
