@@ -22,7 +22,10 @@ public class DSLinkFactory {
      * @param handler DSLink handler
      */
     public static void start(String[] args, DSLinkHandler handler) {
-        startProvider(generate(args, handler));
+        DSLinkProvider provider = generate(args, handler);
+        if (provider != null) {
+            startProvider(provider);
+        }
     }
 
     /**
@@ -43,7 +46,11 @@ public class DSLinkFactory {
 
         boolean req = handler.isRequester();
         boolean resp = handler.isResponder();
-        handler.setConfig(Configuration.autoConfigure(args, req, resp));
+        Configuration config = Configuration.autoConfigure(args, req, resp);
+        if (config == null) {
+            return null;
+        }
+        handler.setConfig(config);
         return generate(handler);
     }
 
