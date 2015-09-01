@@ -121,7 +121,7 @@ public class Actions {
 
                 @Override
                 public void handle(final ActionResult event) {
-                    event.setStreamState(StreamState.OPEN);
+                    event.setStreamState(StreamState.INITIALIZED);
                     event.setCloseHandler(new FutureCloseHandler(future));
                     ScheduledThreadPoolExecutor stpe = Objects.getDaemonThreadPool();
                     future = stpe.scheduleWithFixedDelay(new Runnable() {
@@ -150,7 +150,7 @@ public class Actions {
 
                 @Override
                 public void handle(final ActionResult event) {
-                    event.setStreamState(StreamState.OPEN);
+                    event.setStreamState(StreamState.INITIALIZED);
                     event.setCloseHandler(new FutureCloseHandler(future));
                     ScheduledThreadPoolExecutor stpe = Objects.getDaemonThreadPool();
                     event.getTable().setMode(Table.Mode.REFRESH);
@@ -182,7 +182,7 @@ public class Actions {
 
                 @Override
                 public void handle(final ActionResult event) {
-                    event.setStreamState(StreamState.OPEN);
+                    event.setStreamState(StreamState.INITIALIZED);
                     event.setCloseHandler(new FutureCloseHandler(future));
                     ScheduledThreadPoolExecutor stpe = Objects.getDaemonThreadPool();
 
