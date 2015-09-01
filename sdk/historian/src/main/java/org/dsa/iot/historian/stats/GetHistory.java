@@ -1,5 +1,6 @@
 package org.dsa.iot.historian.stats;
 
+import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeBuilder;
 import org.dsa.iot.dslink.node.Permission;
@@ -8,6 +9,7 @@ import org.dsa.iot.dslink.node.actions.table.Row;
 import org.dsa.iot.dslink.node.actions.table.Table;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
+import org.dsa.iot.dslink.util.Objects;
 import org.dsa.iot.historian.database.Database;
 import org.dsa.iot.historian.utils.QueryData;
 import org.dsa.iot.historian.utils.TimeParser;
@@ -17,6 +19,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 /**
  * @author Samuel Grenier
@@ -33,8 +36,8 @@ public class GetHistory implements Handler<ActionResult> {
 
     @Override
     public void handle(ActionResult event) {
-        long from;
-        long to;
+        final long from;
+        final long to;
         {
             Value v = event.getParameter("Timerange");
             if (v != null) {
@@ -66,24 +69,38 @@ public class GetHistory implements Handler<ActionResult> {
         final Interval interval = Interval.parse(sInterval, sRollup);
 
         final Table table = event.getTable();
-        db.query(path, from, to, new Handler<QueryData>() {
-            @Override
-            public void handle(QueryData event) {
-                Row row;
-                Value value = event.getValue();
-                long time = event.getTimestamp();
-                if (interval == null) {
-                    row = new Row();
-                    String t = TimeParser.parse(time);
-                    row.addValue(new Value(t));
-                    row.addValue(event.getValue());
-                } else {
-                    row = interval.getRowUpdate(value, time);
-                }
+        event.setStreamState(StreamState.INITIALIZED);
+        table.setMode(Table.Mode.STREAM);
 
-                if (row != null) {
-                    table.addRow(row);
-                }
+        ScheduledThreadPoolExecutor stpe = Objects.getDaemonThreadPool();
+        stpe.execute(new Runnable() {
+            @Override
+            public void run() {
+                db.query(path, from, to, new Handler<QueryData>() {
+                    @Override
+                    public void handle(QueryData event) {
+                        if (event == null) {
+                            table.close();
+                            return;
+                        }
+
+                        Row row;
+                        Value value = event.getValue();
+                        long time = event.getTimestamp();
+                        if (interval == null) {
+                            row = new Row();
+                            String t = TimeParser.parse(time);
+                            row.addValue(new Value(t));
+                            row.addValue(event.getValue());
+                        } else {
+                            row = interval.getRowUpdate(value, time);
+                        }
+
+                        if (row != null) {
+                            table.addRow(row);
+                        }
+                    }
+                });
             }
         });
     }

@@ -95,7 +95,8 @@ public abstract class Database {
     public abstract void write(String path, Value value, long ts);
 
     /**
-     * Times must be in UTC.
+     * Times must be in UTC. At the end of the query, the {@code handler} must
+     * receive a {@code null} event in order to close the table stream.
      *
      * @param path Path to query.
      * @param from Beginning search time.
