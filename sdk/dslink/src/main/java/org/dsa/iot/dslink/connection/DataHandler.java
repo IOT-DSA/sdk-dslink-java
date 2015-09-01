@@ -1,5 +1,6 @@
 package org.dsa.iot.dslink.connection;
 
+import org.dsa.iot.dslink.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
@@ -52,17 +53,26 @@ public class DataHandler {
             LOGGER.debug("Received data: {}", obj.encode());
         }
 
-        {
-            Integer msgId = obj.getInteger("msg");
-            JsonArray requests = obj.getArray("requests");
-            if (!(reqHandler == null || requests == null)) {
-                reqHandler.handle(new DataReceived(msgId, requests));
-            }
 
-            JsonArray responses = obj.getArray("responses");
-            if (!(respHandler == null || responses == null)) {
-                respHandler.handle(new DataReceived(msgId, responses));
-            }
+        final Integer msgId = obj.getInteger("msg");
+        final JsonArray requests = obj.getArray("requests");
+        if (!(reqHandler == null || requests == null)) {
+            Objects.getDaemonThreadPool().execute(new Runnable() {
+                @Override
+                public void run() {
+                    reqHandler.handle(new DataReceived(msgId, requests));
+                }
+            });
+        }
+
+        final JsonArray responses = obj.getArray("responses");
+        if (!(respHandler == null || responses == null)) {
+            Objects.getDaemonThreadPool().execute(new Runnable() {
+                @Override
+                public void run() {
+                    respHandler.handle(new DataReceived(msgId, responses));
+                }
+            });
         }
     }
 
