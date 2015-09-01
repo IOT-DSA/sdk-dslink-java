@@ -10,7 +10,7 @@ run {
 }
 
 tasks.withType(CreateStartScripts) {
-    def cutLength = "subprojects/".length()
+    def cutLength = "examples/".length()
     applicationName = project.name.substring(cutLength)
 }
 

@@ -5,8 +5,8 @@ include 'sdk/commons'
 include 'sdk/logging'
 include 'sdk/dslink'
 
-include 'subprojects/requester'
-include 'subprojects/responder'
-include 'subprojects/dual'
+include 'examples/requester'
+include 'examples/responder'
+include 'examples/dual'
 
 rootProject.name = 'sdk-dslink-java'
