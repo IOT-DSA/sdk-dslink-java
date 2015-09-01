@@ -48,7 +48,7 @@ public abstract class ParameterizedAction extends Action {
     /**
      * The {@code param} will be converted to a {@link ParameterInfo} instance
      * with all of its properties copied over. By default, the copied parameter
-     * will be optional, will not be persistent, and will not contain a
+     * will be not optional, will be persistent, and will not contain a
      * validator.
      *
      * {@inheritDoc}
@@ -63,7 +63,8 @@ public abstract class ParameterizedAction extends Action {
         String name = param.getName();
         ValueType type = param.getType();
         ParameterInfo copy = new ParameterInfo(name, type);
-        copy.setOptional(true);
+        copy.setOptional(false);
+        copy.setPersistent(true);
         copy.setDefaultValue(param.getDefault());
         copy.setDescription(param.getDescription());
         copy.setPlaceHolder(param.getPlaceHolder());
