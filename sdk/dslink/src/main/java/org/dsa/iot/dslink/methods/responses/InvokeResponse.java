@@ -2,7 +2,6 @@ package org.dsa.iot.dslink.methods.responses;
 
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.DSLinkHandler;
-import org.dsa.iot.dslink.connection.DataHandler;
 import org.dsa.iot.dslink.methods.Response;
 import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.node.Node;
@@ -15,7 +14,6 @@ import org.dsa.iot.dslink.node.actions.table.Table;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.node.value.ValueUtils;
-import org.dsa.iot.dslink.util.Objects;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
@@ -93,82 +91,78 @@ public class InvokeResponse implements Response {
     @Override
     public JsonObject getJsonResponse(final JsonObject in) {
         NodeManager man = link.getNodeManager();
-        Node tmp = man.getNode(path, false, false).getNode();
-        if (tmp == null) {
+        Node node = man.getNode(path, false, false).getNode();
+        if (node == null) {
             DSLinkHandler handler = link.getLinkHandler();
-            tmp = handler.onInvocationFail(path);
+            node = handler.onInvocationFail(path);
         }
 
-        final Node node = tmp;
         final Action action;
         if (node == null || (action = node.getAction()) == null) {
             throw new RuntimeException("Node not invokable at " + path);
         }
 
+        actRes = new ActionResult(node, in);
+        action.invoke(actRes);
+
+        final Table table = actRes.getTable();
+        final StreamState state = actRes.getStreamState();
+
         JsonObject out = new JsonObject();
-        StreamState streamState = StreamState.INITIALIZED;
-        Objects.getThreadPool().execute(new Runnable() {
-            @Override
-            public void run() {
-                actRes = new ActionResult(node, in);
-                action.invoke(actRes);
+        out.putNumber("rid", rid);
+        out.putString("stream", state.getJsonName());
 
-                JsonArray results = new JsonArray();
-                Table table = actRes.getTable();
-                List<Row> rows = table.getRows(true);
-                if (rows != null) {
-                    for (Row r : rows) {
-                        JsonArray row = new JsonArray();
-                        List<Value> values = r.getValues();
-                        if (values != null) {
-                            for (Value v : values) {
-                                if (v != null) {
-                                    ValueUtils.toJson(row, v);
-                                } else {
-                                    row.add(null);
-                                }
-                            }
-                        }
-                        results.addArray(row);
-                    }
-                }
+        // Handle columns
+        processColumns(action, out);
 
-                StreamState state = actRes.getStreamState();
-                JsonObject out = new JsonObject();
-                out.putNumber("rid", rid);
-                out.putString("stream", state.getJsonName());
-                processColumns(action, out);
+        // Handle mode and metadata
+        {
+            Table.Mode mode = table.getMode();
+            if (mode != null) {
+                JsonObject def = new JsonObject();
+                JsonObject meta = out.getObject("meta", def);
+                meta.putString("mode", mode.getName());
                 {
-                    Table.Mode mode = table.getMode();
-                    if (mode != null) {
-                        JsonObject def = new JsonObject();
-                        JsonObject meta = out.getObject("meta", def);
-                        meta.putString("mode", mode.getName());
-                        {
-                            JsonObject obj = table.getTableMeta();
-                            if (obj != null) {
-                                meta.putObject("meta", obj);
-                            }
-                            table.setTableMeta(null);
-                        }
-                        out.putObject("meta", meta);
+                    JsonObject obj = table.getTableMeta();
+                    if (obj != null) {
+                        meta.putObject("meta", obj);
                     }
+                    table.setTableMeta(null);
+                }
+                out.putObject("meta", meta);
+            }
+        }
+
+        // Handle results
+        {
+            JsonArray results = new JsonArray();
+            List<Row> rows = table.getRows(true);
+            if (rows != null) {
+                for (Row r : rows) {
+                    JsonArray row = new JsonArray();
+                    List<Value> values = r.getValues();
+                    if (values != null) {
+                        for (Value v : values) {
+                            if (v != null) {
+                                ValueUtils.toJson(row, v);
+                            } else {
+                                row.add(null);
+                            }
+                        }
+                    }
+                    results.addArray(row);
                 }
                 out.putArray("updates", results);
-
-                DataHandler writer = link.getWriter();
-                writer.writeResponse(out);
-                if (state == StreamState.CLOSED) {
-                    link.getResponder().removeResponse(rid);
-                } else {
-                    Handler<Void> ch = actRes.getCloseHandler();
-                    table.setStreaming(rid, writer, ch);
-                }
             }
-        });
+        }
 
-        out.putNumber("rid", rid);
-        out.putString("stream", streamState.getJsonName());
+        if (state == StreamState.CLOSED) {
+            link.getResponder().removeResponse(rid);
+        } else {
+            Handler<Void> ch = actRes.getCloseHandler();
+            table.setStreaming(rid, link.getWriter(), ch);
+        }
+
         return out;
     }
 
