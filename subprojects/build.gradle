@@ -9,4 +9,9 @@ run {
     workingDir project.buildDir
 }
 
+tasks.withType(CreateStartScripts) {
+    def cutLength = "subprojects/".length()
+    applicationName = project.name.substring(cutLength)
+}
+
 applicationDistribution.from new File(project.projectDir, "/dslink.json")
