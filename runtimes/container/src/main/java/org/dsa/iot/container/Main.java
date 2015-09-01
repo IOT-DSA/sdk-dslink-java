@@ -1,8 +1,8 @@
 package org.dsa.iot.container;
 
 import org.dsa.iot.container.manager.DSLinkManager;
-import org.dsa.iot.container.stdin.StdinHandler;
 import org.dsa.iot.container.security.SecMan;
+import org.dsa.iot.container.stdin.StdinHandler;
 import org.dsa.iot.container.stdin.UserHandler;
 import org.dsa.iot.shared.SharedObjects;
 

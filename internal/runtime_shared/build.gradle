@@ -1,4 +1,4 @@
-apply from: '../build.gradle'
+apply from: '../../sdk/build.gradle'
 
 dependencies {
     compile ('io.vertx:vertx-core:2.1.5') {

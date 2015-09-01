@@ -1,8 +1,8 @@
 apply from: '../build.gradle'
 
 dependencies {
-    compile project(':sdk/logging')
-    compile project(':sdk/runtime_shared')
+    compile project(':internal/logging')
+    compile project(':internal/runtime_shared')
 }
 
 uploadArchives {

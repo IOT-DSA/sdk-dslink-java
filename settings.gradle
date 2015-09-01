@@ -1,10 +1,16 @@
-include 'sdk/runtime_container'
-include 'sdk/runtime_shared'
+// APIs for developers to use
 include 'sdk/historian'
 include 'sdk/commons'
-include 'sdk/logging'
 include 'sdk/dslink'
 
+// Internal APIs the SDK depends on
+include 'internal/runtime_shared'
+include 'internal/logging'
+
+// Software that is meant to be ran as a standalone
+include 'runtimes/container'
+
+// Examples for developers to reference
 include 'examples/requester'
 include 'examples/responder'
 include 'examples/dual'
