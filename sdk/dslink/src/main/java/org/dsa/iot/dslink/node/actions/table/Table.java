@@ -259,7 +259,6 @@ public class Table {
                        JsonObject meta) {
         JsonObject obj = new JsonObject();
         obj.putNumber("rid", rid);
-        obj.putString("stream", StreamState.OPEN.getJsonName());
         if (meta != null) {
             obj.putObject("meta", meta);
         }

@@ -155,7 +155,7 @@ public class GetHistory implements Handler<ActionResult> {
             act.addResult(param);
         }
 
-        act.setResultType(ResultType.TABLE);
+        act.setResultType(ResultType.STREAM);
     }
 
 }
