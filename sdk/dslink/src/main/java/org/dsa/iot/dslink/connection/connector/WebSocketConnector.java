@@ -134,9 +134,6 @@ public class WebSocketConnector extends RemoteEndpoint {
     @Override
     public void write(String data) {
         checkConnected();
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Sent data: {}", data);
-        }
 
         ByteBuf buf;
         try {
@@ -146,9 +143,12 @@ public class WebSocketConnector extends RemoteEndpoint {
         }
         FrameType type = FrameType.TEXT;
         WebSocketFrame frame = new DefaultWebSocketFrame(type, buf);
-        base.write(frame);
-
+        channel.write(frame);
         channel.flush();
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Sent data: {}", data);
+        }
+
         lastSentMessage = System.currentTimeMillis();
     }
 
