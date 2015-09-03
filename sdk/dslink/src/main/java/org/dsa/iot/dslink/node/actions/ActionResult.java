@@ -17,9 +17,14 @@ import org.vertx.java.core.json.JsonObject;
 public class ActionResult {
 
     /**
-     * Node this action is modifying
+     * Node this action is modifying.
      */
     private final Node node;
+
+    /**
+     * The originating action that's being invoked.
+     */
+    private final Action action;
 
     /**
      * Data object to act upon for the invocation.
@@ -47,14 +52,19 @@ public class ActionResult {
      * with results.
      *
      * @param node The node this action is invoked on.
+     * @param action The originating action that is being invoked
      * @param in Incoming JSON data.
      */
-    public ActionResult(Node node, JsonObject in) {
+    public ActionResult(Node node, Action action, JsonObject in) {
         if (node == null)
             throw new NullPointerException("node");
         else if (in == null)
             throw new NullPointerException("in");
+        else if (action == null) {
+            throw new NullPointerException("action");
+        }
         this.node = node;
+        this.action = action;
         this.jsonIn = in;
     }
 
@@ -129,7 +139,8 @@ public class ActionResult {
      */
     public Table getTable() {
         if (table == null) {
-            return table = new Table();
+            ResultType type = node.getAction().getResultType();
+            return table = new Table(type);
         }
         return table;
     }

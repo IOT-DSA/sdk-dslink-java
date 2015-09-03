@@ -26,6 +26,8 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
  */
 public class GetHistory implements Handler<ActionResult> {
 
+    private static ResultType TYPE = ResultType.TABLE;
+
     private final Database db;
     private final String path;
 
@@ -108,6 +110,7 @@ public class GetHistory implements Handler<ActionResult> {
     public static void initAction(Node node, Database db) {
         String path = node.getName().replaceAll("%2F", "/");
         Action a =  new Action(Permission.READ, new GetHistory(path, db));
+        a.setResultType(TYPE);
         a.setHidden(true);
 
         NodeBuilder b = node.createChild("getHistory", "getHistory");
@@ -155,7 +158,7 @@ public class GetHistory implements Handler<ActionResult> {
             act.addResult(param);
         }
 
-        act.setResultType(ResultType.STREAM);
+        act.setResultType(TYPE);
     }
 
 }

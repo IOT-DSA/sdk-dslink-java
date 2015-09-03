@@ -50,7 +50,7 @@ public class ParameterizedActionTest {
         JsonObject in = new JsonObject();
         in.putObject("params", params);
 
-        a.invoke(new ActionResult(manager.getSuperRoot(), in));
+        a.invoke(new ActionResult(manager.getSuperRoot(), a, in));
     }
 
 }

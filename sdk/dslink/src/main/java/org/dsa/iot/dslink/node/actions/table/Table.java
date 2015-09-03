@@ -3,6 +3,7 @@ package org.dsa.iot.dslink.node.actions.table;
 import org.dsa.iot.dslink.connection.DataHandler;
 import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.node.actions.Parameter;
+import org.dsa.iot.dslink.node.actions.ResultType;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.vertx.java.core.Handler;
@@ -20,6 +21,8 @@ import java.util.List;
  */
 public class Table {
 
+    private final ResultType type;
+
     private List<Parameter> columns;
     private List<Row> rows;
     private Mode mode;
@@ -28,6 +31,10 @@ public class Table {
     private int rid;
     private DataHandler writer;
     private Handler<Void> closeHandler;
+
+    public Table(ResultType type) {
+        this.type = type;
+    }
 
     /**
      * Adds a column to the table.
@@ -259,6 +266,9 @@ public class Table {
                        JsonObject meta) {
         JsonObject obj = new JsonObject();
         obj.putNumber("rid", rid);
+        if (type != ResultType.TABLE) {
+            obj.putString("stream", StreamState.OPEN.getJsonName());
+        }
         if (meta != null) {
             obj.putObject("meta", meta);
         }
