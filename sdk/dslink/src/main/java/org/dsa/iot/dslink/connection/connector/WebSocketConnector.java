@@ -1,5 +1,7 @@
 package org.dsa.iot.dslink.connection.connector;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import org.dsa.iot.dslink.connection.DataHandler;
 import org.dsa.iot.dslink.connection.RemoteEndpoint;
@@ -11,7 +13,10 @@ import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.http.HttpClient;
 import org.vertx.java.core.http.WebSocket;
+import org.vertx.java.core.http.WebSocketFrame;
+import org.vertx.java.core.http.WebSocketFrame.FrameType;
 import org.vertx.java.core.http.impl.WebSocketImplBase;
+import org.vertx.java.core.http.impl.ws.DefaultWebSocketFrame;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.net.impl.ConnectionBase;
 
@@ -31,6 +36,7 @@ public class WebSocketConnector extends RemoteEndpoint {
     private ScheduledFuture<?> pingHandler;
     private long lastSentMessage;
     private WebSocket webSocket;
+    private ConnectionBase base;
     private Channel channel;
 
     public WebSocketConnector(DataHandler handler) {
@@ -47,7 +53,7 @@ public class WebSocketConnector extends RemoteEndpoint {
                 try {
                     Field f = WebSocketImplBase.class.getDeclaredField("conn");
                     f.setAccessible(true);
-                    ConnectionBase base = (ConnectionBase) f.get(webSocket);
+                    base = (ConnectionBase) f.get(webSocket);
 
                     f = ConnectionBase.class.getDeclaredField("channel");
                     f.setAccessible(true);
@@ -131,7 +137,17 @@ public class WebSocketConnector extends RemoteEndpoint {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Sent data: {}", data);
         }
-        webSocket.writeTextFrame(data);
+
+        ByteBuf buf;
+        try {
+            buf = Unpooled.wrappedBuffer(data.getBytes("UTF-8"));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        FrameType type = FrameType.TEXT;
+        WebSocketFrame frame = new DefaultWebSocketFrame(type, buf);
+        base.write(frame);
+
         channel.flush();
         lastSentMessage = System.currentTimeMillis();
     }
