@@ -8,6 +8,7 @@ env:
   - secure: IcJhZIgMgF/0SNZgE56xMVocntA57RTRiH9YrReu/9FeEyIlHk2si1/bLPgV6ns/oQi7pal34TCjY6Yrs9VqKC6j93rRIouIvTg0/mxV0QHytWXicxbaB8kAmTBjHmePFNlqAl0FpkcHJQ7O5cjy4gvVxxzin2jZP7Gvtw0PbeY=
   - secure: HedklAPTdQAEhwsLhCwGco62/1Hq00nYgB+0MZYaVEb9KVdKxgZUswNidtzXVLha9TTOe3ewTmVjsd+Hs0wyyq6TZh8TUKlVPrJc1wd4wkurCK8JZjqUxBV2EydYmGM7j/CHpci1rcGv3QNQRwf2ZwfAoW5YPObJqqZvwk3GYgg=
   - secure: g+rMdXQTBwVb5S58Mj2uKbhwLE1N+Rc/3qGIEzfLY8V5Jj2beak8uNH+m/7dmRPBYLaL6QP5ndt6cY47w3lcXWGa00xeve12BHk9i5dvzx4hDZ18PoWGA5iB/U1Aj4I8USrASliyb2dqHtQg0V2nixgHuNdlJiwDgRNROHAdsQg=
+sudo: false
 install: /bin/true
 before_script:
 - openssl aes-256-cbc -k "$SECRING_PASS" -in 'ci/secring.gpg.enc' -out secring.gpg -d
