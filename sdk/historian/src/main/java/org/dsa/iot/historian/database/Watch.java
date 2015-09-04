@@ -145,16 +145,16 @@ public class Watch {
             b.setDisplayName("Start Date");
             b.setValueType(ValueType.TIME);
             boolean needsDate = false;
+            Node n = b.build();
             {
                 QueryData data = group.getDb().queryFirst(path);
                 if (data != null && data.isDefined()) {
                     Value v = new Value(TimeParser.parse(data.getTimestamp()));
-                    b.setValue(v);
+                    n.setValue(v);
                 } else {
                     needsDate = true;
                 }
             }
-            Node n = b.build();
             if (needsDate) {
                 startDate = n;
             }
