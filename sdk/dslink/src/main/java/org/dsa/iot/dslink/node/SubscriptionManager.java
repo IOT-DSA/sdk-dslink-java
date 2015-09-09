@@ -86,6 +86,9 @@ public class SubscriptionManager {
         String path;
         synchronized (valueLock) {
             path = valueSubsSids.remove(sid);
+            if (path == null) {
+                return;
+            }
             valueSubsPaths.remove(path);
         }
 
@@ -129,6 +132,9 @@ public class SubscriptionManager {
      * @param resp Response to send updates to
      */
     public void addPathSub(Node node, ListResponse resp) {
+        if (node == null) {
+            return;
+        }
         pathSubsMap.put(node, resp);
     }
 
