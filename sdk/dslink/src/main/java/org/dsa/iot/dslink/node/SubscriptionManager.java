@@ -7,6 +7,7 @@ import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -21,8 +22,8 @@ public class SubscriptionManager {
     private final Map<Node, ListResponse> pathSubsMap = new ConcurrentHashMap<>();
     private final Map<String, Integer> pathSubs = new ConcurrentHashMap<>();
 
-    private final Map<String, Integer> valueSubsPaths = new ConcurrentHashMap<>();
-    private final Map<Integer, String> valueSubsSids = new ConcurrentHashMap<>();
+    private final Map<String, Integer> valueSubsPaths = new HashMap<>();
+    private final Map<Integer, String> valueSubsSids = new HashMap<>();
     private final DSLink link;
 
     public SubscriptionManager(DSLink link) {
