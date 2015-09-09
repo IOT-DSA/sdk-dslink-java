@@ -28,7 +28,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class Requester extends Linkable {
 
-    private final Object subUpdateLock = new Object();
     private final Map<Integer, RequestWrapper> reqs;
 
     /**
@@ -169,6 +168,7 @@ public class Requester extends Linkable {
      * @param rid Stream to close.
      * @param onResponse Response.
      */
+    @SuppressWarnings("unused")
     public void closeStream(int rid, Handler<CloseResponse> onResponse) {
         CloseRequest req = new CloseRequest();
         RequestWrapper wrapper = new RequestWrapper(req);
@@ -272,15 +272,12 @@ public class Requester extends Linkable {
             return;
         }
         int rid = in.getInteger("rid");
-        NodeManager manager = link.getNodeManager();
         if (rid == 0) {
             final SubscriptionUpdate update = new SubscriptionUpdate(this);
             Objects.getThreadPool().execute(new Runnable() {
                 @Override
                 public void run() {
-                    synchronized (subUpdateLock) {
-                        update.populate(in);
-                    }
+                    update.populate(in);
                 }
             });
             return;
@@ -294,6 +291,7 @@ public class Requester extends Linkable {
             return;
         }
         final boolean closed = StreamState.CLOSED == stream;
+        final NodeManager manager = link.getNodeManager();
 
         switch (method) {
             case "list":

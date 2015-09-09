@@ -4,6 +4,7 @@ import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
@@ -16,9 +17,9 @@ import java.util.TimeZone;
  */
 public class Value {
 
-    private static final DateFormat FORMAT;
-    private static final Object LOCK;
-    private static final String TIMEZONE;
+    private static final ThreadLocal<DateFormat> FORMAT_TIME_ZONE;
+    private static final ThreadLocal<DateFormat> FORMAT;
+    private static final String TIME_ZONE;
 
     private ValueType type;
     private boolean immutable;
@@ -43,12 +44,28 @@ public class Value {
     }
 
     /**
+     * @param n Initial number to set.
+     * @param time Initial time to set.
+     */
+    public Value(Number n, String time) {
+        set(n, time);
+    }
+
+    /**
      * Creates a value with an initial type of a boolean.
      *
      * @param b Initial boolean to set.
      */
     public Value(Boolean b) {
         set(b);
+    }
+
+    /**
+     * @param b Initial boolean to set.
+     * @param time Initial time to set.
+     */
+    public Value(Boolean b, String time) {
+        set(b, time);
     }
 
     /**
@@ -61,12 +78,28 @@ public class Value {
     }
 
     /**
+     * @param s Initial string to set.
+     * @param time Initial time to set.
+     */
+    public Value(String s, String time) {
+        set(s, time);
+    }
+
+    /**
      * Creates a value with an initial type of a JSON object.
      *
      * @param o Initial JSON object to set.
      */
     public Value(JsonObject o) {
         set(o);
+    }
+
+    /**
+     * @param o Initial JSON object to set.
+     * @param time Initial time to set.
+     */
+    public Value(JsonObject o, String time) {
+        set(o, time);
     }
 
     /**
@@ -79,38 +112,86 @@ public class Value {
     }
 
     /**
+     * @param a Initial JSON array to set.
+     * @param time Initial time to set.
+     */
+    public Value(JsonArray a, String time) {
+        set(a, time);
+    }
+
+    /**
      * @param n Number to set
      */
     public void set(Number n) {
-        set(ValueType.NUMBER, n, null, null, null, null);
+        set(n, null);
+    }
+
+    /**
+     * @param n Number to set.
+     * @param time Initial time to set.
+     */
+    public void set(Number n, String time) {
+        set(ValueType.NUMBER, n, null, null, null, null, time);
     }
 
     /**
      * @param b Boolean to set
      */
     public void set(Boolean b) {
-        set(ValueType.BOOL, null, b, null, null, null);
+        set(b, null);
     }
 
     /**
-     * @param s String to set
+     * @param b Boolean to set.
+     * @param time Initial time to set.
+     */
+    public void set(Boolean b, String time) {
+        set(ValueType.BOOL, null, b, null, null, null, time);
+    }
+
+    /**
+     * @param s String to set.
      */
     public void set(String s) {
-        set(ValueType.STRING, null, null, s, null, null);
+        set(s, null);
+    }
+
+    /**
+     * @param s String to set.
+     * @param time Initial time to set.
+     */
+    public void set(String s, String time) {
+        set(ValueType.STRING, null, null, s, null, null, time);
     }
 
     /**
      * @param object JSON object to set
      */
     public void set(JsonObject object) {
-        set(ValueType.MAP, null, null, null, null, object);
+        set(object, null);
+    }
+
+    /**
+     * @param object JSON object to set.
+     * @param time Initial time to set.
+     */
+    public void set(JsonObject object, String time) {
+        set(ValueType.MAP, null, null, null, null, object, time);
     }
 
     /**
      * @param array JSON array to set
      */
     public void set(JsonArray array) {
-        set(ValueType.ARRAY, null, null, null, array, null);
+        set(array, null);
+    }
+
+    /**
+     * @param array JSON array to set.
+     * @param time Initial time to set.
+     */
+    public void set(JsonArray array, String time) {
+        set(ValueType.ARRAY, null, null, null, array, null, time);
     }
 
     /**
@@ -126,10 +207,26 @@ public class Value {
      * @param o    JSON object to set, or null
      */
     private void set(ValueType type, Number n, Boolean b, String s,
-                     JsonArray a, JsonObject o) {
+                     JsonArray a, JsonObject o, String time) {
         checkImmutable();
         this.type = type;
-        setTime(System.currentTimeMillis());
+        if (time == null) {
+            setTime(System.currentTimeMillis());
+        } else {
+            if (time.matches(".+[+|-]\\d+:\\d+")) {
+                StringBuilder builder = new StringBuilder(time);
+                builder.deleteCharAt(time.lastIndexOf(":"));
+                time = builder.toString();
+            } else {
+                time += TIME_ZONE;
+            }
+            try {
+                this.tsDate = FORMAT_TIME_ZONE.get().parse(time);
+            } catch (ParseException e) {
+                throw new RuntimeException(e);
+            }
+            this.tsFormatted = time;
+        }
 
         this.number = n;
         this.bool = b;
@@ -138,12 +235,15 @@ public class Value {
         this.map = o != null ? o.copy() : null;
     }
 
+    /**
+     * Sets the time of the value.
+     *
+     * @param ms Time to set.
+     */
     public void setTime(long ms) {
         checkImmutable();
-        synchronized (LOCK) {
-            this.tsDate = new Date(ms);
-            this.tsFormatted = FORMAT.format(getDate()) + TIMEZONE;
-        }
+        this.tsDate = new Date(ms);
+        this.tsFormatted = FORMAT.get().format(getDate()) + TIME_ZONE;
     }
 
     /**
@@ -312,8 +412,18 @@ public class Value {
         }
         int hh = offset / 60;
         int mm = offset % 60;
-        TIMEZONE = s + (hh < 10 ? "0" : "") + hh + ":" + (mm < 10 ? "0" : "") + mm;
-        FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.sss");
-        LOCK = new Object();
+        TIME_ZONE = s + (hh < 10 ? "0" : "") + hh + ":" + (mm < 10 ? "0" : "") + mm;
+        FORMAT = new ThreadLocal<DateFormat>() {
+            @Override
+            public DateFormat initialValue() {
+                return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+            }
+        };
+        FORMAT_TIME_ZONE = new ThreadLocal<DateFormat>() {
+            @Override
+            public DateFormat initialValue() {
+                return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+            }
+        };
     }
 }

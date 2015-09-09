@@ -16,31 +16,65 @@ public class ValueUtils {
     private static final String ERROR_MSG = "Unhandled value type: ";
 
     /**
-     * Converts an {@link Object} to a {@link Value}.
+     * Creates an empty value with the designated type.
+     *
+     * @param type Type of the value.
+     * @param time Time of the value.
+     * @return An empty value with the designated time.
+     */
+    public static Value toEmptyValue(ValueType type, String time) {
+        if (type.compare(ValueType.NUMBER)) {
+            return new Value((Number) null, time);
+        } else if (type.compare(ValueType.BOOL)) {
+            return new Value((Boolean) null, time);
+        } else if (type.compare(ValueType.STRING)) {
+            return new Value((String) null, time);
+        } else if (type.compare(ValueType.MAP)) {
+            return new Value((JsonObject) null, time);
+        } else if (type.compare(ValueType.ARRAY)) {
+            return new Value((JsonArray) null, time);
+        }
+        throw new RuntimeException(ERROR_MSG + type.getRawName());
+    }
+
+    /**
+     * Converts an {@link Object} to a {@link Value}. An initial timestamp
+     * will not be set.
      *
      * @param object Object to convert.
      * @return Converted object instance.
      */
-    @SuppressWarnings("unchecked")
     public static Value toValue(Object object) {
+        return toValue(object, null);
+    }
+
+    /**
+     * Converts an {@link Object} to a {@link Value}.
+     *
+     * @param object Object to convert.
+     * @param time Initial time of the value.
+     * @return Converted object instance.
+     */
+    @SuppressWarnings("unchecked")
+    public static Value toValue(Object object, String time) {
         if (object == null) {
             return null;
         }
         Value val;
         if (object instanceof Number) {
-            val = new Value((Number) object);
+            val = new Value((Number) object, time);
         } else if (object instanceof Boolean) {
-            val = new Value(((Boolean) object));
+            val = new Value(((Boolean) object), time);
         } else if (object instanceof String) {
-            val = new Value((String) object);
+            val = new Value((String) object, time);
         } else if (object instanceof JsonObject) {
-            val = new Value((JsonObject) object);
+            val = new Value((JsonObject) object, time);
         } else if (object instanceof Map) {
-            val = new Value(new JsonObject((Map) object));
+            val = new Value(new JsonObject((Map) object), time);
         } else if (object instanceof JsonArray) {
-            val = new Value((JsonArray) object);
+            val = new Value((JsonArray) object, time);
         } else if (object instanceof List) {
-            val = new Value(new JsonArray((List) object));
+            val = new Value(new JsonArray((List) object), time);
         } else {
             throw new RuntimeException(ERROR_MSG + object.getClass().getName());
         }

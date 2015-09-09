@@ -6,22 +6,16 @@ package org.dsa.iot.dslink.node.value;
 public class SubscriptionValue {
 
     private final String path;
-    private final String time;
     private final Value value;
     private final Integer count;
     private final Integer sum;
     private final Integer min;
     private final Integer max;
 
-    public SubscriptionValue(String path, Value value, String time) {
-        this(path, value, time, null, null, null, null);
-    }
-
-    public SubscriptionValue(String path, Value value, String time,
+    public SubscriptionValue(String path, Value value,
                                 Integer count, Integer sum,
                                 Integer min, Integer max) {
         this.path = path;
-        this.time = time;
         this.value = value;
         this.count = count;
         this.sum = sum;
@@ -33,8 +27,17 @@ public class SubscriptionValue {
         return path;
     }
 
+    /**
+     * @return Timestamp of the value
+     * @see Value#getTimeStamp()
+     * @see Value#getDate()
+     */
+    @Deprecated
     public String getTimestamp() {
-        return time;
+        if (value == null) {
+            return null;
+        }
+        return value.getTimeStamp();
     }
 
     public Value getValue() {
