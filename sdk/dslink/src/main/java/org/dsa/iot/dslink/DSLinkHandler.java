@@ -97,6 +97,14 @@ public abstract class DSLinkHandler {
     }
 
     /**
+     * The link has lost a connection from the server.
+     *
+     * @param link The link that has been disconnected.
+     */
+    public void onRequesterDisconnected(DSLink link) {
+    }
+
+    /**
      * This method is asynchronously called. The link is not yet connected
      * to the server.
      *
@@ -112,6 +120,14 @@ public abstract class DSLinkHandler {
      * @param link The link that has completed a connection.
      */
     public void onResponderConnected(DSLink link) {
+    }
+
+    /**
+     * The link has lost a connection from the server.
+     *
+     * @param link The link that has been disconnected.
+     */
+    public void onResponderDisconnected(DSLink link) {
     }
 
     /**

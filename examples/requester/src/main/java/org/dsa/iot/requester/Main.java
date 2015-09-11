@@ -43,9 +43,17 @@ public class Main extends DSLinkHandler {
         LOGGER.info("Sent data");
     }
 
+    @Override
+    public void onRequesterDisconnected(DSLink link) {
+        LOGGER.info("Oh no! The connection to the broker was lost");
+    }
+
     public static void main(String[] args) {
         Main main = new Main();
         main.provider = DSLinkFactory.generate(args, main);
+        if (main.provider == null) {
+            return;
+        }
         main.provider.start();
         main.provider.sleep();
     }

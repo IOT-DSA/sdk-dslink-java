@@ -38,6 +38,11 @@ public class Main extends DSLinkHandler {
         LOGGER.info("Responder connected");
     }
 
+    @Override
+    public void onResponderDisconnected(DSLink link) {
+        LOGGER.info("Oh no! The connected to the broker was lost");
+    }
+
     public static void main(String[] args) {
         DSLinkFactory.start(args, new Main());
     }

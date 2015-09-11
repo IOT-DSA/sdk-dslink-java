@@ -151,6 +151,7 @@ public class DSLink {
                 @Override
                 public void handle(Void event) {
                     DSLink.this.requester.clearSubscriptions();
+                    getLinkHandler().onRequesterDisconnected(DSLink.this);
                 }
             });
         }
@@ -187,6 +188,13 @@ public class DSLink {
 
                     Integer msgId = event.getMsgId();
                     getWriter().writeRequestResponses(msgId, responses);
+                }
+            });
+
+            getWriter().setCloseHandler(new Handler<Void>() {
+                @Override
+                public void handle(Void event) {
+                    getLinkHandler().onResponderDisconnected(DSLink.this);
                 }
             });
         }
