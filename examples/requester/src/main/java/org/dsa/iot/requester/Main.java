@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
 
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Responder simply lists everything from the "/" root.
@@ -23,7 +22,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Main extends DSLinkHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
-    private AtomicInteger integer = new AtomicInteger();
 
     private DSLinkProvider provider;
     private DSLink link;
@@ -86,15 +84,8 @@ public class Main extends DSLinkHandler {
                     printValueMap(child.getConfigurations(), "Configuration", true);
 
                     ListRequest newReq = new ListRequest(child.getPath());
-                    integer.incrementAndGet();
                     link.getRequester().list(newReq, new Lister(newReq));
                 }
-            }
-
-            int i = integer.decrementAndGet();
-            if (i == 0) {
-                LOGGER.info("List completed, stopping the link");
-                provider.stop();
             }
         }
 
