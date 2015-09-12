@@ -66,53 +66,66 @@ public class Main extends DSLinkHandler {
 
         @Override
         public void handle(ListResponse resp) {
-            String msg = "\n";
-            msg += "Received response: " + request.getName() + "\n";
-            msg += "Path: " + request.getPath() + "\n";
+            StringBuilder msg = new StringBuilder("\n");
+            msg.append("Received response: ");
+            msg.append(request.getName());
+            msg.append("\n");
+            msg.append("Path: ");
+            msg.append(request.getPath());
+            msg.append("\n");
             Node node = resp.getNode();
-            msg += printValueMap(node.getAttributes(), "Attribute", false);
-            msg += printValueMap(node.getConfigurations(), "Configuration", false);
+            msg.append(printValueMap(node.getAttributes(), "Attribute", false));
+            msg.append(printValueMap(node.getConfigurations(), "Configuration", false));
             {
-                boolean isAction = node.getAction() != null;
-                msg += "Is action? " + isAction + "\n";
+                msg.append("Is action? ");
+                msg.append(node.getAction() != null);
+                msg.append("\n");
             }
             {
-                boolean isMetric = node.getValueType() != null;
-                msg += "Is metric? " + isMetric + "\n";
+                msg.append("Is metric? ");
+                msg.append(node.getValueType() != null);
+                msg.append("\n");
             }
 
             Map<String, Node> nodes = node.getChildren();
             if (nodes != null) {
-                msg += "Children: \n";
+                msg.append("Children: \n");
                 for (Map.Entry<String, Node> entry : nodes.entrySet()) {
                     String name = entry.getKey();
                     Node child = entry.getValue();
-                    msg += "    Name: " + name + "\n";
-                    msg += printValueMap(child.getAttributes(), "Attribute", true);
-                    msg += printValueMap(child.getConfigurations(), "Configuration", true);
+                    msg.append("    Name: ");
+                    msg.append(name);
+                    msg.append("\n");
+                    msg.append(printValueMap(child.getAttributes(), "Attribute", true));
+                    msg.append(printValueMap(child.getConfigurations(), "Configuration", true));
 
                     ListRequest newReq = new ListRequest(child.getPath());
                     link.getRequester().list(newReq, new Lister(newReq));
                 }
             }
-            LOGGER.info(msg);
+            LOGGER.info(msg.toString());
             System.out.flush();
         }
 
         private String printValueMap(Map<String, Value> map, String name,
                                    boolean indent) {
-            String msg = "";
+            StringBuilder msg = new StringBuilder();
             if (map != null) {
                 for (Map.Entry<String, Value> conf : map.entrySet()) {
                     String a = conf.getKey();
                     String v = conf.getValue().toString();
                     if (indent) {
-                        msg += "      ";
+                        msg.append("      ");
                     }
-                    msg += name + ": " + a + " => " + v + "\n";
+                    msg.append(name);
+                    msg.append(": ");
+                    msg.append(a);
+                    msg.append(" => ");
+                    msg.append(v);
+                    msg.append("\n");
                 }
             }
-            return msg;
+            return msg.toString();
         }
     }
 
