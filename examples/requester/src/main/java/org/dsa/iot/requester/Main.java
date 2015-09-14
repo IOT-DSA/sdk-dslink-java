@@ -79,12 +79,6 @@ public class Main extends DSLinkHandler {
             msg.append(" - Profile: ");
             msg.append(node.getProfile());
             msg.append('\n');
-            String sharedId = node.getSharedIdentifier();
-            if (sharedId != null) {
-                msg.append(" - Shared ID: ");
-                msg.append(sharedId);
-                msg.append('\n');
-            }
             msg.append(printValueMap(node.getAttributes(), "- Attribute", " "));
             msg.append(printValueMap(node.getConfigurations(), "- Configuration", " "));
             {
@@ -114,13 +108,6 @@ public class Main extends DSLinkHandler {
                     msg.append("- Profile: ");
                     msg.append(child.getProfile());
                     msg.append('\n');
-                    sharedId = child.getSharedIdentifier();
-                    if (sharedId != null) {
-                        msg.append(spaces);
-                        msg.append("- Shared ID: ");
-                        msg.append(sharedId);
-                        msg.append('\n');
-                    }
                     Set<String> interfaces = child.getInterfaces();
                     if (interfaces != null) {
                         msg.append(spaces);
