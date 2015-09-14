@@ -121,11 +121,5 @@ public class NodeManager {
             super(null, null, link);
             super.setProfile(profile);
         }
-
-        @Override
-        public void setProfile(String profile) {
-            String err = "Cannot set profile on root node";
-            throw new IllegalStateException(err);
-        }
     }
 }
