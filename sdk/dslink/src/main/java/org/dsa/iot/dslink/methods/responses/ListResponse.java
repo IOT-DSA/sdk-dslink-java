@@ -91,7 +91,7 @@ public class ListResponse implements Response {
                 } else if (name.startsWith("@")) {
                     node.removeAttribute(name.substring(1));
                 } else {
-                    throw new RuntimeException("Unhandled update: " + in.encodePrettily());
+                    updates.put(node.removeChild(name), true);
                 }
             }
         } else {

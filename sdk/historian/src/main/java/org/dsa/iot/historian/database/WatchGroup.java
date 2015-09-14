@@ -278,7 +278,7 @@ public class WatchGroup {
                 @Override
                 public void handle(ActionResult event) {
                     Node node = event.getNode().getParent();
-                    node.getParent().removeChild(node);
+                    node.delete();
                     unsubscribe();
                 }
             }));

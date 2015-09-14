@@ -69,33 +69,39 @@ public class Main extends DSLinkHandler {
             StringBuilder msg = new StringBuilder("\n");
             msg.append("Received response: ");
             msg.append(request.getName());
-            msg.append("\n");
+            msg.append('\n');
             msg.append("Path: ");
             msg.append(request.getPath());
-            msg.append("\n");
+            msg.append('\n');
             Node node = resp.getNode();
             msg.append(printValueMap(node.getAttributes(), "Attribute", false));
             msg.append(printValueMap(node.getConfigurations(), "Configuration", false));
             {
                 msg.append("Is action? ");
                 msg.append(node.getAction() != null);
-                msg.append("\n");
+                msg.append('\n');
             }
             {
                 msg.append("Is metric? ");
                 msg.append(node.getValueType() != null);
-                msg.append("\n");
+                msg.append('\n');
             }
 
-            Map<String, Node> nodes = node.getChildren();
-            if (nodes != null) {
+            Map<Node, Boolean> nodes = resp.getUpdates();
+            if (nodes != null && nodes.size() > 0) {
                 msg.append("Children: \n");
-                for (Map.Entry<String, Node> entry : nodes.entrySet()) {
-                    String name = entry.getKey();
-                    Node child = entry.getValue();
-                    msg.append("    Name: ");
-                    msg.append(name);
-                    msg.append("\n");
+                for (Map.Entry<Node, Boolean> entry : nodes.entrySet()) {
+                    Node child = entry.getKey();
+                    boolean removed = entry.getValue();
+                    msg.append("    - Name: ");
+                    msg.append(child.getName());
+                    msg.append('\n');
+                    msg.append("      - Removed: ");
+                    msg.append(removed);
+                    msg.append('\n');
+                    if (removed) {
+                        continue;
+                    }
                     msg.append(printValueMap(child.getAttributes(), "Attribute", true));
                     msg.append(printValueMap(child.getConfigurations(), "Configuration", true));
 
@@ -103,6 +109,7 @@ public class Main extends DSLinkHandler {
                     link.getRequester().list(newReq, new Lister(newReq));
                 }
             }
+
             LOGGER.info(msg.toString());
             System.out.flush();
         }
@@ -122,7 +129,7 @@ public class Main extends DSLinkHandler {
                     msg.append(a);
                     msg.append(" => ");
                     msg.append(v);
-                    msg.append("\n");
+                    msg.append('\n');
                 }
             }
             return msg.toString();

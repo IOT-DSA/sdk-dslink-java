@@ -89,7 +89,7 @@ public class Watch {
     }
 
     public void unsubscribe() {
-        node.getParent().removeChild(node);
+        node.delete();
         DatabaseProvider provider = group.getDb().getProvider();
         SubscriptionPool pool = provider.getPool();
         pool.unsubscribe(path, Watch.this);

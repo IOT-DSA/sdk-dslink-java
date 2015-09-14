@@ -429,6 +429,16 @@ public class Node {
     }
 
     /**
+     * Deletes this node from its parent.
+     */
+    public void delete() {
+        Node parent = getParent();
+        if (parent != null) {
+            parent.removeChild(this);
+        }
+    }
+
+    /**
      * @param node Node to remove.
      * @return The node if it existed.
      */
