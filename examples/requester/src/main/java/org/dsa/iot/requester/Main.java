@@ -74,6 +74,9 @@ public class Main extends DSLinkHandler {
             msg.append(request.getPath());
             msg.append('\n');
             Node node = resp.getNode();
+            msg.append("Profile: ");
+            msg.append(node.getProfile());
+            msg.append('\n');
             msg.append(printValueMap(node.getAttributes(), "Attribute", false));
             msg.append(printValueMap(node.getConfigurations(), "Configuration", false));
             {
@@ -96,15 +99,16 @@ public class Main extends DSLinkHandler {
                     msg.append("    - Name: ");
                     msg.append(child.getName());
                     msg.append('\n');
+                    msg.append("    - Profile: ");
+                    msg.append(child.getProfile());
+                    msg.append('\n');
                     msg.append("      - Removed: ");
                     msg.append(removed);
                     msg.append('\n');
+
                     if (removed) {
                         continue;
                     }
-                    msg.append(printValueMap(child.getAttributes(), "Attribute", true));
-                    msg.append(printValueMap(child.getConfigurations(), "Configuration", true));
-
                     ListRequest newReq = new ListRequest(child.getPath());
                     link.getRequester().list(newReq, new Lister(newReq));
                 }
