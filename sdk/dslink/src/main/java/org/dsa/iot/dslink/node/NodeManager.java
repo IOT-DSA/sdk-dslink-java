@@ -18,8 +18,7 @@ public class NodeManager {
     private final String defaultProfile;
 
     public NodeManager(Linkable link, String defaultProfile) {
-        this.superRoot = new Node(null, null, link);
-        superRoot.setProfile(defaultProfile);
+        this.superRoot = new SuperRoot(link, defaultProfile);
         this.defaultProfile = defaultProfile;
     }
 
@@ -114,5 +113,19 @@ public class NodeManager {
         if (path.endsWith("/"))
             path = path.substring(0, path.length() - 1);
         return path;
+    }
+
+    private static class SuperRoot extends Node {
+
+        public SuperRoot(Linkable link, String profile) {
+            super(null, null, link);
+            super.setProfile(profile);
+        }
+
+        @Override
+        public void setProfile(String profile) {
+            String err = "Cannot set profile on root node";
+            throw new IllegalStateException(err);
+        }
     }
 }
