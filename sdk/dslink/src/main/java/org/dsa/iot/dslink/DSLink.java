@@ -7,6 +7,8 @@ import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.SubscriptionManager;
 import org.dsa.iot.dslink.serializer.SerializationManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
@@ -23,6 +25,7 @@ import static org.dsa.iot.dslink.connection.DataHandler.DataReceived;
  */
 public class DSLink {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(DSLink.class);
     private final SubscriptionManager manager = new SubscriptionManager(this);
     private final DSLinkHandler linkHandler;
     private final NodeManager nodeManager;
@@ -140,8 +143,12 @@ public class DSLink {
                 public void handle(DataReceived event) {
                     JsonArray array = event.getData();
                     for (Object object : array) {
-                        JsonObject json = (JsonObject) object;
-                        DSLink.this.requester.parse(json);
+                        try {
+                            JsonObject json = (JsonObject) object;
+                            DSLink.this.requester.parse(json);
+                        } catch (RuntimeException e) {
+                            LOGGER.error("Failed to parse json", e);
+                        }
                     }
                     getWriter().writeAck(event.getMsgId());
                 }

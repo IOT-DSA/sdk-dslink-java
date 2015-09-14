@@ -286,9 +286,9 @@ public class Requester extends Linkable {
         Request request = wrapper.getRequest();
         String method = request.getName();
 
-        final StreamState stream = StreamState.toEnum(in.getString("stream"));
+        StreamState stream = StreamState.toEnum(in.getString("stream"));
         if (stream == null) {
-            return;
+            stream = StreamState.OPEN;
         }
         final boolean closed = StreamState.CLOSED == stream;
         final NodeManager manager = link.getNodeManager();

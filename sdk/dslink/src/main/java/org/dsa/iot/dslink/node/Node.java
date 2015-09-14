@@ -10,10 +10,7 @@ import org.dsa.iot.dslink.serializer.SerializationManager;
 import org.dsa.iot.dslink.util.StringUtils;
 
 import java.lang.ref.WeakReference;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -35,7 +32,6 @@ public class Node {
     private final Object childrenLock = new Object();
     private final Object passwordLock = new Object();
     private final Object valueLock = new Object();
-    private final Object actLock = new Object();
 
     private final WeakReference<Node> parent;
     private final Linkable link;
@@ -209,15 +205,16 @@ public class Node {
         }
     }
 
-    public void setInterfaces(String _interface) {
+    public void setInterfaces(String interfaces) {
         synchronized (interfaceLock) {
-            if (_interface == null) {
-                throw new NullPointerException("_interface");
-            } else if (interfaces == null) {
-                interfaces = new HashSet<>();
+            if (interfaces == null) {
+                this.interfaces = null;
+                return;
+            } else if (this.interfaces == null) {
+                this.interfaces = new HashSet<>();
             }
-            String[] split = _interface.split("\\|");
-            Collections.addAll(interfaces, split);
+            String[] split = interfaces.split("\\|");
+            Collections.addAll(this.interfaces, split);
             markChanged();
         }
     }
@@ -238,7 +235,7 @@ public class Node {
      */
     public void setValue(Value value, boolean externalSource) {
         ValueType type = valueType;
-        if (type == null) {
+        if (type == null && value != null) {
             String err = "Value type not set on node (" + getPath() + ")";
             throw new RuntimeException(err);
         }
@@ -510,22 +507,33 @@ public class Node {
      * @return Configuration value, or null if it didn't exist
      */
     public Value removeConfig(String name) {
+        name = StringUtils.encodeName(name);
+        Value ret;
         synchronized (configLock) {
-            name = StringUtils.encodeName(name);
-            Value ret = configs != null ? configs.remove(name) : null;
-            if (ret != null) {
-                ValueUpdate update = new ValueUpdate(name, ret, true);
-                listener.postConfigUpdate(update);
-            }
-
-            SubscriptionManager man = link.getSubscriptionManager();
-            if (man != null) {
-                man.postMetaUpdate(this, "$" + name, null);
-            }
-
-            markChanged();
-            return ret;
+            ret = configs != null ? configs.remove(name) : null;
         }
+        postRemoval("$", name, ret);
+        return ret;
+    }
+
+    /**
+     * Clears all the configurations from the node.
+     *
+     * @return All the previous configurations.
+     */
+    public Map<String, Value> clearConfigs() {
+        Map<String, Value> configs;
+        synchronized (configLock) {
+            if (this.configs == null) {
+                return null;
+            }
+            configs = new HashMap<>(this.configs);
+            this.configs.clear();
+        }
+        for (Map.Entry<String, Value> entry : configs.entrySet()) {
+            postRemoval("$", entry.getKey(), entry.getValue());
+        }
+        return configs;
     }
 
     /**
@@ -594,18 +602,33 @@ public class Node {
      * @return Previous value of the configuration, if any.
      */
     public Value removeRoConfig(String name) {
+        name = StringUtils.encodeName(name);
+        Value ret;
         synchronized (roConfigLock) {
-            name = StringUtils.encodeName(name);
-            Value tmp = roConfigs != null ? roConfigs.remove(name) : null;
-            if (tmp != null) {
-                SubscriptionManager man = link.getSubscriptionManager();
-                if (man != null) {
-                    man.postMetaUpdate(this, "$$" + name, null);
-                }
-            }
-            markChanged();
-            return tmp;
+            ret = roConfigs != null ? roConfigs.remove(name) : null;
         }
+        postRemoval("$$", name, ret);
+        return ret;
+    }
+
+    /**
+     * Clears all the read-only configurations from the node.
+     *
+     * @return All the previous read-only configurations.
+     */
+    public Map<String, Value> clearRoConfigs() {
+        Map<String, Value> roConfigs;
+        synchronized (roConfigLock) {
+            if (this.roConfigs == null) {
+                return null;
+            }
+            roConfigs = new HashMap<>(this.roConfigs);
+            this.roConfigs.clear();
+        }
+        for (Map.Entry<String, Value> entry : roConfigs.entrySet()) {
+            postRemoval("$$", entry.getKey(), entry.getValue());
+        }
+        return roConfigs;
     }
 
     /**
@@ -683,22 +706,33 @@ public class Node {
      * @return Attribute value or null if it didn't exist
      */
     public Value removeAttribute(String name) {
+        name = StringUtils.encodeName(name);
+        Value ret;
         synchronized (attributeLock) {
-            name = StringUtils.encodeName(name);
-            Value ret = attribs != null ? attribs.remove(name) : null;
-            if (ret != null) {
-                ValueUpdate update = new ValueUpdate(name, ret, true);
-                listener.postAttributeUpdate(update);
-
-                SubscriptionManager man = link.getSubscriptionManager();
-                if (man != null) {
-                    man.postMetaUpdate(this, "@" + name, null);
-                }
-            }
-
-            markChanged();
-            return ret;
+            ret = attribs != null ? attribs.remove(name) : null;
         }
+        postRemoval("@", name, ret);
+        return ret;
+    }
+
+    /**
+     * Clears all the attributes in the node.
+     *
+     * @return All the previous attributes that were cleared.
+     */
+    public Map<String, Value> clearAttributes() {
+        Map<String, Value> attribs;
+        synchronized (attributeLock) {
+            if (this.attribs == null) {
+                return null;
+            }
+            attribs = new HashMap<>(this.attribs);
+            this.attribs.clear();
+        }
+        for (Map.Entry<String, Value> entry : attribs.entrySet()) {
+            postRemoval("@", entry.getKey(), entry.getValue());
+        }
+        return attribs;
     }
 
     /**
@@ -743,21 +777,20 @@ public class Node {
     public void setAction(Action action) {
         this.action = action;
         markChanged();
-        if (link != null) {
-            SubscriptionManager man = link.getSubscriptionManager();
-            if (man != null) {
-                synchronized (actLock) {
-                    if (!(action == null || action.isHidden())) {
-                        Value params = new Value(action.getParams());
-                        Value cols = new Value(action.getColumns());
-                        man.postMetaUpdate(this, "$params", params);
-                        man.postMetaUpdate(this, "$columns", cols);
-                        action.setSubscriptionManager(this, man);
-                    } else {
-                        man.postMetaUpdate(this, "$params", null);
-                        man.postMetaUpdate(this, "$columns", null);
-                    }
-                }
+        if (link == null) {
+            return;
+        }
+        SubscriptionManager man = link.getSubscriptionManager();
+        if (man != null) {
+            if (!(action == null || action.isHidden())) {
+                Value params = new Value(action.getParams());
+                Value cols = new Value(action.getColumns());
+                man.postMetaUpdate(this, "$params", params);
+                man.postMetaUpdate(this, "$columns", cols);
+                action.setSubscriptionManager(this, man);
+            } else {
+                man.postMetaUpdate(this, "$params", null);
+                man.postMetaUpdate(this, "$columns", null);
             }
         }
     }
@@ -887,6 +920,23 @@ public class Node {
         return (T) metaData;
     }
 
+    /**
+     * Resets the node's exposed data.
+     */
+    public void reset() {
+        clearChildren();
+        clearConfigs();
+        clearRoConfigs();
+        clearAttributes();
+        setPassword(null);
+        setDisplayName(null);
+        setAction(null);
+        setInterfaces(null);
+        setValue(null);
+        setValueType(null);
+        setWritable(null);
+    }
+
     private void markChanged() {
         if (!isSerializable()) {
             return;
@@ -898,6 +948,26 @@ public class Node {
                 sm.markChanged();
             }
         }
+    }
+
+    private void postRemoval(String prefix, String name, Value value) {
+        if (value == null) {
+            return;
+        }
+
+        ValueUpdate update = new ValueUpdate(name, value, true);
+        if ("$".equals(prefix)) {
+            listener.postConfigUpdate(update);
+        } else if ("@".equals(prefix)) {
+            listener.postAttributeUpdate(update);
+        }
+
+        SubscriptionManager man = link.getSubscriptionManager();
+        if (man != null) {
+            man.postMetaUpdate(this, prefix + name, null);
+        }
+
+        markChanged();
     }
 
     /**

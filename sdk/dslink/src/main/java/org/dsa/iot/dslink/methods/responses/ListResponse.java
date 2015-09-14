@@ -115,6 +115,7 @@ public class ListResponse implements Response {
         } else if (name.startsWith("$")) {
             name = name.substring(1);
             if ("is".equals(name)) {
+                node.reset();
                 node.setProfile((String) v);
             } else if ("interface".equals(name)) {
                 node.setInterfaces((String) v);
