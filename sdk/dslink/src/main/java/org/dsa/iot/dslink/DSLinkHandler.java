@@ -5,6 +5,7 @@ import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.exceptions.NoSuchPathException;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.util.Objects;
+import org.vertx.java.core.json.JsonObject;
 
 /**
  * Top level API for handling the configuration of nodes and responses to
@@ -19,6 +20,17 @@ import org.dsa.iot.dslink.util.Objects;
 public abstract class DSLinkHandler {
 
     private Configuration configuration;
+
+    /**
+     * The default setting from here is what is used in the
+     * {@link Configuration} instance during an auto configuration. The result
+     * must be strictly static.
+     *
+     * @return The extra link data that can be used by any requester.
+     */
+    public JsonObject getLinkData() {
+        return null;
+    }
 
     /**
      * The default setting from here is what is used in the

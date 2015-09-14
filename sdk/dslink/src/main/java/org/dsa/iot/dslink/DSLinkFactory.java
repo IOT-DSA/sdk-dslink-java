@@ -6,6 +6,7 @@ import org.dsa.iot.dslink.handshake.LocalHandshake;
 import org.dsa.iot.dslink.handshake.LocalKeys;
 import org.dsa.iot.dslink.util.log.LogLevel;
 import org.dsa.iot.dslink.util.log.LogManager;
+import org.vertx.java.core.json.JsonObject;
 
 /**
  * Factory for generating {@link DSLink} objects.
@@ -46,11 +47,12 @@ public class DSLinkFactory {
 
         boolean req = handler.isRequester();
         boolean resp = handler.isResponder();
-        Configuration config = Configuration.autoConfigure(args, req, resp);
-        if (config == null) {
+        JsonObject ld = handler.getLinkData();
+        Configuration conf = Configuration.autoConfigure(args, req, resp, ld);
+        if (conf == null) {
             return null;
         }
-        handler.setConfig(config);
+        handler.setConfig(conf);
         return generate(handler);
     }
 

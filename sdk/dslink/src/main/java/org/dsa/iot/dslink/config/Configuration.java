@@ -37,6 +37,7 @@ public class Configuration {
     private ConnectionType type;
     private LocalKeys keys;
     private File serializationPath;
+    private JsonObject linkData;
 
     /**
      * Example endpoint: http://localhost:8080/conn
@@ -203,6 +204,27 @@ public class Configuration {
     }
 
     /**
+     * Sets the extra link data. This data can be used by any requester to
+     * determine how it should handle the DSLink.
+     *
+     * @param data Link data.
+     */
+    public void setLinkData(JsonObject data) {
+        if (data == null) {
+            this.linkData = null;
+        } else {
+            this.linkData = data.copy();
+        }
+    }
+
+    /**
+     * @return Link data.
+     */
+    public JsonObject getLinkData() {
+        return linkData != null ? linkData.copy() : null;
+    }
+
+    /**
      * Sets the serialization path. This location determines where
      * serialization and deserialization will occur.
      *
@@ -239,25 +261,27 @@ public class Configuration {
         }
     }
 
-    public static Configuration autoConfigure(String[] args,
+    public static Configuration autoConfigure(String[] origArgs,
                                                 boolean requester,
-                                                boolean responder) {
+                                                boolean responder,
+                                                JsonObject linkData) {
         Configuration defaults = new Configuration();
         defaults.setConnectionType(ConnectionType.WEB_SOCKET);
         defaults.setRequester(requester);
         defaults.setResponder(responder);
+        defaults.setLinkData(linkData);
 
-        Arguments parsedArgs = Arguments.parse(args);
-        if (parsedArgs == null) {
+        Arguments pArgs = Arguments.parse(origArgs);
+        if (pArgs == null) {
             return null;
         }
 
-        JsonObject json = getAndValidateJson(parsedArgs.getDslinkJson());
-        String name = getFieldValue(parsedArgs.getName(), json, "name");
-        String logLevel = getFieldValue(parsedArgs.getLogLevel(), json, "log");
-        String brokerHost = parsedArgs.getBrokerHost();
-        String keyPath = getFieldValue(parsedArgs.getKeyPath(), json, "key");
-        String nodePath = getFieldValue(parsedArgs.getNodesPath(), json, "nodes");
+        JsonObject json = getAndValidateJson(pArgs.getDslinkJson());
+        String name = getFieldValue(pArgs.getName(), json, "name");
+        String logLevel = getFieldValue(pArgs.getLogLevel(), json, "log");
+        String brokerHost = pArgs.getBrokerHost();
+        String keyPath = getFieldValue(pArgs.getKeyPath(), json, "key");
+        String nodePath = getFieldValue(pArgs.getNodesPath(), json, "nodes");
         String handlerClass = getFieldValue(null, json, "handler_class");
         defaults.setDsId(name);
 
@@ -368,15 +392,19 @@ public class Configuration {
 
     private static class JsonObjectSerializer extends JsonSerializer<JsonObject> {
         @Override
-        public void serialize(JsonObject value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
-            jgen.writeObject(value.toMap());
+        public void serialize(JsonObject value,
+                              JsonGenerator gen,
+                              SerializerProvider provider) throws IOException {
+            gen.writeObject(value.toMap());
         }
     }
 
     private static class JsonArraySerializer extends JsonSerializer<JsonArray> {
         @Override
-        public void serialize(JsonArray value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
-            jgen.writeObject(value.toList());
+        public void serialize(JsonArray value,
+                              JsonGenerator gen,
+                              SerializerProvider provider) throws IOException {
+            gen.writeObject(value.toList());
         }
     }
 

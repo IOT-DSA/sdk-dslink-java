@@ -226,6 +226,16 @@ public class ListResponse implements Response {
                 }
             }
 
+            JsonObject linkData = childData.getObject("$linkData");
+            if (linkData != null) {
+                Value val = new Value(linkData);
+                if (builder != null) {
+                    builder.setConfig("linkData", val);
+                } else {
+                    child.setConfig("linkData", val);
+                }
+            }
+
             if (builder != null) {
                 child = builder.build();
             }

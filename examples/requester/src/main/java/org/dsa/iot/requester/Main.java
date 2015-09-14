@@ -72,35 +72,35 @@ public class Main extends DSLinkHandler {
             msg.append("Received response: ");
             msg.append(request.getName());
             msg.append('\n');
-            msg.append("Path: ");
+            msg.append(" - Path: ");
             msg.append(request.getPath());
             msg.append('\n');
             Node node = resp.getNode();
-            msg.append("Profile: ");
+            msg.append(" - Profile: ");
             msg.append(node.getProfile());
             msg.append('\n');
             String sharedId = node.getSharedIdentifier();
             if (sharedId != null) {
-                msg.append("- Shared ID: ");
+                msg.append(" - Shared ID: ");
                 msg.append(sharedId);
                 msg.append('\n');
             }
-            msg.append(printValueMap(node.getAttributes(), "Attribute"));
-            msg.append(printValueMap(node.getConfigurations(), "Configuration"));
+            msg.append(printValueMap(node.getAttributes(), "- Attribute", " "));
+            msg.append(printValueMap(node.getConfigurations(), "- Configuration", " "));
             {
-                msg.append("Is action? ");
+                msg.append(" - Is action? ");
                 msg.append(node.getAction() != null);
                 msg.append('\n');
             }
             {
-                msg.append("Is metric? ");
+                msg.append(" - Is metric? ");
                 msg.append(node.getValueType() != null);
                 msg.append('\n');
             }
 
             Map<Node, Boolean> nodes = resp.getUpdates();
             if (nodes != null && nodes.size() > 0) {
-                msg.append("Children: \n");
+                msg.append(" Children: \n");
                 for (Map.Entry<Node, Boolean> entry : nodes.entrySet()) {
                     Node child = entry.getKey();
                     boolean removed = entry.getValue();
@@ -136,6 +136,10 @@ public class Main extends DSLinkHandler {
                     if (removed) {
                         continue;
                     }
+
+                    msg.append(printValueMap(child.getAttributes(), "- Attribute", spaces));
+                    msg.append(printValueMap(child.getConfigurations(), "- Configuration", spaces));
+
                     ListRequest newReq = new ListRequest(child.getPath());
                     link.getRequester().list(newReq, new Lister(newReq));
                 }
@@ -145,12 +149,16 @@ public class Main extends DSLinkHandler {
             System.out.flush();
         }
 
-        private String printValueMap(Map<String, Value> map, String name) {
+        private String printValueMap(Map<String, Value> map,
+                                     String name, String indent) {
             StringBuilder msg = new StringBuilder();
             if (map != null) {
                 for (Map.Entry<String, Value> conf : map.entrySet()) {
                     String a = conf.getKey();
                     String v = conf.getValue().toString();
+                    if (indent != null) {
+                        msg.append(indent);
+                    }
                     msg.append(name);
                     msg.append(": ");
                     msg.append(a);

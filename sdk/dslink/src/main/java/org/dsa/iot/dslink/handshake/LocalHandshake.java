@@ -15,6 +15,7 @@ public class LocalHandshake {
     private final String dsId;
     private final boolean isRequester;
     private final boolean isResponder;
+    private final JsonObject linkData;
     private final String zone;
 
     /**
@@ -31,6 +32,7 @@ public class LocalHandshake {
         this.dsId = config.getDsIdWithHash();
         this.isRequester = config.isRequester();
         this.isResponder = config.isResponder();
+        this.linkData = config.getLinkData();
         this.zone = config.getZone();
     }
 
@@ -78,6 +80,7 @@ public class LocalHandshake {
         }
         obj.putBoolean("isRequester", isRequester);
         obj.putBoolean("isResponder", isResponder);
+        obj.putObject("linkData", linkData);
         obj.putString("version", "1.0.4");
         return obj;
     }
