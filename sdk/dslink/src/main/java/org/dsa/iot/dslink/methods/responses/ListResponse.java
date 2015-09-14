@@ -122,8 +122,6 @@ public class ListResponse implements Response {
                 node.setProfile((String) v);
             } else if ("interface".equals(name)) {
                 node.setInterfaces((String) v);
-            } else if ("shared".equals(name)) {
-                node.setSharedIdentifier((String) v);
             } else if ("invokable".equals(name)) {
                 Permission perm = Permission.toEnum((String) v);
                 Action act = getOrCreateAction(node, perm);
@@ -302,14 +300,6 @@ public class ListResponse implements Response {
                 JsonArray update = new JsonArray();
                 update.addString("$writable");
                 update.addString(writable.toJsonName());
-                updates.addArray(update);
-            }
-
-            String shared = node.getSharedIdentifier();
-            if (shared != null) {
-                JsonArray update = new JsonArray();
-                update.addString("$shared");
-                update.addString(shared);
                 updates.addArray(update);
             }
 
@@ -504,11 +494,6 @@ public class ListResponse implements Response {
 
             if (child.isHidden()) {
                 childData.putBoolean("$hidden", true);
-            }
-
-            String shared = child.getSharedIdentifier();
-            if (shared != null) {
-                childData.putString("$shared", shared);
             }
         }
         update.addObject(childData);

@@ -43,7 +43,6 @@ public class Node {
     private NodeListener listener;
     private Writable writable;
     private Object metaData;
-    private String shared;
 
     private Map<String, Value> roConfigs;
     private Map<String, Value> configs;
@@ -566,7 +565,6 @@ public class Node {
                 configs = new ConcurrentHashMap<>();
             }
             switch (name) {
-                case "shared":
                 case "params":
                 case "columns":
                 case "name":
@@ -871,22 +869,6 @@ public class Node {
      */
     public boolean isHidden() {
         return hidden;
-    }
-
-    /**
-     * Sets the top level shared data property. This property is a plain
-     * string that is always shown in the child update when the parent
-     * gets listed. This can be used to identify specific nodes when listing
-     * the parent.
-     *
-     * @param data Shared data.
-     */
-    public void setSharedIdentifier(String data) {
-        this.shared = data;
-    }
-
-    public String getSharedIdentifier() {
-        return shared;
     }
 
     /**
