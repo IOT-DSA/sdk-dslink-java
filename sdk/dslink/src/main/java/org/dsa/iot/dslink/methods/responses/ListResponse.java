@@ -91,7 +91,10 @@ public class ListResponse implements Response {
                 } else if (name.startsWith("@")) {
                     node.removeAttribute(name.substring(1));
                 } else {
-                    updates.put(node.removeChild(name), true);
+                    Node n = node.removeChild(name);
+                    if (n != null) {
+                        updates.put(n, true);
+                    }
                 }
             }
         } else {
