@@ -8,11 +8,13 @@ import org.dsa.iot.dslink.methods.requests.ListRequest;
 import org.dsa.iot.dslink.methods.responses.ListResponse;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.value.Value;
+import org.dsa.iot.dslink.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
 
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Responder simply lists everything from the "/" root.
@@ -77,8 +79,14 @@ public class Main extends DSLinkHandler {
             msg.append("Profile: ");
             msg.append(node.getProfile());
             msg.append('\n');
-            msg.append(printValueMap(node.getAttributes(), "Attribute", false));
-            msg.append(printValueMap(node.getConfigurations(), "Configuration", false));
+            String sharedId = node.getSharedIdentifier();
+            if (sharedId != null) {
+                msg.append("- Shared ID: ");
+                msg.append(sharedId);
+                msg.append('\n');
+            }
+            msg.append(printValueMap(node.getAttributes(), "Attribute"));
+            msg.append(printValueMap(node.getConfigurations(), "Configuration"));
             {
                 msg.append("Is action? ");
                 msg.append(node.getAction() != null);
@@ -96,13 +104,32 @@ public class Main extends DSLinkHandler {
                 for (Map.Entry<Node, Boolean> entry : nodes.entrySet()) {
                     Node child = entry.getKey();
                     boolean removed = entry.getValue();
-                    msg.append("    - Name: ");
+                    String spaces = "    ";
+                    msg.append(spaces);
+                    msg.append("- Name: ");
                     msg.append(child.getName());
                     msg.append('\n');
-                    msg.append("    - Profile: ");
+                    spaces += "  ";
+                    msg.append(spaces);
+                    msg.append("- Profile: ");
                     msg.append(child.getProfile());
                     msg.append('\n');
-                    msg.append("      - Removed: ");
+                    sharedId = child.getSharedIdentifier();
+                    if (sharedId != null) {
+                        msg.append(spaces);
+                        msg.append("- Shared ID: ");
+                        msg.append(sharedId);
+                        msg.append('\n');
+                    }
+                    Set<String> interfaces = child.getInterfaces();
+                    if (interfaces != null) {
+                        msg.append(spaces);
+                        msg.append("- Interfaces: ");
+                        msg.append(StringUtils.join(child.getInterfaces(), "|"));
+                        msg.append('\n');
+                    }
+                    msg.append(spaces);
+                    msg.append("- Removed: ");
                     msg.append(removed);
                     msg.append('\n');
 
@@ -118,16 +145,12 @@ public class Main extends DSLinkHandler {
             System.out.flush();
         }
 
-        private String printValueMap(Map<String, Value> map, String name,
-                                   boolean indent) {
+        private String printValueMap(Map<String, Value> map, String name) {
             StringBuilder msg = new StringBuilder();
             if (map != null) {
                 for (Map.Entry<String, Value> conf : map.entrySet()) {
                     String a = conf.getKey();
                     String v = conf.getValue().toString();
-                    if (indent) {
-                        msg.append("      ");
-                    }
                     msg.append(name);
                     msg.append(": ");
                     msg.append(a);
