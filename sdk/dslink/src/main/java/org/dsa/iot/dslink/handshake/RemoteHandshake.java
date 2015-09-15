@@ -23,6 +23,7 @@ public class RemoteHandshake {
     private final RemoteKey remoteKey;
     private final String wsUri;
     private final String salt;
+    private final String path;
 
     /**
      * Populates the handshake with data from the server.
@@ -39,6 +40,7 @@ public class RemoteHandshake {
         }
         this.wsUri = in.getString("wsUri");
         this.salt = in.getString("salt");
+        this.path = in.getString("path");
     }
 
     /**
@@ -60,6 +62,13 @@ public class RemoteHandshake {
      */
     public String getSalt() {
         return salt;
+    }
+
+    /**
+     * @return The path that the DSLink will be located at on the broker.
+     */
+    public String getPath() {
+        return path;
     }
 
     /**

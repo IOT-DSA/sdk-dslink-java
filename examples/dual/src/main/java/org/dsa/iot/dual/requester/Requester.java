@@ -47,7 +47,8 @@ public class Requester extends DSLinkHandler {
      */
     private static void setNodeValue(DSLink link) {
         Value value = new Value("Hello world!");
-        SetRequest request = new SetRequest("/conns/dual/values/settable", value);
+        String path = link.getPath() + "/values/settable";
+        SetRequest request = new SetRequest(path, value);
         link.getRequester().set(request, new Handler<SetResponse>() {
             @Override
             public void handle(SetResponse event) {
@@ -62,7 +63,8 @@ public class Requester extends DSLinkHandler {
      * @param link Requester link used to communicate to the endpoint.
      */
     private static void listValuesChildren(DSLink link) {
-        ListRequest request = new ListRequest("/conns/dual/values");
+        String path = link.getPath() + "/values";
+        ListRequest request = new ListRequest(path);
         link.getRequester().list(request, new Handler<ListResponse>() {
             @Override
             public void handle(ListResponse event) {
@@ -86,7 +88,7 @@ public class Requester extends DSLinkHandler {
      * @param link Requester link used to communicate to the endpoint.
      */
     private static void subscribe(DSLink link) {
-        final String path = "/conns/dual/values/dynamic";
+        String path = link.getPath() + "/values/dynamic";
         link.getRequester().subscribe(path, new Handler<SubscriptionValue>() {
             @Override
             public void handle(SubscriptionValue event) {
@@ -103,7 +105,7 @@ public class Requester extends DSLinkHandler {
      * @see org.dsa.iot.dual.responder.Responder#initActionNode
      */
     private static void invoke(DSLink link) {
-        final String path = "/conns/dual/values/action";
+        final String path = link.getPath() + "/values/action";
         InvokeRequest request = new InvokeRequest(path);
         link.getRequester().invoke(request, new Handler<InvokeResponse>() {
             @Override

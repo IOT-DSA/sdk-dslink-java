@@ -53,6 +53,7 @@ public class DSLinkProvider {
             public void handle(final ClientConnected event) {
                 final CountDownLatch latch = new CountDownLatch(2);
                 final DataHandler writer = event.getHandler();
+                final String path = event.getPath();
                 Objects.getDaemonThreadPool().execute(new Runnable() {
                     @Override
                     public void run() {
@@ -61,7 +62,7 @@ public class DSLinkProvider {
                             synchronized (lock) {
                                 DSLink tmp = linkRequesterCache.get(dsId);
                                 if (tmp == null) {
-                                    tmp = new DSLink(handler, true);
+                                    tmp = new DSLink(handler, true, path);
                                     tmp.setWriter(writer);
                                     tmp.setDefaultDataHandlers(true, false);
                                     handler.onRequesterInitialized(tmp);
@@ -90,7 +91,7 @@ public class DSLinkProvider {
                             synchronized (lock) {
                                 DSLink tmp = linkResponderCache.get(dsId);
                                 if (tmp == null) {
-                                    tmp = new DSLink(handler, false);
+                                    tmp = new DSLink(handler, false, path);
                                     tmp.setWriter(writer);
                                     File path = handler.getConfig().getSerializationPath();
                                     if (path != null) {
@@ -136,6 +137,7 @@ public class DSLinkProvider {
         manager.start(null);
     }
 
+    @SuppressWarnings("unused")
     public void stop() {
         running = false;
         manager.stop();

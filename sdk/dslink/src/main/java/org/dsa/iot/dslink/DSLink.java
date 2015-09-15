@@ -31,6 +31,7 @@ public class DSLink {
     private final NodeManager nodeManager;
     private final Requester requester;
     private final Responder responder;
+    private final String path;
 
     private SerializationManager serialManager;
     private DataHandler dataHandler;
@@ -39,13 +40,17 @@ public class DSLink {
      * @param linkHandler DSLink dataHandler
      * @param isReqOrResp {@code true} for requester, otherwise {@code false}
      *                    for a responder.
+     * @param path        Path of the {@code DSLink} on the broker.
      */
     protected DSLink(DSLinkHandler linkHandler,
-                     boolean isReqOrResp) {
-        if (linkHandler == null)
+                     boolean isReqOrResp,
+                     String path) {
+        if (linkHandler == null) {
             throw new NullPointerException("linkHandler");
+        }
 
         this.linkHandler = linkHandler;
+        this.path = path;
         if (isReqOrResp) {
             requester = new Requester(linkHandler);
             requester.setDSLink(this);
@@ -92,6 +97,13 @@ public class DSLink {
      */
     public void setWriter(DataHandler handler) {
         this.dataHandler = handler;
+    }
+
+    /**
+     * @return The path of the link on the broker.
+     */
+    public String getPath() {
+        return path;
     }
 
     /**

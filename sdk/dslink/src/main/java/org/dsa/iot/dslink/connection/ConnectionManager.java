@@ -63,7 +63,7 @@ public class ConnectionManager {
                     }
                 }
                 LOGGER.debug("Initiating connection sequence");
-                RemoteHandshake currentHandshake = generateHandshake(new Handler<Exception>() {
+                RemoteHandshake remoteHandshake = generateHandshake(new Handler<Exception>() {
                     @Override
                     public void handle(Exception event) {
                         LOGGER.error("Failed to complete handshake: {}", event.getMessage());
@@ -71,7 +71,7 @@ public class ConnectionManager {
                     }
                 });
 
-                if (currentHandshake == null) {
+                if (remoteHandshake == null) {
                     return;
                 }
 
@@ -81,7 +81,8 @@ public class ConnectionManager {
 
                 boolean req = localHandshake.isRequester();
                 boolean resp = localHandshake.isResponder();
-                final ClientConnected cc = new ClientConnected(req, resp);
+                String path = remoteHandshake.getPath();
+                final ClientConnected cc = new ClientConnected(req, resp, path);
                 cc.setHandler(handler);
 
                 if (preInitHandler != null) {
@@ -93,7 +94,7 @@ public class ConnectionManager {
                     case WEB_SOCKET:
                         WebSocketConnector connector = new WebSocketConnector(handler);
                         connector.setEndpoint(configuration.getAuthEndpoint());
-                        connector.setRemoteHandshake(currentHandshake);
+                        connector.setRemoteHandshake(remoteHandshake);
                         connector.setLocalHandshake(localHandshake);
                         connector.setOnConnected(new Handler<Void>() {
                             @Override
@@ -203,15 +204,18 @@ public class ConnectionManager {
 
         private final boolean isRequester;
         private final boolean isResponder;
+        private final String path;
 
         private Handler<ClientConnected> onRequesterConnected;
         private Handler<ClientConnected> onResponderConnected;
         private DataHandler handler;
 
         public ClientConnected(boolean isRequester,
-                               boolean isResponder) {
+                               boolean isResponder,
+                               String path) {
             this.isRequester = isRequester;
             this.isResponder = isResponder;
+            this.path = path;
         }
 
         public DataHandler getHandler() {
@@ -228,6 +232,10 @@ public class ConnectionManager {
 
         public boolean isResponder() {
             return isResponder;
+        }
+
+        public String getPath() {
+            return path;
         }
 
         public void setRequesterOnConnected(Handler<ClientConnected> handler) {
