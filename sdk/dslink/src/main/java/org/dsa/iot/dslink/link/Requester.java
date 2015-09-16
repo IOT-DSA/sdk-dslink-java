@@ -297,8 +297,9 @@ public class Requester extends Linkable {
             case "list":
                 ListRequest listRequest = (ListRequest) request;
                 Node node = manager.getNode(listRequest.getPath(), true).getNode();
+                String path = node.getPath();
                 SubscriptionManager subs = link.getSubscriptionManager();
-                ListResponse resp = new ListResponse(link, subs, rid, node);
+                ListResponse resp = new ListResponse(link, subs, rid, node, path);
                 resp.populate(in);
                 if (wrapper.getListHandler() != null) {
                     wrapper.getListHandler().handle(resp);
@@ -306,7 +307,7 @@ public class Requester extends Linkable {
                 break;
             case "set":
                 SetRequest setRequest = (SetRequest) request;
-                String path = setRequest.getPath();
+                path = setRequest.getPath();
                 manager.getNode(path, true);
                 SetResponse setResponse = new SetResponse(rid, link, path);
                 setResponse.populate(in);

@@ -27,11 +27,12 @@ public class ListResponse implements Response {
     private final SubscriptionManager manager;
     private final int rid;
     private final Node node;
+    private final String path;
 
     private final Map<Node, Boolean> updates = new HashMap<>();
 
     public ListResponse(DSLink link, SubscriptionManager manager,
-                        int rid, Node node) {
+                        int rid, Node node, String path) {
         if (link == null)
             throw new NullPointerException("link");
         else if (manager == null)
@@ -42,6 +43,7 @@ public class ListResponse implements Response {
         this.manager = manager;
         this.rid = rid;
         this.node = node;
+        this.path = path;
     }
 
     /**
@@ -363,10 +365,7 @@ public class ListResponse implements Response {
         }
         out.putArray("updates", updates);
 
-        if (node != null) {
-            manager.addPathSub(node, this);
-        }
-
+        manager.addPathSub(path, this);
         return out;
     }
 

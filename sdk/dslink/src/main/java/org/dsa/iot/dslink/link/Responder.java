@@ -64,7 +64,7 @@ public class Responder extends Linkable {
                     node.getListener().postListUpdate();
                 }
                 SubscriptionManager subs = link.getSubscriptionManager();
-                response = new ListResponse(link, subs, rid, node);
+                response = new ListResponse(link, subs, rid, node, path);
                 break;
             case "set":
                 path = in.getString("path");

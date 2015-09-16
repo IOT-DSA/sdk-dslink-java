@@ -17,13 +17,12 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class SubscriptionManager {
 
-    private final Object valueLock = new Object();
-
-    private final Map<Node, ListResponse> pathSubsMap = new ConcurrentHashMap<>();
-    private final Map<String, Integer> pathSubs = new ConcurrentHashMap<>();
+    private final Map<String, ListResponse> pathSubsMap = new ConcurrentHashMap<>();
 
     private final Map<String, Integer> valueSubsPaths = new HashMap<>();
     private final Map<Integer, String> valueSubsSids = new HashMap<>();
+
+    private final Object valueLock = new Object();
     private final DSLink link;
 
     public SubscriptionManager(DSLink link) {
@@ -51,7 +50,7 @@ public class SubscriptionManager {
      */
     @SuppressWarnings("unused")
     public boolean hasPathSub(Node node) {
-        return pathSubsMap.containsKey(node);
+        return node != null && pathSubsMap.containsKey(node.getPath());
     }
 
     /**
@@ -128,14 +127,14 @@ public class SubscriptionManager {
      * to publish a child update and have it updated to the remote endpoint if
      * it is subscribed.
      *
-     * @param node Node to subscribe to
+     * @param path Path to subscribe to
      * @param resp Response to send updates to
      */
-    public void addPathSub(Node node, ListResponse resp) {
-        if (node == null) {
+    public void addPathSub(String path, ListResponse resp) {
+        if (path == null) {
             return;
         }
-        pathSubsMap.put(node, resp);
+        pathSubsMap.put(path, resp);
     }
 
     /**
@@ -147,13 +146,14 @@ public class SubscriptionManager {
         if (node == null) {
             return;
         }
-        ListResponse resp = pathSubsMap.remove(node);
+        ListResponse resp = pathSubsMap.remove(node.getPath());
         if (resp != null) {
             Map<String, Node> children = node.getChildren();
             if (children != null) {
                 for (Node child : children.values()) {
-                    resp = pathSubsMap.get(child);
+                    resp = pathSubsMap.get(child.getPath());
                     if (resp != null) {
+                        // Ensure the children get cleaned up
                         resp.getCloseResponse();
                     }
                 }
@@ -168,18 +168,11 @@ public class SubscriptionManager {
      * @param removed Whether the child was removed or not.
      */
     public void postChildUpdate(Node child, boolean removed) {
-        ListResponse resp = null;
-        Integer i = pathSubs.remove(child.getPath());
-        if (i != null) {
-            Node parent = child.getParent();
-            resp = new ListResponse(link, this, 0, parent);
-            addPathSub(parent, resp);
+        Node parent = child.getParent();
+        if (parent == null) {
+            return;
         }
-
-        if (resp == null) {
-            resp = pathSubsMap.get(child.getParent());
-        }
-
+        ListResponse resp = pathSubsMap.get(parent.getPath());
         if (resp != null) {
             resp.childUpdate(child, removed);
         }
@@ -226,7 +219,7 @@ public class SubscriptionManager {
      * @param value The new value of the update.
      */
     public void postMetaUpdate(Node node, String name, Value value) {
-        ListResponse resp = pathSubsMap.get(node);
+        ListResponse resp = pathSubsMap.get(node.getPath());
         if (resp != null) {
             resp.metaUpdate(name, value);
         }
