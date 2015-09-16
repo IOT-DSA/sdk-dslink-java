@@ -115,10 +115,10 @@ public class NodeManager {
         return path;
     }
 
-    private static class SuperRoot extends Node {
+    public static class SuperRoot extends Node {
 
-        public SuperRoot(Linkable link, String profile) {
-            super(null, null, link);
+        private SuperRoot(Linkable link, String profile) {
+            super("", null, link);
             super.setProfile(profile);
         }
     }

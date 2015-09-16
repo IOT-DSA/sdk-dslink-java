@@ -71,20 +71,22 @@ public class Node {
         this.listener = new NodeListener(this);
         this.link = link;
         name = StringUtils.encodeName(name);
+        if (name == null) {
+            throw new IllegalArgumentException("name");
+        }
         if (parent != null) {
-            if (name == null || name.isEmpty()) {
+            if (name.isEmpty()) {
                 throw new IllegalArgumentException("name");
             }
             this.name = name;
-            this.path = parent.getPath() + "/" + name;
-        } else {
-            if (name != null) {
+            if (parent instanceof NodeManager.SuperRoot) {
                 this.path = "/" + name;
-                this.name = name;
             } else {
-                this.path = "";
-                this.name = "";
+                this.path = parent.getPath() + "/" + name;
             }
+        } else {
+            this.path = "/" + name;
+            this.name = name;
         }
     }
 
