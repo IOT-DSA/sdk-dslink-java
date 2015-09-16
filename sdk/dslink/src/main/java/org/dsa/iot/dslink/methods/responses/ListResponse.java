@@ -158,10 +158,8 @@ public class ListResponse implements Response {
             node.setAttribute(name, ValueUtils.toValue(v));
         } else {
             // Child node
-            @SuppressWarnings("ConstantConditions")
             JsonObject childData = (JsonObject) v;
             Node child = node.getChild(name);
-            NodeBuilder builder = null;
 
             String change = childData.getString("change");
             if (change != null && "remove".equals(change)) {
@@ -174,70 +172,41 @@ public class ListResponse implements Response {
 
             String is = childData.getString("$is");
             if (child == null) {
-                builder = node.createChild(name);
-                builder.setProfile(is);
+                NodeBuilder builder = node.createChild(name, is);
+                child = builder.build();
             }
 
             String _interface = childData.getString("$interface");
             if (_interface != null) {
-                if (builder != null) {
-                    builder.setInterfaces(_interface);
-                } else {
-                    child.setInterfaces(_interface);
-                }
+                child.setInterfaces(_interface);
             }
 
             String displayName = childData.getString("$name");
             if (displayName != null) {
-                if (builder != null) {
-                    builder.setDisplayName(displayName);
-                } else {
-                    child.setDisplayName(displayName);
-                }
+                child.setDisplayName(displayName);
             }
 
             String type = childData.getString("$type");
             if (type != null) {
                 ValueType t = ValueType.toValueType(type);
-                if (builder != null) {
-                    builder.setValueType(t);
-                } else {
-                    child.setValueType(t);
-                }
+                child.setValueType(t);
             }
 
             String invokable = childData.getString("$invokable");
             if (invokable != null) {
                 Permission perm = Permission.toEnum(invokable);
-                Action action = getRawAction(perm);
-                if (builder != null) {
-                    builder.setAction(action);
-                } else {
-                    child.setAction(action);
-                }
+                getOrCreateAction(child, perm);
             }
 
             Boolean hidden = childData.getBoolean("$hidden");
             if (hidden != null) {
-                if (builder != null) {
-                    builder.setHidden(hidden);
-                } else {
-                    child.setHidden(hidden);
-                }
+                child.setHidden(hidden);
             }
 
             JsonObject linkData = childData.getObject("$linkData");
             if (linkData != null) {
                 Value val = new Value(linkData);
-                if (builder != null) {
-                    builder.setConfig("linkData", val);
-                } else {
-                    child.setConfig("linkData", val);
-                }
-            }
-
-            if (builder != null) {
-                child = builder.build();
+                child.setConfig("linkData", val);
             }
 
             updates.put(child, false);
@@ -514,6 +483,10 @@ public class ListResponse implements Response {
                 String editor = data.getString("editor");
                 if (editor != null) {
                     param.setEditorType(EditorType.make(editor));
+                }
+                Object def = data.getField("default");
+                if (def != null) {
+                    param.setDefaultValue(ValueUtils.toValue(def));
                 }
                 act.addParameter(param);
             }
