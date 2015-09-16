@@ -146,19 +146,7 @@ public class SubscriptionManager {
         if (node == null) {
             return;
         }
-        ListResponse resp = pathSubsMap.remove(node.getPath());
-        if (resp != null) {
-            Map<String, Node> children = node.getChildren();
-            if (children != null) {
-                for (Node child : children.values()) {
-                    resp = pathSubsMap.get(child.getPath());
-                    if (resp != null) {
-                        // Ensure the children get cleaned up
-                        resp.getCloseResponse();
-                    }
-                }
-            }
-        }
+        pathSubsMap.remove(node.getPath());
     }
 
     /**
