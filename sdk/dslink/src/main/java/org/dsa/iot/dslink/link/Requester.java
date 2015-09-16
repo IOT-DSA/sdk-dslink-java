@@ -12,6 +12,7 @@ import org.dsa.iot.dslink.node.NodePair;
 import org.dsa.iot.dslink.node.SubscriptionManager;
 import org.dsa.iot.dslink.node.value.SubscriptionValue;
 import org.dsa.iot.dslink.util.Objects;
+import org.dsa.iot.dslink.util.SubData;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonObject;
 
@@ -88,25 +89,41 @@ public class Requester extends Linkable {
         return Collections.unmodifiableMap(subUpdates);
     }
 
-    public void subscribe(String path, Handler<SubscriptionValue> onUpdate) {
-        Set<String> paths = new HashSet<>();
-        paths.add(path);
-        subscribe(paths, onUpdate);
+    public void subscribe(String path,
+                          Handler<SubscriptionValue> onUpdate) {
+        SubData sub = new SubData(path, null);
+        subscribe(sub, onUpdate);
     }
 
-    public void subscribe(Set<String> paths, Handler<SubscriptionValue> onUpdate) {
+    public void subscribe(SubData path,
+                          Handler<SubscriptionValue> onUpdate) {
+        subscribe(Collections.singleton(path), onUpdate);
+    }
+
+    public void subscribe(Set<SubData> paths,
+                          Handler<SubscriptionValue> onUpdate) {
         if (paths == null) {
             throw new NullPointerException("paths");
         }
-        Map<String, Integer> subs = new HashMap<>();
+        subscribe(new SubscribeRequest(paths), onUpdate);
+    }
+
+    public void subscribe(SubscribeRequest req,
+                          Handler<SubscriptionValue> onUpdate) {
+        if (req == null) {
+            throw new NullPointerException("req");
+        }
+        final Set<SubData> paths = req.getPaths();
+        Map<SubData, Integer> subs = new HashMap<>();
         int min = currentSubID.getAndAdd(paths.size());
         int max = min + paths.size();
-        Iterator<String> it = paths.iterator();
+        Iterator<SubData> it = paths.iterator();
         StringBuilder error = null;
         while (min < max && it.hasNext()) {
             try {
-                String path = NodeManager.normalizePath(it.next(), true);
-                subs.put(path, min);
+                SubData data = it.next();
+                String path = data.getPath();
+                subs.put(data, min);
                 Integer prev = subPaths.put(path, min);
                 if (prev != null) {
                     String err = "Path " + path + " already subscribed";
@@ -127,8 +144,8 @@ public class Requester extends Linkable {
                 error.append("\n\n");
             }
         }
-        SubscribeRequest req = new SubscribeRequest(subs);
 
+        req.setSubSids(subs);
         RequestWrapper wrapper = new RequestWrapper(req);
         sendRequest(wrapper, currentReqID.incrementAndGet());
         if (error != null) {
