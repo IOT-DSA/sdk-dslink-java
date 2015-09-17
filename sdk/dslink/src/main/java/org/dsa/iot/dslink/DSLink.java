@@ -148,7 +148,7 @@ public class DSLink {
      * @param requester Whether to handle responses.
      * @param responder Whether to handle requests.
      */
-    public void setDefaultDataHandlers(boolean requester, boolean responder) {
+    public void setDefaultDataHandlers(final boolean requester, final boolean responder) {
         if (requester) {
             getWriter().setRespHandler(new Handler<DataReceived>() {
                 @Override
@@ -163,14 +163,6 @@ public class DSLink {
                         }
                     }
                     getWriter().writeAck(event.getMsgId());
-                }
-            });
-
-            getWriter().setCloseHandler(new Handler<Void>() {
-                @Override
-                public void handle(Void event) {
-                    DSLink.this.requester.clearSubscriptions();
-                    getLinkHandler().onRequesterDisconnected(DSLink.this);
                 }
             });
         }
@@ -209,14 +201,21 @@ public class DSLink {
                     getWriter().writeRequestResponses(msgId, responses);
                 }
             });
+        }
 
-            getWriter().setCloseHandler(new Handler<Void>() {
-                @Override
-                public void handle(Void event) {
+        getWriter().setCloseHandler(new Handler<Void>() {
+            @Override
+            public void handle(Void event) {
+                if (requester) {
+                    DSLink.this.requester.clearSubscriptions();
+                    getLinkHandler().onRequesterDisconnected(DSLink.this);
+                }
+
+                if (responder) {
                     getLinkHandler().onResponderDisconnected(DSLink.this);
                 }
-            });
-        }
+            }
+        });
     }
 
     /**
