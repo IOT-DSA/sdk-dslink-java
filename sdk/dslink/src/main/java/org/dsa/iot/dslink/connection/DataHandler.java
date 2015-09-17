@@ -94,7 +94,10 @@ public class DataHandler {
         client.write(top.encode());
     }
 
-    public void writeAck(int ack) {
+    public void writeAck(Integer ack) {
+        if (ack == null) {
+            return;
+        }
         JsonObject obj = new JsonObject();
         obj.putNumber("ack", ack);
         client.write(obj.encode());
