@@ -100,12 +100,11 @@ public class DSLinkInfo {
 
     private boolean isEntryNative(ZipEntry entry) {
         String name = entry.getName();
-        boolean isNative = !entry.isDirectory()
+        return !entry.isDirectory()
                 && (name.endsWith(".a")
                     || name.endsWith(".so")
                     || name.endsWith(".dylib")
                     || name.endsWith(".dll"));
-        return isNative;
     }
 
     public static DSLinkInfo load(Path root, String brokerUrl)

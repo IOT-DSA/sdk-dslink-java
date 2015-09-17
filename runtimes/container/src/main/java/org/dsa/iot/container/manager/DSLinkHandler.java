@@ -77,7 +77,7 @@ public class DSLinkHandler {
             }
         }, info.getName());
         thread.start();
-        System.err.println("Started dslink `" + name + "`");
+        System.err.println("Started DSLink `" + name + "`");
     }
 
     @SuppressFBWarnings("DM_GC")
