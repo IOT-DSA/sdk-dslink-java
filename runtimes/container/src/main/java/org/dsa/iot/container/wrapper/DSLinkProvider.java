@@ -33,7 +33,7 @@ public class DSLinkProvider {
             config.setKeys(keys);
         }
         {
-            File file = info.getRoot().resolve(".nodes").toFile();
+            File file = info.getRoot().resolve("nodes.json").toFile();
             config.setSerializationPath(file);
         }
 
