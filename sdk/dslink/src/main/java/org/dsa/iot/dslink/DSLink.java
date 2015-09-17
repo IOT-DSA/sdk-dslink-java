@@ -166,7 +166,7 @@ public class DSLink {
                 }
             });
 
-            getWriter().setCloseHandler(new Handler<Void>() {
+            getWriter().setReqCloseHandler(new Handler<Void>() {
                 @Override
                 public void handle(Void event) {
                     DSLink.this.requester.clearSubscriptions();
@@ -210,7 +210,7 @@ public class DSLink {
                 }
             });
 
-            getWriter().setCloseHandler(new Handler<Void>() {
+            getWriter().setRespCloseHandler(new Handler<Void>() {
                 @Override
                 public void handle(Void event) {
                     getLinkHandler().onResponderDisconnected(DSLink.this);
