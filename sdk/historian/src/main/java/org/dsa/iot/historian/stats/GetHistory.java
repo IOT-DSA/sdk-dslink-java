@@ -73,7 +73,11 @@ public class GetHistory implements Handler<ActionResult> {
 
         final Table table = event.getTable();
         event.setStreamState(StreamState.INITIALIZED);
-        table.setMode(Table.Mode.APPEND);
+        if (rt) {
+            table.setMode(Table.Mode.STREAM);
+        } else {
+            table.setMode(Table.Mode.APPEND);
+        }
 
         ScheduledThreadPoolExecutor stpe = Objects.getDaemonThreadPool();
         stpe.execute(new Runnable() {
