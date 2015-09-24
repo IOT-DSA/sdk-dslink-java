@@ -124,6 +124,7 @@ public class NodeBuilder {
         // order to ensure that the action is preserved after serialization,
         // the action must be reset on the child node.
 
+        node.setProfile(child.getProfile());
         node.setMetaData(child.getMetaData());
         {
             // addChild can return a pre-existing node. This results in the
