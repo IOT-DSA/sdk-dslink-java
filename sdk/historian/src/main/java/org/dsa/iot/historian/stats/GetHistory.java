@@ -146,6 +146,7 @@ public class GetHistory implements Handler<ActionResult> {
 
         NodeBuilder b = node.createChild("getHistory", "getHistory_");
         b.setDisplayName("Get History");
+        b.setSerializable(false);
         b.setAction(a);
         b.build();
     }
