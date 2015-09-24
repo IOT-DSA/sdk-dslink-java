@@ -44,6 +44,7 @@ public class BatchRow {
             return new Modifier("replace " + start + "-" + end);
         }
 
+        @SuppressWarnings("unused")
         public static Modifier makeInsert(int pos) {
             return new Modifier("insert " + pos);
         }

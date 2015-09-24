@@ -47,7 +47,7 @@ public class InvokeResponse implements Response {
     @Override
     public void populate(JsonObject in) {
         if (results == null) {
-            results = new Table(null);
+            results = new Table();
         }
         {
             JsonArray cols = in.getArray("columns");
@@ -102,7 +102,7 @@ public class InvokeResponse implements Response {
             throw new RuntimeException("Node not invokable at " + path);
         }
 
-        actRes = new ActionResult(node, action, in);
+        actRes = new ActionResult(node, in);
         action.invoke(actRes);
 
         final Table table = actRes.getTable();

@@ -102,6 +102,7 @@ public class GetHistory implements Handler<ActionResult> {
                     @Override
                     public void handle(QueryData data) {
                         if (data == null) {
+                            table.sendReady();
                             if (!rt) {
                                 table.close();
                             } else if (open) {

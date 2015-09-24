@@ -122,6 +122,7 @@ public class Actions {
                 @Override
                 public void handle(final ActionResult event) {
                     event.setStreamState(StreamState.INITIALIZED);
+                    event.getTable().sendReady();
                     ScheduledThreadPoolExecutor stpe = Objects.getDaemonThreadPool();
                     future = stpe.scheduleWithFixedDelay(new Runnable() {
 
@@ -153,6 +154,7 @@ public class Actions {
                     event.setStreamState(StreamState.INITIALIZED);
                     ScheduledThreadPoolExecutor stpe = Objects.getDaemonThreadPool();
                     event.getTable().setMode(Table.Mode.REFRESH);
+                    event.getTable().sendReady();
                     future = stpe.scheduleWithFixedDelay(new Runnable() {
 
                         private final Random random = new Random();
@@ -185,6 +187,7 @@ public class Actions {
                     event.setStreamState(StreamState.INITIALIZED);
                     final Random random = new Random();
                     event.getTable().setMode(Table.Mode.APPEND);
+                    event.getTable().sendReady();
                     for (int i = 0; i < 10; ++i) {
                         Value value = new Value(random.nextInt());
                         event.getTable().addRow(Row.make(value));
