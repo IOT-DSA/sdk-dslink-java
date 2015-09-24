@@ -122,7 +122,6 @@ public class Actions {
                 @Override
                 public void handle(final ActionResult event) {
                     event.setStreamState(StreamState.INITIALIZED);
-                    event.setCloseHandler(new FutureCloseHandler(future));
                     ScheduledThreadPoolExecutor stpe = Objects.getDaemonThreadPool();
                     future = stpe.scheduleWithFixedDelay(new Runnable() {
 
@@ -137,6 +136,7 @@ public class Actions {
                             }
                         }
                     }, 0, 300, TimeUnit.MILLISECONDS);
+                    event.setCloseHandler(new FutureCloseHandler(future));
                 }
             });
             TABLE_STREAM_ACTION.addResult(new Parameter("number", ValueType.STRING));
@@ -151,7 +151,6 @@ public class Actions {
                 @Override
                 public void handle(final ActionResult event) {
                     event.setStreamState(StreamState.INITIALIZED);
-                    event.setCloseHandler(new FutureCloseHandler(future));
                     ScheduledThreadPoolExecutor stpe = Objects.getDaemonThreadPool();
                     event.getTable().setMode(Table.Mode.REFRESH);
                     future = stpe.scheduleWithFixedDelay(new Runnable() {
@@ -169,6 +168,7 @@ public class Actions {
                             t.addBatchRows(row);
                         }
                     }, 0, 1, TimeUnit.SECONDS);
+                    event.setCloseHandler(new FutureCloseHandler(future));
                 }
             });
             TABLE_REFRESH_ACTION.addResult(new Parameter("number", ValueType.STRING));
@@ -183,15 +183,13 @@ public class Actions {
                 @Override
                 public void handle(final ActionResult event) {
                     event.setStreamState(StreamState.INITIALIZED);
-                    event.setCloseHandler(new FutureCloseHandler(future));
-                    ScheduledThreadPoolExecutor stpe = Objects.getDaemonThreadPool();
-
                     final Random random = new Random();
                     event.getTable().setMode(Table.Mode.APPEND);
                     for (int i = 0; i < 10; ++i) {
                         Value value = new Value(random.nextInt());
                         event.getTable().addRow(Row.make(value));
                     }
+                    ScheduledThreadPoolExecutor stpe = Objects.getDaemonThreadPool();
                     future = stpe.scheduleWithFixedDelay(new Runnable() {
 
                         private int counter;
@@ -213,6 +211,7 @@ public class Actions {
                             t.addBatchRows(batch);
                         }
                     }, 0, 1, TimeUnit.SECONDS);
+                    event.setCloseHandler(new FutureCloseHandler(future));
                 }
             });
             TABLE_REPLACE_ACTION.addResult(new Parameter("number", ValueType.STRING));

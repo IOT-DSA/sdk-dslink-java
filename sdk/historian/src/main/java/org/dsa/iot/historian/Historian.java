@@ -85,7 +85,6 @@ public abstract class Historian extends DSLinkHandler {
     @Override
     public void onRequesterConnected(DSLink link) {
         provider.setPool(new SubscriptionPool(link.getRequester()));
-        provider.getPool().clear();
         provider.subscribe(respSuperRoot);
         LOGGER.info("Connected");
     }
@@ -109,7 +108,7 @@ public abstract class Historian extends DSLinkHandler {
         b = node.createChild("profile");
         node = b.build();
 
-        b = node.createChild("getHistory");
+        b = node.createChild("getHistory_");
         Action act = new Action(Permission.READ, null);
         GetHistory.initProfile(act);
         b.setAction(act);

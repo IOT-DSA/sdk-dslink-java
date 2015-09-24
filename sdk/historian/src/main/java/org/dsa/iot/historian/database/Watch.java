@@ -15,11 +15,15 @@ import org.dsa.iot.historian.utils.QueryData;
 import org.dsa.iot.historian.utils.TimeParser;
 import org.vertx.java.core.Handler;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author Samuel Grenier
  */
 public class Watch {
 
+    private final List<Handler<QueryData>> rtHandlers = new ArrayList<>();
     private final WatchGroup group;
     private final Node node;
 
@@ -191,5 +195,28 @@ public class Watch {
         Value v = sv.getValue();
         realTimeValue.setValue(v);
         group.write(this, sv);
+    }
+
+    public void addHandler(Handler<QueryData> handler) {
+        synchronized (rtHandlers) {
+            if (handler == null) {
+                return;
+            }
+            rtHandlers.add(handler);
+        }
+    }
+
+    public void removeHandler(Handler<QueryData> handler) {
+        synchronized (rtHandlers) {
+            rtHandlers.remove(handler);
+        }
+    }
+
+    public void notifyHandlers(QueryData data) {
+        synchronized (rtHandlers) {
+            for (Handler<QueryData> h : rtHandlers) {
+                h.handle(data);
+            }
+        }
     }
 }

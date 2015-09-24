@@ -10,7 +10,9 @@ import org.dsa.iot.dslink.node.actions.table.Table;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.util.Objects;
+import org.dsa.iot.dslink.util.StringUtils;
 import org.dsa.iot.historian.database.Database;
+import org.dsa.iot.historian.database.Watch;
 import org.dsa.iot.historian.utils.QueryData;
 import org.dsa.iot.historian.utils.TimeParser;
 import org.vertx.java.core.Handler;
@@ -26,8 +28,6 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
  */
 public class GetHistory implements Handler<ActionResult> {
 
-    private static ResultType TYPE = ResultType.TABLE;
-
     private final Database db;
     private final String path;
 
@@ -37,7 +37,7 @@ public class GetHistory implements Handler<ActionResult> {
     }
 
     @Override
-    public void handle(ActionResult event) {
+    public void handle(final ActionResult event) {
         final long from;
         final long to;
         {
@@ -68,52 +68,83 @@ public class GetHistory implements Handler<ActionResult> {
         final Value def = new Value("none");
         final String sInterval = event.getParameter("Interval", def).getString();
         final String sRollup = event.getParameter("Rollup", def).getString();
+        final boolean rt = event.getParameter("Real Time", new Value(false)).getBool();
         final Interval interval = Interval.parse(sInterval, sRollup);
 
         final Table table = event.getTable();
         event.setStreamState(StreamState.INITIALIZED);
-        table.setMode(Table.Mode.STREAM);
+        table.setMode(Table.Mode.APPEND);
 
         ScheduledThreadPoolExecutor stpe = Objects.getDaemonThreadPool();
         stpe.execute(new Runnable() {
+
+            private boolean open = true;
+            Handler<QueryData> handler;
+
             @Override
             public void run() {
+                event.setCloseHandler(new Handler<Void>() {
+                    @Override
+                    public void handle(Void ignored) {
+                        open = false;
+                        if (handler != null) {
+                            Watch w = event.getNode().getParent().getMetaData();
+                            w.removeHandler(handler);
+                        }
+                    }
+                });
+
                 db.query(path, from, to, new Handler<QueryData>() {
                     @Override
-                    public void handle(QueryData event) {
-                        if (event == null) {
-                            table.close();
+                    public void handle(QueryData data) {
+                        if (data == null) {
+                            if (!rt) {
+                                table.close();
+                            } else if (open) {
+                                handler = new Handler<QueryData>() {
+                                    @Override
+                                    public void handle(QueryData event) {
+                                        processQueryData(table, interval, event);
+                                    }
+                                };
+                                Watch w = event.getNode().getParent().getMetaData();
+                                w.addHandler(handler);
+                            }
                             return;
                         }
-
-                        Row row;
-                        Value value = event.getValue();
-                        long time = event.getTimestamp();
-                        if (interval == null) {
-                            row = new Row();
-                            String t = TimeParser.parse(time);
-                            row.addValue(new Value(t));
-                            row.addValue(event.getValue());
-                        } else {
-                            row = interval.getRowUpdate(value, time);
-                        }
-
-                        if (row != null) {
-                            table.addRow(row);
-                        }
+                        processQueryData(table, interval, data);
                     }
                 });
             }
         });
     }
 
+    private void processQueryData(Table table,
+                                  Interval interval,
+                                  QueryData data) {
+        Row row;
+        Value value = data.getValue();
+        long time = data.getTimestamp();
+        if (interval == null) {
+            row = new Row();
+            String t = TimeParser.parse(time);
+            row.addValue(new Value(t));
+            row.addValue(value);
+        } else {
+            row = interval.getRowUpdate(value, time);
+        }
+
+        if (row != null) {
+            table.addRow(row);
+        }
+    }
+
     public static void initAction(Node node, Database db) {
-        String path = node.getName().replaceAll("%2F", "/");
+        String path = StringUtils.decodeName(node.getName());
         Action a =  new Action(Permission.READ, new GetHistory(path, db));
-        a.setResultType(TYPE);
         a.setHidden(true);
 
-        NodeBuilder b = node.createChild("getHistory", "getHistory");
+        NodeBuilder b = node.createChild("getHistory", "getHistory_");
         b.setDisplayName("Get History");
         b.setAction(a);
         b.build();
@@ -127,8 +158,8 @@ public class GetHistory implements Handler<ActionResult> {
         }
 
         {
-            Value def = new Value("none");
-            Parameter param = new Parameter("Interval", ValueType.STRING, def);
+            Parameter param = new Parameter("Interval", ValueType.STRING);
+            param.setDefaultValue(new Value("none"));
             act.addParameter(param);
         }
 
@@ -149,6 +180,12 @@ public class GetHistory implements Handler<ActionResult> {
         }
 
         {
+            Parameter param = new Parameter("Real Time", ValueType.BOOL);
+            param.setDefaultValue(new Value(false));
+            act.addParameter(param);
+        }
+
+        {
             Parameter param = new Parameter("timestamp", ValueType.TIME);
             act.addResult(param);
         }
@@ -158,7 +195,7 @@ public class GetHistory implements Handler<ActionResult> {
             act.addResult(param);
         }
 
-        act.setResultType(TYPE);
+        act.setResultType(ResultType.STREAM);
     }
 
 }

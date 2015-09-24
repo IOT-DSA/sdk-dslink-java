@@ -23,10 +23,6 @@ public class SubscriptionPool {
         this.requester = requester;
     }
 
-    public synchronized void clear() {
-        subscriptions.clear();
-    }
-
     public synchronized void subscribe(String path, Watch watch) {
         SubHandler handler = subscriptions.get(path);
         if (handler == null) {

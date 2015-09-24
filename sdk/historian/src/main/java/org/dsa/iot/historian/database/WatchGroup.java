@@ -11,6 +11,7 @@ import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.util.NodeUtils;
 import org.dsa.iot.dslink.util.Objects;
+import org.dsa.iot.historian.utils.QueryData;
 import org.dsa.iot.historian.utils.TimeParser;
 import org.dsa.iot.historian.utils.WatchUpdate;
 import org.vertx.java.core.Handler;
@@ -225,10 +226,9 @@ public class WatchGroup {
 
             final Parameter lt;
             {
-                Value v = NodeUtils.getRoConfig(b, "lt");
-                Set<String> enums = LoggingType.buildEnums(v.getString());
+                Set<String> enums = LoggingType.buildEnums();
                 lt = new Parameter("Logging Type", ValueType.makeEnum(enums));
-                lt.setDefaultValue(v);
+                lt.setDefaultValue(NodeUtils.getRoConfig(b, "lt"));
                 {
                     String desc = "Logging type controls what kind of data ";
                     desc += "gets stored into the database";
@@ -326,7 +326,9 @@ public class WatchGroup {
         Value value = update.getUpdate().getValue();
         if (value != null) {
             long time = TimeParser.parse(value.getTimeStamp());
-            db.write(update.getWatch().getPath(), value, time);
+            Watch watch = update.getWatch();
+            db.write(watch.getPath(), value, time);
+            watch.notifyHandlers(new QueryData(value, time));
         }
     }
 
@@ -385,8 +387,7 @@ public class WatchGroup {
             i.setDefaultValue(vI);
             setInterval(vI.getNumber().longValue());
 
-            Set<String> enums = LoggingType.buildEnums(vLt.getString());
-            lt.setValueType(ValueType.makeEnum(enums));
+            lt.setDefaultValue(vLt);
 
             List<Parameter> params = new LinkedList<>();
             params.add(bft);
