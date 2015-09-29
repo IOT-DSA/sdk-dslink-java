@@ -15,7 +15,7 @@ public class JsonObject implements Iterable<Map.Entry<String, Object>> {
 
     @SuppressWarnings("unchecked")
     public JsonObject(String json) {
-        this((Map) Json.decode(json, Map.class));
+        this(Json.decodeMap(json));
     }
 
     public JsonObject(Map<String, Object> map) {
@@ -30,10 +30,6 @@ public class JsonObject implements Iterable<Map.Entry<String, Object>> {
 
     public String encode() {
         return Json.encode(this);
-    }
-
-    public String encodePrettily() {
-        return Json.encodePrettily(this);
     }
 
     public boolean contains(String key) {

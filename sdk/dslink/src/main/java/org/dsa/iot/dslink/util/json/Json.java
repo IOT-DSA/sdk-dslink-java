@@ -1,17 +1,16 @@
 package org.dsa.iot.dslink.util.json;
 
+import com.fasterxml.jackson.core.JsonEncoding;
+import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueUtils;
+import org.dsa.iot.dslink.util.json.decoders.ListDecoder;
+import org.dsa.iot.dslink.util.json.decoders.MapDecoder;
+import org.dsa.iot.dslink.util.json.encoders.ListEncoder;
+import org.dsa.iot.dslink.util.json.encoders.MapEncoder;
 
-import java.io.IOException;
+import java.io.ByteArrayOutputStream;
 import java.util.List;
 import java.util.Map;
 
@@ -20,32 +19,33 @@ import java.util.Map;
  */
 public class Json {
 
-    static final ObjectMapper PRETTY_MAPPER = new ObjectMapper();
-    static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final JsonFactory FACTORY = new JsonFactory();
+
+    private Json() {
+    }
 
     public static String encode(Object obj) {
-        try {
-            return MAPPER.writeValueAsString(obj);
-        } catch (JsonProcessingException e) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        JsonEncoding enc = JsonEncoding.UTF8;
+        try (JsonGenerator gen = FACTORY.createGenerator(baos, enc)) {
+            if (obj instanceof JsonObject) {
+                MapEncoder.write(gen, (JsonObject) obj);
+            } else if (obj instanceof JsonArray) {
+                ListEncoder.write(gen, (JsonArray) obj);
+            }
+            gen.close();
+            return baos.toString("UTF-8");
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static String encodePrettily(Object obj) {
-        try {
-            return PRETTY_MAPPER.writeValueAsString(obj);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+    public static Map<String, Object> decodeMap(String content) {
+        return MapDecoder.decode(FACTORY, content);
     }
 
-    @SuppressWarnings("unchecked")
-    public static <T> T decode(String content, Class<?> clazz) {
-        try {
-            return (T) MAPPER.readValue(content, clazz);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    public static List<Object> decodeList(String content) {
+        return ListDecoder.decode(FACTORY, content);
     }
 
     @SuppressWarnings("unchecked")
@@ -73,39 +73,5 @@ public class Json {
             return ValueUtils.toObject((Value) value);
         }
         return value;
-    }
-
-    public static ObjectMapper getMapper() {
-        return MAPPER;
-    }
-
-    private static class JsonObjectSerializer extends JsonSerializer<JsonObject> {
-        @Override
-        public void serialize(JsonObject value,
-                              JsonGenerator gen,
-                              SerializerProvider provider) throws IOException {
-            gen.writeObject(value.getMap());
-        }
-    }
-
-    private static class JsonArraySerializer extends JsonSerializer<JsonArray> {
-        @Override
-        public void serialize(JsonArray value,
-                              JsonGenerator gen,
-                              SerializerProvider provider) throws IOException {
-            gen.writeObject(value.getList());
-        }
-    }
-
-    static {
-        MAPPER.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
-        PRETTY_MAPPER.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
-        PRETTY_MAPPER.configure(SerializationFeature.INDENT_OUTPUT, true);
-
-        SimpleModule module = new SimpleModule();
-        module.addSerializer(JsonObject.class, new JsonObjectSerializer());
-        module.addSerializer(JsonArray.class, new JsonArraySerializer());
-        MAPPER.registerModule(module);
-        PRETTY_MAPPER.registerModule(module);
     }
 }

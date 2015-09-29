@@ -17,7 +17,7 @@ public class JsonArray implements Iterable<Object> {
     }
 
     public JsonArray(String content) {
-        this((List) Json.decode(content, List.class));
+        this(Json.decodeList(content));
     }
 
     @SuppressWarnings("unchecked")
@@ -33,11 +33,6 @@ public class JsonArray implements Iterable<Object> {
 
     public String encode() {
         return Json.encode(this);
-    }
-
-    @SuppressWarnings("unused")
-    public String encodePrettily() {
-        return Json.encodePrettily(this);
     }
 
     @SuppressWarnings("unchecked")

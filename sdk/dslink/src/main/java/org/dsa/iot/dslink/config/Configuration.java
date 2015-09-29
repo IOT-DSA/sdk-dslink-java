@@ -1,19 +1,16 @@
 package org.dsa.iot.dslink.config;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParser;
 import org.dsa.iot.dslink.DSLinkHandler;
 import org.dsa.iot.dslink.connection.ConnectionType;
 import org.dsa.iot.dslink.handshake.LocalKeys;
+import org.dsa.iot.dslink.util.FileUtils;
 import org.dsa.iot.dslink.util.PropertyReference;
 import org.dsa.iot.dslink.util.URLInfo;
-import org.dsa.iot.dslink.util.json.Json;
 import org.dsa.iot.dslink.util.json.JsonObject;
 import org.dsa.iot.dslink.util.log.LogManager;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
 
 /**
  * Holds the configuration of a DSLink.
@@ -315,40 +312,31 @@ public class Configuration {
 
     @SuppressWarnings("unchecked")
     private static JsonObject getAndValidateJson(String jsonPath) {
-        JsonFactory factory = Json.getMapper().getFactory();
         File file = new File(jsonPath);
-        try (JsonParser parser = factory.createParser(file)) {
-            JsonObject json = null;
-            parser.nextToken();
-            while (parser.nextToken() != null) {
-                String name = parser.getText();
-                if ("configs".equals(name)) {
-                    json = new JsonObject(parser.readValueAs(Map.class));
-                    break;
-                }
-            }
+        try {
+            byte[] bytes = FileUtils.readAllBytes(file);
+            JsonObject json = new JsonObject(new String(bytes, "UTF-8"));
+            json = json.get("configs");
 
             if (json == null) {
                 throw new RuntimeException("Missing `configs` field");
             } else {
-                JsonObject configs = json.get("configs");
-
                 String prop = System.getProperty(PropertyReference.VALIDATE, "true");
                 if (!Boolean.parseBoolean(prop)) {
-                    return configs;
+                    return json;
                 }
                 prop = System.getProperty(PropertyReference.VALIDATE_JSON, "true");
                 if (!Boolean.parseBoolean(prop)) {
-                    return configs;
+                    return json;
                 }
 
-                checkField(configs, "broker");
-                checkParam(configs, "name");
-                checkParam(configs, "log");
-                checkParam(configs, "key");
-                checkParam(configs, "nodes");
-                checkParam(configs, "handler_class");
-                return configs;
+                checkField(json, "broker");
+                checkParam(json, "name");
+                checkParam(json, "log");
+                checkParam(json, "key");
+                checkParam(json, "nodes");
+                checkParam(json, "handler_class");
+                return json;
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
