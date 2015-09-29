@@ -2,9 +2,9 @@ package org.dsa.iot.dslink.handshake;
 
 import org.dsa.iot.dslink.config.Configuration;
 import org.dsa.iot.dslink.connection.ConnectionType;
+import org.dsa.iot.dslink.util.json.JsonObject;
 import org.junit.Assert;
 import org.junit.Test;
-import org.vertx.java.core.json.JsonObject;
 
 /**
  * Tests the local handshake json information
@@ -31,14 +31,14 @@ public class LocalHandshakeTest {
         JsonObject object = handshake.toJson();
         Assert.assertNotNull(object);
 
-        Assert.assertFalse(object.containsField("zone"));
+        Assert.assertFalse(object.contains("zone"));
         config.setZone("testZone");
         handshake = new LocalHandshake(config);
         object = handshake.toJson();
-        Assert.assertTrue(object.containsField("zone"));
+        Assert.assertTrue(object.contains("zone"));
 
-        Assert.assertTrue(object.containsField("publicKey"));
-        Assert.assertTrue(object.containsField("isRequester"));
-        Assert.assertTrue(object.containsField("isResponder"));
+        Assert.assertTrue(object.contains("publicKey"));
+        Assert.assertTrue(object.contains("isRequester"));
+        Assert.assertTrue(object.contains("isResponder"));
     }
 }

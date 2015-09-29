@@ -7,7 +7,7 @@ import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.dsa.iot.dslink.util.StringUtils;
-import org.vertx.java.core.json.JsonObject;
+import org.dsa.iot.dslink.util.json.JsonObject;
 
 import java.util.Map;
 import java.util.Set;
@@ -32,7 +32,7 @@ public class Serializer {
                 if (child.isSerializable()) {
                     JsonObject childOut = new JsonObject();
                     serializeChildren(childOut, child);
-                    top.putObject(child.getName(), childOut);
+                    top.put(child.getName(), childOut);
                 }
             }
         }
@@ -42,22 +42,22 @@ public class Serializer {
     private void serializeChildren(JsonObject out, Node parent) {
         String data = parent.getDisplayName();
         if (data != null) {
-            out.putString("$name", data);
+            out.put("$name", data);
         }
 
         Set<String> set = parent.getInterfaces();
         if (set != null && set.size() > 0) {
-            out.putString("$interface", StringUtils.join(set, "|"));
+            out.put("$interface", StringUtils.join(set, "|"));
         }
 
         String profile = parent.getProfile();
         if (profile != null) {
-            out.putString("$is", profile);
+            out.put("$is", profile);
         }
 
         ValueType type = parent.getValueType();
         if (type != null) {
-            out.putString("$type", type.toJsonString());
+            out.put("$type", type.toJsonString());
             Value value = parent.getValue();
             if (value != null) {
                 ValueUtils.toJson(out, "?value", value);
@@ -66,16 +66,16 @@ public class Serializer {
 
         char[] password = parent.getPassword();
         if (password != null) {
-            out.putString("$$password", new String(password));
+            out.put("$$password", new String(password));
         }
 
         Writable writable = parent.getWritable();
         if (!(writable == null || writable == Writable.NEVER)) {
-            out.putString("$writable", writable.toJsonName());
+            out.put("$writable", writable.toJsonName());
         }
 
         if (parent.isHidden()) {
-            out.putBoolean("$hidden", true);
+            out.put("$hidden", true);
         }
 
         addValues("$$", out, parent.getRoConfigurations());
@@ -88,7 +88,7 @@ public class Serializer {
                 if (child.isSerializable()) {
                     JsonObject childOut = new JsonObject();
                     serializeChildren(childOut, child);
-                    out.putObject(child.getName(), childOut);
+                    out.put(child.getName(), childOut);
                 }
             }
         }

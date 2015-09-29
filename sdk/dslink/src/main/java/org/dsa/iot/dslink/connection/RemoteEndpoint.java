@@ -5,7 +5,6 @@ import org.dsa.iot.dslink.handshake.LocalHandshake;
 import org.dsa.iot.dslink.handshake.RemoteHandshake;
 import org.dsa.iot.dslink.util.URLInfo;
 import org.dsa.iot.dslink.util.UrlBase64;
-import org.vertx.java.core.buffer.Buffer;
 
 import java.io.UnsupportedEncodingException;
 
@@ -83,12 +82,12 @@ public abstract class RemoteEndpoint extends NetworkHandlers implements NetworkC
                 byte[] salt = handshake.getSalt().getBytes("UTF-8");
                 byte[] sharedSecret = handshake.getRemoteKey().getSharedSecret();
 
-                Buffer buffer = new Buffer(salt.length + sharedSecret.length);
-                buffer.appendBytes(salt);
-                buffer.appendBytes(sharedSecret);
+                byte[] bytes = new byte[salt.length + sharedSecret.length];
+                System.arraycopy(salt, 0, bytes, 0, salt.length);
+                System.arraycopy(sharedSecret, 0, bytes, salt.length, sharedSecret.length);
 
                 SHA256.Digest sha = new SHA256.Digest();
-                byte[] digested = sha.digest(buffer.getBytes());
+                byte[] digested = sha.digest(bytes);
                 uri += UrlBase64.encode(digested);
             } else {
                 // Fake auth parameter

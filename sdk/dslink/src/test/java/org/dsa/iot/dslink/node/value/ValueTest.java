@@ -1,8 +1,8 @@
 package org.dsa.iot.dslink.node.value;
 
+import org.dsa.iot.dslink.util.json.JsonArray;
 import org.junit.Assert;
 import org.junit.Test;
-import org.vertx.java.core.json.JsonArray;
 
 /**
  * Tests the value API.
@@ -57,16 +57,9 @@ public class ValueTest {
         b = new Value("test");
         Assert.assertEquals(a, b);
 
-        a.set(new JsonArray());
-        b.set(new JsonArray());
-        Assert.assertEquals(a, b);
-
-        JsonArray arrayA = new JsonArray();
-        arrayA.addString("Hello world");
-        JsonArray arrayB = new JsonArray();
-        arrayB.addString("Hello world");
-        a.set(arrayA);
-        b.set(arrayB);
+        JsonArray array = new JsonArray();
+        a.set(array);
+        b.set(array);
         Assert.assertEquals(a, b);
     }
 

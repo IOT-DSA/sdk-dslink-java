@@ -6,8 +6,8 @@ import org.dsa.iot.dslink.node.actions.table.Table;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.node.value.ValueUtils;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.json.JsonObject;
+import org.dsa.iot.dslink.util.handler.Handler;
+import org.dsa.iot.dslink.util.json.JsonObject;
 
 /**
  * The results from an invoked action that are set here.
@@ -105,12 +105,12 @@ public class ActionResult {
      * @return Returns a value.
      */
     public Value getParameter(String name, Value def) {
-        JsonObject params = jsonIn.getObject("params");
+        JsonObject params = jsonIn.get("params");
         if (params == null) {
             return def;
         }
 
-        Object obj = params.getField(name);
+        Object obj = params.get(name);
         if (obj == null) {
             return def;
         }

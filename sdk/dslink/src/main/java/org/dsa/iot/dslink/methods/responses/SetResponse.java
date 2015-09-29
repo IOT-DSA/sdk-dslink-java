@@ -10,7 +10,7 @@ import org.dsa.iot.dslink.node.Writable;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.node.value.ValueUtils;
-import org.vertx.java.core.json.JsonObject;
+import org.dsa.iot.dslink.util.json.JsonObject;
 
 /**
  * Handles a set response
@@ -43,8 +43,8 @@ public class SetResponse implements Response {
         updateNode(in);
 
         JsonObject obj = new JsonObject();
-        obj.putNumber("rid", rid);
-        obj.putString("stream", StreamState.CLOSED.getJsonName());
+        obj.put("rid", rid);
+        obj.put("stream", StreamState.CLOSED.getJsonName());
         return obj;
     }
 
@@ -54,7 +54,7 @@ public class SetResponse implements Response {
     }
 
     private void updateNode(JsonObject in) {
-        final Value value = ValueUtils.toValue(in.getField("value"));
+        final Value value = ValueUtils.toValue(in.get("value"));
         NodePair pair = link.getNodeManager().getNode(path, false, false);
         Node node = pair.getNode();
         if (node == null) {

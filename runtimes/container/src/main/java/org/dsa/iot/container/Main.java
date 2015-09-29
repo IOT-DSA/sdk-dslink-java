@@ -23,9 +23,6 @@ public class Main {
         // Set the security manager
         System.setSecurityManager(new SecMan());
 
-        // Start up vert.x threads on main
-        SharedObjects.getVertx();
-
         // Start up global thread pools on main
         SharedObjects.getDaemonThreadPool().prestartAllCoreThreads();
         SharedObjects.getThreadPool().prestartAllCoreThreads();

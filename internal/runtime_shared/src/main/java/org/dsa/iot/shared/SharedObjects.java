@@ -1,8 +1,5 @@
 package org.dsa.iot.shared;
 
-import org.vertx.java.core.Vertx;
-import org.vertx.java.core.impl.DefaultVertx;
-
 import java.util.concurrent.*;
 
 /**
@@ -11,14 +8,9 @@ import java.util.concurrent.*;
 public class SharedObjects {
 
     public static final int POOL_SIZE = 32;
-    private static Vertx VERTX;
 
     private static volatile ScheduledThreadPoolExecutor THREAD_POOL;
     private static volatile ScheduledThreadPoolExecutor DAEMON_THREAD_POOL;
-
-    public static Vertx getVertx() {
-        return VERTX;
-    }
 
     public static ScheduledThreadPoolExecutor createThreadPool(int size) {
         return new ScheduledThreadPool(size);
@@ -103,9 +95,5 @@ public class SharedObjects {
                 throw new RuntimeException(t);
             }
         }
-    }
-
-    static {
-        VERTX = new DefaultVertx();
     }
 }

@@ -11,10 +11,10 @@ import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.util.NodeUtils;
 import org.dsa.iot.dslink.util.Objects;
+import org.dsa.iot.dslink.util.handler.Handler;
 import org.dsa.iot.historian.utils.QueryData;
 import org.dsa.iot.historian.utils.TimeParser;
 import org.dsa.iot.historian.utils.WatchUpdate;
-import org.vertx.java.core.Handler;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;

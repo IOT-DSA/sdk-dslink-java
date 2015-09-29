@@ -1,7 +1,7 @@
 package org.dsa.iot.dslink.node.value;
 
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
+import org.dsa.iot.dslink.util.json.JsonArray;
+import org.dsa.iot.dslink.util.json.JsonObject;
 
 import java.util.List;
 import java.util.Map;
@@ -82,6 +82,30 @@ public class ValueUtils {
     }
 
     /**
+     * @param value Value to convert.
+     * @return Converted {@link Value} to its raw {@link Object} form.
+     */
+    public static Object toObject(Value value) {
+        if (value == null) {
+            return null;
+        }
+        switch (value.getType().toJsonString()) {
+            case ValueType.JSON_BOOL:
+                return value.getBool();
+            case ValueType.JSON_NUMBER:
+                return value.getNumber();
+            case ValueType.JSON_STRING:
+                return value.getString();
+            case ValueType.JSON_MAP:
+                return value.getMap();
+            case ValueType.JSON_ARRAY:
+                return value.getArray();
+            default:
+                throw new RuntimeException(ERROR_MSG + value.getType());
+        }
+    }
+
+    /**
      * @param array JSON array to modify.
      * @param value Value to inject into the JSON array.
      */
@@ -92,22 +116,19 @@ public class ValueUtils {
             throw new NullPointerException("value");
         switch (value.getType().toJsonString()) {
             case ValueType.JSON_BOOL:
-                array.addBoolean(value.getBool());
+                array.add(value.getBool());
                 break;
             case ValueType.JSON_NUMBER:
-                array.addNumber(value.getNumber());
+                array.add(value.getNumber());
                 break;
             case ValueType.JSON_STRING:
-                array.addString(value.getString());
+                array.add(value.getString());
                 break;
             case ValueType.JSON_MAP:
-                array.addObject(value.getMap());
+                array.add(value.getMap());
                 break;
             case ValueType.JSON_ARRAY:
-                array.addArray(value.getArray());
-                break;
-            case ValueType.JSON_ENUM:
-                array.addString(value.toString());
+                array.add(value.getArray());
                 break;
             default:
                 throw new RuntimeException(ERROR_MSG + value.getType());
@@ -131,24 +152,21 @@ public class ValueUtils {
             throw new NullPointerException("value");
         switch (value.getType().toJsonString()) {
             case ValueType.JSON_BOOL:
-                object.putBoolean(name, value.getBool());
+                object.put(name, value.getBool());
                 break;
             case ValueType.JSON_NUMBER:
-                object.putNumber(name, value.getNumber());
+                object.put(name, value.getNumber());
                 break;
             case ValueType.JSON_STRING:
-                object.putString(name, value.getString());
+                object.put(name, value.getString());
                 break;
             case ValueType.JSON_MAP:
                 JsonObject map = value.getMap();
-                object.putObject(name, map);
+                object.put(name, map);
                 break;
             case ValueType.JSON_ARRAY:
                 JsonArray arr = value.getArray();
-                object.putArray(name, arr);
-                break;
-            case ValueType.JSON_ENUM:
-                object.putString(name, value.toString());
+                object.put(name, arr);
                 break;
             default:
                 throw new RuntimeException(ERROR_MSG + value.getType());

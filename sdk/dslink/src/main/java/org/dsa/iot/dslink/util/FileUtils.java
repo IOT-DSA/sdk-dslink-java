@@ -39,7 +39,7 @@ public class FileUtils {
      *
      * @param path Path to write to.
      * @param bytes Bytes to write into the new file.
-     * @throws IOException IO Exception occurred
+     * @throws IOException An error occurred during the write.
      */
     public static void write(File path, byte[] bytes) throws IOException {
         if (path.delete() && LOGGER.isDebugEnabled()) {

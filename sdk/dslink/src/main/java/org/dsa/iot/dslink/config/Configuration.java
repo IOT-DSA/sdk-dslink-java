@@ -1,20 +1,15 @@
 package org.dsa.iot.dslink.config;
 
 import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.dsa.iot.dslink.DSLinkHandler;
 import org.dsa.iot.dslink.connection.ConnectionType;
 import org.dsa.iot.dslink.handshake.LocalKeys;
 import org.dsa.iot.dslink.util.PropertyReference;
 import org.dsa.iot.dslink.util.URLInfo;
+import org.dsa.iot.dslink.util.json.Json;
+import org.dsa.iot.dslink.util.json.JsonObject;
 import org.dsa.iot.dslink.util.log.LogManager;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,8 +21,6 @@ import java.util.Map;
  * @author Samuel Grenier
  */
 public class Configuration {
-
-    private static final ObjectMapper MAPPER;
 
     private URLInfo authEndpoint;
     private String dsId;
@@ -213,7 +206,7 @@ public class Configuration {
         if (data == null) {
             this.linkData = null;
         } else {
-            this.linkData = data.copy();
+            this.linkData = data;
         }
     }
 
@@ -221,7 +214,7 @@ public class Configuration {
      * @return Link data.
      */
     public JsonObject getLinkData() {
-        return linkData != null ? linkData.copy() : null;
+        return linkData;
     }
 
     /**
@@ -322,7 +315,7 @@ public class Configuration {
 
     @SuppressWarnings("unchecked")
     private static JsonObject getAndValidateJson(String jsonPath) {
-        JsonFactory factory = MAPPER.getFactory();
+        JsonFactory factory = Json.getMapper().getFactory();
         File file = new File(jsonPath);
         try (JsonParser parser = factory.createParser(file)) {
             JsonObject json = null;
@@ -338,7 +331,7 @@ public class Configuration {
             if (json == null) {
                 throw new RuntimeException("Missing `configs` field");
             } else {
-                JsonObject configs = json.getObject("configs");
+                JsonObject configs = json.get("configs");
 
                 String prop = System.getProperty(PropertyReference.VALIDATE, "true");
                 if (!Boolean.parseBoolean(prop)) {
@@ -366,54 +359,27 @@ public class Configuration {
                                         JsonObject json,
                                         String field) {
         if (argsVal == null) {
-            JsonObject param = json.getObject(field);
+            JsonObject param = json.get(field);
             if (param == null) {
                 return null;
             }
-            return param.getString("default");
+            return param.get("default");
         }
         return argsVal;
     }
 
     private static void checkField(JsonObject configs, String name) {
-        if (!configs.containsField(name)) {
+        if (!configs.contains(name)) {
             throw new RuntimeException("Missing config field of " + name);
         }
     }
 
     private static void checkParam(JsonObject configs, String param) {
-        JsonObject conf = configs.getObject(param);
+        JsonObject conf = configs.get(param);
         if (conf == null) {
             throw new RuntimeException("Missing config field of " + param);
-        } else if (conf.getString("default") == null) {
+        } else if (conf.get("default") == null) {
             throw new RuntimeException("Missing default value in config of " + param);
         }
-    }
-
-    private static class JsonObjectSerializer extends JsonSerializer<JsonObject> {
-        @Override
-        public void serialize(JsonObject value,
-                              JsonGenerator gen,
-                              SerializerProvider provider) throws IOException {
-            gen.writeObject(value.toMap());
-        }
-    }
-
-    private static class JsonArraySerializer extends JsonSerializer<JsonArray> {
-        @Override
-        public void serialize(JsonArray value,
-                              JsonGenerator gen,
-                              SerializerProvider provider) throws IOException {
-            gen.writeObject(value.toList());
-        }
-    }
-
-    static {
-        MAPPER = new ObjectMapper();
-
-        SimpleModule module = new SimpleModule();
-        module.addSerializer(JsonObject.class, new JsonObjectSerializer());
-        module.addSerializer(JsonArray.class, new JsonArraySerializer());
-        MAPPER.registerModule(module);
     }
 }

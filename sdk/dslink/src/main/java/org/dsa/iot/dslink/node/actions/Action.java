@@ -5,9 +5,9 @@ import org.dsa.iot.dslink.node.Permission;
 import org.dsa.iot.dslink.node.SubscriptionManager;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueUtils;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
+import org.dsa.iot.dslink.util.handler.Handler;
+import org.dsa.iot.dslink.util.json.JsonArray;
+import org.dsa.iot.dslink.util.json.JsonObject;
 
 import java.util.Collection;
 
@@ -95,7 +95,7 @@ public class Action {
         }
         JsonObject param = paramToJson(parameter);
         if (param != null) {
-            params.addObject(param);
+            params.add(param);
         }
         return this;
     }
@@ -116,7 +116,7 @@ public class Action {
         }
         JsonObject result = paramToJson(parameter);
         if (result != null) {
-            results.addObject(result);
+            results.add(result);
         }
         return this;
     }
@@ -214,8 +214,8 @@ public class Action {
         if (param == null)
             return null;
         JsonObject obj = new JsonObject();
-        obj.putString("name", param.getName());
-        obj.putString("type", param.getType().toJsonString());
+        obj.put("name", param.getName());
+        obj.put("type", param.getType().toJsonString());
         Value defVal = param.getDefault();
         if (defVal != null) {
             ValueUtils.toJson(obj, "default", defVal);
@@ -223,17 +223,17 @@ public class Action {
 
         EditorType type = param.getEditorType();
         if (type != null) {
-            obj.putString("editor", type.toJsonString());
+            obj.put("editor", type.toJsonString());
         }
 
         String description = param.getDescription();
         if (description != null) {
-            obj.putString("description", description);
+            obj.put("description", description);
         }
 
         String placeHolder = param.getPlaceHolder();
         if (placeHolder != null) {
-            obj.putString("placeholder", placeHolder);
+            obj.put("placeholder", placeHolder);
         }
 
         return obj;

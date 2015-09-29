@@ -4,7 +4,9 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.lang.Thread.UncaughtExceptionHandler;
-import java.util.concurrent.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Samuel Grenier
@@ -18,7 +20,6 @@ public class ObjectsTest {
 
         Assert.assertNotNull(Objects.getDaemonThreadPool());
         Assert.assertNotNull(Objects.getThreadPool());
-        Assert.assertNotNull(Objects.getVertx());
     }
 
     @Test

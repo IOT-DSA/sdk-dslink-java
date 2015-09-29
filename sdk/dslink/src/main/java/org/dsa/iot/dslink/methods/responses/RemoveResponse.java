@@ -3,7 +3,7 @@ package org.dsa.iot.dslink.methods.responses;
 import org.dsa.iot.dslink.methods.Response;
 import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.node.NodePair;
-import org.vertx.java.core.json.JsonObject;
+import org.dsa.iot.dslink.util.json.JsonObject;
 
 /**
  * @author Samuel Grenier
@@ -36,8 +36,8 @@ public class RemoveResponse implements Response {
         removeConfig();
 
         JsonObject obj = new JsonObject();
-        obj.putNumber("rid", rid);
-        obj.putString("stream", StreamState.CLOSED.getJsonName());
+        obj.put("rid", rid);
+        obj.put("stream", StreamState.CLOSED.getJsonName());
         return obj;
     }
 

@@ -1,6 +1,6 @@
 package org.dsa.iot.dslink.methods;
 
-import org.vertx.java.core.json.JsonObject;
+import org.dsa.iot.dslink.util.json.JsonObject;
 
 /**
  * Generic request API

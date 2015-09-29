@@ -1,7 +1,7 @@
 package org.dsa.iot.responder.util;
 
 
-import org.vertx.java.core.Handler;
+import org.dsa.iot.dslink.util.handler.Handler;
 
 import java.util.concurrent.ScheduledFuture;
 

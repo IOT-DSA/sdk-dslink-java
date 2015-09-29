@@ -1,8 +1,8 @@
 package org.dsa.iot.dslink.methods.requests;
 
 import org.dsa.iot.dslink.methods.Request;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
+import org.dsa.iot.dslink.util.json.JsonArray;
+import org.dsa.iot.dslink.util.json.JsonObject;
 
 import java.util.List;
 
@@ -29,6 +29,6 @@ public class UnsubscribeRequest implements Request {
 
     @Override
     public void addJsonValues(JsonObject out) {
-        out.putArray("sids", new JsonArray(sids));
+        out.put("sids", new JsonArray(sids));
     }
 }

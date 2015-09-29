@@ -1,17 +1,10 @@
 package org.dsa.iot.dslink.handshake;
 
-import org.dsa.iot.dslink.util.HttpClientUtils;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import org.dsa.iot.dslink.util.URLInfo;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.buffer.Buffer;
-import org.vertx.java.core.http.HttpClient;
-import org.vertx.java.core.http.HttpClientRequest;
-import org.vertx.java.core.http.HttpClientResponse;
-import org.vertx.java.core.impl.DefaultFutureResult;
-import org.vertx.java.core.json.JsonObject;
-
-import java.net.HttpURLConnection;
-import java.util.concurrent.CountDownLatch;
+import org.dsa.iot.dslink.util.http.HttpClient;
+import org.dsa.iot.dslink.util.http.HttpResp;
+import org.dsa.iot.dslink.util.json.JsonObject;
 
 /**
  * Handshake information retrieved from the server.
@@ -32,15 +25,15 @@ public class RemoteHandshake {
      * @param in   JSON object retrieved from the server.
      */
     public RemoteHandshake(LocalKeys keys, JsonObject in) {
-        String tempKey = in.getString("tempKey");
+        String tempKey = in.get("tempKey");
         if (tempKey != null) {
             this.remoteKey = RemoteKey.generate(keys, tempKey);
         } else {
             this.remoteKey = null;
         }
-        this.wsUri = in.getString("wsUri");
-        this.salt = in.getString("salt");
-        this.path = in.getString("path");
+        this.wsUri = in.get("wsUri");
+        this.salt = in.get("salt");
+        this.path = in.get("path");
     }
 
     /**
@@ -81,57 +74,22 @@ public class RemoteHandshake {
      * @param url URL for the authentication endpoint
      * @return Remote handshake information
      */
-    public static RemoteHandshake generate(final LocalHandshake lh, URLInfo url) {
-        if (url == null)
+    public static RemoteHandshake generate(LocalHandshake lh, URLInfo url) {
+        if (url == null) {
             throw new NullPointerException("url");
-        HttpClient client = HttpClientUtils.configure(url);
+        }
+
+        HttpClient client = new HttpClient(url);
         String fullPath = url.path + "?dsId=" + lh.getDsId();
-        final DefaultFutureResult<RemoteHandshake> h = new DefaultFutureResult<>();
-        final CountDownLatch latch = new CountDownLatch(1);
-        HttpClientRequest req = client.post(fullPath, new Handler<HttpClientResponse>() {
-            @Override
-            public void handle(HttpClientResponse event) {
-                if (event.statusCode() != HttpURLConnection.HTTP_OK) {
-                    Throwable t = new Throwable("BAD STATUS: " + event.statusCode());
-                    h.setFailure(t);
-                    latch.countDown();
-                } else {
-                    event.bodyHandler(new Handler<Buffer>() {
-                        @Override
-                        public void handle(Buffer event) {
-                            String s = event.toString();
-                            JsonObject o = new JsonObject(s);
-                            LocalKeys k = lh.getKeys();
-                            RemoteHandshake rh = new RemoteHandshake(k, o);
-                            h.setResult(rh);
-                            latch.countDown();
-                        }
-                    });
-                }
-            }
-        });
+        HttpResp resp = client.post(fullPath, lh.toJson().encode());
 
-        req.exceptionHandler(new Handler<Throwable>() {
-            @Override
-            public void handle(Throwable event) {
-                h.setFailure(event);
-                latch.countDown();
-            }
-        });
-
-        String encoded = lh.toJson().encode();
-        req.end(encoded);
-
-        try {
-            latch.await();
-        } catch (InterruptedException e) {
-            h.setFailure(e);
+        HttpResponseStatus status = resp.getStatus();
+        if (status.code() != HttpResponseStatus.OK.code()) {
+            throw new RuntimeException("Bad status: " + status);
         }
 
-        if (h.failed()) {
-            throw new RuntimeException(h.cause());
-        }
-
-        return h.result();
+        JsonObject o = new JsonObject(resp.getBody());
+        LocalKeys k = lh.getKeys();
+        return new RemoteHandshake(k, o);
     }
 }

@@ -13,8 +13,8 @@ import org.dsa.iot.dslink.node.SubscriptionManager;
 import org.dsa.iot.dslink.node.value.SubscriptionValue;
 import org.dsa.iot.dslink.util.Objects;
 import org.dsa.iot.dslink.util.SubData;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.json.JsonObject;
+import org.dsa.iot.dslink.util.handler.Handler;
+import org.dsa.iot.dslink.util.json.JsonObject;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -271,10 +271,10 @@ public class Requester extends Linkable {
         JsonObject obj = new JsonObject();
         request.addJsonValues(obj);
         {
-            obj.putNumber("rid", rid);
+            obj.put("rid", rid);
             reqs.put(rid, wrapper);
         }
-        obj.putString("method", request.getName());
+        obj.put("method", request.getName());
         link.getWriter().writeRequest(obj);
     }
 
@@ -288,7 +288,7 @@ public class Requester extends Linkable {
         if (link == null) {
             return;
         }
-        int rid = in.getInteger("rid");
+        int rid = in.get("rid");
         if (rid == 0) {
             final SubscriptionUpdate update = new SubscriptionUpdate(this);
             Objects.getThreadPool().execute(new Runnable() {
@@ -303,7 +303,7 @@ public class Requester extends Linkable {
         Request request = wrapper.getRequest();
         String method = request.getName();
 
-        StreamState stream = StreamState.toEnum(in.getString("stream"));
+        StreamState stream = StreamState.toEnum((String) in.get("stream"));
         if (stream == null) {
             stream = StreamState.OPEN;
         }

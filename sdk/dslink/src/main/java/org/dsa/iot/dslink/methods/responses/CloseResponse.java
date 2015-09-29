@@ -2,7 +2,7 @@ package org.dsa.iot.dslink.methods.responses;
 
 import org.dsa.iot.dslink.methods.Response;
 import org.dsa.iot.dslink.methods.StreamState;
-import org.vertx.java.core.json.JsonObject;
+import org.dsa.iot.dslink.util.json.JsonObject;
 
 /**
  * @author Samuel Grenier
@@ -31,8 +31,8 @@ public class CloseResponse implements Response {
     public JsonObject getJsonResponse(JsonObject in) {
         if (response == null) {
             JsonObject obj = new JsonObject();
-            obj.putNumber("rid", rid);
-            obj.putString("stream", StreamState.CLOSED.getJsonName());
+            obj.put("rid", rid);
+            obj.put("stream", StreamState.CLOSED.getJsonName());
             return obj;
         } else {
             return response.getCloseResponse();

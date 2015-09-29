@@ -1,7 +1,7 @@
 package org.dsa.iot.dslink.connection;
 
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.json.JsonObject;
+import org.dsa.iot.dslink.util.handler.Handler;
+import org.dsa.iot.dslink.util.json.JsonObject;
 
 /**
  * Handles network clients on vertx events.

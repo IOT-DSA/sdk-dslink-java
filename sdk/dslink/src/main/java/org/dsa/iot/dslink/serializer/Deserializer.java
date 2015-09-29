@@ -5,7 +5,7 @@ import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.Writable;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.node.value.ValueUtils;
-import org.vertx.java.core.json.JsonObject;
+import org.dsa.iot.dslink.util.json.JsonObject;
 
 import java.util.Map;
 
@@ -29,7 +29,7 @@ public class Deserializer {
      */
     @SuppressWarnings("unchecked")
     public void deserialize(JsonObject object) {
-        Map<String, Object> map = object.toMap();
+        Map<String, Object> map = object.getMap();
         for (Map.Entry<String, Object> entry : map.entrySet()) {
             String name = entry.getKey();
             Node node = manager.getNode(name, true).getNode();

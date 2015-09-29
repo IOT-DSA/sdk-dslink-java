@@ -7,11 +7,11 @@ import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.SubscriptionManager;
 import org.dsa.iot.dslink.serializer.SerializationManager;
+import org.dsa.iot.dslink.util.handler.Handler;
+import org.dsa.iot.dslink.util.json.JsonArray;
+import org.dsa.iot.dslink.util.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -187,20 +187,20 @@ public class DSLink {
                             responses.add(resp);
                         } catch (Exception e) {
                             JsonObject resp = new JsonObject();
-                            Integer rid = json.getInteger("rid");
+                            Integer rid = json.get("rid");
                             if (rid != null) {
-                                resp.putNumber("rid", rid);
+                                resp.put("rid", rid);
                             }
-                            resp.putString("stream", StreamState.CLOSED.getJsonName());
+                            resp.put("stream", StreamState.CLOSED.getJsonName());
 
                             JsonObject err = new JsonObject();
-                            resp.putString("msg", e.getMessage());
+                            resp.put("msg", e.getMessage());
                             { // Build stack trace
                                 StringWriter writer = new StringWriter();
                                 e.printStackTrace(new PrintWriter(writer));
-                                resp.putString("detail", writer.toString());
+                                resp.put("detail", writer.toString());
                             }
-                            resp.putObject("error", err);
+                            resp.put("error", err);
                             responses.add(resp);
                         }
                     }

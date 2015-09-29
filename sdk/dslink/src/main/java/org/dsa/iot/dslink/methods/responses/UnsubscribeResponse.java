@@ -4,8 +4,8 @@ import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.methods.Response;
 import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.node.SubscriptionManager;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
+import org.dsa.iot.dslink.util.json.JsonArray;
+import org.dsa.iot.dslink.util.json.JsonObject;
 
 /**
  * @author Samuel Grenier
@@ -31,7 +31,7 @@ public class UnsubscribeResponse implements Response {
 
     @Override
     public JsonObject getJsonResponse(JsonObject in) {
-        JsonArray sids = in.getArray("sids");
+        JsonArray sids = in.get("sids");
         if (sids != null && sids.size() > 0) {
             for (Object obj : sids) {
                 Integer sid = (Integer) obj;
@@ -40,8 +40,8 @@ public class UnsubscribeResponse implements Response {
         }
 
         JsonObject obj = new JsonObject();
-        obj.putNumber("rid", rid);
-        obj.putString("stream", StreamState.CLOSED.getJsonName());
+        obj.put("rid", rid);
+        obj.put("stream", StreamState.CLOSED.getJsonName());
         return obj;
     }
 

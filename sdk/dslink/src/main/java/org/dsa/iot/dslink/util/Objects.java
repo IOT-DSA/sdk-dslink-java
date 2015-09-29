@@ -1,9 +1,8 @@
 package org.dsa.iot.dslink.util;
 
 import org.dsa.iot.shared.SharedObjects;
-import org.vertx.java.core.Vertx;
 
-import java.util.concurrent.*;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 /**
  * Miscellaneous global fields.
@@ -14,10 +13,6 @@ public class Objects {
 
     private static volatile ScheduledThreadPoolExecutor THREAD_POOL;
     private static volatile ScheduledThreadPoolExecutor DAEMON_THREAD_POOL;
-
-    public static Vertx getVertx() {
-        return SharedObjects.getVertx();
-    }
 
     @SuppressWarnings("unused")
     public static ScheduledThreadPoolExecutor createThreadPool() {

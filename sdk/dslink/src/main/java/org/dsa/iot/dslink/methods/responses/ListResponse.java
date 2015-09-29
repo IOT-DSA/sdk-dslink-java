@@ -9,10 +9,9 @@ import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.dsa.iot.dslink.util.StringUtils;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonElement;
-import org.vertx.java.core.json.JsonObject;
+import org.dsa.iot.dslink.util.handler.Handler;
+import org.dsa.iot.dslink.util.json.JsonArray;
+import org.dsa.iot.dslink.util.json.JsonObject;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -69,7 +68,7 @@ public class ListResponse implements Response {
 
     @Override
     public void populate(JsonObject in) {
-        JsonArray updates = in.getArray("updates");
+        JsonArray updates = in.get("updates");
         if (updates != null) {
             for (Object obj : updates) {
                 if (obj instanceof JsonObject) {
@@ -82,8 +81,8 @@ public class ListResponse implements Response {
     }
 
     private void update(JsonObject in) {
-        String name = in.getString("name");
-        String change = in.getString("change");
+        String name = in.get("name");
+        String change = in.get("change");
         if (change != null) {
             if ("remove".equals(change)) {
                 if (name.startsWith("$$")) {
@@ -161,7 +160,7 @@ public class ListResponse implements Response {
             JsonObject childData = (JsonObject) v;
             Node child = node.getChild(name);
 
-            String change = childData.getString("change");
+            String change = childData.get("change");
             if (change != null && "remove".equals(change)) {
                 if (child != null) {
                     node.removeChild(child.getName());
@@ -170,40 +169,40 @@ public class ListResponse implements Response {
                 return;
             }
 
-            String is = childData.getString("$is");
+            String is = childData.get("$is");
             if (child == null) {
                 NodeBuilder builder = node.createChild(name, is);
                 child = builder.build();
             }
 
-            String _interface = childData.getString("$interface");
+            String _interface = childData.get("$interface");
             if (_interface != null) {
                 child.setInterfaces(_interface);
             }
 
-            String displayName = childData.getString("$name");
+            String displayName = childData.get("$name");
             if (displayName != null) {
                 child.setDisplayName(displayName);
             }
 
-            String type = childData.getString("$type");
+            String type = childData.get("$type");
             if (type != null) {
                 ValueType t = ValueType.toValueType(type);
                 child.setValueType(t);
             }
 
-            String invokable = childData.getString("$invokable");
+            String invokable = childData.get("$invokable");
             if (invokable != null) {
                 Permission perm = Permission.toEnum(invokable);
                 getOrCreateAction(child, perm);
             }
 
-            Boolean hidden = childData.getBoolean("$hidden");
+            Boolean hidden = childData.get("$hidden");
             if (hidden != null) {
                 child.setHidden(hidden);
             }
 
-            JsonObject linkData = childData.getObject("$linkData");
+            JsonObject linkData = childData.get("$linkData");
             if (linkData != null) {
                 Value val = new Value(linkData);
                 child.setConfig("linkData", val);
@@ -216,8 +215,8 @@ public class ListResponse implements Response {
     @Override
     public JsonObject getJsonResponse(JsonObject in) {
         JsonObject out = new JsonObject();
-        out.putNumber("rid", getRid());
-        out.putString("stream", StreamState.OPEN.getJsonName());
+        out.put("rid", getRid());
+        out.put("stream", StreamState.OPEN.getJsonName());
 
         JsonArray updates = new JsonArray();
         if (node != null) {
@@ -225,9 +224,9 @@ public class ListResponse implements Response {
             String profile = node.getProfile();
             if (profile != null) {
                 JsonArray update = new JsonArray();
-                update.addString("$is");
-                update.addString(profile);
-                updates.addArray(update);
+                update.add("$is");
+                update.add(profile);
+                updates.add(update);
             } else {
                 String err = "Profile not set on node: "
                             + node.getPath();
@@ -237,41 +236,41 @@ public class ListResponse implements Response {
             String name = node.getDisplayName();
             if (name != null) {
                 JsonArray update = new JsonArray();
-                update.addString("$name");
-                update.addString(name);
-                updates.addArray(update);
+                update.add("$name");
+                update.add(name);
+                updates.add(update);
             }
 
             Set<String> interfaces = node.getInterfaces();
             if (interfaces != null && interfaces.size() > 0) {
                 JsonArray update = new JsonArray();
-                update.addString("$interface");
-                update.addString(StringUtils.join(interfaces, "|"));
-                updates.addArray(update);
+                update.add("$interface");
+                update.add(StringUtils.join(interfaces, "|"));
+                updates.add(update);
             }
 
             ValueType type = node.getValueType();
             if (type != null) {
                 JsonArray update = new JsonArray();
-                update.addString("$type");
-                update.addString(type.toJsonString());
-                updates.addArray(update);
+                update.add("$type");
+                update.add(type.toJsonString());
+                updates.add(update);
             }
 
             char[] password = node.getPassword();
             if (password != null) {
                 JsonArray update = new JsonArray();
-                update.addString("$$password");
-                update.addString(null);
-                updates.addArray(update);
+                update.add("$$password");
+                update.add(null);
+                updates.add(update);
             }
 
             Writable writable = node.getWritable();
             if (!(writable == null || writable == Writable.NEVER)) {
                 JsonArray update = new JsonArray();
-                update.addString("$writable");
-                update.addString(writable.toJsonName());
-                updates.addArray(update);
+                update.add("$writable");
+                update.add(writable.toJsonName());
+                updates.add(update);
             }
 
             // Action
@@ -279,25 +278,25 @@ public class ListResponse implements Response {
             if (action != null
                     && action.hasPermission()) {
                 JsonArray update = new JsonArray();
-                update.addString("$invokable");
-                update.addString(action.getPermission().getJsonName());
-                updates.addArray(update);
+                update.add("$invokable");
+                update.add(action.getPermission().getJsonName());
+                updates.add(update);
 
                 if (!action.isHidden()) {
                     update = new JsonArray();
-                    update.addString("$params");
-                    update.addArray(action.getParams());
-                    updates.addArray(update);
+                    update.add("$params");
+                    update.add(action.getParams());
+                    updates.add(update);
 
                     update = new JsonArray();
-                    update.addString("$columns");
-                    update.addArray(action.getColumns());
-                    updates.addArray(update);
+                    update.add("$columns");
+                    update.add(action.getColumns());
+                    updates.add(update);
 
                     update = new JsonArray();
-                    update.addString("$result");
-                    update.addString(action.getResultType().getJsonName());
-                    updates.addArray(update);
+                    update.add("$result");
+                    update.add(action.getResultType().getJsonName());
+                    updates.add(update);
                 }
             }
 
@@ -310,29 +309,29 @@ public class ListResponse implements Response {
             Boolean hasChildren = node.getHasChildren();
             if (hasChildren != null) {
                 JsonArray update = new JsonArray();
-                update.addString("$hasChildren");
-                update.addBoolean(hasChildren);
-                updates.addArray(update);
+                update.add("$hasChildren");
+                update.add(hasChildren);
+                updates.add(update);
             }
 
             // Whether this node should be be visible to the UI
             if (node.isHidden()) {
                 JsonArray update = new JsonArray();
-                update.addString("$hidden");
-                update.addBoolean(true);
-                updates.addArray(update);
+                update.add("$hidden");
+                update.add(true);
+                updates.add(update);
             }
 
             // Children
             Map<String, Node> children = node.getChildren();
             if (children != null) {
                 for (Node child : children.values()) {
-                    JsonElement update = getChildUpdate(child, false);
-                    updates.addElement(update);
+                    Object update = getChildUpdate(child, false);
+                    updates.add(update);
                 }
             }
         }
-        out.putArray("updates", updates);
+        out.put("updates", updates);
 
         manager.addPathSub(path, this);
         return out;
@@ -344,12 +343,12 @@ public class ListResponse implements Response {
         }
 
         JsonArray updates = new JsonArray();
-        updates.addElement(getChildUpdate(child, removed));
+        updates.add(getChildUpdate(child, removed));
 
         JsonObject resp = new JsonObject();
-        resp.putNumber("rid", getRid());
-        resp.putString("stream", StreamState.OPEN.getJsonName());
-        resp.putArray("updates", updates);
+        resp.put("rid", getRid());
+        resp.put("stream", StreamState.OPEN.getJsonName());
+        resp.put("updates", updates);
         link.getWriter().writeResponse(resp);
     }
 
@@ -357,23 +356,23 @@ public class ListResponse implements Response {
         JsonArray updates = new JsonArray();
         if (value != null) {
             JsonArray update = new JsonArray();
-            update.addString(name);
+            update.add(name);
 
             ValueUtils.toJson(update, value);
-            update.addString(value.getTimeStamp());
+            update.add(value.getTimeStamp());
 
-            updates.addArray(update);
+            updates.add(update);
         } else {
             JsonObject obj = new JsonObject();
-            obj.putString("name", name);
-            obj.putString("change", "remove");
-            updates.addObject(obj);
+            obj.put("name", name);
+            obj.put("change", "remove");
+            updates.add(obj);
         }
 
         JsonObject resp = new JsonObject();
-        resp.putNumber("rid", getRid());
-        resp.putString("stream", StreamState.OPEN.getJsonName());
-        resp.putArray("updates", updates);
+        resp.put("rid", getRid());
+        resp.put("stream", StreamState.OPEN.getJsonName());
+        resp.put("updates", updates);
         link.getWriter().writeResponse(resp);
     }
 
@@ -387,8 +386,8 @@ public class ListResponse implements Response {
             }
         }
         JsonObject resp = new JsonObject();
-        resp.putNumber("rid", getRid());
-        resp.putString("stream", StreamState.CLOSED.getJsonName());
+        resp.put("rid", getRid());
+        resp.put("stream", StreamState.CLOSED.getJsonName());
         return resp;
     }
 
@@ -403,22 +402,22 @@ public class ListResponse implements Response {
         }
         for (Map.Entry<String, Value> entry : vals.entrySet()) {
             JsonArray update = new JsonArray();
-            update.addString(prefix + entry.getKey());
+            update.add(prefix + entry.getKey());
             ValueUtils.toJson(update, entry.getValue());
-            out.addArray(update);
+            out.add(update);
         }
     }
 
-    private JsonElement getChildUpdate(Node child, boolean removed) {
+    private Object getChildUpdate(Node child, boolean removed) {
         if (removed) {
             JsonObject obj = new JsonObject();
-            obj.putString("name", child.getName());
-            obj.putString("change", "remove");
+            obj.put("name", child.getName());
+            obj.put("change", "remove");
             return obj;
         }
 
         JsonArray update = new JsonArray();
-        update.addString(child.getName());
+        update.add(child.getName());
 
         JsonObject childData = new JsonObject();
         {
@@ -428,43 +427,43 @@ public class ListResponse implements Response {
                         + child.getPath();
                 throw new RuntimeException(err);
             }
-            childData.putString("$is", profile);
+            childData.put("$is", profile);
 
             String displayName = child.getDisplayName();
             if (displayName != null) {
-                childData.putString("$name", displayName);
+                childData.put("$name", displayName);
             }
 
             Action action = child.getAction();
             if (action != null) {
                 String perm = action.getPermission().getJsonName();
-                childData.putString("$invokable", perm);
+                childData.put("$invokable", perm);
 
                 String jsonName = action.getResultType().getJsonName();
-                childData.putString("$result", jsonName);
+                childData.put("$result", jsonName);
             }
 
             Set<String> interfaces = child.getInterfaces();
             if (interfaces != null) {
                 String _interface = StringUtils.join(interfaces, "|");
-                childData.putString("$interface", _interface);
+                childData.put("$interface", _interface);
             }
 
             ValueType type = child.getValueType();
             if (type != null) {
-                childData.putString("$type", type.toJsonString());
+                childData.put("$type", type.toJsonString());
             }
 
             Boolean hasChildren = child.getHasChildren();
             if (hasChildren != null) {
-                childData.putBoolean("$hasChildren", hasChildren);
+                childData.put("$hasChildren", hasChildren);
             }
 
             if (child.isHidden()) {
-                childData.putBoolean("$hidden", true);
+                childData.put("$hidden", true);
             }
         }
-        update.addObject(childData);
+        update.add(childData);
         return update;
     }
 
@@ -473,18 +472,18 @@ public class ListResponse implements Response {
                                               boolean isCol) {
         for (Object anArray : array) {
             JsonObject data = (JsonObject) anArray;
-            String name = data.getString("name");
-            String type = data.getString("type");
+            String name = data.get("name");
+            String type = data.get("type");
             ValueType valType = ValueType.toValueType(type);
             Parameter param = new Parameter(name, valType);
             if (isCol) {
                 act.addResult(param);
             } else {
-                String editor = data.getString("editor");
+                String editor = data.get("editor");
                 if (editor != null) {
                     param.setEditorType(EditorType.make(editor));
                 }
-                Object def = data.getField("default");
+                Object def = data.get("default");
                 if (def != null) {
                     param.setDefaultValue(ValueUtils.toValue(def));
                 }

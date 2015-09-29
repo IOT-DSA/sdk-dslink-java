@@ -14,9 +14,9 @@ import org.dsa.iot.dslink.node.actions.table.Table;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.node.value.ValueUtils;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
+import org.dsa.iot.dslink.util.handler.Handler;
+import org.dsa.iot.dslink.util.json.JsonArray;
+import org.dsa.iot.dslink.util.json.JsonObject;
 
 import java.util.List;
 
@@ -50,13 +50,13 @@ public class InvokeResponse implements Response {
             results = new Table();
         }
         {
-            JsonArray cols = in.getArray("columns");
+            JsonArray cols = in.get("columns");
             if (cols != null) {
                 for (Object object : cols) {
                     JsonObject col = (JsonObject) object;
-                    String name = col.getString("name");
-                    String type = col.getString("type");
-                    JsonObject meta = col.getObject("meta");
+                    String name = col.get("name");
+                    String type = col.get("type");
+                    JsonObject meta = col.get("meta");
                     ValueType vt = ValueType.toValueType(type);
 
                     Parameter p = new Parameter(name, vt);
@@ -66,7 +66,7 @@ public class InvokeResponse implements Response {
             }
         }
         {
-            JsonArray updates = in.getArray("updates");
+            JsonArray updates = in.get("updates");
             if (updates != null) {
                 for (Object object : updates) {
                     Row row = new Row();
@@ -109,8 +109,8 @@ public class InvokeResponse implements Response {
         final StreamState state = actRes.getStreamState();
 
         JsonObject out = new JsonObject();
-        out.putNumber("rid", rid);
-        out.putString("stream", state.getJsonName());
+        out.put("rid", rid);
+        out.put("stream", state.getJsonName());
 
         // Handle columns
         processColumns(action, out);
@@ -120,16 +120,16 @@ public class InvokeResponse implements Response {
             Table.Mode mode = table.getMode();
             if (mode != null) {
                 JsonObject def = new JsonObject();
-                JsonObject meta = out.getObject("meta", def);
-                meta.putString("mode", mode.getName());
+                JsonObject meta = out.get("meta", def);
+                meta.put("mode", mode.getName());
                 {
                     JsonObject obj = table.getTableMeta();
                     if (obj != null) {
-                        meta.putObject("meta", obj);
+                        meta.put("meta", obj);
                     }
                     table.setTableMeta(null);
                 }
-                out.putObject("meta", meta);
+                out.put("meta", meta);
             }
         }
 
@@ -150,9 +150,9 @@ public class InvokeResponse implements Response {
                             }
                         }
                     }
-                    results.addArray(row);
+                    results.add(row);
                 }
-                out.putArray("updates", results);
+                out.put("updates", results);
             }
         }
 
@@ -178,8 +178,8 @@ public class InvokeResponse implements Response {
             table.setClosed();
         }
         JsonObject obj = new JsonObject();
-        obj.putNumber("rid", rid);
-        obj.putString("stream", StreamState.CLOSED.getJsonName());
+        obj.put("rid", rid);
+        obj.put("stream", StreamState.CLOSED.getJsonName());
         return obj;
     }
 
@@ -193,17 +193,17 @@ public class InvokeResponse implements Response {
             array = new JsonArray();
             for (Parameter p : cols) {
                 JsonObject o = new JsonObject();
-                o.putString("name", p.getName());
-                o.putString("type", p.getType().toJsonString());
+                o.put("name", p.getName());
+                o.put("type", p.getType().toJsonString());
                 JsonObject meta = p.getMetaData();
                 if (meta != null) {
-                    o.putObject("meta", meta);
+                    o.put("meta", meta);
                 }
-                array.addObject(o);
+                array.add(o);
             }
         }
         if (cols != null) {
-            obj.putArray("columns", array);
+            obj.put("columns", array);
         }
     }
 }

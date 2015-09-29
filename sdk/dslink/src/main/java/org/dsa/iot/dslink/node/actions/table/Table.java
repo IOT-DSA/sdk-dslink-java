@@ -5,9 +5,9 @@ import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.node.actions.Parameter;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueUtils;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
+import org.dsa.iot.dslink.util.handler.Handler;
+import org.dsa.iot.dslink.util.json.JsonArray;
+import org.dsa.iot.dslink.util.json.JsonObject;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -82,14 +82,14 @@ public class Table {
         } else {
             JsonArray updates = new JsonArray();
             for (Row r : batch.getRows()) {
-                updates.addArray(processRow(r));
+                updates.add(processRow(r));
             }
 
             BatchRow.Modifier m = batch.getModifier();
             JsonObject meta = null;
             if (m != null) {
                 meta = new JsonObject();
-                meta.putString("modify", batch.getModifier().get());
+                meta.put("modify", batch.getModifier().get());
             }
             write(writer, cols, updates, meta);
         }
@@ -125,7 +125,7 @@ public class Table {
             rows.add(row);
         } else {
             JsonArray updates = new JsonArray();
-            updates.addArray(processRow(row));
+            updates.add(processRow(row));
             write(writer, cols, updates, null);
         }
     }
@@ -143,7 +143,7 @@ public class Table {
             this.mode = mode;
         } else {
             JsonObject meta = new JsonObject();
-            meta.putString("mode", mode.getName());
+            meta.put("mode", mode.getName());
             write(writer, null, null, meta);
         }
     }
@@ -180,8 +180,8 @@ public class Table {
         DataHandler writer = this.writer;
         if (writer != null) {
             JsonObject obj = new JsonObject();
-            obj.putNumber("rid", rid);
-            obj.putString("stream", StreamState.CLOSED.getJsonName());
+            obj.put("rid", rid);
+            obj.put("stream", StreamState.CLOSED.getJsonName());
             writer.writeResponse(obj);
             this.writer = null;
             Handler<Void> closeHandler = this.closeHandler;
@@ -247,8 +247,8 @@ public class Table {
             return;
         }
         JsonObject obj = new JsonObject();
-        obj.putNumber("rid", rid);
-        obj.putString("stream", StreamState.OPEN.getJsonName());
+        obj.put("rid", rid);
+        obj.put("stream", StreamState.OPEN.getJsonName());
         writer.writeResponse(obj);
     }
 
@@ -270,22 +270,22 @@ public class Table {
                        JsonArray updates,
                        JsonObject meta) {
         JsonObject obj = new JsonObject();
-        obj.putNumber("rid", rid);
+        obj.put("rid", rid);
         if (ready) {
             ready = false;
-            obj.putString("stream", StreamState.OPEN.getJsonName());
+            obj.put("stream", StreamState.OPEN.getJsonName());
         }
         if (meta != null) {
-            obj.putObject("meta", meta);
+            obj.put("meta", meta);
         }
         if (cols != null) {
             JsonArray array = processColumns(cols);
             if (array != null) {
-                obj.putArray("columns", array);
+                obj.put("columns", array);
             }
         }
         if (updates != null) {
-            obj.putArray("updates", updates);
+            obj.put("updates", updates);
         }
         writer.writeResponse(obj);
     }
@@ -312,13 +312,13 @@ public class Table {
         JsonArray array = new JsonArray();
         for (Parameter p : cols) {
             JsonObject o = new JsonObject();
-            o.putString("name", p.getName());
-            o.putString("type", p.getType().toJsonString());
+            o.put("name", p.getName());
+            o.put("type", p.getType().toJsonString());
             JsonObject meta = p.getMetaData();
             if (meta != null) {
-                o.putObject("meta", meta);
+                o.put("meta", meta);
             }
-            array.addObject(o);
+            array.add(o);
         }
         return array;
     }

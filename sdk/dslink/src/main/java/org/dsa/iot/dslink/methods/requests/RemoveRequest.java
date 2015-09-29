@@ -1,7 +1,7 @@
 package org.dsa.iot.dslink.methods.requests;
 
 import org.dsa.iot.dslink.methods.Request;
-import org.vertx.java.core.json.JsonObject;
+import org.dsa.iot.dslink.util.json.JsonObject;
 
 /**
  * Request used to remove attributes or configurations.
@@ -30,6 +30,6 @@ public class RemoveRequest implements Request {
 
     @Override
     public void addJsonValues(JsonObject out) {
-        out.putString("path", path);
+        out.put("path", path);
     }
 }

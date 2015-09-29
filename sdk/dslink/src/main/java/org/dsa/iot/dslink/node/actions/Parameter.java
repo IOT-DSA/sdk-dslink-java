@@ -2,7 +2,7 @@ package org.dsa.iot.dslink.node.actions;
 
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
-import org.vertx.java.core.json.JsonObject;
+import org.dsa.iot.dslink.util.json.JsonObject;
 
 /**
  * @author Samuel Grenier

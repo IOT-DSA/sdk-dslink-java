@@ -1,11 +1,11 @@
 package org.dsa.iot.dslink.connection;
 
 import org.dsa.iot.dslink.util.Objects;
+import org.dsa.iot.dslink.util.handler.Handler;
+import org.dsa.iot.dslink.util.json.JsonArray;
+import org.dsa.iot.dslink.util.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -59,8 +59,8 @@ public class DataHandler {
         }
 
 
-        final Integer msgId = obj.getInteger("msg");
-        final JsonArray requests = obj.getArray("requests");
+        final Integer msgId = obj.get("msg");
+        final JsonArray requests = obj.get("requests");
         if (!(reqHandler == null || requests == null)) {
             Objects.getDaemonThreadPool().execute(new Runnable() {
                 @Override
@@ -70,7 +70,7 @@ public class DataHandler {
             });
         }
 
-        final JsonArray responses = obj.getArray("responses");
+        final JsonArray responses = obj.get("responses");
         if (!(respHandler == null || responses == null)) {
             Objects.getDaemonThreadPool().execute(new Runnable() {
                 @Override
@@ -98,9 +98,9 @@ public class DataHandler {
             throw new NullPointerException("object");
         }
         JsonArray reqs = new JsonArray();
-        reqs.addObject(object);
+        reqs.add(object);
         JsonObject top = new JsonObject();
-        top.putArray("requests", reqs);
+        top.put("requests", reqs);
         client.write(top.encode());
     }
 
@@ -109,7 +109,7 @@ public class DataHandler {
             return;
         }
         JsonObject obj = new JsonObject();
-        obj.putNumber("ack", ack);
+        obj.put("ack", ack);
         client.write(obj.encode());
     }
 
@@ -141,13 +141,13 @@ public class DataHandler {
 
         JsonArray responses = new JsonArray();
         for (JsonObject obj : objects) {
-            responses.addObject(obj);
+            responses.add(obj);
         }
         JsonObject top = new JsonObject();
-        top.putArray("responses", responses);
-        top.putNumber("msg", msgId.getAndIncrement());
+        top.put("responses", responses);
+        top.put("msg", msgId.getAndIncrement());
         if (ackId != null) {
-            top.putNumber("ack", ackId);
+            top.put("ack", ackId);
         }
 
         client.write(top.encode());

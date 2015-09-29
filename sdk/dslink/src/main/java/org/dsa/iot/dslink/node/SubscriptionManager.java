@@ -4,8 +4,8 @@ import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.methods.responses.ListResponse;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueUtils;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
+import org.dsa.iot.dslink.util.json.JsonArray;
+import org.dsa.iot.dslink.util.json.JsonObject;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -178,22 +178,22 @@ public class SubscriptionManager {
             JsonArray updates = new JsonArray();
             {
                 JsonArray update = new JsonArray();
-                update.addNumber(sid);
+                update.add(sid);
 
                 Value value = node.getValue();
                 if (value != null) {
                     ValueUtils.toJson(update, value);
-                    update.addString(value.getTimeStamp());
+                    update.add(value.getTimeStamp());
                 } else {
                     update.add(null);
                 }
 
-                updates.addArray(update);
+                updates.add(update);
             }
 
             JsonObject resp = new JsonObject();
-            resp.putNumber("rid", 0);
-            resp.putArray("updates", updates);
+            resp.put("rid", 0);
+            resp.put("updates", updates);
             link.getWriter().writeResponse(resp);
         }
     }

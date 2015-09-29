@@ -3,9 +3,9 @@ package org.dsa.iot.dslink.serializer;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.util.FileUtils;
 import org.dsa.iot.dslink.util.Objects;
+import org.dsa.iot.dslink.util.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.vertx.java.core.json.JsonObject;
 
 import java.io.File;
 import java.io.IOException;

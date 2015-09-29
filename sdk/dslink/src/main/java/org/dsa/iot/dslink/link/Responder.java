@@ -8,7 +8,7 @@ import org.dsa.iot.dslink.methods.responses.*;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.SubscriptionManager;
-import org.vertx.java.core.json.JsonObject;
+import org.dsa.iot.dslink.util.json.JsonObject;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -42,8 +42,8 @@ public class Responder extends Linkable {
      * @return Outgoing response
      */
     public JsonObject parse(JsonObject in) {
-        final Integer rid = in.getInteger("rid");
-        final String method = in.getString("method");
+        final Integer rid = in.get("rid");
+        final String method = in.get("method");
         if (rid == null) {
             throw new NullPointerException("rid");
         } else if (method == null) {
@@ -55,7 +55,7 @@ public class Responder extends Linkable {
         Response response;
         switch (method) {
             case "list":
-                String path = in.getString("path");
+                String path = in.get("path");
                 if (path == null) {
                     throw new NullPointerException("path");
                 }
@@ -67,7 +67,7 @@ public class Responder extends Linkable {
                 response = new ListResponse(link, subs, rid, node, path);
                 break;
             case "set":
-                path = in.getString("path");
+                path = in.get("path");
                 if (path == null) {
                     throw new NullPointerException("path");
                 }
@@ -80,7 +80,7 @@ public class Responder extends Linkable {
                 response = new UnsubscribeResponse(rid, link);
                 break;
             case "invoke":
-                path = in.getString("path");
+                path = in.get("path");
                 if (path == null) {
                     throw new NullPointerException("path");
                 }
@@ -95,7 +95,7 @@ public class Responder extends Linkable {
         }
 
         JsonObject resp = response.getJsonResponse(in);
-        if (!StreamState.CLOSED.getJsonName().equals(resp.getString("stream"))) {
+        if (!StreamState.CLOSED.getJsonName().equals(resp.get("stream"))) {
             resps.put(rid, response);
         }
         return resp;

@@ -6,11 +6,11 @@ import org.dsa.iot.dslink.node.Writable;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValuePair;
 import org.dsa.iot.dslink.node.value.ValueType;
+import org.dsa.iot.dslink.util.handler.Handler;
+import org.dsa.iot.dslink.util.json.JsonArray;
+import org.dsa.iot.dslink.util.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
 
 /**
  * @author Samuel Grenier
@@ -47,7 +47,7 @@ public class Values {
         builder.setValueType(ValueType.MAP);
         {
             JsonObject object = new JsonObject();
-            object.putString("key", "value");
+            object.put("key", "value");
             builder.setValue(new Value(object));
         }
         builder.build();
@@ -56,8 +56,8 @@ public class Values {
         builder.setValueType(ValueType.ARRAY);
         {
             JsonArray array = new JsonArray();
-            array.addNumber(0);
-            array.addString("Hello world");
+            array.add(0);
+            array.add("Hello world");
             builder.setValue(new Value(array));
         }
         builder.build();

@@ -2,8 +2,8 @@ package org.dsa.iot.dslink.methods.requests;
 
 import org.dsa.iot.dslink.methods.Request;
 import org.dsa.iot.dslink.util.SubData;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
+import org.dsa.iot.dslink.util.json.JsonArray;
+import org.dsa.iot.dslink.util.json.JsonObject;
 
 import java.util.Collections;
 import java.util.Map;
@@ -49,13 +49,13 @@ public class SubscribeRequest implements Request {
             Integer qos = data.getQos();
 
             JsonObject obj = new JsonObject();
-            obj.putString("path", path);
-            obj.putNumber("sid", sub.getValue());
+            obj.put("path", path);
+            obj.put("sid", sub.getValue());
             if (qos != null) {
-                obj.putNumber("qos", qos);
+                obj.put("qos", qos);
             }
-            array.addObject(obj);
+            array.add(obj);
         }
-        out.putArray("paths", array);
+        out.put("paths", array);
     }
 }

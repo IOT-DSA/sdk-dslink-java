@@ -5,10 +5,10 @@ import org.dsa.iot.dslink.node.Permission;
 import org.dsa.iot.dslink.node.actions.ActionResult;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
+import org.dsa.iot.dslink.util.handler.Handler;
+import org.dsa.iot.dslink.util.json.JsonObject;
 import org.junit.Assert;
 import org.junit.Test;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.json.JsonObject;
 
 import java.util.Map;
 
@@ -45,10 +45,10 @@ public class ParameterizedActionTest {
         }
 
         JsonObject params = new JsonObject();
-        params.putBoolean("test", false);
+        params.put("test", false);
 
         JsonObject in = new JsonObject();
-        in.putObject("params", params);
+        in.put("params", params);
 
         a.invoke(new ActionResult(manager.getSuperRoot(), in));
     }

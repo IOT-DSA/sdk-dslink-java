@@ -5,10 +5,10 @@ import org.dsa.iot.dslink.DSLinkFactory;
 import org.dsa.iot.dslink.DSLinkHandler;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
+import org.dsa.iot.dslink.util.json.JsonObject;
 import org.dsa.iot.responder.rng.RNG;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.vertx.java.core.json.JsonObject;
 
 /**
  * @author Samuel Grenier
@@ -20,7 +20,7 @@ public class Main extends DSLinkHandler {
     @Override
     public JsonObject getLinkData() {
         JsonObject obj = new JsonObject();
-        obj.putBoolean("exampleResponder", true);
+        obj.put("exampleResponder", true);
         return obj;
     }
 

@@ -8,8 +8,8 @@ import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.NodePair;
 import org.dsa.iot.dslink.node.SubscriptionManager;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
+import org.dsa.iot.dslink.util.json.JsonArray;
+import org.dsa.iot.dslink.util.json.JsonObject;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -40,14 +40,14 @@ public class SubscribeResponse implements Response {
 
     @Override
     public JsonObject getJsonResponse(JsonObject in) {
-        JsonArray paths = in.getArray("paths");
+        JsonArray paths = in.get("paths");
         if (paths != null && paths.size() > 0) {
             StringBuilder builder = null;
             for (Object obj : paths) {
                 try {
                     JsonObject subData = (JsonObject) obj;
-                    String path = subData.getString("path");
-                    int sid = subData.getInteger("sid");
+                    String path = subData.get("path");
+                    int sid = subData.get("sid");
 
                     NodeManager nm = link.getNodeManager();
                     NodePair pair = nm.getNode(path, false, false);
@@ -74,8 +74,8 @@ public class SubscribeResponse implements Response {
         }
 
         JsonObject obj = new JsonObject();
-        obj.putNumber("rid", rid);
-        obj.putString("stream", StreamState.CLOSED.getJsonName());
+        obj.put("rid", rid);
+        obj.put("stream", StreamState.CLOSED.getJsonName());
         return obj;
     }
 

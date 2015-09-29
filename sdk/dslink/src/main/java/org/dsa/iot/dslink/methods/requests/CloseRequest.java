@@ -1,7 +1,7 @@
 package org.dsa.iot.dslink.methods.requests;
 
 import org.dsa.iot.dslink.methods.Request;
-import org.vertx.java.core.json.JsonObject;
+import org.dsa.iot.dslink.util.json.JsonObject;
 
 /**
  * @author Samuel Grenier

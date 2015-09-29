@@ -1,7 +1,7 @@
 package org.dsa.iot.dslink.handshake;
 
 import org.dsa.iot.dslink.config.Configuration;
-import org.vertx.java.core.json.JsonObject;
+import org.dsa.iot.dslink.util.json.JsonObject;
 
 /**
  * Holds the necessary information to perform a handshake to a remote server.
@@ -74,14 +74,14 @@ public class LocalHandshake {
      */
     public JsonObject toJson() {
         JsonObject obj = new JsonObject();
-        obj.putString("publicKey", publicKey);
+        obj.put("publicKey", publicKey);
         if (zone != null) {
-            obj.putString("zone", zone);
+            obj.put("zone", zone);
         }
-        obj.putBoolean("isRequester", isRequester);
-        obj.putBoolean("isResponder", isResponder);
-        obj.putObject("linkData", linkData);
-        obj.putString("version", "1.0.4");
+        obj.put("isRequester", isRequester);
+        obj.put("isResponder", isResponder);
+        obj.put("linkData", linkData);
+        obj.put("version", "1.0.4");
         return obj;
     }
 }

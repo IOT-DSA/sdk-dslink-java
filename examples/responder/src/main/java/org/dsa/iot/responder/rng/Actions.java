@@ -13,8 +13,8 @@ import org.dsa.iot.dslink.node.actions.table.Table;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.util.Objects;
+import org.dsa.iot.dslink.util.handler.Handler;
 import org.dsa.iot.responder.util.FutureCloseHandler;
-import org.vertx.java.core.Handler;
 
 import java.util.Random;
 import java.util.concurrent.ScheduledFuture;

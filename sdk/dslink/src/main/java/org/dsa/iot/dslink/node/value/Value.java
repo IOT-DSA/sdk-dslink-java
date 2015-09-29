@@ -1,7 +1,7 @@
 package org.dsa.iot.dslink.node.value;
 
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
+import org.dsa.iot.dslink.util.json.JsonArray;
+import org.dsa.iot.dslink.util.json.JsonObject;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -231,8 +231,8 @@ public class Value {
         this.number = n;
         this.bool = b;
         this.string = s;
-        this.array = a != null ? a.copy() : null;
-        this.map = o != null ? o.copy() : null;
+        this.array = a;
+        this.map = o;
     }
 
     /**
@@ -299,14 +299,14 @@ public class Value {
      * @return JSON object of the value
      */
     public JsonObject getMap() {
-        return map == null ? null : map.copy();
+        return map;
     }
 
     /**
      * @return JSON array of the value
      */
     public JsonArray getArray() {
-        return array == null ? null : array.copy();
+        return array;
     }
 
     /**

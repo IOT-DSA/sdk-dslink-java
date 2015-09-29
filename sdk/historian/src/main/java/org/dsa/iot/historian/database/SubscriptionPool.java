@@ -2,7 +2,7 @@ package org.dsa.iot.historian.database;
 
 import org.dsa.iot.dslink.link.Requester;
 import org.dsa.iot.dslink.node.value.SubscriptionValue;
-import org.vertx.java.core.Handler;
+import org.dsa.iot.dslink.util.handler.Handler;
 
 import java.util.ArrayList;
 import java.util.HashMap;

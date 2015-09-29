@@ -1,7 +1,7 @@
 package org.dsa.iot.dslink.methods.requests;
 
 import org.dsa.iot.dslink.methods.Request;
-import org.vertx.java.core.json.JsonObject;
+import org.dsa.iot.dslink.util.json.JsonObject;
 
 /**
  * Used to invoke an action on a node.
@@ -52,9 +52,9 @@ public class InvokeRequest implements Request {
 
     @Override
     public void addJsonValues(JsonObject out) {
-        out.putString("path", path);
+        out.put("path", path);
         if (params != null) {
-            out.putObject("params", params);
+            out.put("params", params);
         }
     }
 }

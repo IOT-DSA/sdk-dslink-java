@@ -4,9 +4,9 @@ import org.dsa.iot.dslink.config.Configuration;
 import org.dsa.iot.dslink.connection.ConnectionManager;
 import org.dsa.iot.dslink.handshake.LocalHandshake;
 import org.dsa.iot.dslink.handshake.LocalKeys;
+import org.dsa.iot.dslink.util.json.JsonObject;
 import org.dsa.iot.dslink.util.log.LogLevel;
 import org.dsa.iot.dslink.util.log.LogManager;
-import org.vertx.java.core.json.JsonObject;
 
 /**
  * Factory for generating {@link DSLink} objects.

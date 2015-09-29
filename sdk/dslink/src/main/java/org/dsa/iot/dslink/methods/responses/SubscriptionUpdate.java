@@ -8,9 +8,9 @@ import org.dsa.iot.dslink.node.value.SubscriptionValue;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.node.value.ValueUtils;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
+import org.dsa.iot.dslink.util.handler.Handler;
+import org.dsa.iot.dslink.util.json.JsonArray;
+import org.dsa.iot.dslink.util.json.JsonObject;
 
 import java.util.Map;
 
@@ -34,7 +34,7 @@ public class SubscriptionUpdate implements Response {
 
     @Override
     public void populate(JsonObject in) {
-        JsonArray updates = in.getArray("updates");
+        JsonArray updates = in.get("updates");
         Map<Integer, String> paths = requester.getSubscriptionIDs();
         Map<Integer, Handler<SubscriptionValue>> handlers = requester.getSubscriptionHandlers();
         if (updates != null) {
@@ -56,14 +56,14 @@ public class SubscriptionUpdate implements Response {
                     timestamp = update.get(2);
                 } else if (obj instanceof JsonObject) {
                     JsonObject update = (JsonObject) obj;
-                    rid = update.getInteger("sid");
+                    rid = update.get("sid");
                     path = paths.get(rid);
-                    valueObj = update.getField("value");
-                    timestamp = update.getString("ts");
-                    count = update.getInteger("count");
-                    sum = update.getInteger("sum");
-                    min = update.getInteger("min");
-                    max = update.getInteger("max");
+                    valueObj = update.get("value");
+                    timestamp = update.get("ts");
+                    count = update.get("count");
+                    sum = update.get("sum");
+                    min = update.get("min");
+                    max = update.get("max");
                 } else {
                     String err = "Invalid subscription update: " + in.encode();
                     throw new RuntimeException(err);

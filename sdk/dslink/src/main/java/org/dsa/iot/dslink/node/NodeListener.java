@@ -2,7 +2,7 @@ package org.dsa.iot.dslink.node;
 
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValuePair;
-import org.vertx.java.core.Handler;
+import org.dsa.iot.dslink.util.handler.Handler;
 
 import java.lang.ref.WeakReference;
 

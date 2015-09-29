@@ -5,7 +5,7 @@ import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.exceptions.NoSuchPathException;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.util.Objects;
-import org.vertx.java.core.json.JsonObject;
+import org.dsa.iot.dslink.util.json.JsonObject;
 
 /**
  * Top level API for handling the configuration of nodes and responses to

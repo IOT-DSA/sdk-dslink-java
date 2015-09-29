@@ -1,10 +1,10 @@
 apply from: '../../sdk/build.gradle'
 
 dependencies {
-    compile ('io.vertx:vertx-core:2.1.5') {
-        exclude group: 'log4j'
-    }
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.6.2'
+    compile 'com.fasterxml.jackson.core:jackson-core:2.6.2'
     compile 'org.bouncycastle:bcprov-jdk15on:1.51'
+    compile 'io.netty:netty-all:5.0.0.Alpha2'
     compile 'com.beust:jcommander:1.48'
 }
 

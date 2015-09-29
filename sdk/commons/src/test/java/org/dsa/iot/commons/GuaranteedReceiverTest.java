@@ -1,8 +1,8 @@
 package org.dsa.iot.commons;
 
+import org.dsa.iot.dslink.util.handler.Handler;
 import org.junit.Assert;
 import org.junit.Test;
-import org.vertx.java.core.Handler;
 
 import java.util.concurrent.CountDownLatch;
 

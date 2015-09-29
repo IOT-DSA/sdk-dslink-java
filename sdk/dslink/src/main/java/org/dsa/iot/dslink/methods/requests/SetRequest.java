@@ -3,7 +3,7 @@ package org.dsa.iot.dslink.methods.requests;
 import org.dsa.iot.dslink.methods.Request;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueUtils;
-import org.vertx.java.core.json.JsonObject;
+import org.dsa.iot.dslink.util.json.JsonObject;
 
 /**
  * Request used to set a value
@@ -36,7 +36,7 @@ public class SetRequest implements Request {
 
     @Override
     public void addJsonValues(JsonObject out) {
-        out.putString("path", path);
+        out.put("path", path);
         ValueUtils.toJson(out, "value", value);
     }
 }
