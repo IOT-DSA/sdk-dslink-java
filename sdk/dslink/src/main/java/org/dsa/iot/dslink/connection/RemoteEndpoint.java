@@ -15,20 +15,11 @@ import java.io.UnsupportedEncodingException;
  */
 public abstract class RemoteEndpoint extends NetworkHandlers implements NetworkClient {
 
-    private final DataHandler handler;
     private LocalHandshake localHandshake;
     private RemoteHandshake remoteHandshake;
     private URLInfo endpoint;
 
-    public RemoteEndpoint(DataHandler handler) {
-        this.handler = handler;
-    }
-
     public abstract void start();
-
-    public DataHandler getDataHandler() {
-        return handler;
-    }
 
     /**
      * @param handshake Local handshake information to set.
@@ -74,7 +65,7 @@ public abstract class RemoteEndpoint extends NetworkHandlers implements NetworkC
     }
 
     public String getUri() {
-        RemoteHandshake handshake = remoteHandshake;
+        RemoteHandshake handshake = getRemoteHandshake();
         String uri = handshake.getWsUri() + "?auth=";
         try {
             String s = handshake.getSalt();

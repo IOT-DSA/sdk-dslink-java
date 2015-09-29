@@ -11,7 +11,6 @@ import io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketCl
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.util.CharsetUtil;
-import org.dsa.iot.dslink.connection.DataHandler;
 import org.dsa.iot.dslink.connection.RemoteEndpoint;
 import org.dsa.iot.dslink.util.Objects;
 import org.dsa.iot.dslink.util.URLInfo;
@@ -38,10 +37,6 @@ public class WebSocketConnector extends RemoteEndpoint {
     private ScheduledFuture<?> pingHandler;
     private long lastSentMessage;
     private Channel channel;
-
-    public WebSocketConnector(DataHandler handler) {
-        super(handler);
-    }
 
     @Override
     public void start() {
