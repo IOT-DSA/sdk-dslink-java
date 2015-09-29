@@ -8,6 +8,8 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.websocketx.*;
 import io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketClientCompressionHandler;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.util.CharsetUtil;
 import org.dsa.iot.dslink.connection.DataHandler;
 import org.dsa.iot.dslink.connection.RemoteEndpoint;
@@ -18,6 +20,7 @@ import org.dsa.iot.dslink.util.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.net.ssl.TrustManagerFactory;
 import java.net.URI;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -44,7 +47,7 @@ public class WebSocketConnector extends RemoteEndpoint {
     public void start() {
         eventLoopGroup = new NioEventLoopGroup();
         try {
-            URLInfo endpoint = getEndpoint();
+            final URLInfo endpoint = getEndpoint();
             String full = endpoint.protocol + "://" + endpoint.host
                     + ":" + endpoint.port + getUri();
             URI uri = new URI(full);
@@ -61,6 +64,12 @@ public class WebSocketConnector extends RemoteEndpoint {
                 @Override
                 protected void initChannel(SocketChannel ch) throws Exception {
                     ChannelPipeline p = ch.pipeline();
+                    if (endpoint.secure) {
+                        TrustManagerFactory man = InsecureTrustManagerFactory.INSTANCE;
+                        SslContext con = SslContext.newClientContext(man);
+                        p.addLast(con.newHandler(ch.alloc()));
+                    }
+
                     p.addLast(new HttpClientCodec());
                     p.addLast(new HttpObjectAggregator(8192));
                     p.addLast(new WebSocketClientCompressionHandler());

@@ -7,8 +7,12 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.*;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.util.CharsetUtil;
 import org.dsa.iot.dslink.util.URLInfo;
+
+import javax.net.ssl.TrustManagerFactory;
 
 /**
  * @author Samuel Grenier
@@ -88,9 +92,9 @@ public class HttpClient {
         headers.set(HttpHeaderNames.CONTENT_LENGTH, len);
     }
 
-    private static class Initializer extends ChannelInitializer<SocketChannel> {
+    private class Initializer extends ChannelInitializer<SocketChannel> {
 
-        private final HttpHandler handler;
+        private HttpHandler handler;
 
         public Initializer(HttpHandler handler) {
             this.handler = handler;
@@ -99,6 +103,13 @@ public class HttpClient {
         @Override
         protected void initChannel(SocketChannel ch) throws Exception {
             ChannelPipeline p = ch.pipeline();
+
+            if (url.secure) {
+                TrustManagerFactory man = InsecureTrustManagerFactory.INSTANCE;
+                SslContext con = SslContext.newClientContext(man);
+                p.addLast(con.newHandler(ch.alloc()));
+            }
+
             p.addLast(new HttpClientCodec());
             p.addLast(new HttpContentDecompressor());
             p.addLast(handler);
