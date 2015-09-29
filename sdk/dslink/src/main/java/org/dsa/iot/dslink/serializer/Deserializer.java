@@ -34,19 +34,19 @@ public class Deserializer {
             String name = entry.getKey();
             Node node = manager.getNode(name, true).getNode();
             Object value = entry.getValue();
-            Map<String, Object> data = (Map<String, Object>) value;
+            JsonObject data = (JsonObject) value;
             deserializeNode(node, data);
         }
     }
 
     @SuppressWarnings("unchecked")
-    private void deserializeNode(Node node, Map<String, Object> map) {
-        final String type = (String) map.get("$type");
+    private void deserializeNode(Node node, JsonObject map) {
+        final String type = map.get("$type");
         if (type != null) {
             ValueType t = ValueType.toValueType(type);
             node.setValueType(t);
         }
-        for (Map.Entry<String, Object> entry : map.entrySet()) {
+        for (Map.Entry<String, Object> entry : map) {
             String name = entry.getKey();
             Object value = entry.getValue();
             if (value == null || "$type".equals(name)) {
@@ -74,7 +74,7 @@ public class Deserializer {
                 node.setAttribute(name.substring(1), ValueUtils.toValue(value));
             } else {
                 Node child = node.createChild(name).build();
-                Map<String, Object> children = (Map<String, Object>) value;
+                JsonObject children = (JsonObject) value;
                 deserializeNode(child, children);
             }
         }
