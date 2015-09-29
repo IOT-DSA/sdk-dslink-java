@@ -43,7 +43,7 @@ public class JsonObject implements Iterable<Map.Entry<String, Object>> {
 
     @SuppressWarnings("unchecked")
     public <T> T get(String key, T def) {
-        T t = (T) map.get(key);
+        T t = (T) Json.update(map.get(key));
         return t != null ? t : def;
     }
 
@@ -64,6 +64,28 @@ public class JsonObject implements Iterable<Map.Entry<String, Object>> {
 
     @Override
     public Iterator<Map.Entry<String, Object>> iterator() {
-        return map.entrySet().iterator();
+        return new JsonIterator(map.entrySet().iterator());
+    }
+
+    private static class JsonIterator
+            implements Iterator<Map.Entry<String, Object>> {
+
+        private final Iterator<Map.Entry<String, Object>> it;
+
+        public JsonIterator(Iterator<Map.Entry<String, Object>> it) {
+            this.it = it;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return it.hasNext();
+        }
+
+        @Override
+        public Map.Entry<String, Object> next() {
+            Map.Entry<String, Object> entry = it.next();
+            entry.setValue(Json.update(entry.getValue()));
+            return entry;
+        }
     }
 }

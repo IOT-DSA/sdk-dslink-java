@@ -25,10 +25,7 @@ public class JsonArray implements Iterable<Object> {
         if (list == null) {
             throw new NullPointerException("list");
         }
-        this.list = new LinkedList<>();
-        for (Object obj : list) {
-            add(obj);
-        }
+        this.list = list;
     }
 
     public String encode() {
@@ -37,7 +34,7 @@ public class JsonArray implements Iterable<Object> {
 
     @SuppressWarnings("unchecked")
     public <T> T get(int index) {
-        return (T) list.get(index);
+        return (T) Json.update(list.get(index));
     }
 
     public JsonArray add(Object value) {
@@ -56,6 +53,25 @@ public class JsonArray implements Iterable<Object> {
 
     @Override
     public Iterator<Object> iterator() {
-        return list.iterator();
+        return new JsonIterator(list.iterator());
+    }
+
+    private static class JsonIterator implements Iterator<Object> {
+
+        private final Iterator<Object> it;
+
+        public JsonIterator(Iterator<Object> it) {
+            this.it = it;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return it.hasNext();
+        }
+
+        @Override
+        public Object next() {
+            return Json.update(it.next());
+        }
     }
 }

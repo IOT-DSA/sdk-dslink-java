@@ -74,4 +74,14 @@ public class Json {
         }
         return value;
     }
+
+    @SuppressWarnings("unchecked")
+    public static Object update(Object value) {
+        if (value instanceof Map) {
+            return new JsonObject((Map) value);
+        } else if (value instanceof List) {
+            return new JsonArray((List) value);
+        }
+        return value;
+    }
 }
