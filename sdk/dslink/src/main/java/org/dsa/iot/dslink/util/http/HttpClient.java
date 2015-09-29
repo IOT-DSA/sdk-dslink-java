@@ -85,6 +85,7 @@ public class HttpClient {
     private void setHeaders(HttpHeaders headers) {
         headers.set(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE);
         headers.set(HttpHeaderNames.ACCEPT_ENCODING, HttpHeaderValues.TEXT_PLAIN);
+        headers.set(HttpHeaderNames.HOST, url.host);
     }
 
     private void setContentLength(HttpHeaders headers, int length) {
