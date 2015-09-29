@@ -29,8 +29,7 @@ public class Deserializer {
      */
     @SuppressWarnings("unchecked")
     public void deserialize(JsonObject object) {
-        Map<String, Object> map = object.getMap();
-        for (Map.Entry<String, Object> entry : map.entrySet()) {
+        for (Map.Entry<String, Object> entry : object) {
             String name = entry.getKey();
             Node node = manager.getNode(name, true).getNode();
             Object value = entry.getValue();
