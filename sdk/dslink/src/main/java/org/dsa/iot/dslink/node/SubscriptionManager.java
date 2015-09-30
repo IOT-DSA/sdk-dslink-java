@@ -4,9 +4,12 @@ import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.methods.responses.ListResponse;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueUtils;
+import org.dsa.iot.dslink.util.Objects;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,6 +30,49 @@ public class SubscriptionManager {
 
     public SubscriptionManager(DSLink link) {
         this.link = link;
+    }
+
+    public void clearAllSubscriptions() {
+        NodeManager manager = link.getNodeManager();
+
+        Collection<String> paths;
+        synchronized (valueLock) {
+            paths = new ArrayList<>(valueSubsPaths.keySet());
+            valueSubsPaths.clear();
+            valueSubsSids.clear();
+        }
+        for (String path : paths) {
+            Node node = manager.getNode(path, false, false).getNode();
+            if (node != null) {
+                final NodeListener listener = node.getListener();
+                if (listener != null) {
+                    Objects.getDaemonThreadPool().execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            listener.postOnUnsubscription();
+                        }
+                    });
+                }
+            }
+        }
+
+        synchronized (pathSubsMap) {
+            paths = new ArrayList<>(pathSubsMap.keySet());
+        }
+        for (String path : paths) {
+            Node node = manager.getNode(path, false, false).getNode();
+            if (node != null) {
+                final NodeListener listener = node.getListener();
+                if (listener != null) {
+                    Objects.getDaemonThreadPool().execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            listener.postListClosed();
+                        }
+                    });
+                }
+            }
+        }
     }
 
     /**

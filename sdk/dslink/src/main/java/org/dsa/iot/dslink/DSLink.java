@@ -100,19 +100,19 @@ public class DSLink {
     }
 
     /**
-     * @return The path of the link on the broker.
-     */
-    public String getPath() {
-        return path;
-    }
-
-    /**
      * The writer must never be cached as it can change.
      *
      * @return The writer to write responses to a remote endpoint.
      */
     public DataHandler getWriter() {
         return dataHandler;
+    }
+
+    /**
+     * @return The path of the link on the broker.
+     */
+    public String getPath() {
+        return path;
     }
 
     /**
@@ -213,6 +213,8 @@ public class DSLink {
             getWriter().setRespCloseHandler(new Handler<Void>() {
                 @Override
                 public void handle(Void event) {
+                    Responder resp = DSLink.this.getResponder();
+                    resp.getSubscriptionManager().clearAllSubscriptions();
                     getLinkHandler().onResponderDisconnected(DSLink.this);
                 }
             });
