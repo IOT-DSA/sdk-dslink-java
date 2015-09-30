@@ -118,14 +118,8 @@ public class WebSocketConnector extends RemoteEndpoint {
             throw new RuntimeException(e);
         }
         ByteBuf buf = Unpooled.wrappedBuffer(bytes);
-        try {
-            WebSocketFrame frame = new TextWebSocketFrame(buf);
-            channel.writeAndFlush(frame);
-        } finally {
-            if (buf.refCnt() > 0) {
-                buf.release();
-            }
-        }
+        WebSocketFrame frame = new TextWebSocketFrame(buf);
+        channel.writeAndFlush(frame);
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Sent data: {}", data);
         }
