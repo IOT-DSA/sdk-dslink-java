@@ -8,10 +8,7 @@ import org.dsa.iot.dslink.util.Objects;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -56,10 +53,10 @@ public class SubscriptionManager {
             }
         }
 
-        synchronized (pathSubsMap) {
-            paths = new ArrayList<>(pathSubsMap.keySet());
-        }
-        for (String path : paths) {
+        Iterator<String> it = pathSubsMap.keySet().iterator();
+        while (it.hasNext()) {
+            String path = it.next();
+            it.remove();
             Node node = manager.getNode(path, false, false).getNode();
             if (node != null) {
                 final NodeListener listener = node.getListener();
