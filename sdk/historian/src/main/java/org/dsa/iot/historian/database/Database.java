@@ -3,6 +3,7 @@ package org.dsa.iot.historian.database;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.util.Objects;
+import org.dsa.iot.dslink.util.handler.CompleteHandler;
 import org.dsa.iot.dslink.util.handler.Handler;
 import org.dsa.iot.historian.utils.QueryData;
 import org.dsa.iot.historian.utils.TimeParser;
@@ -106,7 +107,7 @@ public abstract class Database {
     public abstract void query(String path,
                                long from,
                                long to,
-                               Handler<QueryData> handler);
+                               CompleteHandler<QueryData> handler);
 
     /**
      * @param path Path to query.

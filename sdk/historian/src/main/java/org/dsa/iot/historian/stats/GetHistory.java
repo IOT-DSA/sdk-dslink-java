@@ -11,6 +11,7 @@ import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.util.Objects;
 import org.dsa.iot.dslink.util.StringUtils;
+import org.dsa.iot.dslink.util.handler.CompleteHandler;
 import org.dsa.iot.dslink.util.handler.Handler;
 import org.dsa.iot.historian.database.Database;
 import org.dsa.iot.historian.database.Watch;
@@ -98,26 +99,27 @@ public class GetHistory implements Handler<ActionResult> {
                     }
                 });
 
-                db.query(path, from, to, new Handler<QueryData>() {
+                db.query(path, from, to, new CompleteHandler<QueryData>() {
                     @Override
                     public void handle(QueryData data) {
-                        if (data == null) {
-                            table.sendReady();
-                            if (!rt) {
-                                table.close();
-                            } else if (open) {
-                                handler = new Handler<QueryData>() {
-                                    @Override
-                                    public void handle(QueryData event) {
-                                        processQueryData(table, interval, event);
-                                    }
-                                };
-                                Watch w = event.getNode().getParent().getMetaData();
-                                w.addHandler(handler);
-                            }
-                            return;
-                        }
                         processQueryData(table, interval, data);
+                    }
+
+                    @Override
+                    public void complete() {
+                        table.sendReady();
+                        if (!rt) {
+                            table.close();
+                        } else if (open) {
+                            handler = new Handler<QueryData>() {
+                                @Override
+                                public void handle(QueryData event) {
+                                    processQueryData(table, interval, event);
+                                }
+                            };
+                            Watch w = event.getNode().getParent().getMetaData();
+                            w.addHandler(handler);
+                        }
                     }
                 });
             }
