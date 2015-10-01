@@ -32,6 +32,11 @@ public class JsonArray implements Iterable<Object> {
         return Json.encode(this);
     }
 
+    @SuppressWarnings("unused")
+    public String encodePrettily() {
+        return Json.encodePrettily(this);
+    }
+
     public <T> T remove(int index) {
         return (T) Json.update(list.remove(index));
     }

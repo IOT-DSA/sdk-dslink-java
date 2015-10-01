@@ -3,6 +3,8 @@ package org.dsa.iot.dslink.util.json;
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.PrettyPrinter;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.dsa.iot.dslink.util.json.decoders.ListDecoder;
@@ -25,9 +27,18 @@ public class Json {
     }
 
     public static String encode(Object obj) {
+        return performEncode(obj, null);
+    }
+
+    public static String encodePrettily(Object obj) {
+        return performEncode(obj, new DefaultPrettyPrinter());
+    }
+
+    private static String performEncode(Object obj, PrettyPrinter printer) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         JsonEncoding enc = JsonEncoding.UTF8;
         try (JsonGenerator gen = FACTORY.createGenerator(baos, enc)) {
+            gen.setPrettyPrinter(printer);
             if (obj instanceof JsonObject) {
                 MapEncoder.write(gen, (JsonObject) obj);
             } else if (obj instanceof JsonArray) {

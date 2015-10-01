@@ -32,6 +32,11 @@ public class JsonObject implements Iterable<Map.Entry<String, Object>> {
         return Json.encode(this);
     }
 
+    @SuppressWarnings("unused")
+    public String encodePrettily() {
+        return Json.encodePrettily(this);
+    }
+
     public boolean contains(String key) {
         return map.containsKey(key);
     }
