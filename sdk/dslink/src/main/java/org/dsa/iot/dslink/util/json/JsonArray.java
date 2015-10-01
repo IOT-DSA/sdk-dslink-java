@@ -33,7 +33,7 @@ public class JsonArray implements Iterable<Object> {
     }
 
     public <T> T remove(int index) {
-        return (T) list.remove(index);
+        return (T) Json.update(list.remove(index));
     }
 
     public <T> T get(int index) {
