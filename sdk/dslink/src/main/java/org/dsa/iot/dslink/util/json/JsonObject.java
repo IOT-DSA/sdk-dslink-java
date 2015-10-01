@@ -37,7 +37,7 @@ public class JsonObject implements Iterable<Map.Entry<String, Object>> {
     }
 
     public <T> T remove(String key) {
-        return (T) map.remove(key);
+        return (T) Json.update(map.remove(key));
     }
 
     public <T> T get(String key) {
