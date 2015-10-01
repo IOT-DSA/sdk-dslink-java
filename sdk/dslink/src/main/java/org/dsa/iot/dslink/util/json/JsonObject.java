@@ -5,6 +5,7 @@ import java.util.*;
 /**
  * @author Samuel Grenier
  */
+@SuppressWarnings("unchecked")
 public class JsonObject implements Iterable<Map.Entry<String, Object>> {
 
     private final Map<String, Object> map;
@@ -13,7 +14,6 @@ public class JsonObject implements Iterable<Map.Entry<String, Object>> {
         this(new LinkedHashMap<String, Object>());
     }
 
-    @SuppressWarnings("unchecked")
     public JsonObject(String json) {
         this(Json.decodeMap(json));
     }
@@ -36,12 +36,15 @@ public class JsonObject implements Iterable<Map.Entry<String, Object>> {
         return map.containsKey(key);
     }
 
-    @SuppressWarnings("unchecked")
+    public <T> T remove(String key) {
+        return (T) map.remove(key);
+    }
+
     public <T> T get(String key) {
         return get(key, null);
     }
 
-    @SuppressWarnings("unchecked")
+
     public <T> T get(String key, T def) {
         T t = (T) Json.update(map.get(key));
         return t != null ? t : def;
@@ -56,6 +59,10 @@ public class JsonObject implements Iterable<Map.Entry<String, Object>> {
 
     public int size() {
         return map.size();
+    }
+
+    public void mergeIn(JsonObject other) {
+        map.putAll(other.map);
     }
 
     public Map<String, Object> getMap() {
