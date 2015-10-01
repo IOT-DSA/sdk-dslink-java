@@ -109,6 +109,12 @@ public class GetHistory implements Handler<ActionResult> {
                     public void complete() {
                         table.sendReady();
                         if (!rt) {
+                            if (interval != null) {
+                                Row row = interval.complete();
+                                if (row != null) {
+                                    table.addRow(row);
+                                }
+                            }
                             table.close();
                         } else if (open) {
                             handler = new Handler<QueryData>() {

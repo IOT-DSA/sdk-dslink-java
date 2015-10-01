@@ -51,6 +51,16 @@ public class Interval {
      */
     private Value lastValue;
 
+    /**
+     * Last real time value.
+     */
+    private Value realTimeValue;
+
+    /**
+     * Last real time timestamp.
+     */
+    private long realTimeTime;
+
     private Interval(Rollup rollup) {
         this.rollup = rollup;
     }
@@ -62,11 +72,12 @@ public class Interval {
      * @return An update or null to skip the update.
      */
     public Row getRowUpdate(Value value, long fullTs) {
+        setRealTime(value, fullTs);
         final long alignedTs = alignTime(fullTs);
 
         Row row = null;
-        if (alignedTs == lastValueTimeTrunc) {
-            // Update the last value with the same time stamp in the interval
+        if (alignedTs - lastValueTimeTrunc < incrementTime) {
+            // Update the last value within the same interval
             lastValue = value;
             if (rollup != null) {
                 rollup.update(value, fullTs);
@@ -74,11 +85,12 @@ public class Interval {
         } else if (lastValue != null) {
             // Finish up the rollup, the interval for this period is completed
             if (rollup == null) {
-                row = getRowUpdate(lastValueTimeTrunc, lastValue);
+                row = makeRow(lastValue, lastValueTimeTrunc);
             } else {
-                row = getRowUpdate(lastValueTimeTrunc, rollup.getValue());
+                row = makeRow(rollup.getValue(), lastValueTimeTrunc);
             }
             lastValue = null;
+            setRealTime(value, alignedTs);
         }
 
         // New interval period has been started
@@ -93,7 +105,23 @@ public class Interval {
         return row;
     }
 
-    private Row getRowUpdate(long ts, Value value) {
+    public Row complete() {
+        if (lastValue == null) {
+            // Don't duplicate the value if the interval finished and there
+            // is no more data.
+            return null;
+        }
+        Value val = realTimeValue;
+        if (val != null) {
+            if (rollup != null) {
+                val = rollup.getValue();
+            }
+            return makeRow(val, realTimeTime);
+        }
+        return null;
+    }
+
+    private Row makeRow(Value value, long ts) {
         Row row = new Row();
         row.addValue(new Value(TimeParser.parse(ts)));
         row.addValue(value);
@@ -152,6 +180,13 @@ public class Interval {
         }
 
         return c.getTime().getTime();
+    }
+
+    private void setRealTime(Value value, long time) {
+        // Subtract the increment time since the time must point to the
+        // start time of the row, not the end.
+        realTimeTime = time - incrementTime;
+        realTimeValue = value;
     }
 
     private void update(char interval, String number) {
