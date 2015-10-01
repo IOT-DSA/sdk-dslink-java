@@ -45,6 +45,11 @@ public class MapEncoder {
             } else if (instance instanceof JsonArray) {
                 gen.writeArrayFieldStart(name);
                 ListEncoder.performWrite(gen, (JsonArray) instance);
+            } else if (instance == null) {
+                gen.writeNullField(name);
+            } else {
+                String err = "Unsupported class: " + instance.getClass().getName();
+                throw new RuntimeException(err);
             }
         }
         gen.writeEndObject();
