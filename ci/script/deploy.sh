@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 # Deploy to maven
-if [ "$TRAVIS_BRANCH" != 'v0.10.x' ]; then
-    echo 'Ignoring artifact upload (not on bug fix branch)'
+if [ "$TRAVIS_BRANCH" != 'master' ]; then
+    echo 'Ignoring artifact upload (not on master branch)'
 elif [ "$TRAVIS_PULL_REQUEST" == 'true' ]; then
     echo 'Ignoring artifact upload (pull request)'
 else
