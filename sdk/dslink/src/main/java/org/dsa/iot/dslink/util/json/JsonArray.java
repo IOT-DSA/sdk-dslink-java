@@ -8,6 +8,7 @@ import java.util.List;
 /**
  * @author Samuel Grenier
  */
+@SuppressWarnings("unchecked")
 public class JsonArray implements Iterable<Object> {
 
     private final List<Object> list;
@@ -20,7 +21,6 @@ public class JsonArray implements Iterable<Object> {
         this(Json.decodeList(content));
     }
 
-    @SuppressWarnings("unchecked")
     public JsonArray(List list) {
         if (list == null) {
             throw new NullPointerException("list");
@@ -32,7 +32,10 @@ public class JsonArray implements Iterable<Object> {
         return Json.encode(this);
     }
 
-    @SuppressWarnings("unchecked")
+    public <T> T remove(int index) {
+        return (T) list.remove(index);
+    }
+
     public <T> T get(int index) {
         return (T) Json.update(list.get(index));
     }
@@ -45,6 +48,11 @@ public class JsonArray implements Iterable<Object> {
 
     public int size() {
         return list.size();
+    }
+
+    @SuppressWarnings("unused")
+    public void mergeIn(JsonArray other) {
+        list.addAll(other.list);
     }
 
     public List<Object> getList() {
