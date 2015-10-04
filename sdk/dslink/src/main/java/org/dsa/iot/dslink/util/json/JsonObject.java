@@ -75,6 +75,11 @@ public class JsonObject implements Iterable<Map.Entry<String, Object>> {
     }
 
     @Override
+    public String toString() {
+        return encode();
+    }
+
+    @Override
     public Iterator<Map.Entry<String, Object>> iterator() {
         return new JsonIterator(map.entrySet().iterator());
     }
