@@ -65,6 +65,11 @@ public class JsonArray implements Iterable<Object> {
     }
 
     @Override
+    public String toString() {
+        return encode();
+    }
+
+    @Override
     public Iterator<Object> iterator() {
         return new JsonIterator(list.iterator());
     }
