@@ -48,7 +48,7 @@ public class UserHandler implements LinkHandler {
                     e.printStackTrace();
                 }
             }
-        });
+        }, THREAD_NAME);
         thread.setPriority(Thread.MAX_PRIORITY);
         thread.start();
     }
