@@ -70,6 +70,10 @@ public class UserHandler implements LinkHandler {
                 manager.stop(path);
                 break;
             }
+            case "stopAll": {
+                manager.stopAll();
+                break;
+            }
             case "start": {
                 if (data.length < 2) {
                     System.err.println("Usage: start <link>");
@@ -81,10 +85,6 @@ public class UserHandler implements LinkHandler {
             }
             case "startAll": {
                 manager.loadDirectory(root, brokerUrl);
-                break;
-            }
-            case "stopAll": {
-                manager.stopAll();
                 break;
             }
             default: {
