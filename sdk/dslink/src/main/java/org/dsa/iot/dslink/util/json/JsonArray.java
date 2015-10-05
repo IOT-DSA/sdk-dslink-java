@@ -55,7 +55,6 @@ public class JsonArray implements Iterable<Object> {
         return list.size();
     }
 
-    @SuppressWarnings("unused")
     public void mergeIn(JsonArray other) {
         list.addAll(other.list);
     }
