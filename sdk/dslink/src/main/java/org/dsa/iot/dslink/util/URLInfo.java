@@ -23,7 +23,7 @@ public class URLInfo {
      * @param path     Path of the URL
      * @param secure   Whether the URL connects over a secure channel or not
      */
-    private URLInfo(String protocol, String host,
+    public URLInfo(String protocol, String host,
                     int port, String path, boolean secure) {
         this.protocol = protocol;
         this.host = host;

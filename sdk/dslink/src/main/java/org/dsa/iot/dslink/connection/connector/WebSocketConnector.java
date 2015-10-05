@@ -1,29 +1,15 @@
 package org.dsa.iot.dslink.connection.connector;
 
-import io.netty.bootstrap.Bootstrap;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-import io.netty.channel.*;
-import io.netty.channel.socket.SocketChannel;
-import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.http.*;
-import io.netty.handler.codec.http.websocketx.*;
-import io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketClientCompressionHandler;
-import io.netty.handler.ssl.SslContext;
-import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
-import io.netty.util.CharsetUtil;
 import org.dsa.iot.dslink.connection.RemoteEndpoint;
+import org.dsa.iot.dslink.provider.WsProvider;
 import org.dsa.iot.dslink.util.Objects;
 import org.dsa.iot.dslink.util.URLInfo;
 import org.dsa.iot.dslink.util.handler.Handler;
+import org.dsa.iot.dslink.util.http.WsClient;
 import org.dsa.iot.dslink.util.json.JsonObject;
-import org.dsa.iot.shared.SharedObjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.net.ssl.TrustManagerFactory;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -37,63 +23,25 @@ public class WebSocketConnector extends RemoteEndpoint {
     private static final Logger LOGGER;
 
     private ScheduledFuture<?> pingHandler;
+    private WsProvider.Writer writer;
     private long lastSentMessage;
-    private Channel channel;
 
     @Override
     public void start() {
-        final URLInfo endpoint = getEndpoint();
-        String full = endpoint.protocol + "://" + endpoint.host
-                + ":" + endpoint.port + getUri();
-        URI uri;
-        try {
-            uri = new URI(full);
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
-        WebSocketVersion v = WebSocketVersion.V13;
-        HttpHeaders h = new DefaultHttpHeaders();
-        final WebSocketClientHandshaker wsch = WebSocketClientHandshakerFactory
-                .newHandshaker(uri, v, null, true, h, Integer.MAX_VALUE);
-        final WebSocketHandler handler = new WebSocketHandler(wsch);
-
-        Bootstrap b = new Bootstrap();
-        b.group(SharedObjects.getLoop());
-        b.channel(NioSocketChannel.class);
-        b.handler(new ChannelInitializer<SocketChannel>() {
-            @Override
-            protected void initChannel(SocketChannel ch) throws Exception {
-                ChannelPipeline p = ch.pipeline();
-                if (endpoint.secure) {
-                    TrustManagerFactory man = InsecureTrustManagerFactory.INSTANCE;
-                    SslContext con = SslContext.newClientContext(man);
-                    p.addLast(con.newHandler(ch.alloc()));
-                }
-
-                p.addLast(new HttpClientCodec());
-                p.addLast(new HttpObjectAggregator(8192));
-                p.addLast(new WebSocketClientCompressionHandler());
-                p.addLast(handler);
-            }
-        });
-
-        ChannelFuture fut = b.connect(endpoint.host, endpoint.port);
-        channel = fut.syncUninterruptibly().channel();
-        handler.handshakeFuture().syncUninterruptibly().channel();
-        Handler<Void> onConnected = getOnConnected();
-        if (onConnected != null) {
-            onConnected.handle(null);
-        }
+        URLInfo endpoint = getEndpoint();
+        endpoint = new URLInfo(endpoint.protocol, endpoint.host,
+                            endpoint.port, getUri(), endpoint.secure);
+        WsProvider.getProvider().connect(new WsHandler(endpoint));
     }
 
     @Override
     public void close() {
-        if (channel != null) {
+        if (writer != null) {
             try {
-                channel.close();
+                writer.close();
             } catch (Exception ignored) {
             }
-            channel = null;
+            writer = null;
         }
         if (pingHandler != null) {
             try {
@@ -108,25 +56,16 @@ public class WebSocketConnector extends RemoteEndpoint {
     public void write(String data) {
         checkConnected();
 
-        byte[] bytes;
-        try {
-            bytes = data.getBytes("UTF-8");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        ByteBuf buf = Unpooled.wrappedBuffer(bytes);
-        WebSocketFrame frame = new TextWebSocketFrame(buf);
-        channel.writeAndFlush(frame);
+        writer.write(data);
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Sent data: {}", data);
         }
-
         lastSentMessage = System.currentTimeMillis();
     }
 
     @Override
     public boolean isConnected() {
-        return channel != null;
+        return writer != null;
     }
 
     private void setupPingHandler() {
@@ -155,34 +94,43 @@ public class WebSocketConnector extends RemoteEndpoint {
         }
     }
 
-    private class WebSocketHandler extends SimpleChannelInboundHandler<Object> {
-        private final WebSocketClientHandshaker handshake;
-        private ChannelPromise handshakeFuture;
+    private class WsHandler extends WsClient {
 
-        public WebSocketHandler(WebSocketClientHandshaker handshake) {
-            this.handshake = handshake;
-        }
-
-        public ChannelFuture handshakeFuture() {
-            return handshakeFuture;
+        public WsHandler(URLInfo url) {
+            super(url);
         }
 
         @Override
-        public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
-            super.handlerAdded(ctx);
-            handshakeFuture = ctx.newPromise();
+        public void onData(String data) {
+            JsonObject obj = new JsonObject(data);
+            if (obj.contains("ping")) {
+                String pong = data.replaceFirst("i", "o");
+                WebSocketConnector.this.write(pong);
+                if (LOGGER.isDebugEnabled()) {
+                    String s = "Received ping, sending pong: {}";
+                    LOGGER.debug(s, pong);
+                }
+                return;
+            }
+            Handler<JsonObject> h = getOnData();
+            if (h != null) {
+                h.handle(obj);
+            }
         }
 
         @Override
-        public void channelActive(ChannelHandlerContext ctx) throws Exception {
-            super.channelActive(ctx);
-            handshake.handshake(ctx.channel());
+        public void onConnected(WsProvider.Writer writer) {
+            WebSocketConnector.this.writer = writer;
             setupPingHandler();
+            Handler<Void> onConnected = getOnConnected();
+            if (onConnected != null) {
+                onConnected.handle(null);
+            }
         }
 
         @Override
-        public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-            super.channelInactive(ctx);
+        public void onDisconnected() {
+            WebSocketConnector.this.writer = null;
             Handler<Void> onDisconnected = getOnDisconnected();
             if (onDisconnected != null) {
                 onDisconnected.handle(null);
@@ -191,57 +139,13 @@ public class WebSocketConnector extends RemoteEndpoint {
         }
 
         @Override
-        public void messageReceived(ChannelHandlerContext ctx, Object msg) {
-            Channel ch = ctx.channel();
-            if (!handshake.isHandshakeComplete()) {
-                handshake.finishHandshake(ch, (FullHttpResponse) msg);
-                handshakeFuture.setSuccess();
-                return;
+        public void onThrowable(Throwable throwable) {
+            LOGGER.error("", throwable);
+            Handler<Void> onDisconnected = getOnDisconnected();
+            if (onDisconnected != null) {
+                onDisconnected.handle(null);
             }
-
-            if (msg instanceof FullHttpResponse) {
-                FullHttpResponse response = (FullHttpResponse) msg;
-                throw new IllegalStateException(
-                        "Unexpected FullHttpResponse (getStatus=" + response.status() +
-                                ", content=" + response.content().toString(CharsetUtil.UTF_8) + ')');
-            }
-
-            WebSocketFrame frame = (WebSocketFrame) msg;
-            if (frame instanceof TextWebSocketFrame) {
-                TextWebSocketFrame textFrame = (TextWebSocketFrame) frame;
-                {
-                    String data = textFrame.text();
-                    JsonObject obj = new JsonObject(textFrame.text());
-                    if (obj.contains("ping")) {
-                        String pong = data.replaceFirst("i", "o");
-                        WebSocketConnector.this.write(pong);
-                        if (LOGGER.isDebugEnabled()) {
-                            String s = "Received ping, sending pong: {}";
-                            LOGGER.debug(s, pong);
-                        }
-                        return;
-                    }
-                    Handler<JsonObject> h = getOnData();
-                    if (h != null) {
-                        h.handle(obj);
-                    }
-                }
-            } else if (frame instanceof CloseWebSocketFrame) {
-                Handler<Void> onDisconnected = getOnDisconnected();
-                if (onDisconnected != null) {
-                    onDisconnected.handle(null);
-                }
-                WebSocketConnector.this.close();
-            }
-        }
-
-        @Override
-        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-            cause.printStackTrace();
-            if (!handshakeFuture.isDone()) {
-                handshakeFuture.setFailure(cause);
-            }
-            ctx.close();
+            WebSocketConnector.this.close();
         }
     }
 
