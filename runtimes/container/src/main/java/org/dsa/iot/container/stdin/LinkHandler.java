@@ -5,7 +5,7 @@ package org.dsa.iot.container.stdin;
  */
 public interface LinkHandler {
 
-    public static final String THREAD_NAME = "input-handler";
+    String THREAD_NAME = "input-handler";
 
     void start();
 }
