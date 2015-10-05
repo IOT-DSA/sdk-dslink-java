@@ -1,5 +1,8 @@
 package org.dsa.iot.shared;
 
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+
 import java.util.concurrent.*;
 
 /**
@@ -11,6 +14,14 @@ public class SharedObjects {
 
     private static volatile ScheduledThreadPoolExecutor THREAD_POOL;
     private static volatile ScheduledThreadPoolExecutor DAEMON_THREAD_POOL;
+    private static volatile EventLoopGroup LOOP;
+
+    public static EventLoopGroup getLoop() {
+        if (LOOP == null) {
+            LOOP = new NioEventLoopGroup();
+        }
+        return LOOP;
+    }
 
     public static ScheduledThreadPoolExecutor createThreadPool(int size) {
         return new ScheduledThreadPool(size);
@@ -18,12 +29,11 @@ public class SharedObjects {
 
     public static ScheduledThreadPoolExecutor getThreadPool() {
         if (THREAD_POOL == null) {
-            THREAD_POOL = createThreadPool(POOL_SIZE);
+            setThreadPool(createThreadPool(POOL_SIZE));
         }
         return THREAD_POOL;
     }
 
-    @SuppressWarnings("unused")
     public static void setThreadPool(ScheduledThreadPoolExecutor stpe) {
         THREAD_POOL = stpe;
     }
@@ -35,12 +45,11 @@ public class SharedObjects {
 
     public static ScheduledThreadPoolExecutor getDaemonThreadPool() {
         if (DAEMON_THREAD_POOL == null) {
-            DAEMON_THREAD_POOL = createDaemonThreadPool(POOL_SIZE);
+            setDaemonThreadPool(createDaemonThreadPool(POOL_SIZE));
         }
         return DAEMON_THREAD_POOL;
     }
 
-    @SuppressWarnings("unused")
     public static void setDaemonThreadPool(ScheduledThreadPoolExecutor stpe) {
         DAEMON_THREAD_POOL = stpe;
     }

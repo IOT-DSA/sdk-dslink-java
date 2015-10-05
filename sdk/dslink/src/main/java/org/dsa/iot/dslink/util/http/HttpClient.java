@@ -3,7 +3,6 @@ package org.dsa.iot.dslink.util.http;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
-import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.*;
@@ -11,6 +10,7 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.util.CharsetUtil;
 import org.dsa.iot.dslink.util.URLInfo;
+import org.dsa.iot.shared.SharedObjects;
 
 import javax.net.ssl.TrustManagerFactory;
 
@@ -34,12 +34,11 @@ public class HttpClient {
         } else if (uri.isEmpty()) {
             uri = "/";
         }
-        EventLoopGroup group = new NioEventLoopGroup();
         try {
             final HttpHandler handler = new HttpHandler();
 
             Bootstrap b = new Bootstrap();
-            b.group(group);
+            b.group(SharedObjects.getLoop());
             b.channel(NioSocketChannel.class);
             b.handler(new Initializer(handler));
             ChannelFuture fut = b.connect(url.host, url.port);
@@ -49,8 +48,6 @@ public class HttpClient {
             return populateResponse(handler);
         } catch (Throwable t) {
             throw new RuntimeException(t);
-        } finally {
-            group.shutdownGracefully();
         }
     }
 

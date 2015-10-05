@@ -24,6 +24,7 @@ public class Main {
         System.setSecurityManager(new SecMan());
 
         // Start up global thread pools on main
+        SharedObjects.getLoop();
         SharedObjects.getDaemonThreadPool().prestartAllCoreThreads();
         SharedObjects.getThreadPool().prestartAllCoreThreads();
 

@@ -4,7 +4,6 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
-import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.*;
@@ -18,11 +17,13 @@ import org.dsa.iot.dslink.util.Objects;
 import org.dsa.iot.dslink.util.URLInfo;
 import org.dsa.iot.dslink.util.handler.Handler;
 import org.dsa.iot.dslink.util.json.JsonObject;
+import org.dsa.iot.shared.SharedObjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.TrustManagerFactory;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -35,53 +36,53 @@ public class WebSocketConnector extends RemoteEndpoint {
 
     private static final Logger LOGGER;
 
-    private EventLoopGroup eventLoopGroup;
     private ScheduledFuture<?> pingHandler;
     private long lastSentMessage;
     private Channel channel;
 
     @Override
     public void start() {
-        eventLoopGroup = new NioEventLoopGroup();
+        final URLInfo endpoint = getEndpoint();
+        String full = endpoint.protocol + "://" + endpoint.host
+                + ":" + endpoint.port + getUri();
+        URI uri;
         try {
-            final URLInfo endpoint = getEndpoint();
-            String full = endpoint.protocol + "://" + endpoint.host
-                    + ":" + endpoint.port + getUri();
-            URI uri = new URI(full);
-            WebSocketVersion v = WebSocketVersion.V13;
-            HttpHeaders h = new DefaultHttpHeaders();
-            final WebSocketClientHandshaker wsch = WebSocketClientHandshakerFactory
-                    .newHandshaker(uri, v, null, true, h, Integer.MAX_VALUE);
-            final WebSocketHandler handler = new WebSocketHandler(wsch);
+            uri = new URI(full);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+        WebSocketVersion v = WebSocketVersion.V13;
+        HttpHeaders h = new DefaultHttpHeaders();
+        final WebSocketClientHandshaker wsch = WebSocketClientHandshakerFactory
+                .newHandshaker(uri, v, null, true, h, Integer.MAX_VALUE);
+        final WebSocketHandler handler = new WebSocketHandler(wsch);
 
-            Bootstrap b = new Bootstrap();
-            b.group(eventLoopGroup);
-            b.channel(NioSocketChannel.class);
-            b.handler(new ChannelInitializer<SocketChannel>() {
-                @Override
-                protected void initChannel(SocketChannel ch) throws Exception {
-                    ChannelPipeline p = ch.pipeline();
-                    if (endpoint.secure) {
-                        TrustManagerFactory man = InsecureTrustManagerFactory.INSTANCE;
-                        SslContext con = SslContext.newClientContext(man);
-                        p.addLast(con.newHandler(ch.alloc()));
-                    }
-
-                    p.addLast(new HttpClientCodec());
-                    p.addLast(new HttpObjectAggregator(8192));
-                    p.addLast(new WebSocketClientCompressionHandler());
-                    p.addLast(handler);
+        Bootstrap b = new Bootstrap();
+        b.group(SharedObjects.getLoop());
+        b.channel(NioSocketChannel.class);
+        b.handler(new ChannelInitializer<SocketChannel>() {
+            @Override
+            protected void initChannel(SocketChannel ch) throws Exception {
+                ChannelPipeline p = ch.pipeline();
+                if (endpoint.secure) {
+                    TrustManagerFactory man = InsecureTrustManagerFactory.INSTANCE;
+                    SslContext con = SslContext.newClientContext(man);
+                    p.addLast(con.newHandler(ch.alloc()));
                 }
-            });
 
-            channel = b.connect(endpoint.host, endpoint.port).sync().channel();
-            handler.handshakeFuture().sync().channel();
-            Handler<Void> onConnected = getOnConnected();
-            if (onConnected != null) {
-                onConnected.handle(null);
+                p.addLast(new HttpClientCodec());
+                p.addLast(new HttpObjectAggregator(8192));
+                p.addLast(new WebSocketClientCompressionHandler());
+                p.addLast(handler);
             }
-        } catch (Exception e) {
-            eventLoopGroup.shutdownGracefully();
+        });
+
+        ChannelFuture fut = b.connect(endpoint.host, endpoint.port);
+        channel = fut.syncUninterruptibly().channel();
+        handler.handshakeFuture().syncUninterruptibly().channel();
+        Handler<Void> onConnected = getOnConnected();
+        if (onConnected != null) {
+            onConnected.handle(null);
         }
     }
 
@@ -100,10 +101,6 @@ public class WebSocketConnector extends RemoteEndpoint {
             } catch (Exception ignored) {
             }
             pingHandler = null;
-        }
-        if (eventLoopGroup != null) {
-            eventLoopGroup.shutdownGracefully();
-            eventLoopGroup = null;
         }
     }
 
