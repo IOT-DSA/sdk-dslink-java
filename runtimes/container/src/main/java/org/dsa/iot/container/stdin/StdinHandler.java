@@ -19,7 +19,7 @@ import java.util.Map;
 /**
  * @author Samuel Grenier
  */
-public class StdinHandler {
+public class StdinHandler implements LinkHandler {
 
     private final DSLinkManager manager;
 
@@ -27,6 +27,7 @@ public class StdinHandler {
         this.manager = manager;
     }
 
+    @Override
     public void start() {
         Thread thread = new Thread(new Runnable() {
             @Override

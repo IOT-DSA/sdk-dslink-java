@@ -9,10 +9,7 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Samuel Grenier
@@ -87,6 +84,17 @@ public class DSLinkManager {
         DSLinkHandler link = links.remove(name);
         if (link != null) {
             link.stop();
+        }
+    }
+
+    public synchronized void stopAll() {
+        Iterator<DSLinkHandler> it = links.values().iterator();
+        while (it.hasNext()) {
+            DSLinkHandler handler = it.next();
+            it.remove();
+            if (handler != null) {
+                handler.stop();
+            }
         }
     }
 

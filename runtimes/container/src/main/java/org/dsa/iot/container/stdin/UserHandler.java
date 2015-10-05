@@ -9,7 +9,7 @@ import java.nio.file.Path;
 /**
  * @author Samuel Grenier
  */
-public class UserHandler {
+public class UserHandler implements LinkHandler {
 
     private final DSLinkManager manager;
     private final Path root;
@@ -21,6 +21,7 @@ public class UserHandler {
         this.brokerUrl = brokerUrl;
     }
 
+    @Override
     public void start() {
         Thread thread = new Thread(new Runnable() {
             @Override
@@ -58,20 +59,32 @@ public class UserHandler {
             return;
         }
         String[] data = input.split(" ");
-        if (data.length < 2) {
-            System.err.println("Unknown command: " + input);
-            return;
-        }
         String command = data[0];
-        String dslink = data[1];
-
         switch (command) {
             case "stop": {
-                manager.stop(root.resolve(dslink));
+                if (data.length < 2) {
+                    System.err.println("Usage: stop <link>");
+                    break;
+                }
+                Path path = root.resolve(data[1]);
+                manager.stop(path);
                 break;
             }
             case "start": {
-                manager.load(root.resolve(dslink), brokerUrl);
+                if (data.length < 2) {
+                    System.err.println("Usage: start <link>");
+                    break;
+                }
+                Path path = root.resolve(data[1]);
+                manager.load(path, brokerUrl);
+                break;
+            }
+            case "startAll": {
+                manager.loadDirectory(root, brokerUrl);
+                break;
+            }
+            case "stopAll": {
+                manager.stopAll();
                 break;
             }
             default: {

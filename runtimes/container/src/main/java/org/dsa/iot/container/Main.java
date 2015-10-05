@@ -2,6 +2,7 @@ package org.dsa.iot.container;
 
 import org.dsa.iot.container.manager.DSLinkManager;
 import org.dsa.iot.container.security.SecMan;
+import org.dsa.iot.container.stdin.LinkHandler;
 import org.dsa.iot.container.stdin.StdinHandler;
 import org.dsa.iot.container.stdin.UserHandler;
 import org.dsa.iot.shared.SharedObjects;
@@ -30,16 +31,14 @@ public class Main {
 
         DSLinkManager manager = new DSLinkManager();
         String dslinksFolder = parsed.getDslinksFolder();
+        LinkHandler handler;
         if (dslinksFolder != null) {
             String brokerUrl = parsed.getBrokerUrl();
             Path folder = Paths.get(dslinksFolder);
-            manager.loadDirectory(folder, brokerUrl);
-
-            UserHandler handler = new UserHandler(manager, folder, brokerUrl);
-            handler.start();
+            handler = new UserHandler(manager, folder, brokerUrl);
         } else {
-            StdinHandler handler = new StdinHandler(manager);
-            handler.start();
+            handler = new StdinHandler(manager);
         }
+        handler.start();
     }
 }
