@@ -2,6 +2,7 @@
 include 'sdk/historian'
 include 'sdk/commons'
 include 'sdk/dslink'
+include 'sdk/broker'
 
 // Internal APIs the SDK depends on
 include 'internal/runtime_shared'
@@ -9,6 +10,7 @@ include 'internal/logging'
 
 // Software that is meant to be ran as a standalone
 include 'runtimes/container'
+include 'runtimes/broker'
 
 // Examples for developers to reference
 include 'examples/requester'

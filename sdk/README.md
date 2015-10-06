@@ -16,3 +16,7 @@ development.
 
 This is a very high level library that enables very quick development of
 historian enabled DSLinks.
+
+## Broker Library
+
+This library can be used to embed the DSA broker into any application.
