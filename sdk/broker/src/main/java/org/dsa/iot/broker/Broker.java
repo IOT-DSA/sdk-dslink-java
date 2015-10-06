@@ -12,6 +12,7 @@ import org.dsa.iot.dslink.util.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.net.ssl.SSLException;
 import java.io.File;
 
 /**
@@ -23,6 +24,9 @@ public class Broker {
     private final BrokerConfig config;
     private EventLoopGroup bossLoop;
     private EventLoopGroup workerLoop;
+
+    private Server httpServer;
+    private Server httpsServer;
 
     public Broker(BrokerConfig config) {
         if (config == null) {
@@ -49,7 +53,7 @@ public class Broker {
     public void start() {
         stop();
         LOGGER.info("Broker is starting");
-        bossLoop = new NioEventLoopGroup(2);
+        bossLoop = new NioEventLoopGroup(1);
         workerLoop = new NioEventLoopGroup();
 
         final JsonObject conf = config.getConfig().get("server");
@@ -70,11 +74,7 @@ public class Broker {
                 Thread t = new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        try {
-                            startHttpServer(httpConf);
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
+                        startHttpServer(httpConf);
                     }
                 }, "Broker-HTTP-server");
                 t.start();
@@ -84,11 +84,7 @@ public class Broker {
                 Thread t = new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        try {
-                            startHttpsServer(httpConf);
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
+                        startHttpsServer(httpsConf);
                     }
                 }, "Broker-HTTPS-server");
                 t.start();
@@ -107,35 +103,48 @@ public class Broker {
             LOGGER.info("Broker is shutting down");
             bossLoop.shutdownGracefully();
             workerLoop.shutdownGracefully();
+            if (httpServer != null) {
+                httpServer.stop();
+                httpServer = null;
+            }
+            if (httpsServer != null) {
+                httpsServer.stop();
+                httpsServer = null;
+            }
         }
     }
 
-    private void startHttpServer(JsonObject conf) throws Exception {
+    private void startHttpServer(JsonObject conf) {
         String host = conf.get("host");
         int port = conf.get("port");
-        Server server = new Server(host, port, null);
-        server.start(bossLoop, workerLoop);
+        httpServer = new Server(host, port, null);
+        httpServer.start(bossLoop, workerLoop);
     }
 
-    private void startHttpsServer(JsonObject conf) throws Exception {
+    private void startHttpsServer(JsonObject conf) {
         String certChain = conf.get("certChainFile");
         if (certChain == null) {
-            throw new Exception("certChainFile not configured");
+            throw new RuntimeException("certChainFile not configured");
         }
         String certKey = conf.get("certKeyFile");
         if (certKey == null) {
-            throw new Exception("certChainKey not configured");
+            throw new RuntimeException("certChainKey not configured");
         }
         String certKeyPass = conf.get("certKeyPass");
 
         File cc = new File(certChain);
         File ck = new File(certKey);
-        SslContext ssl = SslContext.newServerContext(cc, ck, certKeyPass);
+        SslContext ssl;
+        try {
+            ssl = SslContext.newServerContext(cc, ck, certKeyPass);
+        } catch (SSLException e) {
+            throw new RuntimeException(e);
+        }
 
         String host = conf.get("host");
         int port = conf.get("port");
-        Server server = new Server(host, port, ssl);
-        server.start(bossLoop, workerLoop);
+        httpsServer = new Server(host, port, ssl);
+        httpsServer.start(bossLoop, workerLoop);
     }
 
     /**

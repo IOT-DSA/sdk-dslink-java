@@ -21,6 +21,7 @@ public class Server {
     private final String host;
     private final int port;
     private final SslContext ssl;
+    private Channel channel;
 
     public Server(String host, int port, SslContext ssl) {
         if (host == null) {
@@ -44,10 +45,18 @@ public class Server {
         ChannelFuture fut = strap.bind(host, port);
         fut.syncUninterruptibly();
         {
-            String pretty = ssl != null ? "Secure" : "Insecure";
+            String pretty = ssl != null ? "HTTPS" : "HTTP";
             LOGGER.info("{} server bound to {} on port {}", pretty, host, port);
         }
-        fut.channel().closeFuture().syncUninterruptibly();
+        channel = fut.channel();
+        channel.closeFuture().syncUninterruptibly();
+    }
+
+    public void stop() {
+        if (channel != null) {
+            channel.close();
+            channel = null;
+        }
     }
 
     private class WsServerInitializer extends ChannelInitializer<SocketChannel> {
