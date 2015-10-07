@@ -23,6 +23,7 @@ public class Broker {
     private final NodeTree tree;
 
     private ServerManager server;
+    private String downstreamName;
 
     public Broker(BrokerConfig config,
                   ClientManager clients,
@@ -45,7 +46,7 @@ public class Broker {
         stop();
         try {
             LOGGER.info("Broker is starting");
-            JsonObject serverConf = config.getConfig().get("server");
+            JsonObject serverConf = config.get().get("server");
             server = new ServerManager(this, serverConf);
             server.start();
         } catch (Exception e) {
@@ -69,6 +70,22 @@ public class Broker {
 
     public NodeTree getNodeTree() {
         return tree;
+    }
+
+    public String getDownstreamName() {
+        if (downstreamName != null) {
+            return downstreamName;
+        }
+        JsonObject broker = config.get().get("broker");
+        downstreamName = broker.get("downstreamName");
+        if (downstreamName == null
+                || downstreamName.isEmpty()
+                || downstreamName.contains("/")) {
+            stop(); // Bad broker config, stop it immediately
+            String err = "Bad downstream name: " + downstreamName;
+            throw new IllegalStateException(err);
+        }
+        return downstreamName;
     }
 
     protected void addShutdownHook() {

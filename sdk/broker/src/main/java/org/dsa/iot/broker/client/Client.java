@@ -26,7 +26,7 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
     private final String name;
 
     private ChannelHandlerContext ctx;
-    private ClientManager manager;
+    private Broker broker;
 
     private String publicKey;
     private boolean isRequester;
@@ -132,12 +132,12 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
         return tempKey;
     }
 
-    public void setManager(ClientManager manager) {
-        this.manager = manager;
+    public void setBroker(Broker broker) {
+        this.broker = broker;
     }
 
-    public ClientManager getManager() {
-        return manager;
+    public Broker getBroker() {
+        return broker;
     }
 
     public boolean validate(String auth) {
@@ -163,7 +163,7 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
                                          String dsId,
                                          JsonObject handshake) {
         Client client = new Client(dsId);
-        client.setManager(broker.getClientManager());
+        client.setBroker(broker);
         client.setPublicKey((String) handshake.get("publicKey"));
         client.setRequester((Boolean) handshake.get("isRequester"));
         client.setResponder((Boolean) handshake.get("isResponder"));
@@ -171,8 +171,9 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
         client.setDsaVersion((String) handshake.get("version"));
         client.setSalt(generateSalt());
 
-        String path = broker.getNodeTree().addOfflineDSLink(client);
-        client.setPath(path);
+        if (client.isResponder()) {
+            broker.getNodeTree().initResponder(client);
+        }
 
         ClientManager manager = broker.getClientManager();
         manager.clientConnecting(client);
@@ -208,7 +209,7 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
             ctx.close();
             ctx = null;
         }
-        getManager().clientDisconnected(this);
+        getBroker().getClientManager().clientDisconnected(this);
     }
 
     @Override

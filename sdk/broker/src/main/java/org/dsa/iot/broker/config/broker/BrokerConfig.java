@@ -7,7 +7,7 @@ import org.dsa.iot.dslink.util.json.JsonObject;
  */
 public abstract class BrokerConfig {
 
-    public abstract JsonObject getConfig();
+    public abstract JsonObject get();
 
     public abstract void readAndUpdate();
 }

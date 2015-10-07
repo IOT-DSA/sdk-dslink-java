@@ -1,5 +1,6 @@
 package org.dsa.iot.broker.client;
 
+import org.dsa.iot.broker.node.NodeTree;
 import org.dsa.iot.dslink.util.Objects;
 
 import java.util.HashMap;
@@ -35,9 +36,17 @@ public class ClientManager {
             if (c != null) {
                 c.expireEarly();
             }
-            Client old = connectedClients.put(dsId, client);
-            if (old != null) {
-                old.close();
+
+            {
+                Client old = connectedClients.put(dsId, client);
+                if (old != null) {
+                    old.close();
+                }
+            }
+
+            if (client.isResponder()) {
+                NodeTree tree = client.getBroker().getNodeTree();
+                tree.respConnected(client);
             }
         }
     }
@@ -45,6 +54,10 @@ public class ClientManager {
     public void clientDisconnected(Client client) {
         synchronized (lock) {
             connectedClients.remove(client.getDsId());
+        }
+        if (client.isResponder()) {
+            NodeTree tree = client.getBroker().getNodeTree();
+            tree.respDisconnected(client);
         }
     }
 

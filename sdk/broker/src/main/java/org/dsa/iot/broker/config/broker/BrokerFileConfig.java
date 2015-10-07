@@ -26,7 +26,7 @@ public class BrokerFileConfig extends BrokerConfig {
     }
 
     @Override
-    public JsonObject getConfig() {
+    public JsonObject get() {
         return opts;
     }
 
@@ -56,6 +56,6 @@ public class BrokerFileConfig extends BrokerConfig {
     protected JsonObject getDefaultConfig() {
         BrokerConfig conf = new BrokerMemoryConfig();
         conf.readAndUpdate();
-        return conf.getConfig();
+        return conf.get();
     }
 }

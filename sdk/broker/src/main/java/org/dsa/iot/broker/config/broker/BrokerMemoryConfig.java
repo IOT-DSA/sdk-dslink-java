@@ -12,7 +12,7 @@ public class BrokerMemoryConfig extends BrokerConfig {
     private JsonObject opts;
 
     @Override
-    public JsonObject getConfig() {
+    public JsonObject get() {
         return opts;
     }
 
