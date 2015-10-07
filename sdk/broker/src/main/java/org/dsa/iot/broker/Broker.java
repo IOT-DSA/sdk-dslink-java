@@ -7,6 +7,7 @@ import org.dsa.iot.broker.config.broker.BrokerFileConfig;
 import org.dsa.iot.broker.config.broker.BrokerMemoryConfig;
 import org.dsa.iot.broker.server.ServerManager;
 import org.dsa.iot.dslink.util.json.JsonObject;
+import org.dsa.iot.dslink.util.log.LogManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,6 +86,9 @@ public class Broker {
             parsed.displayHelp();
             return null;
         }
+
+        String log = parsed.getLogLevel();
+        LogManager.setLevel(log);
 
         BrokerConfig conf = new BrokerFileConfig();
         Broker b = new Broker(conf);

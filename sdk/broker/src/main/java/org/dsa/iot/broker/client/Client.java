@@ -1,5 +1,8 @@
 package org.dsa.iot.broker.client;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.*;
+import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.CharsetUtil;
 import org.bouncycastle.jcajce.provider.digest.SHA256;
 import org.dsa.iot.dslink.handshake.LocalKeys;
@@ -13,13 +16,16 @@ import java.security.SecureRandom;
 /**
  * @author Samuel Grenier
  */
-public class Client {
+public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
 
     private static final SecureRandom RANDOM = new SecureRandom();
 
     private final String dsId;
     private final String name;
     private final String pubKeyHash;
+
+    private ChannelHandlerContext ctx;
+    private ClientManager manager;
 
     private String publicKey;
     private boolean isRequester;
@@ -116,6 +122,14 @@ public class Client {
         return tempKey;
     }
 
+    public void setManager(ClientManager manager) {
+        this.manager = manager;
+    }
+
+    public ClientManager getManager() {
+        return manager;
+    }
+
     public boolean validate(String auth) {
         if (auth == null) {
             return false;
@@ -135,8 +149,11 @@ public class Client {
         return MessageDigest.isEqual(origHash, validHash);
     }
 
-    public static Client create(String dsId, JsonObject handshake) {
+    public static Client create(ClientManager manager,
+                                String dsId,
+                                JsonObject handshake) {
         Client client = new Client(dsId);
+        client.setManager(manager);
         client.setPublicKey((String) handshake.get("publicKey"));
         client.setRequester((Boolean) handshake.get("isRequester"));
         client.setResponder((Boolean) handshake.get("isResponder"));
@@ -168,5 +185,44 @@ public class Client {
         byte[] b = new byte[32];
         RANDOM.nextBytes(b);
         return new String(b, CharsetUtil.UTF_8);
+    }
+
+    public void close() {
+        if (ctx != null) {
+            ctx.close();
+            ctx = null;
+        }
+        getManager().clientDisconnected(this);
+    }
+
+    @Override
+    public void channelActive(ChannelHandlerContext ctx) {
+        this.ctx = ctx;
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) {
+        close();
+    }
+
+    @Override
+    protected void messageReceived(ChannelHandlerContext ctx,
+                                   WebSocketFrame frame) throws Exception {
+        final Channel channel = ctx.channel();
+        if (frame instanceof TextWebSocketFrame) {
+            String data = ((TextWebSocketFrame) frame).text();
+            channel.writeAndFlush(data); // echo it out for now
+        } else if (frame instanceof PingWebSocketFrame) {
+            ByteBuf buf = frame.content().retain();
+            channel.writeAndFlush(new PongWebSocketFrame(buf));
+        } else if (frame instanceof CloseWebSocketFrame) {
+            ChannelPromise prom = channel.newPromise();
+            ChannelFutureListener cfl = ChannelFutureListener.CLOSE;
+            channel.writeAndFlush(frame.retain(), prom).addListener(cfl);
+        } else {
+            String err = "%s frame types not supported";
+            err = String.format(err, frame.getClass().getName());
+            throw new UnsupportedOperationException(err);
+        }
     }
 }

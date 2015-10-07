@@ -17,6 +17,7 @@ public class DsaHandshake {
         obj.put("salt", client.getSalt());
         obj.put("path", "/downstream/" + client.getName()); // TODO: handle duplicates
         obj.put("wsUri", "/ws");
-        return Unpooled.wrappedBuffer(obj.encode().getBytes(CharsetUtil.UTF_8));
+        byte[] bytes = obj.encode().getBytes(CharsetUtil.UTF_8);
+        return Unpooled.wrappedBuffer(bytes);
     }
 }

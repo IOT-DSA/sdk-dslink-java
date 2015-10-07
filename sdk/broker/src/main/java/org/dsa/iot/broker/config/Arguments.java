@@ -17,6 +17,11 @@ public class Arguments {
                description = "Starts the broker server")
     private boolean server = false;
 
+    @Parameter(names = { "--log", "-l"},
+            description = "Sets the log level",
+            arity = 1)
+    private String log = "info";
+
     @Parameter(names = { "--help", "-h" },
             description = "Displays the help menu",
             help = true)
@@ -24,6 +29,10 @@ public class Arguments {
 
     public boolean runServer() {
         return server;
+    }
+
+    public String getLogLevel() {
+        return log;
     }
 
     /**

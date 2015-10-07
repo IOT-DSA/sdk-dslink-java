@@ -6,7 +6,8 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.AsciiString;
 import io.netty.handler.codec.http.*;
-import io.netty.handler.codec.http.websocketx.*;
+import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
+import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
 import io.netty.util.CharsetUtil;
 import org.dsa.iot.broker.client.Client;
 import org.dsa.iot.broker.client.ClientManager;
@@ -21,7 +22,6 @@ public class WsServerHandler extends SimpleChannelInboundHandler<Object> {
 
     private static final HttpVersion VERSION = HttpVersion.HTTP_1_1;
 
-    private WebSocketServerHandshaker handshake;
     private final ClientManager manager;
     private final boolean secure;
 
@@ -37,8 +37,6 @@ public class WsServerHandler extends SimpleChannelInboundHandler<Object> {
     public void messageReceived(ChannelHandlerContext ctx, Object msg) {
         if (msg instanceof FullHttpRequest) {
             handleHttpRequest(ctx, (FullHttpRequest) msg);
-        } else if (msg instanceof WebSocketFrame) {
-            handleWebSocketFrame(ctx, (WebSocketFrame) msg);
         }
     }
 
@@ -76,7 +74,7 @@ public class WsServerHandler extends SimpleChannelInboundHandler<Object> {
         ByteBuf content;
         {
             String data = req.content().toString(CharsetUtil.UTF_8);
-            Client client = Client.create(dsId, new JsonObject(data));
+            Client client = Client.create(manager, dsId, new JsonObject(data));
             content = DsaHandshake.createHandshake(client);
             manager.clientConnecting(client);
         }
@@ -101,9 +99,10 @@ public class WsServerHandler extends SimpleChannelInboundHandler<Object> {
                               FullHttpRequest req,
                               String auth,
                               String dsId) {
+        Client client;
         // Validate the auth and dsId
         {
-            Client client = manager.getPendingClient(dsId);
+            client = manager.getPendingClient(dsId);
             if (client == null || !client.validate(auth)) {
                 sendForbidden(ctx);
                 return;
@@ -113,30 +112,15 @@ public class WsServerHandler extends SimpleChannelInboundHandler<Object> {
         // Allow the handshake to continue
         WebSocketServerHandshakerFactory ws = new WebSocketServerHandshakerFactory(
                 getWebSocketLocation(req), null, true, Integer.MAX_VALUE);
-        handshake = ws.newHandshaker(req);
+        WebSocketServerHandshaker handshake = ws.newHandshaker(req);
         if (handshake == null) {
             Channel c = ctx.channel();
             WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(c);
         } else {
+            ctx.pipeline().addLast(client);
+            ctx.pipeline().remove(WsServerHandler.class);
+            manager.clientConnected(client);
             handshake.handshake(ctx.channel(), req);
-        }
-    }
-
-    private void handleWebSocketFrame(ChannelHandlerContext ctx,
-                                      WebSocketFrame frame) {
-        final Channel channel = ctx.channel();
-        if (frame instanceof TextWebSocketFrame) {
-            String data = ((TextWebSocketFrame) frame).text();
-            channel.writeAndFlush(data); // echo it out for now
-        } else if (frame instanceof PingWebSocketFrame) {
-            ByteBuf buf = frame.content().retain();
-            channel.write(new PongWebSocketFrame(buf));
-        } else if (frame instanceof CloseWebSocketFrame) {
-            handshake.close(channel, (CloseWebSocketFrame) frame.retain());
-        } else {
-            String err = "%s frame types not supported";
-            err = String.format(err, frame.getClass().getName());
-            throw new UnsupportedOperationException(err);
         }
     }
 

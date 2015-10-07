@@ -23,6 +23,11 @@ public class BrokerMemoryConfig extends BrokerConfig {
     }
 
     protected void addDefaultOpts() {
+        addServerOpts();
+        addBrokerOpts();
+    }
+
+    protected void addServerOpts() {
         JsonObject server = new JsonObject();
         {
             JsonObject http = new JsonObject();
@@ -42,5 +47,11 @@ public class BrokerMemoryConfig extends BrokerConfig {
             server.put("https", https);
         }
         opts.put("server", server);
+    }
+
+    protected void addBrokerOpts() {
+        JsonObject broker = new JsonObject();
+        broker.put("downstreamName", "downstream");
+        opts.put("broker", broker);
     }
 }
