@@ -9,8 +9,8 @@ import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
 import io.netty.util.CharsetUtil;
+import org.dsa.iot.broker.Broker;
 import org.dsa.iot.broker.client.Client;
-import org.dsa.iot.broker.client.ClientManager;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
 import java.util.List;
@@ -22,14 +22,14 @@ public class WsServerHandler extends SimpleChannelInboundHandler<Object> {
 
     private static final HttpVersion VERSION = HttpVersion.HTTP_1_1;
 
-    private final ClientManager manager;
+    private final Broker broker;
     private final boolean secure;
 
-    public WsServerHandler(ClientManager manager, boolean secure) {
-        if (manager == null) {
-            throw new NullPointerException("manager");
+    public WsServerHandler(Broker broker, boolean secure) {
+        if (broker == null) {
+            throw new NullPointerException("broker");
         }
-        this.manager = manager;
+        this.broker = broker;
         this.secure = secure;
     }
 
@@ -74,9 +74,8 @@ public class WsServerHandler extends SimpleChannelInboundHandler<Object> {
         ByteBuf content;
         {
             String data = req.content().toString(CharsetUtil.UTF_8);
-            Client client = Client.create(manager, dsId, new JsonObject(data));
-            content = DsaHandshake.createHandshake(client);
-            manager.clientConnecting(client);
+            JsonObject json = new JsonObject(data);
+            content = DsaHandshake.initialize(broker, json, dsId);
         }
         HttpResponseStatus stat = HttpResponseStatus.OK;
         FullHttpResponse res = new DefaultFullHttpResponse(VERSION, stat, content);
@@ -102,7 +101,7 @@ public class WsServerHandler extends SimpleChannelInboundHandler<Object> {
         Client client;
         // Validate the auth and dsId
         {
-            client = manager.getPendingClient(dsId);
+            client = broker.getClientManager().getPendingClient(dsId);
             if (client == null || !client.validate(auth)) {
                 sendForbidden(ctx);
                 return;
@@ -119,7 +118,7 @@ public class WsServerHandler extends SimpleChannelInboundHandler<Object> {
         } else {
             ctx.pipeline().addLast(client);
             ctx.pipeline().remove(WsServerHandler.class);
-            manager.clientConnected(client);
+            broker.getClientManager().clientConnected(client);
             handshake.handshake(ctx.channel(), req);
         }
     }

@@ -3,7 +3,7 @@ package org.dsa.iot.broker.server;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.handler.ssl.SslContext;
-import org.dsa.iot.broker.client.ClientManager;
+import org.dsa.iot.broker.Broker;
 import org.dsa.iot.dslink.util.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,8 +17,8 @@ import java.io.File;
 public class ServerManager {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ServerManager.class);
-    private final ClientManager manager;
     private final JsonObject serverConf;
+    private final Broker broker;
 
     private EventLoopGroup bossLoop;
     private EventLoopGroup workerLoop;
@@ -26,14 +26,14 @@ public class ServerManager {
     private Server httpServer;
     private Server httpsServer;
 
-    public ServerManager(ClientManager manager,
+    public ServerManager(Broker broker,
                          JsonObject serverConf) {
         if (serverConf == null) {
             throw new NullPointerException("serverConf");
-        } else if (manager == null) {
-            throw new NullPointerException("manager");
+        } else if (broker == null) {
+            throw new NullPointerException("broker");
         }
-        this.manager = manager;
+        this.broker = broker;
         this.serverConf = serverConf;
     }
 
@@ -95,7 +95,7 @@ public class ServerManager {
     private void startHttpServer(JsonObject conf) {
         String host = conf.get("host");
         int port = conf.get("port");
-        httpServer = new Server(host, port, null, manager);
+        httpServer = new Server(host, port, null, broker);
         httpServer.start(bossLoop, workerLoop);
     }
 
@@ -121,7 +121,7 @@ public class ServerManager {
 
         String host = conf.get("host");
         int port = conf.get("port");
-        httpsServer = new Server(host, port, ssl, manager);
+        httpsServer = new Server(host, port, ssl, broker);
         httpsServer.start(bossLoop, workerLoop);
     }
 }

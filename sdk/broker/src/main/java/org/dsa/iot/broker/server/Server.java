@@ -8,7 +8,7 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketServerCompressionHandler;
 import io.netty.handler.ssl.SslContext;
-import org.dsa.iot.broker.client.ClientManager;
+import org.dsa.iot.broker.Broker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,22 +19,22 @@ public class Server {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Server.class);
 
-    private final ClientManager manager;
+    private final Broker broker;
     private final String host;
     private final int port;
     private final SslContext ssl;
     private Channel channel;
 
     public Server(String host, int port,
-                  SslContext ssl, ClientManager manager) {
+                  SslContext ssl, Broker broker) {
         if (host == null) {
             throw new NullPointerException("host");
-        } else if (manager == null) {
-            throw new NullPointerException("manager");
+        } else if (broker == null) {
+            throw new NullPointerException("broker");
         } else if (port < 0) {
             throw new IllegalArgumentException("port");
         }
-        this.manager = manager;
+        this.broker = broker;
         this.host = host;
         this.port = port;
         this.ssl = ssl;
@@ -76,7 +76,7 @@ public class Server {
             pipeline.addLast(new HttpServerCodec());
             pipeline.addLast(new HttpObjectAggregator(65536));
             pipeline.addLast(new WebSocketServerCompressionHandler());
-            pipeline.addLast(new WsServerHandler(manager, ssl != null));
+            pipeline.addLast(new WsServerHandler(broker, ssl != null));
         }
     }
 }

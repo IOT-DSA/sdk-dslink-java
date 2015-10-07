@@ -5,6 +5,7 @@ import io.netty.channel.*;
 import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.CharsetUtil;
 import org.bouncycastle.jcajce.provider.digest.SHA256;
+import org.dsa.iot.broker.Broker;
 import org.dsa.iot.dslink.handshake.LocalKeys;
 import org.dsa.iot.dslink.handshake.RemoteKey;
 import org.dsa.iot.dslink.util.UrlBase64;
@@ -20,9 +21,9 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
 
     private static final SecureRandom RANDOM = new SecureRandom();
 
+    private final String pubKeyHash;
     private final String dsId;
     private final String name;
-    private final String pubKeyHash;
 
     private ChannelHandlerContext ctx;
     private ClientManager manager;
@@ -36,8 +37,9 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
     private String salt;
     private byte[] sharedSecret;
     private LocalKeys tempKey;
+    private String path;
 
-    public Client(String dsId) {
+    private Client(String dsId) {
         if (dsId == null) {
             throw new NullPointerException("dsId");
         }
@@ -50,12 +52,20 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
         return dsId;
     }
 
+    public String getPubKeyHash() {
+        return pubKeyHash;
+    }
+
     public String getName() {
         return name;
     }
 
-    public String getPubKeyHash() {
-        return pubKeyHash;
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public String getPath() {
+        return path;
     }
 
     public void setPublicKey(String key) {
@@ -149,17 +159,23 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
         return MessageDigest.isEqual(origHash, validHash);
     }
 
-    public static Client create(ClientManager manager,
-                                String dsId,
-                                JsonObject handshake) {
+    public static Client registerNewConn(Broker broker,
+                                         String dsId,
+                                         JsonObject handshake) {
         Client client = new Client(dsId);
-        client.setManager(manager);
+        client.setManager(broker.getClientManager());
         client.setPublicKey((String) handshake.get("publicKey"));
         client.setRequester((Boolean) handshake.get("isRequester"));
         client.setResponder((Boolean) handshake.get("isResponder"));
         client.setLinkData((JsonObject) handshake.get("linkData"));
         client.setDsaVersion((String) handshake.get("version"));
         client.setSalt(generateSalt());
+
+        String path = broker.getNodeTree().addOfflineDSLink(client);
+        client.setPath(path);
+
+        ClientManager manager = broker.getClientManager();
+        manager.clientConnecting(client);
 
         LocalKeys keys = LocalKeys.generate();
         client.setTempKey(keys);

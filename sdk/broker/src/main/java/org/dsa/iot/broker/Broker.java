@@ -5,6 +5,7 @@ import org.dsa.iot.broker.config.Arguments;
 import org.dsa.iot.broker.config.broker.BrokerConfig;
 import org.dsa.iot.broker.config.broker.BrokerFileConfig;
 import org.dsa.iot.broker.config.broker.BrokerMemoryConfig;
+import org.dsa.iot.broker.node.NodeTree;
 import org.dsa.iot.broker.server.ServerManager;
 import org.dsa.iot.dslink.util.json.JsonObject;
 import org.dsa.iot.dslink.util.log.LogManager;
@@ -19,28 +20,20 @@ public class Broker {
     private static final Logger LOGGER = LoggerFactory.getLogger(Broker.class);
     private final ClientManager clients;
     private final BrokerConfig config;
+    private final NodeTree tree;
+
     private ServerManager server;
 
-    public Broker(BrokerConfig config) {
-        this(config, new ClientManager());
-    }
-
-    public Broker(BrokerConfig config, ClientManager clients) {
+    public Broker(BrokerConfig config,
+                  ClientManager clients,
+                  NodeTree tree) {
         if (config == null) {
             throw new NullPointerException("config");
         }
         this.clients = clients;
         this.config = config;
+        this.tree = tree;
         config.readAndUpdate();
-    }
-
-    protected void addShutdownHook() {
-        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-            @Override
-            public void run() {
-                stop();
-            }
-        }, "Broker-Shutdown-Hook"));
     }
 
     /**
@@ -53,7 +46,7 @@ public class Broker {
         try {
             LOGGER.info("Broker is starting");
             JsonObject serverConf = config.getConfig().get("server");
-            server = new ServerManager(clients, serverConf);
+            server = new ServerManager(this, serverConf);
             server.start();
         } catch (Exception e) {
             stop();
@@ -68,6 +61,23 @@ public class Broker {
             LOGGER.info("Broker is shutting down");
             server.stop();
         }
+    }
+
+    public ClientManager getClientManager() {
+        return clients;
+    }
+
+    public NodeTree getNodeTree() {
+        return tree;
+    }
+
+    protected void addShutdownHook() {
+        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+            @Override
+            public void run() {
+                stop();
+            }
+        }, "Broker-Shutdown-Hook"));
     }
 
     /**
@@ -91,7 +101,10 @@ public class Broker {
         LogManager.setLevel(log);
 
         BrokerConfig conf = new BrokerFileConfig();
-        Broker b = new Broker(conf);
+        ClientManager cm = new ClientManager();
+        NodeTree nt = new NodeTree();
+
+        Broker b = new Broker(conf, cm, nt);
         b.addShutdownHook();
         return b;
     }
