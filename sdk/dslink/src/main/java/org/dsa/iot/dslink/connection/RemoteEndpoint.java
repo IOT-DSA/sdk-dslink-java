@@ -1,12 +1,11 @@
 package org.dsa.iot.dslink.connection;
 
+import io.netty.util.CharsetUtil;
 import org.bouncycastle.jcajce.provider.digest.SHA256;
 import org.dsa.iot.dslink.handshake.LocalHandshake;
 import org.dsa.iot.dslink.handshake.RemoteHandshake;
 import org.dsa.iot.dslink.util.URLInfo;
 import org.dsa.iot.dslink.util.UrlBase64;
-
-import java.io.UnsupportedEncodingException;
 
 /**
  * Common interface for handling remote endpoints.
@@ -67,27 +66,23 @@ public abstract class RemoteEndpoint extends NetworkHandlers implements NetworkC
     public String getUri() {
         RemoteHandshake handshake = getRemoteHandshake();
         String uri = handshake.getWsUri() + "?auth=";
-        try {
-            String s = handshake.getSalt();
-            if (s != null) {
-                byte[] salt = handshake.getSalt().getBytes("UTF-8");
-                byte[] sharedSecret = handshake.getRemoteKey().getSharedSecret();
+        String s = handshake.getSalt();
+        if (s != null) {
+            byte[] salt = handshake.getSalt().getBytes(CharsetUtil.UTF_8);
+            byte[] sharedSecret = handshake.getRemoteKey().getSharedSecret();
 
-                byte[] bytes = new byte[salt.length + sharedSecret.length];
-                System.arraycopy(salt, 0, bytes, 0, salt.length);
-                System.arraycopy(sharedSecret, 0, bytes, salt.length, sharedSecret.length);
+            byte[] bytes = new byte[salt.length + sharedSecret.length];
+            System.arraycopy(salt, 0, bytes, 0, salt.length);
+            System.arraycopy(sharedSecret, 0, bytes, salt.length, sharedSecret.length);
 
-                SHA256.Digest sha = new SHA256.Digest();
-                byte[] digested = sha.digest(bytes);
-                uri += UrlBase64.encode(digested);
-            } else {
-                // Fake auth parameter
-                uri += "_";
-            }
-            uri += "&dsId=" + getLocalHandshake().getDsId();
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
+            SHA256.Digest sha = new SHA256.Digest();
+            byte[] digested = sha.digest(bytes);
+            uri += UrlBase64.encode(digested);
+        } else {
+            // Fake auth parameter
+            uri += "_";
         }
+        uri += "&dsId=" + getLocalHandshake().getDsId();
         return uri;
     }
 }
