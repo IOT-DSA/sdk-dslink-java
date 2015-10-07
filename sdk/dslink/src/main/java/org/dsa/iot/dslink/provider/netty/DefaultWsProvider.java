@@ -119,12 +119,7 @@ public class DefaultWsProvider extends WsProvider {
                 client.onConnected(new Writer() {
                     @Override
                     public void write(String data) {
-                        byte[] bytes;
-                        try {
-                            bytes = data.getBytes("UTF-8");
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
+                        byte[] bytes = data.getBytes(CharsetUtil.UTF_8);
                         ByteBuf buf = Unpooled.wrappedBuffer(bytes);
                         WebSocketFrame frame = new TextWebSocketFrame(buf);
                         ctx.channel().writeAndFlush(frame);
