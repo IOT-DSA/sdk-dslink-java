@@ -85,7 +85,11 @@ public class Broker {
             String err = "Bad downstream name: " + downstreamName;
             throw new IllegalStateException(err);
         }
-        return downstreamName;
+        return getDownstreamName();
+    }
+
+    public String getDownstreamPath() {
+        return "/" + getDownstreamName();
     }
 
     protected void addShutdownHook() {

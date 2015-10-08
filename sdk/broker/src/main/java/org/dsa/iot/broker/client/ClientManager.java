@@ -43,17 +43,20 @@ public class ClientManager {
                     old.close();
                 }
             }
-
-            if (client.isResponder()) {
-                NodeTree tree = client.getBroker().getNodeTree();
-                tree.respConnected(client);
-            }
+        }
+        if (client.isResponder()) {
+            NodeTree tree = client.getBroker().getNodeTree();
+            tree.respConnected(client);
         }
     }
 
     public void clientDisconnected(Client client) {
         synchronized (lock) {
-            connectedClients.remove(client.getDsId());
+            String dsId = client.getDsId();
+            Client old = connectedClients.remove(dsId);
+            if (old != null) {
+                old.close();
+            }
         }
         if (client.isResponder()) {
             NodeTree tree = client.getBroker().getNodeTree();

@@ -1,6 +1,7 @@
 package org.dsa.iot.broker.client;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.CharsetUtil;
@@ -9,6 +10,7 @@ import org.dsa.iot.broker.Broker;
 import org.dsa.iot.dslink.handshake.LocalKeys;
 import org.dsa.iot.dslink.handshake.RemoteKey;
 import org.dsa.iot.dslink.util.UrlBase64;
+import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
 import java.security.MessageDigest;
@@ -212,6 +214,13 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
         getBroker().getClientManager().clientDisconnected(this);
     }
 
+    public void write(String data) {
+        byte[] bytes = data.getBytes(CharsetUtil.UTF_8);
+        ByteBuf buf = Unpooled.wrappedBuffer(bytes);
+        TextWebSocketFrame frame = new TextWebSocketFrame(buf);
+        ctx.channel().writeAndFlush(frame);
+    }
+
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
         this.ctx = ctx;
@@ -228,7 +237,21 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
         final Channel channel = ctx.channel();
         if (frame instanceof TextWebSocketFrame) {
             String data = ((TextWebSocketFrame) frame).text();
-            channel.writeAndFlush(data); // echo it out for now
+            JsonObject obj = new JsonObject(data);
+            if (isRequester()) {
+                JsonArray requests = obj.get("requests");
+                if (requests != null) {
+                    for (Object req : requests) {
+                        processRequest((JsonObject) req);
+                    }
+                }
+            }
+            JsonArray responses = obj.get("responses");
+            if (responses != null) {
+                for (Object resp : responses) {
+                    processResponse((JsonObject) resp);
+                }
+            }
         } else if (frame instanceof PingWebSocketFrame) {
             ByteBuf buf = frame.content().retain();
             channel.writeAndFlush(new PongWebSocketFrame(buf));
@@ -241,5 +264,21 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
             err = String.format(err, frame.getClass().getName());
             throw new UnsupportedOperationException(err);
         }
+    }
+
+    private void processRequest(JsonObject request) {
+        String method = request.get("method");
+        switch (method) {
+            case "list": {
+                getBroker().getNodeTree().list(this, request);
+                break;
+            }
+            default:
+                throw new RuntimeException("Unsupported method: " + method);
+        }
+    }
+
+    private void processResponse(JsonObject response) {
+
     }
 }
