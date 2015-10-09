@@ -26,10 +26,10 @@ public class MessageProcessor {
     }
 
     public void processData(JsonObject data) {
-        if (client.isRequester()) {
+        if (client.handshake().isRequester()) {
             processRequests((JsonArray) data.get("requests"));
         }
-        if (client.isResponder()) {
+        if (client.handshake().isResponder()) {
             processResponses((JsonArray) data.get("responses"));
         }
     }
@@ -51,7 +51,7 @@ public class MessageProcessor {
     }
 
     protected void processRequest(JsonObject request) {
-        final Broker broker = client.getBroker();
+        final Broker broker = client.broker();
         final String method = request.get("method");
         final int rid = request.get("rid");
         JsonObject resp = null;

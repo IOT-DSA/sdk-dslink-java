@@ -21,8 +21,8 @@ public class BrokerTree {
         return root;
     }
 
-    public void initResponder(Client client) {
-        downstream.initResponder(client);
+    public String initResponder(String name, String dsId) {
+        return downstream.initResponder(name, dsId);
     }
 
     public void respConnected(Client client) {

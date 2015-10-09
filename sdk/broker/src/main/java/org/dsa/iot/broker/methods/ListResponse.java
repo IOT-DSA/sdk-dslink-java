@@ -50,7 +50,7 @@ public class ListResponse {
             DSLinkNode link = (DSLinkNode) node;
             Client remote = link.getClient();
             if (remote != null) {
-                remoteRid = link.getNextRid();
+                remoteRid = link.nextRid();
                 JsonObject resp = new JsonObject();
                 {
                     resp.put("method", "list");

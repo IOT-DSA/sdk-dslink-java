@@ -16,14 +16,10 @@ public class Downstream extends BrokerNode<DSLinkNode> {
         super(parent, name, "node");
     }
 
-    public void initResponder(Client client) {
-        if (!client.isResponder()) {
-            throw new IllegalStateException("Client is not a responder");
-        }
-        String name = client.getName();
+    public String initResponder(String name, String dsId) {
         synchronized (this) {
             DSLinkNode node = getChild(name);
-            if (!(node == null || node.getDsId().equals(client.getDsId()))) {
+            if (!(node == null || node.getDsId().equals(dsId))) {
                 StringBuilder tmp = new StringBuilder(name);
                 tmp.append("-");
                 tmp.append(randomChar());
@@ -33,18 +29,18 @@ public class Downstream extends BrokerNode<DSLinkNode> {
                 }
                 name = tmp.toString();
             }
-            client.setDownstreamName(name);
             if (node == null) {
                 node = new DSLinkNode(this, name);
                 addChild(node);
             }
         }
+        return name;
     }
 
     public void respConnected(Client client) {
         DSLinkNode node = getNode(client);
         node.setClient(client);
-        node.setLinkData(client.getLinkData());
+        node.setLinkData(client.handshake().linkData());
     }
 
     public void respDisconnected(Client client) {
@@ -65,13 +61,10 @@ public class Downstream extends BrokerNode<DSLinkNode> {
     }
 
     private static String validateClient(Client client) {
-        String name;
-        if (!client.isResponder()) {
+        if (!client.handshake().isResponder()) {
             throw new IllegalStateException("Client is not a responder");
-        } else if ((name = client.getDownstreamName()) == null) {
-            throw new IllegalStateException("Client doesn't have path");
         }
-        return name;
+        return client.handshake().name();
     }
 
     private static char randomChar() {

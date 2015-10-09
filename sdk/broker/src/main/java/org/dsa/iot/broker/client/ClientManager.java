@@ -21,7 +21,7 @@ public class ClientManager {
             throw new NullPointerException("client");
         }
         synchronized (lock) {
-            String key = client.getDsId();
+            String key = client.handshake().dsId();
             TimedClient value = new TimedClient(key, client);
             value.start(30, TimeUnit.SECONDS);
             pendingClients.put(key, value);
@@ -30,7 +30,7 @@ public class ClientManager {
 
     public void clientConnected(Client client) {
         synchronized (lock) {
-            String dsId = client.getDsId();
+            String dsId = client.handshake().dsId();
             TimedClient c = pendingClients.remove(dsId);
             if (c != null) {
                 c.expireEarly();
@@ -43,21 +43,21 @@ public class ClientManager {
                 }
             }
         }
-        if (client.isResponder()) {
-            client.getBroker().getTree().respConnected(client);
+        if (client.handshake().isResponder()) {
+            client.broker().getTree().respConnected(client);
         }
     }
 
     public void clientDisconnected(Client client) {
         synchronized (lock) {
-            String dsId = client.getDsId();
+            String dsId = client.handshake().dsId();
             Client old = connectedClients.remove(dsId);
             if (old != null) {
                 old.close();
             }
         }
-        if (client.isResponder()) {
-            client.getBroker().getTree().respDisconnected(client);
+        if (client.handshake().isResponder()) {
+            client.broker().getTree().respDisconnected(client);
         }
     }
 

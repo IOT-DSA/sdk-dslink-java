@@ -25,7 +25,6 @@ public class WsServerHandler extends SimpleChannelInboundHandler<Object> {
     private static final Logger LOGGER = LoggerFactory.getLogger(WsServerHandler.class);
     private static final HttpVersion VERSION = HttpVersion.HTTP_1_1;
 
-    private final DsaHandshake handshake;
     private final Broker broker;
     private final boolean secure;
 
@@ -33,7 +32,6 @@ public class WsServerHandler extends SimpleChannelInboundHandler<Object> {
         if (broker == null) {
             throw new NullPointerException("broker");
         }
-        this.handshake = new DsaHandshake(broker);
         this.broker = broker;
         this.secure = secure;
     }
@@ -80,7 +78,8 @@ public class WsServerHandler extends SimpleChannelInboundHandler<Object> {
         {
             String data = req.content().toString(CharsetUtil.UTF_8);
             JsonObject json = new JsonObject(data);
-            content = handshake.initialize(json, dsId);
+            DsaHandshake handshake = new DsaHandshake(json, dsId);
+            content = handshake.initialize(broker);
         }
         HttpResponseStatus stat = HttpResponseStatus.OK;
         FullHttpResponse res = new DefaultFullHttpResponse(VERSION, stat, content);
@@ -107,7 +106,7 @@ public class WsServerHandler extends SimpleChannelInboundHandler<Object> {
         // Validate the auth and dsId
         {
             client = broker.getClientManager().getPendingClient(dsId);
-            if (client == null || !client.validate(auth)) {
+            if (client == null || !client.handshake().validate(auth)) {
                 sendForbidden(ctx);
                 return;
             }

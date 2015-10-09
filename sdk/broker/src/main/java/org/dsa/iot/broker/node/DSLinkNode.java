@@ -5,8 +5,6 @@ import org.dsa.iot.dslink.util.TimeUtils;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 /**
  * @author Samuel Grenier
  */
@@ -16,7 +14,6 @@ public class DSLinkNode extends BrokerNode {
     private String dsId;
     private Client client;
 
-    private AtomicInteger rid;
     private String disconnected;
     private JsonObject linkData;
 
@@ -28,10 +25,8 @@ public class DSLinkNode extends BrokerNode {
         if (client == null) {
             this.disconnected = TimeUtils.format(System.currentTimeMillis());
             this.client = null;
-            this.rid = null;
         } else {
-            this.rid = new AtomicInteger();
-            this.dsId = client.getDsId();
+            this.dsId = client.handshake().dsId();
             this.disconnected = null;
             this.client = client;
         }
@@ -57,8 +52,8 @@ public class DSLinkNode extends BrokerNode {
         return disconnected;
     }
 
-    public int getNextRid() {
-        return rid.incrementAndGet();
+    public int nextRid() {
+        return client.nextRid();
     }
 
     @Override
