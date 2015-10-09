@@ -2,7 +2,10 @@ package org.dsa.iot.broker.node;
 
 import org.dsa.iot.broker.client.Client;
 import org.dsa.iot.dslink.util.TimeUtils;
+import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author Samuel Grenier
@@ -13,6 +16,7 @@ public class DSLinkNode extends BrokerNode {
     private String dsId;
     private Client client;
 
+    private AtomicInteger rid;
     private String disconnected;
     private JsonObject linkData;
 
@@ -21,12 +25,15 @@ public class DSLinkNode extends BrokerNode {
     }
 
     public void setClient(Client client) {
-        this.client = client;
         if (client == null) {
-            disconnected = TimeUtils.format(System.currentTimeMillis());
+            this.disconnected = TimeUtils.format(System.currentTimeMillis());
+            this.client = null;
+            this.rid = null;
         } else {
+            this.rid = new AtomicInteger();
             this.dsId = client.getDsId();
-            disconnected = null;
+            this.disconnected = null;
+            this.client = client;
         }
     }
 
@@ -48,5 +55,30 @@ public class DSLinkNode extends BrokerNode {
 
     public String getDisconnected() {
         return disconnected;
+    }
+
+    public int getNextRid() {
+        return rid.incrementAndGet();
+    }
+
+    @Override
+    protected void populateUpdates(JsonArray updates) {
+        super.populateUpdates(updates);
+        String disconnected = getDisconnected();
+        if (disconnected != null) {
+            JsonArray update = new JsonArray();
+            update.add("disconnectedTs");
+            update.add(disconnected);
+        }
+    }
+
+    @Override
+    protected JsonObject getChildUpdate() {
+        JsonObject tmp = super.getChildUpdate();
+        JsonObject linkData = getLinkData();
+        if (linkData != null) {
+            tmp.put("linkData", linkData);
+        }
+        return tmp;
     }
 }

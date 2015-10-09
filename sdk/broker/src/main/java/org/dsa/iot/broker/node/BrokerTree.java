@@ -2,8 +2,6 @@ package org.dsa.iot.broker.node;
 
 import org.dsa.iot.broker.Broker;
 import org.dsa.iot.broker.client.Client;
-import org.dsa.iot.dslink.node.NodeManager;
-import org.dsa.iot.dslink.util.json.JsonObject;
 
 /**
  * @author Samuel Grenier
@@ -19,28 +17,8 @@ public class BrokerTree {
         root.addChild(downstream);
     }
 
-    public JsonObject list(String path) {
-        path = NodeManager.normalizePath(path, true);
-        if (path.equals("/")) {
-            return root.list();
-        }
-
-        BrokerNode<?> node = root;
-        {
-            String[] split = NodeManager.splitPath(path);
-            if (split.length > 1 && split[0].equals(downstream.getName())) {
-                // TODO: redirect to responder dslink
-                node = null;
-            }
-
-            for (String name : split) {
-                if (node == null) {
-                    break;
-                }
-                node = node.getChild(name);
-            }
-        }
-        return node == null ? null : node.list();
+    public BrokerNode getRoot() {
+        return root;
     }
 
     public void initResponder(Client client) {

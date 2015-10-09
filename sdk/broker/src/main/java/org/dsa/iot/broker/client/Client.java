@@ -7,6 +7,7 @@ import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.CharsetUtil;
 import org.bouncycastle.jcajce.provider.digest.SHA256;
 import org.dsa.iot.broker.Broker;
+import org.dsa.iot.broker.utils.Dispatch;
 import org.dsa.iot.dslink.handshake.LocalKeys;
 import org.dsa.iot.dslink.handshake.RemoteKey;
 import org.dsa.iot.dslink.util.UrlBase64;
@@ -188,6 +189,10 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
         close();
+    }
+
+    public void addDispatch(int remoteRid, Dispatch dispatch) {
+        processor.addDispatch(remoteRid, dispatch);
     }
 
     @Override

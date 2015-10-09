@@ -99,13 +99,15 @@ public class BrokerNode<T extends BrokerNode> {
             for (BrokerNode node : children.values()) {
                 JsonArray update = new JsonArray();
                 update.add(node.name);
-                {
-                    JsonObject obj = new JsonObject();
-                    obj.put("$is", node.profile);
-                    update.add(obj);
-                }
+                update.add(node.getChildUpdate());
                 updates.add(update);
             }
         }
+    }
+
+    protected JsonObject getChildUpdate() {
+        JsonObject obj = new JsonObject();
+        obj.put("$is", profile);
+        return obj;
     }
 }
