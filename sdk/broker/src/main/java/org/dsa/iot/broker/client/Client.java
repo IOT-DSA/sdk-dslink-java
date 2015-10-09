@@ -10,7 +10,6 @@ import org.dsa.iot.broker.Broker;
 import org.dsa.iot.dslink.handshake.LocalKeys;
 import org.dsa.iot.dslink.handshake.RemoteKey;
 import org.dsa.iot.dslink.util.UrlBase64;
-import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
 import java.security.MessageDigest;
@@ -23,7 +22,7 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
 
     private static final SecureRandom RANDOM = new SecureRandom();
 
-    private final String pubKeyHash;
+    private final MessageProcessor processor = new MessageProcessor(this);
     private final String dsId;
     private final String name;
 
@@ -39,6 +38,7 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
     private String salt;
     private byte[] sharedSecret;
     private LocalKeys tempKey;
+    private String downstreamName;
     private String path;
 
     private Client(String dsId) {
@@ -46,16 +46,11 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
             throw new NullPointerException("dsId");
         }
         this.dsId = dsId;
-        this.pubKeyHash = dsId.substring(dsId.length() - 43);
-        this.name = dsIdToName(dsId, pubKeyHash.length());
+        this.name = dsIdToName(dsId);
     }
 
     public String getDsId() {
         return dsId;
-    }
-
-    public String getPubKeyHash() {
-        return pubKeyHash;
     }
 
     public String getName() {
@@ -68,6 +63,15 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
 
     public String getPath() {
         return path;
+    }
+
+    public void setDownstreamName(String name) {
+        this.downstreamName = name;
+        setPath("/" + broker.getDownstreamName() + "/" + name);
+    }
+
+    public String getDownstreamName() {
+        return downstreamName;
     }
 
     public void setPublicKey(String key) {
@@ -161,51 +165,6 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
         return MessageDigest.isEqual(origHash, validHash);
     }
 
-    public static Client registerNewConn(Broker broker,
-                                         String dsId,
-                                         JsonObject handshake) {
-        Client client = new Client(dsId);
-        client.setBroker(broker);
-        client.setPublicKey((String) handshake.get("publicKey"));
-        client.setRequester((Boolean) handshake.get("isRequester"));
-        client.setResponder((Boolean) handshake.get("isResponder"));
-        client.setLinkData((JsonObject) handshake.get("linkData"));
-        client.setDsaVersion((String) handshake.get("version"));
-        client.setSalt(generateSalt());
-
-        if (client.isResponder()) {
-            broker.getNodeTree().initResponder(client);
-        }
-
-        ClientManager manager = broker.getClientManager();
-        manager.clientConnecting(client);
-
-        LocalKeys keys = LocalKeys.generate();
-        client.setTempKey(keys);
-
-        RemoteKey remKey = RemoteKey.generate(keys, client.getPublicKey());
-        client.setSharedSecret(remKey.getSharedSecret());
-
-        return client;
-    }
-
-    private static String dsIdToName(String dsId, int hashLength) {
-        String tmp = dsId.substring(0, hashLength);
-        if (tmp.lastIndexOf('-') > -1) {
-            tmp = tmp.substring(0, tmp.length() - 1);
-        }
-        if (tmp.isEmpty()) {
-            throw new IllegalStateException("Invalid DsId name from " + dsId);
-        }
-        return tmp;
-    }
-
-    private static String generateSalt() {
-        byte[] b = new byte[32];
-        RANDOM.nextBytes(b);
-        return new String(b, CharsetUtil.UTF_8);
-    }
-
     public void close() {
         if (ctx != null) {
             ctx.close();
@@ -238,20 +197,7 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
         if (frame instanceof TextWebSocketFrame) {
             String data = ((TextWebSocketFrame) frame).text();
             JsonObject obj = new JsonObject(data);
-            if (isRequester()) {
-                JsonArray requests = obj.get("requests");
-                if (requests != null) {
-                    for (Object req : requests) {
-                        processRequest((JsonObject) req);
-                    }
-                }
-            }
-            JsonArray responses = obj.get("responses");
-            if (responses != null) {
-                for (Object resp : responses) {
-                    processResponse((JsonObject) resp);
-                }
-            }
+            processor.processData(obj);
         } else if (frame instanceof PingWebSocketFrame) {
             ByteBuf buf = frame.content().retain();
             channel.writeAndFlush(new PongWebSocketFrame(buf));
@@ -266,19 +212,48 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
         }
     }
 
-    private void processRequest(JsonObject request) {
-        String method = request.get("method");
-        switch (method) {
-            case "list": {
-                getBroker().getNodeTree().list(this, request);
-                break;
-            }
-            default:
-                throw new RuntimeException("Unsupported method: " + method);
+    public static Client registerNewConn(Broker broker,
+                                         String dsId,
+                                         JsonObject handshake) {
+        Client client = new Client(dsId);
+        client.setBroker(broker);
+        client.setPublicKey((String) handshake.get("publicKey"));
+        client.setRequester((Boolean) handshake.get("isRequester"));
+        client.setResponder((Boolean) handshake.get("isResponder"));
+        client.setLinkData((JsonObject) handshake.get("linkData"));
+        client.setDsaVersion((String) handshake.get("version"));
+        client.setSalt(generateSalt());
+
+        if (client.isResponder()) {
+            broker.getTree().initResponder(client);
         }
+
+        ClientManager manager = broker.getClientManager();
+        manager.clientConnecting(client);
+
+        LocalKeys keys = LocalKeys.generate();
+        client.setTempKey(keys);
+
+        RemoteKey remKey = RemoteKey.generate(keys, client.getPublicKey());
+        client.setSharedSecret(remKey.getSharedSecret());
+
+        return client;
     }
 
-    private void processResponse(JsonObject response) {
+    private static String dsIdToName(String dsId) {
+        String tmp = dsId.substring(0, dsId.length() - 43);
+        if (tmp.lastIndexOf('-') > -1) {
+            tmp = tmp.substring(0, tmp.length() - 1);
+        }
+        if (tmp.isEmpty()) {
+            throw new IllegalStateException("Invalid DsId name from " + dsId);
+        }
+        return tmp;
+    }
 
+    private static String generateSalt() {
+        byte[] b = new byte[32];
+        RANDOM.nextBytes(b);
+        return new String(b, CharsetUtil.UTF_8);
     }
 }

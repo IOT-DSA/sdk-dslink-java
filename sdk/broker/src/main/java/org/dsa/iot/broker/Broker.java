@@ -5,7 +5,7 @@ import org.dsa.iot.broker.config.Arguments;
 import org.dsa.iot.broker.config.broker.BrokerConfig;
 import org.dsa.iot.broker.config.broker.BrokerFileConfig;
 import org.dsa.iot.broker.config.broker.BrokerMemoryConfig;
-import org.dsa.iot.broker.node.NodeTree;
+import org.dsa.iot.broker.node.BrokerTree;
 import org.dsa.iot.broker.server.ServerManager;
 import org.dsa.iot.dslink.util.json.JsonObject;
 import org.dsa.iot.dslink.util.log.LogManager;
@@ -20,16 +20,20 @@ public class Broker {
     private static final Logger LOGGER = LoggerFactory.getLogger(Broker.class);
     private final ClientManager clients;
     private final BrokerConfig config;
-    private final NodeTree tree;
+    private final BrokerTree tree;
 
     private ServerManager server;
     private String downstreamName;
 
     public Broker(BrokerConfig config,
                   ClientManager clients,
-                  NodeTree tree) {
+                  BrokerTree tree) {
         if (config == null) {
             throw new NullPointerException("config");
+        } else if (clients == null) {
+            throw new NullPointerException("clients");
+        } else if (tree == null) {
+            throw new NullPointerException("tree");
         }
         this.clients = clients;
         this.config = config;
@@ -68,7 +72,7 @@ public class Broker {
         return clients;
     }
 
-    public NodeTree getNodeTree() {
+    public BrokerTree getTree() {
         return tree;
     }
 
@@ -86,10 +90,6 @@ public class Broker {
             throw new IllegalStateException(err);
         }
         return getDownstreamName();
-    }
-
-    public String getDownstreamPath() {
-        return "/" + getDownstreamName();
     }
 
     protected void addShutdownHook() {
@@ -123,9 +123,10 @@ public class Broker {
 
         BrokerConfig conf = new BrokerFileConfig();
         ClientManager cm = new ClientManager();
-        NodeTree nt = new NodeTree();
+        BrokerTree bt = new BrokerTree();
 
-        Broker b = new Broker(conf, cm, nt);
+        Broker b = new Broker(conf, cm, bt);
+        bt.initialize(b);
         b.addShutdownHook();
         return b;
     }
