@@ -1,6 +1,7 @@
 package org.dsa.iot.broker.node;
 
 import org.dsa.iot.broker.client.Client;
+import org.dsa.iot.broker.utils.MessageProcessor;
 import org.dsa.iot.dslink.util.TimeUtils;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
@@ -14,6 +15,7 @@ public class DSLinkNode extends BrokerNode {
     private String dsId;
     private Client client;
 
+    private MessageProcessor processor;
     private String disconnected;
     private JsonObject linkData;
 
@@ -28,38 +30,39 @@ public class DSLinkNode extends BrokerNode {
         } else {
             this.dsId = client.handshake().dsId();
             this.disconnected = null;
+            this.processor = new MessageProcessor(this);
             this.client = client;
         }
     }
 
-    public Client getClient() {
+    public Client client() {
         return client;
     }
 
-    public String getDsId() {
+    public MessageProcessor processor() {
+        return processor;
+    }
+
+    public String dsId() {
         return dsId;
     }
 
-    public void setLinkData(JsonObject linkData) {
+    public void linkData(JsonObject linkData) {
         this.linkData = linkData;
     }
 
-    public JsonObject getLinkData() {
+    public JsonObject linkData() {
         return linkData;
     }
 
-    public String getDisconnected() {
+    public String disconnected() {
         return disconnected;
-    }
-
-    public int nextRid() {
-        return client.nextRid();
     }
 
     @Override
     protected void populateUpdates(JsonArray updates) {
         super.populateUpdates(updates);
-        String disconnected = getDisconnected();
+        String disconnected = disconnected();
         if (disconnected != null) {
             JsonArray update = new JsonArray();
             update.add("disconnectedTs");
@@ -70,7 +73,7 @@ public class DSLinkNode extends BrokerNode {
     @Override
     protected JsonObject getChildUpdate() {
         JsonObject tmp = super.getChildUpdate();
-        JsonObject linkData = getLinkData();
+        JsonObject linkData = linkData();
         if (linkData != null) {
             tmp.put("linkData", linkData);
         }

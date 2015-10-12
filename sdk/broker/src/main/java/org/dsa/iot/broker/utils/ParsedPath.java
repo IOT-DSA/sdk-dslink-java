@@ -9,11 +9,14 @@ public class ParsedPath {
 
     private final boolean isRemote;
     private final String[] splitPath;
+    private final String fullPath;
 
     private ParsedPath(boolean isRemote,
-                       String[] split) {
+                       String[] split,
+                       String fullPath) {
         this.isRemote = isRemote;
         this.splitPath = split;
+        this.fullPath = fullPath;
     }
 
     /**
@@ -26,8 +29,15 @@ public class ParsedPath {
     /**
      * @return The split path during parsing.
      */
-    public String[] splitPath() {
+    public String[] split() {
         return splitPath.clone();
+    }
+
+    /**
+     * @return The full path
+     */
+    public String full() {
+        return fullPath;
     }
 
     /**
@@ -37,9 +47,10 @@ public class ParsedPath {
      */
     public static ParsedPath parse(String downstream,
                                    String path) {
+        path = NodeManager.normalizePath(path, true);
         String[] split = NodeManager.splitPath(path);
         boolean ir = split.length > 1 && split[0].equals(downstream);
-        return new ParsedPath(ir, split);
+        return new ParsedPath(ir, split, path);
     }
 
 }

@@ -22,6 +22,7 @@ public class BrokerNode<T extends BrokerNode> {
     private final String profile;
     private final String name;
     private final String path;
+    private boolean accessible = true;
 
     public BrokerNode(BrokerNode parent, String name, String profile) {
         if (profile == null || profile.isEmpty()) {
@@ -40,6 +41,15 @@ public class BrokerNode<T extends BrokerNode> {
             this.path = "/" + parent.path;
             this.parent = new WeakReference<>(parent);
         }
+    }
+
+    public void accessible(boolean accessible) {
+        // TODO: notify list listeners if this flag changes
+        this.accessible = accessible;
+    }
+
+    public boolean accessible() {
+        return accessible;
     }
 
     public String getName() {
@@ -97,6 +107,9 @@ public class BrokerNode<T extends BrokerNode> {
         }
         {
             for (BrokerNode node : children.values()) {
+                if (!node.accessible()) {
+                    continue;
+                }
                 JsonArray update = new JsonArray();
                 update.add(node.name);
                 update.add(node.getChildUpdate());

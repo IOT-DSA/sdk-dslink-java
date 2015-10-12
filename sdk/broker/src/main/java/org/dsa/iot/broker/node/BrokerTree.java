@@ -21,15 +21,15 @@ public class BrokerTree {
         return root;
     }
 
-    public String initResponder(String name, String dsId) {
-        return downstream.initResponder(name, dsId);
+    public String init(String name, String dsId) {
+        return downstream.init(name, dsId);
     }
 
-    public void respConnected(Client client) {
-        downstream.respConnected(client);
+    public void connected(Client client) {
+        downstream.connected(client);
     }
 
-    public void respDisconnected(Client client) {
-        downstream.respDisconnected(client);
+    public void disconnected(Client client) {
+        downstream.disconnected(client);
     }
 }

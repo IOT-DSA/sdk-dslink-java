@@ -12,8 +12,6 @@ import io.netty.util.CharsetUtil;
 import org.dsa.iot.broker.Broker;
 import org.dsa.iot.broker.client.Client;
 import org.dsa.iot.dslink.util.json.JsonObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -22,7 +20,6 @@ import java.util.List;
  */
 public class WsServerHandler extends SimpleChannelInboundHandler<Object> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(WsServerHandler.class);
     private static final HttpVersion VERSION = HttpVersion.HTTP_1_1;
 
     private final Broker broker;
@@ -113,7 +110,6 @@ public class WsServerHandler extends SimpleChannelInboundHandler<Object> {
         }
 
         // Allow the handshake to continue
-        LOGGER.info("Client `{}` connected", dsId);
         WebSocketServerHandshakerFactory ws = new WebSocketServerHandshakerFactory(
                 getWebSocketLocation(req), null, true, Integer.MAX_VALUE);
         WebSocketServerHandshaker handshake = ws.newHandshaker(req);
@@ -121,11 +117,11 @@ public class WsServerHandler extends SimpleChannelInboundHandler<Object> {
             Channel c = ctx.channel();
             WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(c);
         } else {
+            broker.getClientManager().clientConnected(client);
             client.channelActive(ctx);
             ctx.pipeline().addLast(client);
             ctx.pipeline().remove(WsServerHandler.class);
             handshake.handshake(ctx.channel(), req);
-            broker.getClientManager().clientConnected(client);
         }
     }
 

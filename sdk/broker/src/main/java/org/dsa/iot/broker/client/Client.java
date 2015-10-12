@@ -6,8 +6,9 @@ import io.netty.channel.*;
 import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.CharsetUtil;
 import org.dsa.iot.broker.Broker;
+import org.dsa.iot.broker.node.DSLinkNode;
 import org.dsa.iot.broker.server.DsaHandshake;
-import org.dsa.iot.broker.utils.Dispatch;
+import org.dsa.iot.broker.utils.MessageProcessor;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -17,12 +18,12 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
 
-    private final MessageProcessor processor = new MessageProcessor(this);
     private final DsaHandshake handshake;
     private final AtomicInteger rid;
     private final Broker broker;
 
     private ChannelHandlerContext ctx;
+    private DSLinkNode node;
 
     public Client(Broker broker, DsaHandshake handshake) {
         if (broker == null) {
@@ -43,6 +44,18 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
         return rid.incrementAndGet();
     }
 
+    public void node(DSLinkNode node) {
+        this.node = node;
+    }
+
+    public DSLinkNode node() {
+        return node;
+    }
+
+    public MessageProcessor processor() {
+        return node().processor();
+    }
+
     public DsaHandshake handshake() {
         return handshake;
     }
@@ -55,8 +68,8 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
         if (ctx != null) {
             ctx.close();
             ctx = null;
+            broker().getClientManager().clientDisconnected(this);
         }
-        broker().getClientManager().clientDisconnected(this);
     }
 
     public void write(String data) {
@@ -76,10 +89,6 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
         close();
     }
 
-    public void addDispatch(int remoteRid, Dispatch dispatch) {
-        processor.addDispatch(remoteRid, dispatch);
-    }
-
     @Override
     protected void messageReceived(ChannelHandlerContext ctx,
                                    WebSocketFrame frame) throws Exception {
@@ -87,7 +96,7 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
         if (frame instanceof TextWebSocketFrame) {
             String data = ((TextWebSocketFrame) frame).text();
             JsonObject obj = new JsonObject(data);
-            processor.processData(obj);
+            processor().processData(obj);
         } else if (frame instanceof PingWebSocketFrame) {
             ByteBuf buf = frame.content().retain();
             channel.writeAndFlush(new PongWebSocketFrame(buf));
