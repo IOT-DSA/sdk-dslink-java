@@ -98,25 +98,6 @@ public class DefaultWsProvider extends WsProvider {
         public void channelActive(final ChannelHandlerContext ctx) throws Exception {
             super.channelActive(ctx);
             handshake.handshake(ctx.channel());
-            client.onConnected(new Writer() {
-                @Override
-                public void write(String data) {
-                    byte[] bytes;
-                    try {
-                        bytes = data.getBytes("UTF-8");
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                    ByteBuf buf = Unpooled.wrappedBuffer(bytes);
-                    WebSocketFrame frame = new TextWebSocketFrame(buf);
-                    ctx.channel().writeAndFlush(frame);
-                }
-
-                @Override
-                public void close() {
-                    ctx.close();
-                }
-            });
         }
 
         @Override
@@ -126,11 +107,31 @@ public class DefaultWsProvider extends WsProvider {
         }
 
         @Override
-        public void messageReceived(ChannelHandlerContext ctx, Object msg) {
+        public void messageReceived(final ChannelHandlerContext ctx,
+                                    final Object msg) {
             Channel ch = ctx.channel();
             if (handshake != null && !handshake.isHandshakeComplete()) {
                 handshake.finishHandshake(ch, (FullHttpResponse) msg);
                 handshake = null;
+                client.onConnected(new Writer() {
+                    @Override
+                    public void write(String data) {
+                        byte[] bytes;
+                        try {
+                            bytes = data.getBytes("UTF-8");
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                        ByteBuf buf = Unpooled.wrappedBuffer(bytes);
+                        WebSocketFrame frame = new TextWebSocketFrame(buf);
+                        ctx.channel().writeAndFlush(frame);
+                    }
+
+                    @Override
+                    public void close() {
+                        ctx.close();
+                    }
+                });
                 if (handshakeFuture != null) {
                     handshakeFuture.setSuccess();
                 }
