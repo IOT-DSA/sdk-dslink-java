@@ -7,14 +7,14 @@ public class SubscriptionValue {
 
     private final String path;
     private final Value value;
-    private final Integer count;
-    private final Integer sum;
-    private final Integer min;
-    private final Integer max;
+    private final Number count;
+    private final Number sum;
+    private final Number min;
+    private final Number max;
 
     public SubscriptionValue(String path, Value value,
-                                Integer count, Integer sum,
-                                Integer min, Integer max) {
+                                Number count, Number sum,
+                                Number min, Number max) {
         this.path = path;
         this.value = value;
         this.count = count;
@@ -44,19 +44,19 @@ public class SubscriptionValue {
         return value;
     }
 
-    public Integer getCount() {
+    public Number getCount() {
         return count;
     }
 
-    public Integer getSum() {
+    public Number getSum() {
         return sum;
     }
 
-    public Integer getMin() {
+    public Number getMin() {
         return min;
     }
 
-    public Integer getMax() {
+    public Number getMax() {
         return max;
     }
 }
