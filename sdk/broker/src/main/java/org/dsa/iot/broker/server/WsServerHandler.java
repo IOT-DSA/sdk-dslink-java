@@ -119,6 +119,7 @@ public class WsServerHandler extends SimpleChannelInboundHandler<Object> {
         } else {
             broker.getClientManager().clientConnected(client);
             client.channelActive(ctx);
+            client.write("{}");
             ctx.pipeline().addLast(client);
             ctx.pipeline().remove(WsServerHandler.class);
             handshake.handshake(ctx.channel(), req);

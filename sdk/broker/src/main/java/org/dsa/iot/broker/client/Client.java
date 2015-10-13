@@ -10,6 +10,8 @@ import org.dsa.iot.broker.node.DSLinkNode;
 import org.dsa.iot.broker.server.DsaHandshake;
 import org.dsa.iot.broker.utils.MessageProcessor;
 import org.dsa.iot.dslink.util.json.JsonObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -18,6 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(Client.class);
     private final DsaHandshake handshake;
     private final AtomicInteger rid;
     private final Broker broker;
@@ -77,6 +80,9 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
         ByteBuf buf = Unpooled.wrappedBuffer(bytes);
         TextWebSocketFrame frame = new TextWebSocketFrame(buf);
         ctx.channel().writeAndFlush(frame);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("[Sent] {}: {}", handshake().dsId(), data);
+        }
     }
 
     @Override
@@ -95,6 +101,9 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
         final Channel channel = ctx.channel();
         if (frame instanceof TextWebSocketFrame) {
             String data = ((TextWebSocketFrame) frame).text();
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("[Received] {}: {}", handshake().dsId(), data);
+            }
             JsonObject obj = new JsonObject(data);
             processor().processData(obj);
         } else if (frame instanceof PingWebSocketFrame) {
