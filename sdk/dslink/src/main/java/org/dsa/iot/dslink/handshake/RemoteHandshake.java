@@ -1,7 +1,10 @@
 package org.dsa.iot.dslink.handshake;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.util.CharsetUtil;
+import org.bouncycastle.jcajce.provider.digest.SHA256;
 import org.dsa.iot.dslink.util.URLInfo;
+import org.dsa.iot.dslink.util.UrlBase64;
 import org.dsa.iot.dslink.util.http.HttpClient;
 import org.dsa.iot.dslink.util.http.HttpResp;
 import org.dsa.iot.dslink.util.json.JsonObject;
@@ -81,6 +84,23 @@ public class RemoteHandshake {
 
         HttpClient client = new HttpClient(url);
         String fullPath = url.path + "?dsId=" + lh.getDsId();
+
+        String token = lh.getToken();
+        if (token != null) {
+            byte[] dsId = lh.getDsId().getBytes(CharsetUtil.UTF_8);
+            byte[] fullToken = token.getBytes(CharsetUtil.UTF_8);
+            byte[] bytes = new byte[dsId.length + fullToken.length];
+            System.arraycopy(dsId, 0, bytes, 0, dsId.length);
+            System.arraycopy(fullToken, 0, bytes, dsId.length, fullToken.length);
+
+            SHA256.Digest sha = new SHA256.Digest();
+            byte[] digested = sha.digest(bytes);
+            String hash = UrlBase64.encode(digested);
+
+            token = token.substring(0, 16) + hash;
+            fullPath += "&token=" + token;
+        }
+
         HttpResp resp = client.post(fullPath, lh.toJson().encode());
 
         HttpResponseStatus status = resp.getStatus();

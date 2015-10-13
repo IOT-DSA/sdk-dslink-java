@@ -17,6 +17,7 @@ public class LocalHandshake {
     private final boolean isResponder;
     private final JsonObject linkData;
     private final String zone;
+    private final String token;
 
     /**
      * Populates the handshake with the designated configuration.
@@ -34,6 +35,7 @@ public class LocalHandshake {
         this.isResponder = config.isResponder();
         this.linkData = config.getLinkData();
         this.zone = config.getZone();
+        this.token = config.getToken();
     }
 
     /**
@@ -41,6 +43,13 @@ public class LocalHandshake {
      */
     public LocalKeys getKeys() {
         return keys;
+    }
+
+    /**
+     * @return Token used to connect to the broker
+     */
+    public String getToken() {
+        return token;
     }
 
     /**
