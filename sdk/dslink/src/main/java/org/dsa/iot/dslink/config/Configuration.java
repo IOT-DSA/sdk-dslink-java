@@ -28,6 +28,7 @@ public class Configuration {
     private LocalKeys keys;
     private File serializationPath;
     private JsonObject linkData;
+    private String token;
 
     /**
      * Example endpoint: http://localhost:8080/conn
@@ -58,6 +59,24 @@ public class Configuration {
      */
     public URLInfo getAuthEndpoint() {
         return authEndpoint;
+    }
+
+    /**
+     * Sets the token used during the connection handshake.
+     *
+     * @param token Token to set.
+     */
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+    /**
+     * Gets the token used during the connection handshake.
+     *
+     * @return Token
+     */
+    public String getToken() {
+        return token;
     }
 
     /**
@@ -248,6 +267,8 @@ public class Configuration {
             throw new RuntimeException("keys not set");
         } else if (!(isRequester || isResponder)) {
             throw new RuntimeException("Neither a requester nor a responder");
+        } else if (token != null && token.length() != 48) {
+            throw new RuntimeException("Token is not 48 characters long");
         }
     }
 
@@ -273,7 +294,9 @@ public class Configuration {
         String keyPath = getFieldValue(pArgs.getKeyPath(), json, "key");
         String nodePath = getFieldValue(pArgs.getNodesPath(), json, "nodes");
         String handlerClass = getFieldValue(null, json, "handler_class");
-        defaults.setDsId(name);
+
+        LogManager.configure();
+        LogManager.setLevel(logLevel);
 
         String prop = System.getProperty(PropertyReference.VALIDATE, "true");
         boolean validate = Boolean.parseBoolean(prop);
@@ -298,9 +321,9 @@ public class Configuration {
             }
         }
 
-        LogManager.configure();
-        LogManager.setLevel(logLevel);
         defaults.setAuthEndpoint(brokerHost);
+        defaults.setToken(pArgs.getToken());
+        defaults.setDsId(name);
 
         File loc = new File(keyPath);
         defaults.setKeys(LocalKeys.getFromFileSystem(loc));

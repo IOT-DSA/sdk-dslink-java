@@ -19,6 +19,11 @@ public class Arguments {
                 required = true)
     private String broker;
 
+    @Parameter(names = { "--token", "-t" },
+                description = "Sets the token used when connecting to the broker",
+                arity = 1)
+    private String token;
+
     @Parameter(names = { "--nodes", "-n" },
                 description = "Sets the path for the serialized nodes",
                 arity = 1)
@@ -66,6 +71,15 @@ public class Arguments {
      */
     public String getBrokerHost() {
         return broker;
+    }
+
+    /**
+     * The token used when connecting to the broker.
+     *
+     * @return Token
+     */
+    public String getToken() {
+        return token;
     }
 
     /**
