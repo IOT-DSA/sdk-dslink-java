@@ -220,11 +220,6 @@ public class Value {
             } else {
                 time += TIME_ZONE;
             }
-            try {
-                this.tsDate = FORMAT_TIME_ZONE.get().parse(time);
-            } catch (ParseException e) {
-                throw new RuntimeException(e);
-            }
             this.tsFormatted = time;
         }
 
@@ -243,7 +238,7 @@ public class Value {
     public void setTime(long ms) {
         checkImmutable();
         this.tsDate = new Date(ms);
-        this.tsFormatted = FORMAT.get().format(getDate()) + TIME_ZONE;
+        this.tsFormatted = null;
     }
 
     /**
@@ -262,6 +257,9 @@ public class Value {
      * @return The formatted time this value was set or created.
      */
     public String getTimeStamp() {
+        if (tsFormatted == null) {
+            tsFormatted = FORMAT.get().format(getDate()) + TIME_ZONE;
+        }
         return tsFormatted;
     }
 
@@ -271,6 +269,13 @@ public class Value {
      * @return The raw date this value was set or created.
      */
     public Date getDate() {
+        if (tsDate == null) {
+            try {
+                this.tsDate = FORMAT_TIME_ZONE.get().parse(tsFormatted);
+            } catch (ParseException e) {
+                throw new RuntimeException(e);
+            }
+        }
         return new Date(tsDate.getTime());
     }
 
