@@ -43,10 +43,10 @@ public class SubscriptionUpdate implements Response {
                 String path;
                 Object valueObj;
                 String timestamp;
-                Integer count = null;
-                Integer sum = null;
-                Integer min = null;
-                Integer max = null;
+                Number count = null;
+                Number sum = null;
+                Number min = null;
+                Number max = null;
 
                 if (obj instanceof JsonArray) {
                     JsonArray update = (JsonArray) obj;

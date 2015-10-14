@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Manages subscriptions in the historian.
@@ -48,26 +49,47 @@ public class SubscriptionPool {
 
     private static class SubHandler implements Handler<SubscriptionValue> {
 
+        private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         private final List<Watch> watches = new ArrayList<>();
 
-        public synchronized boolean isEmpty() {
-            return watches.isEmpty();
-        }
-
-        public synchronized void addWatch(Watch watch) {
-            if (!watches.contains(watch)) {
-                watches.add(watch);
+        public boolean isEmpty() {
+            lock.readLock().lock();
+            try {
+                return watches.isEmpty();
+            } finally {
+                lock.readLock().unlock();
             }
         }
 
-        public synchronized void removeWatch(Watch watch) {
-            watches.remove(watch);
+        public void addWatch(Watch watch) {
+            lock.writeLock().lock();
+            try {
+                if (!watches.contains(watch)) {
+                    watches.add(watch);
+                }
+            } finally {
+                lock.writeLock().unlock();
+            }
+        }
+
+        public void removeWatch(Watch watch) {
+            lock.writeLock().lock();
+            try {
+                watches.remove(watch);
+            } finally {
+                lock.writeLock().unlock();
+            }
         }
 
         @Override
-        public synchronized void handle(SubscriptionValue event) {
-            for (Watch w : watches) {
-                w.onData(event);
+        public void handle(SubscriptionValue event) {
+            lock.readLock().lock();
+            try {
+                for (Watch w : watches) {
+                    w.onData(event);
+                }
+            } finally {
+                lock.readLock().unlock();
             }
         }
     }

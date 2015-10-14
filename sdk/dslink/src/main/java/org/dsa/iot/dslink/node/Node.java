@@ -278,8 +278,13 @@ public class Node {
             }
         }
         synchronized (valueLock) {
+            Value prev = this.value;
             this.value = value;
-            markChanged();
+            if ((prev != null && prev.isSerializable())
+                    || (value != null && value.isSerializable())
+                    || (prev == null && value == null)) {
+                markChanged();
+            }
             if (link != null) {
                 SubscriptionManager manager = link.getSubscriptionManager();
                 if (manager != null) {

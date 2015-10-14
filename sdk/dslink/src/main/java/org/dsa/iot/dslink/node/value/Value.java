@@ -1,6 +1,7 @@
 package org.dsa.iot.dslink.node.value;
 
 import org.dsa.iot.dslink.util.TimeUtils;
+import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
@@ -16,6 +17,7 @@ public class Value {
 
     private ValueType type;
     private boolean immutable;
+    private boolean serializable = true;
 
     private Date tsDate;
     private String tsFormatted;
@@ -206,8 +208,7 @@ public class Value {
         if (time == null) {
             setTime(System.currentTimeMillis());
         } else {
-            this.tsDate = TimeUtils.parse(time);
-            this.tsFormatted = time;
+            this.tsFormatted = TimeUtils.fix(time);
         }
 
         this.number = n;
@@ -225,7 +226,22 @@ public class Value {
     public void setTime(long ms) {
         checkImmutable();
         this.tsDate = new Date(ms);
-        this.tsFormatted = TimeUtils.format(ms);
+        this.tsFormatted = null;
+    }
+
+    /**
+     * This attribute only takes effect for serialization of {@link Node}'s.
+     *
+     * @param serializable Whether this value is allowed to be serialized.
+     */
+    @SuppressWarnings("unused")
+    public void setSerializable(boolean serializable) {
+        checkImmutable();
+        this.serializable = serializable;
+    }
+
+    public boolean isSerializable() {
+        return serializable;
     }
 
     /**
@@ -244,6 +260,9 @@ public class Value {
      * @return The formatted time this value was set or created.
      */
     public String getTimeStamp() {
+        if (tsFormatted == null) {
+            tsFormatted = TimeUtils.format(tsDate.getTime());
+        }
         return tsFormatted;
     }
 
@@ -253,6 +272,9 @@ public class Value {
      * @return The raw date this value was set or created.
      */
     public Date getDate() {
+        if (tsDate == null) {
+            tsDate = TimeUtils.parse(tsFormatted);
+        }
         return new Date(tsDate.getTime());
     }
 

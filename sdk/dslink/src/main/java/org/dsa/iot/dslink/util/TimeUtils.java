@@ -19,7 +19,7 @@ public class TimeUtils {
         return FORMAT.get().format(time) + TIME_ZONE;
     }
 
-    public static Date parse(String time) {
+    public static String fix(String time) {
         if (time.matches(".+[+|-]\\d+:\\d+")) {
             StringBuilder builder = new StringBuilder(time);
             builder.deleteCharAt(time.lastIndexOf(":"));
@@ -27,6 +27,11 @@ public class TimeUtils {
         } else {
             time += TIME_ZONE;
         }
+        return time;
+    }
+
+    public static Date parse(String time) {
+        time = fix(time);
         try {
             return FORMAT_TIME_ZONE.get().parse(time);
         } catch (ParseException e) {

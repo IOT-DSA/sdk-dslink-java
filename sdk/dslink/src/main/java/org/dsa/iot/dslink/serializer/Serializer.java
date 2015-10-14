@@ -59,7 +59,7 @@ public class Serializer {
         if (type != null) {
             out.put("$type", type.toJsonString());
             Value value = parent.getValue();
-            if (value != null) {
+            if (value != null && value.isSerializable()) {
                 ValueUtils.toJson(out, "?value", value);
             }
         }
@@ -100,9 +100,11 @@ public class Serializer {
         }
 
         for (Map.Entry<String, Value> entry : vals.entrySet()) {
-            String name = prefix + entry.getKey();
             Value value = entry.getValue();
-            ValueUtils.toJson(out, name, value);
+            if (value.isSerializable()) {
+                String name = prefix + entry.getKey();
+                ValueUtils.toJson(out, name, value);
+            }
         }
     }
 }
