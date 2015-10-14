@@ -17,12 +17,14 @@ import org.dsa.iot.historian.utils.TimeParser;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * @author Samuel Grenier
  */
 public class Watch {
 
+    private final ReentrantReadWriteLock rtLock = new ReentrantReadWriteLock();
     private final List<Handler<QueryData>> rtHandlers = new ArrayList<>();
     private final WatchGroup group;
     private final Node node;
@@ -198,25 +200,34 @@ public class Watch {
     }
 
     public void addHandler(Handler<QueryData> handler) {
-        synchronized (rtHandlers) {
-            if (handler == null) {
-                return;
-            }
+        if (handler == null) {
+            return;
+        }
+        rtLock.writeLock().lock();
+        try {
             rtHandlers.add(handler);
+        } finally {
+            rtLock.writeLock().unlock();
         }
     }
 
     public void removeHandler(Handler<QueryData> handler) {
-        synchronized (rtHandlers) {
+        rtLock.writeLock().lock();
+        try {
             rtHandlers.remove(handler);
+        } finally {
+            rtLock.writeLock().unlock();
         }
     }
 
     public void notifyHandlers(QueryData data) {
-        synchronized (rtHandlers) {
+        rtLock.readLock().lock();
+        try {
             for (Handler<QueryData> h : rtHandlers) {
                 h.handle(data);
             }
+        } finally {
+            rtLock.readLock().unlock();
         }
     }
 }
