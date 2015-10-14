@@ -1,5 +1,6 @@
 package org.dsa.iot.dslink.node.value;
 
+import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
@@ -23,6 +24,7 @@ public class Value {
 
     private ValueType type;
     private boolean immutable;
+    private boolean serializable = true;
 
     private Date tsDate;
     private String tsFormatted;
@@ -239,6 +241,20 @@ public class Value {
         checkImmutable();
         this.tsDate = new Date(ms);
         this.tsFormatted = null;
+    }
+
+    /**
+     * This attribute only takes effect for serialization of {@link Node}'s.
+     *
+     * @param serializable Whether this value is allowed to be serialized.
+     */
+    public void setSerializable(boolean serializable) {
+        checkImmutable();
+        this.serializable = serializable;
+    }
+
+    public boolean isSerializable() {
+        return serializable;
     }
 
     /**
