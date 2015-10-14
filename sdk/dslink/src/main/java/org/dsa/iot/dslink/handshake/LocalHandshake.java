@@ -1,6 +1,9 @@
 package org.dsa.iot.dslink.handshake;
 
+import io.netty.util.CharsetUtil;
+import org.bouncycastle.jcajce.provider.digest.SHA256;
 import org.dsa.iot.dslink.config.Configuration;
+import org.dsa.iot.dslink.util.UrlBase64;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
 /**
@@ -35,7 +38,21 @@ public class LocalHandshake {
         this.isResponder = config.isResponder();
         this.linkData = config.getLinkData();
         this.zone = config.getZone();
-        this.token = config.getToken();
+        String token = config.getToken();
+        if (token != null) {
+            byte[] dsId = this.dsId.getBytes(CharsetUtil.UTF_8);
+            byte[] fullToken = token.getBytes(CharsetUtil.UTF_8);
+            byte[] bytes = new byte[dsId.length + fullToken.length];
+            System.arraycopy(dsId, 0, bytes, 0, dsId.length);
+            System.arraycopy(fullToken, 0, bytes, dsId.length, fullToken.length);
+
+            SHA256.Digest sha = new SHA256.Digest();
+            byte[] digested = sha.digest(bytes);
+            String hash = UrlBase64.encode(digested);
+
+            token = token.substring(0, 16) + hash;
+        }
+        this.token = token;
     }
 
     /**

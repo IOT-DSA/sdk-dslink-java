@@ -84,6 +84,12 @@ public abstract class RemoteEndpoint extends NetworkHandlers implements NetworkC
                 // Fake auth parameter
                 uri += "_";
             }
+
+            String token = getLocalHandshake().getToken();
+            if (token != null) {
+                uri += "&token=" + token;
+            }
+
             uri += "&dsId=" + getLocalHandshake().getDsId();
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
