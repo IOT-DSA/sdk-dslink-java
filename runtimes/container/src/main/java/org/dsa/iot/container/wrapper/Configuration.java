@@ -103,4 +103,14 @@ public class Configuration {
             throw new RuntimeException(e);
         }
     }
+
+    public void setToken(String token) {
+        Method method;
+        try {
+            method = configClass.getMethod("setToken", String.class);
+            method.invoke(instance, token);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

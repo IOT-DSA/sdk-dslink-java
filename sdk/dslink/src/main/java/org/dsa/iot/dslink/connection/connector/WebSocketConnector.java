@@ -36,19 +36,19 @@ public class WebSocketConnector extends RemoteEndpoint {
 
     @Override
     public void close() {
-        if (writer != null) {
-            try {
-                writer.close();
-            } catch (Exception ignored) {
-            }
-            writer = null;
-        }
         if (pingHandler != null) {
             try {
                 pingHandler.cancel(false);
             } catch (Exception ignored) {
             }
             pingHandler = null;
+        }
+        if (writer != null) {
+            try {
+                writer.close();
+            } catch (Exception ignored) {
+            }
+            writer = null;
         }
     }
 
@@ -130,22 +130,20 @@ public class WebSocketConnector extends RemoteEndpoint {
 
         @Override
         public void onDisconnected() {
-            WebSocketConnector.this.writer = null;
+            if (!isConnected()) {
+                return;
+            }
+            WebSocketConnector.this.close();
             Handler<Void> onDisconnected = getOnDisconnected();
             if (onDisconnected != null) {
                 onDisconnected.handle(null);
             }
-            WebSocketConnector.this.close();
         }
 
         @Override
         public void onThrowable(Throwable throwable) {
             LOGGER.error("", throwable);
-            Handler<Void> onDisconnected = getOnDisconnected();
-            if (onDisconnected != null) {
-                onDisconnected.handle(null);
-            }
-            WebSocketConnector.this.close();
+            onDisconnected();
         }
     }
 

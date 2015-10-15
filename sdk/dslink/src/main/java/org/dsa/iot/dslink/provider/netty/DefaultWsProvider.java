@@ -115,6 +115,7 @@ public class DefaultWsProvider extends WsProvider {
                 handshake = null;
                 if (handshakeFuture != null) {
                     handshakeFuture.setSuccess();
+                    handshakeFuture = null;
                 }
                 client.onConnected(new Writer() {
                     @Override

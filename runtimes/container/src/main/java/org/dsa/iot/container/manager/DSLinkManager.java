@@ -31,7 +31,9 @@ public class DSLinkManager {
         }
     }
 
-    public synchronized void loadDirectory(Path path, String brokerUrl) {
+    public synchronized void loadDirectory(Path path,
+                                           String brokerUrl,
+                                           String token) {
         if (!Files.isDirectory(path)) {
             System.err.println(path.toString() + " is not a directory");
             return;
@@ -42,7 +44,7 @@ public class DSLinkManager {
                     continue;
                 }
                 try {
-                    load(dslinkRoot, brokerUrl);
+                    load(dslinkRoot, brokerUrl, token);
                 } catch (Exception e) {
                     e.printStackTrace(System.err);
                 }
@@ -52,8 +54,10 @@ public class DSLinkManager {
         }
     }
 
-    public synchronized void load(Path path, String brokerUrl) throws Exception {
-        DSLinkInfo info = DSLinkInfo.load(path, brokerUrl);
+    public synchronized void load(Path path,
+                                  String brokerUrl,
+                                  String token) throws Exception {
+        DSLinkInfo info = DSLinkInfo.load(path, brokerUrl, token);
         if (info == null) {
             return;
         }
