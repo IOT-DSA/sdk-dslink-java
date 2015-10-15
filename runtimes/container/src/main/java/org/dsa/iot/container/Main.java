@@ -31,11 +31,13 @@ public class Main {
 
         DSLinkManager manager = new DSLinkManager();
         String dslinksFolder = parsed.getDslinksFolder();
+        String token = parsed.getToken();
+
         LinkHandler handler;
         if (dslinksFolder != null) {
             String brokerUrl = parsed.getBrokerUrl();
             Path folder = Paths.get(dslinksFolder);
-            handler = new UserHandler(manager, folder, brokerUrl);
+            handler = new UserHandler(manager, folder, brokerUrl, token);
         } else {
             handler = new StdinHandler(manager);
         }

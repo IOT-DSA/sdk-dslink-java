@@ -14,11 +14,16 @@ public class UserHandler implements LinkHandler {
     private final DSLinkManager manager;
     private final Path root;
     private final String brokerUrl;
+    private final String token;
 
-    public UserHandler(DSLinkManager manager, Path root, String brokerUrl) {
+    public UserHandler(DSLinkManager manager,
+                       Path root,
+                       String brokerUrl,
+                       String token) {
         this.manager = manager;
         this.root = root;
         this.brokerUrl = brokerUrl;
+        this.token = token;
     }
 
     @Override
@@ -80,11 +85,11 @@ public class UserHandler implements LinkHandler {
                     break;
                 }
                 Path path = root.resolve(data[1]);
-                manager.load(path, brokerUrl);
+                manager.load(path, brokerUrl, token);
                 break;
             }
             case "startAll": {
-                manager.loadDirectory(root, brokerUrl);
+                manager.loadDirectory(root, brokerUrl, token);
                 break;
             }
             default: {

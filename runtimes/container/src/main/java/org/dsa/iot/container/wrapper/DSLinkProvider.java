@@ -27,6 +27,11 @@ public class DSLinkProvider {
         config.setConnectionType("WEB_SOCKET");
         config.setAuthEndpoint(info.getBrokerUrl());
         config.setDsId(info.getName());
+        String token = info.getToken();
+        if (token != null) {
+            config.setToken(token);
+        }
+
         {
             LocalKeys keys = new LocalKeys(loader);
             keys.getFromFileSystem(info.getRoot().resolve(".key").toFile());

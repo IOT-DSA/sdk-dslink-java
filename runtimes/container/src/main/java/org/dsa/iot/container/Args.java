@@ -21,6 +21,11 @@ public class Args {
                 arity = 1)
     private String brokerUrl;
 
+    @Parameter(names = { "--token", "-t" },
+            description = "Sets the token used when connecting to the broker",
+            arity = 1)
+    private String token;
+
     @Parameter(names = { "--help", "-h" },
             description = "Displays the help menu",
             help = true)
@@ -32,6 +37,10 @@ public class Args {
 
     public String getBrokerUrl() {
         return brokerUrl;
+    }
+
+    public String getToken() {
+        return token;
     }
 
     public static Args parse(String[] args) {
