@@ -92,7 +92,7 @@ public class SerializationManager {
                 }
                 LOGGER.debug("Copying serialized data to a backup");
             }
-            String out = json.encode();
+            String out = json.encodePrettily();
             byte[] bytes = out.getBytes("UTF-8");
             FileUtils.write(file, bytes);
 
