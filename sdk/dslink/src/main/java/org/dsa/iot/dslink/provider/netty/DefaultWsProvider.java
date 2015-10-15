@@ -134,6 +134,7 @@ public class DefaultWsProvider extends WsProvider {
                 });
                 if (handshakeFuture != null) {
                     handshakeFuture.setSuccess();
+                    handshakeFuture = null;
                 }
                 return;
             }
