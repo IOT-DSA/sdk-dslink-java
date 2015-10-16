@@ -124,7 +124,10 @@ public class NodeListener {
     public void postListUpdate() {
         Handler<Node> handler = listHandler;
         if (handler != null) {
-            handler.handle(node.get());
+            Node node = this.node.get();
+            if (node != null) {
+                handler.handle(node);
+            }
         }
     }
 
@@ -135,7 +138,10 @@ public class NodeListener {
     public void postListClosed() {
         Handler<Node> handler = listClosedHandler;
         if (handler != null) {
-            handler.handle(node.get());
+            Node node = this.node.get();
+            if (node != null) {
+                handler.handle(node);
+            }
         }
     }
 
@@ -156,7 +162,10 @@ public class NodeListener {
     protected void postOnSubscription() {
         Handler<Node> handler = onSubscribedHandler;
         if (handler != null) {
-            handler.handle(node.get());
+            Node node = this.node.get();
+            if (node != null) {
+                handler.handle(node);
+            }
         }
     }
 
@@ -177,7 +186,10 @@ public class NodeListener {
     protected void postOnUnsubscription() {
         Handler<Node> handler = onUnsubscribedHandler;
         if (handler != null) {
-            handler.handle(node.get());
+            Node node = this.node.get();
+            if (node != null) {
+                handler.handle(node);
+            }
         }
     }
 
