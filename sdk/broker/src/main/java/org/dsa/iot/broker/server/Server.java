@@ -43,7 +43,6 @@ public class Server {
     public void start(EventLoopGroup bossLoop,
                       EventLoopGroup workerLoop) {
         ServerBootstrap strap = new ServerBootstrap();
-        strap.option(ChannelOption.SO_REUSEADDR, false);
         strap.channel(NioServerSocketChannel.class);
         strap.childHandler(new WsServerInitializer());
         strap.group(bossLoop, workerLoop);
