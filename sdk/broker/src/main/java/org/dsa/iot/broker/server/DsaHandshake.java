@@ -74,7 +74,7 @@ public class DsaHandshake {
         obj.put("tempKey", tempKey.encodedPublicKey());
         obj.put("salt", salt);
 
-        this.name = broker.getTree().init(name, dsId);
+        this.name = broker.getTree().initDslink(name, dsId);
         if (isResponder) {
             obj.put("path", "/" + broker.getDownstreamName() + "/" + name);
         }

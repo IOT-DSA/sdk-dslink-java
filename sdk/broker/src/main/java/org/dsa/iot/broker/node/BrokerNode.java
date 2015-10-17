@@ -36,12 +36,25 @@ public class BrokerNode<T extends BrokerNode> {
             this.path = "";
             this.parent = null;
         } else {
+            name = StringUtils.encodeName(name);
             if (name == null || name.isEmpty()) {
                 throw new IllegalArgumentException("name");
             }
-            this.name = StringUtils.encodeName(name);
-            this.path = "/" + parent.path;
+            this.name = name;
+            this.path = parent.path + "/" + name;
             this.parent = new WeakReference<>(parent);
+        }
+    }
+
+    public void connected(Client client) {
+        for (BrokerNode child : children.values()) {
+            child.connected(client);
+        }
+    }
+
+    public void disconnected(Client client) {
+        for (BrokerNode child : children.values()) {
+            child.disconnected(client);
         }
     }
 

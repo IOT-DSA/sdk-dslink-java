@@ -6,11 +6,15 @@ import org.dsa.iot.broker.utils.ParsedPath;
 import org.dsa.iot.dslink.util.TimeUtils;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Samuel Grenier
  */
 public class DSLinkNode extends BrokerNode {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DSLinkNode.class);
 
     // The reserved dsId that can claim this node
     private String dsId;
@@ -24,20 +28,33 @@ public class DSLinkNode extends BrokerNode {
         super(parent, name, "dslink");
     }
 
-    public void clientConnected(Client client) {
+    @Override
+    public void connected(Client client) {
         String cDsId = client.handshake().dsId();
         if (!(this.dsId == null || this.dsId.equals(cDsId))) {
             throw new IllegalStateException("Expected different dsId");
         }
+        LOGGER.info("Client `{}` has connected", cDsId);
         this.dsId = cDsId;
         this.disconnected = null;
         this.processor = new MessageProcessor(this);
         this.client = client;
+        this.client.node(this);
+        if (client.handshake().isResponder()) {
+            linkData(client.handshake().linkData());
+            accessible(true);
+        } else {
+            linkData(null);
+            accessible(false);
+        }
     }
 
-    public void clientDisconnected() {
+    @Override
+    public void disconnected(Client client) {
         this.disconnected = TimeUtils.format(System.currentTimeMillis());
         this.client = null;
+        client.node(null);
+        LOGGER.info("Client `{}` has disconnected", client.handshake().dsId());
     }
 
     public Client client() {

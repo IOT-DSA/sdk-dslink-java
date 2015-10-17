@@ -21,15 +21,15 @@ public class BrokerTree {
         return root;
     }
 
-    public String init(String name, String dsId) {
+    public String initDslink(String name, String dsId) {
         return downstream.init(name, dsId);
     }
 
     public void connected(Client client) {
-        downstream.connected(client);
+        root.connected(client);
     }
 
     public void disconnected(Client client) {
-        downstream.disconnected(client);
+        root.disconnected(client);
     }
 }
