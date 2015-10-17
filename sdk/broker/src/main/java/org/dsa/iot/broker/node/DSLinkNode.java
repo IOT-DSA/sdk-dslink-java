@@ -2,6 +2,7 @@ package org.dsa.iot.broker.node;
 
 import org.dsa.iot.broker.client.Client;
 import org.dsa.iot.broker.utils.MessageProcessor;
+import org.dsa.iot.broker.utils.ParsedPath;
 import org.dsa.iot.dslink.util.TimeUtils;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
@@ -23,16 +24,20 @@ public class DSLinkNode extends BrokerNode {
         super(parent, name, "dslink");
     }
 
-    public void setClient(Client client) {
-        if (client == null) {
-            this.disconnected = TimeUtils.format(System.currentTimeMillis());
-            this.client = null;
-        } else {
-            this.dsId = client.handshake().dsId();
-            this.disconnected = null;
-            this.processor = new MessageProcessor(this);
-            this.client = client;
+    public void clientConnected(Client client) {
+        String cDsId = client.handshake().dsId();
+        if (!(this.dsId == null || this.dsId.equals(cDsId))) {
+            throw new IllegalStateException("Expected different dsId");
         }
+        this.dsId = cDsId;
+        this.disconnected = null;
+        this.processor = new MessageProcessor(this);
+        this.client = client;
+    }
+
+    public void clientDisconnected() {
+        this.disconnected = TimeUtils.format(System.currentTimeMillis());
+        this.client = null;
     }
 
     public Client client() {
@@ -57,6 +62,14 @@ public class DSLinkNode extends BrokerNode {
 
     public String disconnected() {
         return disconnected;
+    }
+
+    @Override
+    public JsonObject list(ParsedPath pp, Client requester, int rid) {
+        if (pp.isRemote()) {
+            processor().addListStream(pp, requester, rid);
+        }
+        return null;
     }
 
     @Override

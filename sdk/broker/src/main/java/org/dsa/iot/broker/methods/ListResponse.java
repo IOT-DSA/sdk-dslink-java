@@ -3,7 +3,6 @@ package org.dsa.iot.broker.methods;
 import org.dsa.iot.broker.Broker;
 import org.dsa.iot.broker.client.Client;
 import org.dsa.iot.broker.node.BrokerNode;
-import org.dsa.iot.broker.node.DSLinkNode;
 import org.dsa.iot.broker.utils.ParsedPath;
 import org.dsa.iot.dslink.util.StringUtils;
 import org.dsa.iot.dslink.util.json.JsonObject;
@@ -39,16 +38,7 @@ public class ListResponse {
                 node = tmp;
             }
         }
-        if (pp.isRemote()) {
-            DSLinkNode link = (DSLinkNode) node;
-            Client remote = link.client();
-            if (remote != null) {
-                remote.processor().addListStream(pp, client, rid);
-            } else {
-                return link.list();
-            }
-        }
-        return pp.isRemote() ? null : node.list();
+        return node.list(pp, client, rid);
     }
 
     public static String getBasePath(String[] split) {

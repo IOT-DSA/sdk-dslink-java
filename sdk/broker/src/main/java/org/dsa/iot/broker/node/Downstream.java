@@ -44,7 +44,7 @@ public class Downstream extends BrokerNode<DSLinkNode> {
     public void connected(Client client) {
         LOGGER.info("Client `{}` has connected", client.handshake().dsId());
         DSLinkNode node = getNode(client);
-        node.setClient(client);
+        node.clientConnected(client);
         if (client.handshake().isResponder()) {
             node.linkData(client.handshake().linkData());
             node.accessible(true);
@@ -57,7 +57,7 @@ public class Downstream extends BrokerNode<DSLinkNode> {
 
     public void disconnected(Client client) {
         DSLinkNode node = getNode(client);
-        node.setClient(null);
+        node.clientDisconnected();
         client.node(null);
         LOGGER.info("Client `{}` has disconnected", client.handshake().dsId());
     }

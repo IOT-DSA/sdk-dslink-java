@@ -1,5 +1,7 @@
 package org.dsa.iot.broker.node;
 
+import org.dsa.iot.broker.client.Client;
+import org.dsa.iot.broker.utils.ParsedPath;
 import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueUtils;
@@ -31,7 +33,7 @@ public class BrokerNode<T extends BrokerNode> {
         this.profile = profile;
         if (parent == null) {
             this.name = null;
-            this.path = "/";
+            this.path = "";
             this.parent = null;
         } else {
             if (name == null || name.isEmpty()) {
@@ -81,12 +83,12 @@ public class BrokerNode<T extends BrokerNode> {
         nodeOpts.put(key, value);
     }
 
-    public JsonObject list() {
+    public JsonObject list(ParsedPath path, Client requester, int rid) {
         JsonArray updates = new JsonArray();
         populateUpdates(updates);
         JsonObject obj = new JsonObject();
         // TODO: handle list subscriptions
-        obj.put("stream", StreamState.CLOSED.getJsonName());
+        obj.put("stream", StreamState.OPEN.getJsonName());
         obj.put("updates", updates);
         return obj;
     }
