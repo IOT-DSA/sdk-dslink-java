@@ -194,11 +194,11 @@ public class DSLink {
                             resp.put("stream", StreamState.CLOSED.getJsonName());
 
                             JsonObject err = new JsonObject();
-                            resp.put("msg", e.getMessage());
+                            err.put("msg", e.getMessage());
                             { // Build stack trace
                                 StringWriter writer = new StringWriter();
                                 e.printStackTrace(new PrintWriter(writer));
-                                resp.put("detail", writer.toString());
+                                err.put("detail", writer.toString());
                             }
                             resp.put("error", err);
                             responses.add(resp);
