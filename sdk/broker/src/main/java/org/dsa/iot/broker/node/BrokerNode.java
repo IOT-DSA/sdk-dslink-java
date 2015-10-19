@@ -116,7 +116,9 @@ public class BrokerNode<T extends BrokerNode> {
     }
 
     public JsonObject list(ParsedPath path, Client requester, int rid) {
-        initializePathSubs();
+        if (pathSubs == null) {
+            initializePathSubs();
+        }
         pathSubs.put(requester, rid);
 
         JsonArray updates = new JsonArray();
@@ -153,14 +155,9 @@ public class BrokerNode<T extends BrokerNode> {
         return obj;
     }
 
-    private void initializePathSubs() {
+    private synchronized void initializePathSubs() {
         if (pathSubs == null) {
-            synchronized (this) {
-                if (pathSubs != null) {
-                    return;
-                }
-                pathSubs = new ConcurrentHashMap<>();
-            }
+            pathSubs = new ConcurrentHashMap<>();
         }
     }
 }

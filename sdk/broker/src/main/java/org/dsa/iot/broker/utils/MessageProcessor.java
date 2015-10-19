@@ -227,7 +227,7 @@ public class MessageProcessor {
                         pathListMap.remove(stream.path());
                     }
                     listLock.writeLock().unlock();
-                } else {
+                } else if (stream != null) {
                     String name = stream.getClass().getName();
                     throw new IllegalStateException("Unhandled class: " + name);
                 }
