@@ -3,13 +3,10 @@ package org.dsa.iot.broker.node;
 import org.dsa.iot.broker.client.Client;
 import org.dsa.iot.broker.utils.ParsedPath;
 import org.dsa.iot.dslink.methods.StreamState;
-import org.dsa.iot.dslink.node.value.Value;
-import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.dsa.iot.dslink.util.StringUtils;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
-import java.lang.ref.WeakReference;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -19,12 +16,12 @@ import java.util.concurrent.ConcurrentHashMap;
 public class BrokerNode<T extends BrokerNode> {
 
     private final Map<String, T> children = new ConcurrentHashMap<>();
-    private final Map<String, Value> nodeOpts = new ConcurrentHashMap<>();
-    private final WeakReference<BrokerNode> parent;
     private final String profile;
     private final String name;
     private final String path;
     private boolean accessible = true;
+
+    private Map<Client, Integer> pathSubs;
 
     public BrokerNode(BrokerNode parent, String name, String profile) {
         if (profile == null || profile.isEmpty()) {
@@ -34,7 +31,6 @@ public class BrokerNode<T extends BrokerNode> {
         if (parent == null) {
             this.name = null;
             this.path = "";
-            this.parent = null;
         } else {
             name = StringUtils.encodeName(name);
             if (name == null || name.isEmpty()) {
@@ -42,19 +38,30 @@ public class BrokerNode<T extends BrokerNode> {
             }
             this.name = name;
             this.path = parent.path + "/" + name;
-            this.parent = new WeakReference<>(parent);
         }
     }
 
     public void connected(Client client) {
+    }
+
+    public void disconnected(Client client) {
+        if (pathSubs != null) {
+            pathSubs.remove(client);
+        }
+    }
+
+    public void propagateConnected(Client client) {
         for (BrokerNode child : children.values()) {
             child.connected(client);
         }
     }
 
-    public void disconnected(Client client) {
+    public void propagateDisconnected(Client client) {
         for (BrokerNode child : children.values()) {
             child.disconnected(client);
+        }
+        if (pathSubs != null) {
+            pathSubs.remove(client);
         }
     }
 
@@ -79,28 +86,42 @@ public class BrokerNode<T extends BrokerNode> {
         if (child == null) {
             return;
         }
-        // TODO: send update to list subscriptions
         children.put(child.getName(), child);
+        if (pathSubs != null && pathSubs.size() > 0) {
+            JsonArray update = new JsonArray();
+            update.add(child.getName());
+            update.add(child.getChildUpdate());
+
+            JsonArray updates = new JsonArray();
+            updates.add(update);
+
+            JsonObject resp = new JsonObject();
+            resp.put("stream", StreamState.OPEN.getJsonName());
+            resp.put("updates", updates);
+
+
+            JsonArray resps = new JsonArray();
+            resps.add(resp);
+            JsonObject top = new JsonObject();
+            top.put("responses", resps);
+            for (Map.Entry<Client, Integer> sub : pathSubs.entrySet()) {
+                resp.put("rid", sub.getValue());
+                sub.getKey().write(top.encode());
+            }
+        }
     }
 
     public T getChild(String name) {
         return children.get(name);
     }
 
-    public void setNodeOption(String key, Value value) {
-        // TODO: send update to list subscriptions
-        if (value == null) {
-            nodeOpts.remove(key);
-            return;
-        }
-        nodeOpts.put(key, value);
-    }
-
     public JsonObject list(ParsedPath path, Client requester, int rid) {
+        initializePathSubs();
+        pathSubs.put(requester, rid);
+
         JsonArray updates = new JsonArray();
         populateUpdates(updates);
         JsonObject obj = new JsonObject();
-        // TODO: handle list subscriptions
         obj.put("stream", StreamState.OPEN.getJsonName());
         obj.put("updates", updates);
         return obj;
@@ -111,14 +132,7 @@ public class BrokerNode<T extends BrokerNode> {
             JsonArray update = new JsonArray();
             update.add("$is");
             update.add(profile);
-        }
-        {
-            for (Map.Entry<String, Value> entry : nodeOpts.entrySet()) {
-                JsonArray update = new JsonArray();
-                update.add(entry.getKey());
-                ValueUtils.toJson(update, entry.getValue());
-                updates.add(update);
-            }
+            updates.add(update);
         }
         {
             for (BrokerNode node : children.values()) {
@@ -137,5 +151,16 @@ public class BrokerNode<T extends BrokerNode> {
         JsonObject obj = new JsonObject();
         obj.put("$is", profile);
         return obj;
+    }
+
+    private void initializePathSubs() {
+        if (pathSubs == null) {
+            synchronized (this) {
+                if (pathSubs != null) {
+                    return;
+                }
+                pathSubs = new ConcurrentHashMap<>();
+            }
+        }
     }
 }

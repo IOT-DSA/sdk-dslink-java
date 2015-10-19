@@ -27,9 +27,11 @@ public class BrokerTree {
 
     public void connected(Client client) {
         root.connected(client);
+        root.propagateConnected(client);
     }
 
     public void disconnected(Client client) {
         root.disconnected(client);
+        root.propagateDisconnected(client);
     }
 }

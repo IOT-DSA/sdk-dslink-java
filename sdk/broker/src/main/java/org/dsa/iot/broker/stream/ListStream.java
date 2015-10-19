@@ -23,22 +23,22 @@ public class ListStream extends Stream {
     }
 
     @Override
-    public synchronized void add(Client requester, int requesterRid) {
+    public void add(Client requester, int requesterRid) {
         reqMap.put(requester, requesterRid);
     }
 
     @Override
-    public synchronized void remove(Client requester) {
+    public void remove(Client requester) {
         reqMap.remove(requester);
     }
 
     @Override
-    public synchronized boolean isEmpty() {
+    public boolean isEmpty() {
         return reqMap.isEmpty();
     }
 
     @Override
-    public synchronized void dispatch(StreamState state, JsonObject response) {
+    public void dispatch(StreamState state, JsonObject response) {
         JsonArray resps = new JsonArray();
         resps.add(response);
         JsonObject top = new JsonObject();

@@ -39,7 +39,7 @@ public class DSLinkNode extends BrokerNode {
         this.disconnected = null;
         this.processor = new MessageProcessor(this);
         this.client = client;
-        this.client.node(this);
+        client.node(this);
         if (client.handshake().isResponder()) {
             linkData(client.handshake().linkData());
             accessible(true);
@@ -97,6 +97,7 @@ public class DSLinkNode extends BrokerNode {
             JsonArray update = new JsonArray();
             update.add("disconnectedTs");
             update.add(disconnected);
+            updates.add(update);
         }
     }
 

@@ -88,6 +88,7 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
         this.ctx = ctx;
+        write("{}");
     }
 
     @Override
