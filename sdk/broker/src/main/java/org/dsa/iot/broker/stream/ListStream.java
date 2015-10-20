@@ -1,6 +1,7 @@
 package org.dsa.iot.broker.stream;
 
 import org.dsa.iot.broker.client.Client;
+import org.dsa.iot.broker.processor.Responder;
 import org.dsa.iot.broker.utils.ParsedPath;
 import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.util.json.JsonArray;
@@ -18,7 +19,7 @@ public class ListStream extends Stream {
 
     private final Map<Client, Integer> reqMap = new ConcurrentHashMap<>();
 
-    public ListStream(Client responder, ParsedPath path) {
+    public ListStream(Responder responder, ParsedPath path) {
         super(responder, path);
     }
 
@@ -48,7 +49,7 @@ public class ListStream extends Stream {
             Client client = entry.getKey();
             int rid = entry.getValue();
             if (state == StreamState.CLOSED) {
-                client.processor().removeRequesterStream(rid);
+                client.processor().requester().removeStream(rid);
             }
 
             response.put("rid", rid);

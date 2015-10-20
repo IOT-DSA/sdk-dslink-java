@@ -1,7 +1,7 @@
 package org.dsa.iot.broker.node;
 
 import org.dsa.iot.broker.client.Client;
-import org.dsa.iot.broker.utils.MessageProcessor;
+import org.dsa.iot.broker.processor.MessageProcessor;
 import org.dsa.iot.broker.utils.ParsedPath;
 import org.dsa.iot.dslink.util.TimeUtils;
 import org.dsa.iot.dslink.util.json.JsonArray;
@@ -84,7 +84,7 @@ public class DSLinkNode extends BrokerNode {
     @Override
     public JsonObject list(ParsedPath pp, Client requester, int rid) {
         if (pp.isRemote()) {
-            processor().addListStream(pp, requester, rid);
+            processor().responder().addListStream(pp, requester, rid);
         }
         return null;
     }

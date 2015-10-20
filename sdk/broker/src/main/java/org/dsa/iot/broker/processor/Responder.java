@@ -1,11 +1,11 @@
-package org.dsa.iot.broker.utils;
+package org.dsa.iot.broker.processor;
 
-import org.dsa.iot.broker.Broker;
 import org.dsa.iot.broker.client.Client;
 import org.dsa.iot.broker.methods.ListResponse;
 import org.dsa.iot.broker.node.DSLinkNode;
 import org.dsa.iot.broker.stream.ListStream;
 import org.dsa.iot.broker.stream.Stream;
+import org.dsa.iot.broker.utils.ParsedPath;
 import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
@@ -17,11 +17,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 /**
  * @author Samuel Grenier
  */
-public class MessageProcessor {
-
-    private final DSLinkNode node;
-
-    //// Responder data
+public class Responder extends LinkHandler {
 
     private final ReentrantReadWriteLock listLock = new ReentrantReadWriteLock();
     private final Map<String, Integer> pathListMap = new ConcurrentHashMap<>();
@@ -29,14 +25,8 @@ public class MessageProcessor {
     private final ReentrantReadWriteLock streamLock = new ReentrantReadWriteLock();
     private final Map<Integer, Stream> streamMap = new ConcurrentHashMap<>();
 
-    //// Requester data
-
-    private final Map<Integer, Stream> reqStreams = new ConcurrentHashMap<>();
-
-    ////
-
-    public MessageProcessor(DSLinkNode node) {
-        this.node = node;
+    public Responder(DSLinkNode node) {
+        super(node);
     }
 
     public void addListStream(ParsedPath path,
@@ -95,7 +85,7 @@ public class MessageProcessor {
             try {
                 stream = streamMap.get(rid);
                 if (stream == null) {
-                    stream = new ListStream(client(), path);
+                    stream = new ListStream(this, path);
                     streamMap.put(rid, stream);
                 }
             } finally {
@@ -103,111 +93,36 @@ public class MessageProcessor {
             }
         }
         stream.add(requester, requesterRid);
-        requester.processor().reqStreams.put(requesterRid, stream);
+        requester.processor().requester().addStream(requesterRid, stream);
     }
 
-    public void processData(JsonObject data) {
-        if (client().handshake().isRequester()) {
-            processRequests((JsonArray) data.get("requests"));
+    public void closeStream(Client requester, Stream stream) {
+        if (stream == null) {
+            return;
         }
-        if (client().handshake().isResponder()) {
-            processResponses((JsonArray) data.get("responses"));
+
+        stream.remove(requester);
+        if (!stream.isEmpty()) {
+            return;
         }
-    }
 
-    public void removeRequesterStream(int rid) {
-        reqStreams.remove(rid);
-    }
-
-    protected void processRequests(JsonArray requests) {
-        if (requests != null) {
-            for (Object obj : requests) {
-                processRequest((JsonObject) obj);
-            }
+        listLock.writeLock().lock();
+        streamLock.writeLock().lock();
+        Integer respRid = pathListMap.remove(stream.path());
+        if (respRid != null) {
+            streamMap.remove(respRid);
         }
-    }
+        streamLock.writeLock().unlock();
+        listLock.writeLock().unlock();
 
-    protected void processResponses(JsonArray responses) {
-        if (responses != null) {
-            for (Object obj : responses) {
-                processResponse((JsonObject) obj);
-            }
-        }
-    }
-
-    protected void processRequest(JsonObject request) {
-        final Broker broker = client().broker();
-        final String method = request.get("method");
-        final int rid = request.get("rid");
-        JsonObject resp = null;
-        switch (method) {
-            case "list": {
-                String path = request.get("path");
-                ListResponse list = new ListResponse(broker, path);
-                resp = list.getResponse(client(), rid);
-                break;
-            }
-            case "set": {
-                break;
-            }
-            case "remove": {
-                break;
-            }
-            case "close": {
-                Stream stream = reqStreams.remove(rid);
-                if (stream == null) {
-                    break;
-                }
-                stream.remove(client());
-                if (!stream.isEmpty()) {
-                    break;
-                }
-
-                MessageProcessor proc = stream.responder().processor();
-                proc.listLock.writeLock().lock();
-                proc.streamLock.writeLock().lock();
-
-                Integer respRid = proc.pathListMap.remove(stream.path());
-                if (respRid != null) {
-                    proc.streamMap.remove(respRid);
-                }
-
-                proc.streamLock.writeLock().unlock();
-                proc.listLock.writeLock().unlock();
-
-                if (respRid != null) {
-                    JsonObject req = new JsonObject();
-                    req.put("rid", respRid);
-                    req.put("method", "close");
-                    JsonArray reqs = new JsonArray();
-                    reqs.add(req);
-                    JsonObject top = new JsonObject();
-                    top.put("requests", reqs);
-                    stream.responder().write(top.encode());
-                }
-                break;
-            }
-            case "subscribe": {
-                break;
-            }
-            case "unsubscribe": {
-                break;
-            }
-            case "invoke": {
-                break;
-            }
-            default:
-                throw new RuntimeException("Unsupported method: " + method);
-        }
-        if (resp != null) {
-            resp.put("rid", rid);
-
-            JsonArray resps = new JsonArray();
-            resps.add(resp);
-
+        if (respRid != null) {
+            JsonObject req = new JsonObject();
+            req.put("rid", respRid);
+            req.put("method", "close");
+            JsonArray reqs = new JsonArray();
+            reqs.add(req);
             JsonObject top = new JsonObject();
-            top.put("responses", resps);
-
+            top.put("requests", reqs);
             client().write(top.encode());
         }
     }
@@ -236,15 +151,14 @@ public class MessageProcessor {
             }
         } else {
             streamLock.readLock().lock();
-            stream = streamMap.get(rid);
-            streamLock.readLock().unlock();
+            try {
+                stream = streamMap.get(rid);
+            } finally {
+                streamLock.readLock().unlock();
+            }
         }
         if (stream != null) {
             stream.dispatch(state, response);
         }
-    }
-
-    protected Client client() {
-        return node.client();
     }
 }
