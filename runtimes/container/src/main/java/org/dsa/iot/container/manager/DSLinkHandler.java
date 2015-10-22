@@ -64,7 +64,11 @@ public class DSLinkHandler {
         });
 
         LogManager manager = new LogManager(loader);
-        manager.configure(info.getLogPath());
+        try {
+            manager.configure(info.getLogPath());
+        } catch (RuntimeException e) {
+            System.err.println("Failed to configure logger for " + info.getName());
+        }
         manager.setLevel(info.getLogLevel());
 
         provider = new DSLinkProvider(loader, info);
