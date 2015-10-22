@@ -23,6 +23,9 @@
     "broker": {
       "type": "url"
     },
+    "token": {
+      "type": "string"
+    },
     "nodes": {
       "type": "path",
       "default": "nodes.json"
