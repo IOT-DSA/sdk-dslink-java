@@ -5,6 +5,8 @@ import org.slf4j.impl.Level;
 import org.slf4j.impl.LoggerFactoryImpl;
 import org.slf4j.impl.StaticLoggerBinder;
 
+import java.io.File;
+
 /**
  * @author Samuel Grenier
  */
@@ -13,7 +15,8 @@ public class LoggingBridge implements LogBridge {
     private LogLevel level;
 
     @Override
-    public void configure() {
+    public void configure(File path) {
+        getLoggerFactory().setLogPath(path);
     }
 
     @Override
