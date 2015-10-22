@@ -1,5 +1,6 @@
 package org.dsa.iot.container.wrapper.log;
 
+import java.io.File;
 import java.lang.reflect.Method;
 
 /**
@@ -16,13 +17,33 @@ public class LogManager {
         this.loader = loader;
     }
 
-    public void setLevel(String level) {
-        String logManagerClass = "org.dsa.iot.dslink.util.log.LogManager";
+    public void configure(String logPath) {
         try {
-            Class<?> managerClazz = loader.loadClass(logManagerClass);
-            Method method = managerClazz.getMethod("setLevel", String.class);
+            if (logPath != null) {
+                Class<?> managerClass = getManagerClass();
+                Method method = managerClass.getMethod("configure", File.class);
+                method.invoke(null, new File(logPath));
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void setLevel(String level) {
+        try {
+            Class<?> managerClass = getManagerClass();
+            Method method = managerClass.getMethod("setLevel", String.class);
             method.invoke(null, level);
         } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private Class<?> getManagerClass() {
+        String logManagerClass = "org.dsa.iot.dslink.util.log.LogManager";
+        try {
+            return loader.loadClass(logManagerClass);
+        } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
     }

@@ -85,7 +85,7 @@ public class UserHandler implements LinkHandler {
                     break;
                 }
                 Path path = root.resolve(data[1]);
-                manager.load(path, brokerUrl, token);
+                manager.load(path, brokerUrl, token, null);
                 break;
             }
             case "startAll": {

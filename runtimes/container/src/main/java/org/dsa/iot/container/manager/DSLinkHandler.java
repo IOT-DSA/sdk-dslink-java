@@ -64,6 +64,7 @@ public class DSLinkHandler {
         });
 
         LogManager manager = new LogManager(loader);
+        manager.configure(info.getLogPath());
         manager.setLevel(info.getLogLevel());
 
         provider = new DSLinkProvider(loader, info);

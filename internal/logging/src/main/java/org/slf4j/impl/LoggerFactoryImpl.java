@@ -7,7 +7,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.nio.charset.Charset;
 
 /**
  * @author Samuel Grenier
@@ -38,9 +37,13 @@ public class LoggerFactoryImpl implements ILoggerFactory {
         }
 
         try {
+            if (shouldClose) {
+                stream.close();
+            }
+            shouldClose = true;
             boolean exists = logPath.exists();
-            OutputStream stream = new FileOutputStream(logPath, exists);
-            this.stream = new PrintStream(stream, false, Charset.defaultCharset().name());
+            OutputStream out = new FileOutputStream(logPath, exists);
+            stream = new PrintStream(out, false, "UTF-8");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

@@ -100,7 +100,12 @@ public class StdinHandler implements LinkHandler {
                 token = config.get("token").asText();
             }
 
-            DSLinkInfo info = new DSLinkInfo(path, name, log, clazz, broker, token);
+            String logPath = null;
+            if (config.has("log-file")) {
+                logPath = config.get("log-file").asText();
+            }
+
+            DSLinkInfo info = new DSLinkInfo(path, name, log, clazz, broker, token, logPath);
             try {
                 manager.start(path, info);
 

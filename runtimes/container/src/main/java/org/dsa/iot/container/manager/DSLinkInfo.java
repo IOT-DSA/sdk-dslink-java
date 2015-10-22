@@ -30,13 +30,15 @@ public class DSLinkInfo {
     private final String handlerClass;
     private final String brokerUrl;
     private final String token;
+    private final String logPath;
 
     public DSLinkInfo(Path path,
                       String name,
                       String logLevel,
                       String handlerClass,
                       String brokerUrl,
-                      String token) {
+                      String token,
+                      String logPath) {
         if (path == null) {
             throw new NullPointerException("path");
         } else if (name == null) {
@@ -54,6 +56,7 @@ public class DSLinkInfo {
         this.handlerClass = handlerClass;
         this.brokerUrl = brokerUrl;
         this.token = token;
+        this.logPath = logPath;
     }
 
     public Path getRoot() {
@@ -66,6 +69,10 @@ public class DSLinkInfo {
 
     public String getLogLevel() {
         return logLevel;
+    }
+
+    public String getLogPath() {
+        return logPath;
     }
 
     public String getHandlerClass() {
@@ -116,7 +123,8 @@ public class DSLinkInfo {
 
     public static DSLinkInfo load(Path root,
                                   String brokerUrl,
-                                  String token) throws IOException {
+                                  String token,
+                                  String logPath) throws IOException {
         Path dslinkJson = root.resolve("dslink.json");
         if (!Files.isRegularFile(dslinkJson)) {
             String err = "Missing dslink.json for ";
@@ -145,7 +153,8 @@ public class DSLinkInfo {
             handler = config.path("handler_class").get("default").asText();
         }
 
-        return new DSLinkInfo(root, name, logLevel, handler, brokerUrl, token);
+        return new DSLinkInfo(root, name, logLevel,
+                                handler, brokerUrl, token, logPath);
     }
 
     private static class JarWalker extends SimpleFileVisitor<Path> {
