@@ -3,7 +3,11 @@ package org.slf4j.impl;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.nio.charset.Charset;
 
 /**
  * @author Samuel Grenier
@@ -36,8 +40,8 @@ public class LoggerFactoryImpl implements ILoggerFactory {
         try {
             boolean exists = logPath.exists();
             OutputStream stream = new FileOutputStream(logPath, exists);
-            this.stream = new PrintStream(stream);
-        } catch (FileNotFoundException e) {
+            this.stream = new PrintStream(stream, false, Charset.defaultCharset().name());
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
