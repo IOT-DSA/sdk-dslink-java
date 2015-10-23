@@ -1,5 +1,7 @@
 package org.dsa.iot.dslink.util.log;
 
+import java.io.File;
+
 /**
  * Utility for setting the default log level for all loggers.
  *
@@ -74,9 +76,12 @@ public class LogManager {
 
     /**
      * Configures the root logger with a different layout.
+     *
+     * @param logPath Path where the logger should output to or {@code null} to
+     *                log to standard output steams.
      */
-    public static void configure() {
-        getBridge().configure();
+    public static void configure(File logPath) {
+        getBridge().configure(logPath);
     }
 
     /**

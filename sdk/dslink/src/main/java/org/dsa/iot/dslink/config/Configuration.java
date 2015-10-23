@@ -295,8 +295,15 @@ public class Configuration {
         String nodePath = getFieldValue(pArgs.getNodesPath(), json, "nodes");
         String handlerClass = getFieldValue(null, json, "handler_class");
 
-        LogManager.configure();
-        LogManager.setLevel(logLevel);
+        {
+            String logPath = pArgs.getLogPath();
+            File file = null;
+            if (logPath != null) {
+                file = new File(logPath);
+            }
+            LogManager.configure(file);
+            LogManager.setLevel(logLevel);
+        }
 
         String prop = System.getProperty(PropertyReference.VALIDATE, "true");
         boolean validate = Boolean.parseBoolean(prop);

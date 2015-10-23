@@ -44,7 +44,7 @@ public class DSLinkManager {
                     continue;
                 }
                 try {
-                    load(dslinkRoot, brokerUrl, token);
+                    load(dslinkRoot, brokerUrl, token, null);
                 } catch (Exception e) {
                     e.printStackTrace(System.err);
                 }
@@ -56,8 +56,9 @@ public class DSLinkManager {
 
     public synchronized void load(Path path,
                                   String brokerUrl,
-                                  String token) throws Exception {
-        DSLinkInfo info = DSLinkInfo.load(path, brokerUrl, token);
+                                  String token,
+                                  String logPath) throws Exception {
+        DSLinkInfo info = DSLinkInfo.load(path, brokerUrl, token, logPath);
         if (info == null) {
             return;
         }

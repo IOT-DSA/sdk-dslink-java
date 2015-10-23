@@ -39,6 +39,11 @@ public class Arguments {
                 arity = 1)
     private String log;
 
+    @Parameter(names = { "--log-file", "-f" },
+                description = "Sets the output log file",
+                arity = 1)
+    private String logFile;
+
     @Parameter(names = { "--dslink-json", "-d" },
                 description = "Sets the location of the dslink.json file",
                 arity = 1)
@@ -107,6 +112,15 @@ public class Arguments {
      */
     public String getLogLevel() {
         return log;
+    }
+
+    /**
+     * The path used for logging if specified.
+     *
+     * @return Log path.
+     */
+    public String getLogPath() {
+        return logFile;
     }
 
     /**

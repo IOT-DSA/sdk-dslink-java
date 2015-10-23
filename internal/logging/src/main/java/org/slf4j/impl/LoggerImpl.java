@@ -375,13 +375,12 @@ public class LoggerImpl implements Logger {
         Date date = new Date();
         synchronized (LOCK) {
             formatted = SDF.format(date);
+            formatted += " [" + Thread.currentThread().getName() + "] "
+                    + level.getName()
+                    + " " + getName()
+                    + " - " + msg;
+            factory.getPrintStream().println(formatted);
         }
-
-        formatted += " [" + Thread.currentThread().getName() + "] "
-                + level.getName()
-                + " " + getName()
-                + " - " + msg;
-        System.out.println(formatted);
     }
 
     static {
