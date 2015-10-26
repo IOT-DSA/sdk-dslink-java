@@ -307,6 +307,19 @@ public class Requester extends Linkable {
         if (stream == null) {
             stream = StreamState.OPEN;
         }
+
+        final ErrorResponse error;
+        {
+            JsonObject e = in.get("error");
+            if (e != null) {
+                String msg = e.get("msg");
+                String detail = e.get("detail");
+                error = new ErrorResponse(msg, detail);
+            } else {
+                error = null;
+            }
+        }
+
         final boolean closed = StreamState.CLOSED == stream;
         final NodeManager manager = link.getNodeManager();
 
@@ -316,10 +329,11 @@ public class Requester extends Linkable {
                 Node node = manager.getNode(listRequest.getPath(), true).getNode();
                 String path = node.getPath();
                 SubscriptionManager subs = link.getSubscriptionManager();
-                ListResponse resp = new ListResponse(link, subs, rid, node, path);
-                resp.populate(in);
+                ListResponse listResp = new ListResponse(link, subs, rid, node, path);
+                listResp.setError(error);
+                listResp.populate(in);
                 if (wrapper.getListHandler() != null) {
-                    wrapper.getListHandler().handle(resp);
+                    wrapper.getListHandler().handle(listResp);
                 }
                 break;
             case "set":
@@ -327,6 +341,7 @@ public class Requester extends Linkable {
                 path = setRequest.getPath();
                 manager.getNode(path, true);
                 SetResponse setResponse = new SetResponse(rid, link, path);
+                setResponse.setError(error);
                 setResponse.populate(in);
                 if (wrapper.getSetHandler() != null) {
                     wrapper.getSetHandler().handle(setResponse);
@@ -336,6 +351,7 @@ public class Requester extends Linkable {
                 RemoveRequest removeRequest = (RemoveRequest) request;
                 NodePair pair = manager.getNode(removeRequest.getPath(), true);
                 RemoveResponse removeResponse = new RemoveResponse(rid, pair);
+                removeResponse.setError(error);
                 removeResponse.populate(in);
                 if (wrapper.getRemoveHandler() != null) {
                     wrapper.getRemoveHandler().handle(removeResponse);
@@ -345,10 +361,12 @@ public class Requester extends Linkable {
                 break;
             case "subscribe":
                 SubscribeResponse subResp = new SubscribeResponse(rid, link);
+                subResp.setError(error);
                 subResp.populate(in);
                 break;
             case "unsubscribe":
                 UnsubscribeResponse unsubResp = new UnsubscribeResponse(rid, link);
+                unsubResp.setError(error);
                 unsubResp.populate(in);
                 if (wrapper.getUnsubHandler() != null) {
                     wrapper.getUnsubHandler().handle(unsubResp);
@@ -378,6 +396,7 @@ public class Requester extends Linkable {
                         inResp = new InvokeResponse(link, rid, path);
                     }
                 }
+                inResp.setError(error);
                 inResp.populate(in);
                 boolean invoke = false;
                 if (inReq.waitForStreamClose()) {

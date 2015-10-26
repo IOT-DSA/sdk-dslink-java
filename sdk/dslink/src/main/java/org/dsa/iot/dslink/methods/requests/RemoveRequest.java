@@ -8,7 +8,7 @@ import org.dsa.iot.dslink.util.json.JsonObject;
  *
  * @author Samuel Grenier
  */
-public class RemoveRequest implements Request {
+public class RemoveRequest extends Request {
 
     private final String path;
 

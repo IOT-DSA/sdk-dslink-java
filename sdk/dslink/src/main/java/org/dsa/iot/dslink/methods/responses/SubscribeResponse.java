@@ -17,7 +17,7 @@ import java.io.StringWriter;
 /**
  * @author Samuel Grenier
  */
-public class SubscribeResponse implements Response {
+public class SubscribeResponse extends Response {
 
     private final int rid;
     private final DSLink link;

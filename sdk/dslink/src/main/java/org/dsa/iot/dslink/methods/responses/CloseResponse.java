@@ -7,7 +7,7 @@ import org.dsa.iot.dslink.util.json.JsonObject;
 /**
  * @author Samuel Grenier
  */
-public class CloseResponse implements Response {
+public class CloseResponse extends Response {
 
     private final int rid;
     private final Response response;

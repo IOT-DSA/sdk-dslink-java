@@ -23,7 +23,7 @@ import java.util.List;
 /**
  * @author Samuel Grenier
  */
-public class InvokeResponse implements Response {
+public class InvokeResponse extends Response {
 
     private final DSLink link;
 

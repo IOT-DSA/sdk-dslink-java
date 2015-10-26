@@ -36,6 +36,7 @@ public class Requester extends DSLinkHandler {
         listValuesChildren(link);
         subscribe(link);
         invoke(link);
+        invokeError(link);
     }
 
     /**
@@ -105,7 +106,7 @@ public class Requester extends DSLinkHandler {
      * @see org.dsa.iot.dual.responder.Responder#initActionNode
      */
     private static void invoke(DSLink link) {
-        final String path = link.getPath() + "/values/action";
+        String path = link.getPath() + "/values/action";
         InvokeRequest request = new InvokeRequest(path);
         link.getRequester().invoke(request, new Handler<InvokeResponse>() {
             @Override
@@ -116,6 +117,22 @@ public class Requester extends DSLinkHandler {
                 Row row = t.getRows().get(0);
                 Value value = row.getValues().get(0);
                 LOGGER.info("Received response: {}", value.toString());
+            }
+        });
+    }
+
+    private static void invokeError(DSLink link) {
+        String path = link.getPath() + "/non_existent_node";
+        InvokeRequest req = new InvokeRequest(path);
+        link.getRequester().invoke(req, new Handler<InvokeResponse>() {
+            @Override
+            public void handle(InvokeResponse event) {
+                if (!event.hasError()) {
+                    return;
+                }
+                String m = event.getError().getMessage();
+                String d = event.getError().getDetail();
+                LOGGER.info("Invocation error (as desired): \nmsg: {}\ndetail: {}", m, d);
             }
         });
     }

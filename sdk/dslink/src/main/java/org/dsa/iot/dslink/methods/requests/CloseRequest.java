@@ -6,7 +6,7 @@ import org.dsa.iot.dslink.util.json.JsonObject;
 /**
  * @author Samuel Grenier
  */
-public class CloseRequest implements Request {
+public class CloseRequest extends Request {
 
     @Override
     public String getName() {

@@ -7,12 +7,12 @@ import org.dsa.iot.dslink.util.json.JsonObject;
  *
  * @author Samuel Grenier
  */
-public interface Request {
+public abstract class Request {
 
     /**
      * @return The name of the request
      */
-    String getName();
+    public abstract String getName();
 
     /**
      * Add the JSON request values of the specified request to the JSON to
@@ -20,5 +20,5 @@ public interface Request {
      *
      * @param out Values to add to.
      */
-    void addJsonValues(JsonObject out);
+    public abstract void addJsonValues(JsonObject out);
 }

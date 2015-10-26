@@ -6,7 +6,7 @@ import org.dsa.iot.dslink.util.json.JsonObject;
 /**
  * @author Samuel Grenier
  */
-public class ListRequest implements Request {
+public class ListRequest extends Request {
 
     private final String path;
 
