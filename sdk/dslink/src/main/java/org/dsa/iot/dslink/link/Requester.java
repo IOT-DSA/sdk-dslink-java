@@ -203,11 +203,12 @@ public class Requester extends Linkable {
      *
      * @param request Invocation request.
      * @param onResponse Response.
+     * @return Request ID that can be used to close the stream.
      */
-    public void invoke(InvokeRequest request, Handler<InvokeResponse> onResponse) {
+    public int invoke(InvokeRequest request, Handler<InvokeResponse> onResponse) {
         RequestWrapper wrapper = new RequestWrapper(request);
         wrapper.setInvokeHandler(onResponse);
-        sendRequest(wrapper);
+        return sendRequest(wrapper);
     }
 
     /**
@@ -215,11 +216,12 @@ public class Requester extends Linkable {
      *
      * @param request List request.
      * @param onResponse Response.
+     * @return Request ID that can be used to close the stream.
      */
-    public void list(ListRequest request, Handler<ListResponse> onResponse) {
+    public int list(ListRequest request, Handler<ListResponse> onResponse) {
         RequestWrapper wrapper = new RequestWrapper(request);
         wrapper.setListHandler(onResponse);
-        sendRequest(wrapper);
+        return sendRequest(wrapper);
     }
 
     /**
@@ -251,9 +253,10 @@ public class Requester extends Linkable {
      *
      * @param wrapper Request to send to the client.
      */
-    private void sendRequest(RequestWrapper wrapper) {
+    private int sendRequest(RequestWrapper wrapper) {
         int rid = currentReqID.incrementAndGet();
         sendRequest(wrapper, rid);
+        return rid;
     }
 
     /**
