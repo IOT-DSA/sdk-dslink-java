@@ -25,13 +25,13 @@ public class Responder extends LinkHandler {
     private final ReentrantReadWriteLock streamLock = new ReentrantReadWriteLock();
     private final Map<Integer, Stream> streamMap = new ConcurrentHashMap<>();
 
-    private final Object reqLock = new Object();
-    private final Map<Client, List<Stream>> reqStreams = new ConcurrentHashMap<>();
+    private final Map<Client, List<Stream>> reqStreams = new HashMap<>();
 
     public Responder(DSLinkNode node) {
         super(node);
     }
 
+    @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
     public void addListStream(ParsedPath path,
                               Client requester,
                               int requesterRid) {
@@ -96,15 +96,7 @@ public class Responder extends LinkHandler {
             }
         }
 
-        synchronized (reqLock) {
-            List<Stream> streams = reqStreams.get(requester);
-            if (streams == null) {
-                streams = new ArrayList<>();
-                reqStreams.put(requester, streams);
-            }
-            streams.add(stream);
-        }
-
+        addRequesterStream(requester, stream);
         stream.add(requester, requesterRid);
         requester.processor().requester().addStream(requesterRid, stream);
     }
@@ -155,10 +147,31 @@ public class Responder extends LinkHandler {
         }
     }
 
+    @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
+    public void addRequesterStream(Client requester, Stream stream) {
+        List<Stream> streams;
+        synchronized (reqStreams) {
+            streams = reqStreams.get(requester);
+            if (streams == null) {
+                streams = new ArrayList<>();
+                reqStreams.put(requester, streams);
+            }
+        }
+        synchronized (streams) {
+            streams.add(stream);
+        }
+    }
+
+    @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
     public void requesterDisconnected(Client requester) {
-        synchronized (reqLock) {
-            List<Stream> streams = reqStreams.remove(requester);
-            closeStream(requester, streams);
+        List<Stream> streams;
+        synchronized (reqStreams) {
+            streams = reqStreams.remove(requester);
+        }
+        if (streams != null) {
+            synchronized (streams) {
+                closeStream(requester, streams);
+            }
         }
     }
 
