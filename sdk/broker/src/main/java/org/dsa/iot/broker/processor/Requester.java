@@ -52,7 +52,9 @@ public class Requester extends LinkHandler {
             }
             case "close": {
                 Stream stream = removeStream(rid);
-                stream.close(this);
+                if (stream != null) {
+                    stream.close(this);
+                }
                 break;
             }
             case "subscribe": {
