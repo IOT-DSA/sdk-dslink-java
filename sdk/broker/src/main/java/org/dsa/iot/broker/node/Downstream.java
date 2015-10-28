@@ -46,10 +46,7 @@ public class Downstream extends BrokerNode<DSLinkNode> {
     }
 
     @Override
-    public void disconnected(Client client) {
-        super.disconnected(client);
-        DSLinkNode node = getChild(client.handshake().name());
-        node.disconnected(client);
+    public void propagateConnected(Client client) {
     }
 
     private static char randomChar() {

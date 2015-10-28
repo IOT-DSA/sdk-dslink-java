@@ -53,15 +53,14 @@ public class BrokerNode<T extends BrokerNode> {
     public void propagateConnected(Client client) {
         for (BrokerNode child : children.values()) {
             child.connected(client);
+            child.propagateConnected(client);
         }
     }
 
     public void propagateDisconnected(Client client) {
         for (BrokerNode child : children.values()) {
             child.disconnected(client);
-        }
-        if (pathSubs != null) {
-            pathSubs.remove(client);
+            child.propagateDisconnected(client);
         }
     }
 

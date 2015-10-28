@@ -10,7 +10,7 @@ import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -24,6 +24,9 @@ public class Responder extends LinkHandler {
 
     private final ReentrantReadWriteLock streamLock = new ReentrantReadWriteLock();
     private final Map<Integer, Stream> streamMap = new ConcurrentHashMap<>();
+
+    private final Object reqLock = new Object();
+    private final Map<Client, List<Stream>> reqStreams = new ConcurrentHashMap<>();
 
     public Responder(DSLinkNode node) {
         super(node);
@@ -92,38 +95,70 @@ public class Responder extends LinkHandler {
                 streamLock.writeLock().unlock();
             }
         }
+
+        synchronized (reqLock) {
+            List<Stream> streams = reqStreams.get(requester);
+            if (streams == null) {
+                streams = new ArrayList<>();
+                reqStreams.put(requester, streams);
+            }
+            streams.add(stream);
+        }
+
         stream.add(requester, requesterRid);
         requester.processor().requester().addStream(requesterRid, stream);
     }
 
     public void closeStream(Client requester, Stream stream) {
-        if (stream == null) {
+        closeStream(requester, Collections.singleton(stream));
+    }
+
+    public void closeStream(Client requester, Collection<Stream> streams) {
+        if (streams == null) {
             return;
         }
 
-        stream.remove(requester);
-        if (!stream.isEmpty()) {
-            return;
-        }
+        JsonArray reqs = null;
+        for (Stream stream : streams) {
+            if (stream == null) {
+                continue;
+            }
+            stream.remove(requester);
+            if (!stream.isEmpty()) {
+                continue;
+            }
 
-        listLock.writeLock().lock();
-        streamLock.writeLock().lock();
-        Integer respRid = pathListMap.remove(stream.path());
-        if (respRid != null) {
-            streamMap.remove(respRid);
-        }
-        streamLock.writeLock().unlock();
-        listLock.writeLock().unlock();
+            listLock.writeLock().lock();
+            streamLock.writeLock().lock();
+            Integer respRid = pathListMap.remove(stream.path());
+            if (respRid != null) {
+                streamMap.remove(respRid);
+            }
+            streamLock.writeLock().unlock();
+            listLock.writeLock().unlock();
 
-        if (respRid != null) {
-            JsonObject req = new JsonObject();
-            req.put("rid", respRid);
-            req.put("method", "close");
-            JsonArray reqs = new JsonArray();
-            reqs.add(req);
+            if (respRid != null) {
+                JsonObject req = new JsonObject();
+                req.put("rid", respRid);
+                req.put("method", "close");
+
+                if (reqs == null) {
+                    reqs = new JsonArray();
+                }
+                reqs.add(req);
+            }
+        }
+        if (reqs != null) {
             JsonObject top = new JsonObject();
             top.put("requests", reqs);
             client().write(top.encode());
+        }
+    }
+
+    public void requesterDisconnected(Client requester) {
+        synchronized (reqLock) {
+            List<Stream> streams = reqStreams.remove(requester);
+            closeStream(requester, streams);
         }
     }
 

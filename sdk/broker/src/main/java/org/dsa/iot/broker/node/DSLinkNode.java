@@ -51,10 +51,17 @@ public class DSLinkNode extends BrokerNode {
 
     @Override
     public void disconnected(Client client) {
-        this.disconnected = TimeUtils.format(System.currentTimeMillis());
-        this.client = null;
-        client.node(null);
-        LOGGER.info("Client `{}` has disconnected", client.handshake().dsId());
+        if (client == this.client) {
+            this.disconnected = TimeUtils.format(System.currentTimeMillis());
+            this.client = null;
+            client.node(null);
+            LOGGER.info("Client `{}` has disconnected", client.handshake().dsId());
+        } else {
+            if (client() != null && client().handshake().isResponder()
+                    && client.handshake().isRequester()) {
+                processor().responder().requesterDisconnected(client);
+            }
+        }
     }
 
     public Client client() {
