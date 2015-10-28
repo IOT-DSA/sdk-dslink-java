@@ -322,8 +322,8 @@ public class Requester extends Linkable {
             }
         }
 
-        final boolean closed = StreamState.CLOSED == stream;
         final NodeManager manager = link.getNodeManager();
+        boolean closed = StreamState.CLOSED == stream;
 
         switch (method) {
             case "list":
@@ -360,6 +360,7 @@ public class Requester extends Linkable {
                 }
                 break;
             case "close":
+                closed = true;
                 break;
             case "subscribe":
                 SubscribeResponse subResp = new SubscribeResponse(rid, link);
