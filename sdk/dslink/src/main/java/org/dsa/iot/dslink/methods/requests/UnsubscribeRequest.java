@@ -11,7 +11,7 @@ import java.util.List;
  *
  * @author Samuel Grenier
  */
-public class UnsubscribeRequest implements Request {
+public class UnsubscribeRequest extends Request {
 
     private final List<Integer> sids;
 

@@ -20,7 +20,7 @@ import java.util.Set;
 /**
  * @author Samuel Grenier
  */
-public class ListResponse implements Response {
+public class ListResponse extends Response {
 
     private final DSLink link;
     private final SubscriptionManager manager;

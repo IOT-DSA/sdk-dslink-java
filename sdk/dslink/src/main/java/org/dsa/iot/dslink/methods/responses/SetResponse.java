@@ -17,7 +17,7 @@ import org.dsa.iot.dslink.util.json.JsonObject;
  *
  * @author Samuel Grenier
  */
-public class SetResponse implements Response {
+public class SetResponse extends Response {
 
     private final int rid;
     private final DSLink link;

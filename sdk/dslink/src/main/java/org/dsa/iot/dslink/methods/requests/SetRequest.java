@@ -10,7 +10,7 @@ import org.dsa.iot.dslink.util.json.JsonObject;
  *
  * @author Samuel Grenier
  */
-public class SetRequest implements Request {
+public class SetRequest extends Request {
 
     private final String path;
     private final Value value;

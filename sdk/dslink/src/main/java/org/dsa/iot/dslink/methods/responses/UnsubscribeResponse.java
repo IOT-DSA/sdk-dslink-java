@@ -10,7 +10,7 @@ import org.dsa.iot.dslink.util.json.JsonObject;
 /**
  * @author Samuel Grenier
  */
-public class UnsubscribeResponse implements Response {
+public class UnsubscribeResponse extends Response {
 
     private final int rid;
     private final SubscriptionManager manager;

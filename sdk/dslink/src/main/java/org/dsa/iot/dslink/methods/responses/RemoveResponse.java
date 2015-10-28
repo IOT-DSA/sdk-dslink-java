@@ -8,7 +8,7 @@ import org.dsa.iot.dslink.util.json.JsonObject;
 /**
  * @author Samuel Grenier
  */
-public class RemoveResponse implements Response {
+public class RemoveResponse extends Response {
 
     private final int rid;
     private final NodePair pair;

@@ -12,7 +12,7 @@ import java.util.Set;
 /**
  * @author Samuel Grenier
  */
-public class SubscribeRequest implements Request {
+public class SubscribeRequest extends Request {
 
     private Map<SubData, Integer> subSids;
     private final Set<SubData> paths;

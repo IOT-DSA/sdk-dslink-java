@@ -17,7 +17,7 @@ import java.util.Map;
 /**
  * @author Samuel Grenier
  */
-public class SubscriptionUpdate implements Response {
+public class SubscriptionUpdate extends Response {
 
     private final Requester requester;
     private final NodeManager manager;
