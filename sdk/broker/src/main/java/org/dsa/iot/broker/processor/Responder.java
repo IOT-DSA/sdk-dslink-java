@@ -1,7 +1,6 @@
 package org.dsa.iot.broker.processor;
 
 import org.dsa.iot.broker.client.Client;
-import org.dsa.iot.broker.methods.ListResponse;
 import org.dsa.iot.broker.node.DSLinkNode;
 import org.dsa.iot.broker.stream.ListStream;
 import org.dsa.iot.broker.stream.Stream;
@@ -62,7 +61,7 @@ public class Responder extends LinkHandler {
                     JsonObject resp = new JsonObject();
                     resp.put("method", "list");
                     resp.put("rid", rid);
-                    resp.put("path", ListResponse.getBasePath(path.split()));
+                    resp.put("path", path.base());
 
                     JsonArray reqs = new JsonArray();
                     reqs.add(resp);

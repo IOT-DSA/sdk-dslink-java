@@ -1,6 +1,7 @@
 package org.dsa.iot.broker.utils;
 
 import org.dsa.iot.dslink.node.NodeManager;
+import org.dsa.iot.dslink.util.StringUtils;
 
 /**
  * @author Samuel Grenier
@@ -38,6 +39,19 @@ public class ParsedPath {
      */
     public String full() {
         return fullPath;
+    }
+
+    /**
+     * @return The base path of the remote path.
+     */
+    public String base() {
+        if (isRemote()) {
+            String[] tmp = new String[splitPath.length - 2];
+            System.arraycopy(splitPath, 2, tmp, 0, tmp.length);
+            return "/" + StringUtils.join(tmp, "/");
+        } else {
+            return fullPath;
+        }
     }
 
     /**

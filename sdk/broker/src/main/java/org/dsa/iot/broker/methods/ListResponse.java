@@ -4,7 +4,6 @@ import org.dsa.iot.broker.Broker;
 import org.dsa.iot.broker.client.Client;
 import org.dsa.iot.broker.node.BrokerNode;
 import org.dsa.iot.broker.utils.ParsedPath;
-import org.dsa.iot.dslink.util.StringUtils;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
 /**
@@ -39,11 +38,5 @@ public class ListResponse {
             }
         }
         return node.list(pp, client, rid);
-    }
-
-    public static String getBasePath(String[] split) {
-        String[] tmp = new String[split.length - 2];
-        System.arraycopy(split, 2, tmp, 0, tmp.length);
-        return "/" + StringUtils.join(tmp, "/");
     }
 }
