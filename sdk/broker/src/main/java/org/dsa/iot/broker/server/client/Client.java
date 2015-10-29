@@ -1,4 +1,4 @@
-package org.dsa.iot.broker.client;
+package org.dsa.iot.broker.server.client;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -120,6 +120,4 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
             throw new UnsupportedOperationException(err);
         }
     }
-
-
 }

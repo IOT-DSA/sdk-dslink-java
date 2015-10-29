@@ -1,9 +1,9 @@
 package org.dsa.iot.broker.processor;
 
-import org.dsa.iot.broker.client.Client;
 import org.dsa.iot.broker.node.DSLinkNode;
-import org.dsa.iot.broker.stream.ListStream;
-import org.dsa.iot.broker.stream.Stream;
+import org.dsa.iot.broker.processor.stream.ListStream;
+import org.dsa.iot.broker.processor.stream.Stream;
+import org.dsa.iot.broker.server.client.Client;
 import org.dsa.iot.broker.utils.ParsedPath;
 import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.util.json.JsonArray;

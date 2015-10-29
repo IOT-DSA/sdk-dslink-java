@@ -1,7 +1,7 @@
 package org.dsa.iot.broker.processor;
 
-import org.dsa.iot.broker.client.Client;
 import org.dsa.iot.broker.node.DSLinkNode;
+import org.dsa.iot.broker.server.client.Client;
 
 /**
  * @author Samuel Grenier

@@ -1,6 +1,6 @@
 package org.dsa.iot.broker.node;
 
-import org.dsa.iot.broker.client.Client;
+import org.dsa.iot.broker.server.client.Client;
 
 import java.util.Random;
 

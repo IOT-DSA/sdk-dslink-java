@@ -10,7 +10,7 @@ import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
 import io.netty.util.CharsetUtil;
 import org.dsa.iot.broker.Broker;
-import org.dsa.iot.broker.client.Client;
+import org.dsa.iot.broker.server.client.Client;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
 import java.util.List;

@@ -1,8 +1,8 @@
-package org.dsa.iot.broker.methods;
+package org.dsa.iot.broker.processor.methods;
 
 import org.dsa.iot.broker.Broker;
-import org.dsa.iot.broker.client.Client;
 import org.dsa.iot.broker.node.BrokerNode;
+import org.dsa.iot.broker.server.client.Client;
 import org.dsa.iot.broker.utils.ParsedPath;
 import org.dsa.iot.dslink.util.json.JsonObject;
 

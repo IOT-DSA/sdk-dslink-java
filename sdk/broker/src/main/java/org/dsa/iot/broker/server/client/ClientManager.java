@@ -1,4 +1,4 @@
-package org.dsa.iot.broker.client;
+package org.dsa.iot.broker.server.client;
 
 import org.dsa.iot.dslink.util.Objects;
 
