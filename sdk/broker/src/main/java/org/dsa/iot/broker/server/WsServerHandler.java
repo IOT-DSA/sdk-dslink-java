@@ -57,11 +57,6 @@ public class WsServerHandler extends SimpleChannelInboundHandler<FullHttpRequest
 
     }
 
-    @Override
-    public void channelReadComplete(ChannelHandlerContext ctx) {
-        ctx.flush();
-    }
-
     private void handleNewConn(ChannelHandlerContext ctx,
                                FullHttpRequest req,
                                String dsId) {
