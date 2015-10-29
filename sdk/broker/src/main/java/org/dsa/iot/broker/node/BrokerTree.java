@@ -1,6 +1,5 @@
 package org.dsa.iot.broker.node;
 
-import org.dsa.iot.broker.Broker;
 import org.dsa.iot.broker.client.Client;
 
 /**
@@ -11,9 +10,12 @@ public class BrokerTree {
     private final BrokerNode<BrokerNode> root = new BrokerNode<>(null, null, "broker");
     private Downstream downstream;
 
-    public void initialize(Broker broker) {
-        String name = broker.getDownstreamName();
-        this.downstream = new Downstream(root, name);
+    public void initialize(String downStreamName) {
+        initialize(new Downstream(root, downStreamName));
+    }
+
+    public void initialize(Downstream downstream) {
+        this.downstream = downstream;
         root.addChild(downstream);
     }
 

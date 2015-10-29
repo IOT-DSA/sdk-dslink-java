@@ -20,12 +20,22 @@ public class DSLinkNode extends BrokerNode {
     private String dsId;
     private Client client;
 
-    private MessageProcessor processor = new MessageProcessor();
+    private final MessageProcessor processor;
     private String disconnected;
     private JsonObject linkData;
 
     public DSLinkNode(Downstream parent, String name) {
+        this(parent, name, new MessageProcessor());
+    }
+
+    public DSLinkNode(Downstream parent,
+                      String name,
+                      MessageProcessor processor) {
         super(parent, name, "dslink");
+        if (processor == null) {
+            throw new NullPointerException("processor");
+        }
+        this.processor = processor;
     }
 
     @Override

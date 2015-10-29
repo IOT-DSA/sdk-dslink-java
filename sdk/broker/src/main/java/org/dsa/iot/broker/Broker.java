@@ -126,7 +126,7 @@ public class Broker {
         BrokerTree bt = new BrokerTree();
 
         Broker b = new Broker(conf, cm, bt);
-        bt.initialize(b);
+        bt.initialize(b.getDownstreamName());
         b.addShutdownHook();
         return b;
     }

@@ -10,7 +10,6 @@ import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
@@ -19,10 +18,10 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class Responder extends LinkHandler {
 
     private final ReentrantReadWriteLock listLock = new ReentrantReadWriteLock();
-    private final Map<String, Integer> pathListMap = new ConcurrentHashMap<>();
+    private final Map<String, Integer> pathListMap = new HashMap<>();
 
     private final ReentrantReadWriteLock streamLock = new ReentrantReadWriteLock();
-    private final Map<Integer, Stream> streamMap = new ConcurrentHashMap<>();
+    private final Map<Integer, Stream> streamMap = new HashMap<>();
 
     private final Map<Client, List<Stream>> reqStreams = new HashMap<>();
 
