@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 public class DSLinkNode extends BrokerNode {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DSLinkNode.class);
+    public static final String PROFILE = "dslink";
 
     // The reserved dsId that can claim this node
     private String dsId;
@@ -31,7 +32,7 @@ public class DSLinkNode extends BrokerNode {
     public DSLinkNode(Downstream parent,
                       String name,
                       MessageProcessor processor) {
-        super(parent, name, "dslink");
+        super(parent, name, PROFILE);
         if (processor == null) {
             throw new NullPointerException("processor");
         }

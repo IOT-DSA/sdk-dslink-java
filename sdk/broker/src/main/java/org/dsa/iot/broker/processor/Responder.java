@@ -54,20 +54,50 @@ public class Responder extends LinkHandler {
             try {
                 rid = pathListMap.get(path.full());
                 if (rid == null) {
-                    rid = client().nextRid();
-                    pathListMap.put(path.full(), rid);
+                    Client responder = client();
+                    if (responder != null) {
+                        rid = responder.nextRid();
+                        pathListMap.put(path.full(), rid);
 
-                    JsonObject resp = new JsonObject();
-                    resp.put("method", "list");
-                    resp.put("rid", rid);
-                    resp.put("path", path.base());
+                        JsonObject req = new JsonObject();
+                        req.put("method", "list");
+                        req.put("rid", rid);
+                        req.put("path", path.base());
 
-                    JsonArray reqs = new JsonArray();
-                    reqs.add(resp);
-                    JsonObject top = new JsonObject();
-                    top.put("requests", reqs);
+                        JsonArray reqs = new JsonArray();
+                        reqs.add(req);
+                        JsonObject top = new JsonObject();
+                        top.put("requests", reqs);
 
-                    client().write(top.encode());
+                        responder.write(top.encode());
+                    } else if (path.base().equals("/")) {
+                        JsonObject resp = new JsonObject();
+                        resp.put("rid", requesterRid);
+                        resp.put("stream", StreamState.OPEN.getJsonName());
+                        {
+                            JsonArray updates = new JsonArray();
+                            {
+                                JsonArray update = new JsonArray();
+                                update.add("$is");
+                                update.add(DSLinkNode.PROFILE);
+                                updates.add(update);
+                            }
+                            {
+                                JsonArray update = new JsonArray();
+                                update.add("$disconnectedTs");
+                                update.add(node().disconnected());
+                                updates.add(update);
+                            }
+                            resp.put("updates", updates);
+                        }
+
+                        JsonArray resps = new JsonArray();
+                        resps.add(resp);
+
+                        JsonObject top = new JsonObject();
+                        top.put("responses", resps);
+                        requester.write(top.encode());
+                    }
                 }
             } finally {
                 listLock.writeLock().unlock();

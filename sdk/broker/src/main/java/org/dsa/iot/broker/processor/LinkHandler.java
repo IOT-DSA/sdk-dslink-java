@@ -17,6 +17,10 @@ public class LinkHandler {
         this.node = node;
     }
 
+    public DSLinkNode node() {
+        return node;
+    }
+
     public Client client() {
         return node.client();
     }

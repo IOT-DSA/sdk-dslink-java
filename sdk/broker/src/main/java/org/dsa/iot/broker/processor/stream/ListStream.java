@@ -30,6 +30,9 @@ public class ListStream extends Stream {
         reqMap.put(requester, requesterRid);
         cacheLock.readLock().lock();
         try {
+            if (cache.isEmpty()) {
+                return;
+            }
             JsonArray updates = new JsonArray();
             for (JsonArray update : cache.values()) {
                 updates.add(update);
