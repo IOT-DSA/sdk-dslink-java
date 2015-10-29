@@ -10,10 +10,10 @@ import org.dsa.iot.dslink.util.json.JsonObject;
  */
 public class MessageProcessor {
 
-    private final Responder responder;
-    private final Requester requester;
+    private Responder responder;
+    private Requester requester;
 
-    public MessageProcessor(DSLinkNode node) {
+    public void initialize(DSLinkNode node) {
         DsaHandshake handshake = node.client().handshake();
         if (handshake.isResponder()) {
             this.responder = new Responder(node);

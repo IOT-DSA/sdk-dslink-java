@@ -20,7 +20,7 @@ public class DSLinkNode extends BrokerNode {
     private String dsId;
     private Client client;
 
-    private MessageProcessor processor;
+    private MessageProcessor processor = new MessageProcessor();
     private String disconnected;
     private JsonObject linkData;
 
@@ -38,13 +38,13 @@ public class DSLinkNode extends BrokerNode {
         this.dsId = cDsId;
         this.client = client;
         this.disconnected = null;
-        this.processor = new MessageProcessor(this);
         client.node(this);
+        processor.initialize(this);
         if (client.handshake().isResponder()) {
-            linkData(client.handshake().linkData());
+            this.linkData = client.handshake().linkData();
             accessible(true);
         } else {
-            linkData(null);
+            this.linkData = null;
             accessible(false);
         }
     }
@@ -74,10 +74,6 @@ public class DSLinkNode extends BrokerNode {
 
     public String dsId() {
         return dsId;
-    }
-
-    public void linkData(JsonObject linkData) {
-        this.linkData = linkData;
     }
 
     public JsonObject linkData() {
