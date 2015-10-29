@@ -36,9 +36,9 @@ public class DSLinkNode extends BrokerNode {
         }
         LOGGER.info("Client `{}` has connected", cDsId);
         this.dsId = cDsId;
+        this.client = client;
         this.disconnected = null;
         this.processor = new MessageProcessor(this);
-        this.client = client;
         client.node(this);
         if (client.handshake().isResponder()) {
             linkData(client.handshake().linkData());

@@ -1,7 +1,7 @@
 package org.dsa.iot.broker.processor;
 
-import org.dsa.iot.broker.client.Client;
 import org.dsa.iot.broker.node.DSLinkNode;
+import org.dsa.iot.broker.server.DsaHandshake;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
@@ -10,22 +10,28 @@ import org.dsa.iot.dslink.util.json.JsonObject;
  */
 public class MessageProcessor {
 
-    private final DSLinkNode node;
-
     private final Responder responder;
     private final Requester requester;
 
     public MessageProcessor(DSLinkNode node) {
-        this.node = node;
-        this.responder = new Responder(node);
-        this.requester = new Requester(node);
+        DsaHandshake handshake = node.client().handshake();
+        if (handshake.isResponder()) {
+            this.responder = new Responder(node);
+        } else {
+            this.responder = null;
+        }
+        if (handshake.isRequester()) {
+            this.requester = new Requester(node);
+        } else {
+            this.requester = null;
+        }
     }
 
     public void processData(JsonObject data) {
-        if (client().handshake().isRequester()) {
+        if (requester != null) {
             processRequests((JsonArray) data.get("requests"));
         }
-        if (client().handshake().isResponder()) {
+        if (responder != null) {
             processResponses((JsonArray) data.get("responses"));
         }
     }
@@ -52,9 +58,5 @@ public class MessageProcessor {
                 responder.processResponse((JsonObject) obj);
             }
         }
-    }
-
-    protected Client client() {
-        return node.client();
     }
 }
