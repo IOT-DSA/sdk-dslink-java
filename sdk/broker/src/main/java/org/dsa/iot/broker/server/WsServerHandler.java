@@ -18,7 +18,7 @@ import java.util.List;
 /**
  * @author Samuel Grenier
  */
-public class WsServerHandler extends SimpleChannelInboundHandler<Object> {
+public class WsServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
     private static final HttpVersion VERSION = HttpVersion.HTTP_1_1;
 
@@ -34,19 +34,7 @@ public class WsServerHandler extends SimpleChannelInboundHandler<Object> {
     }
 
     @Override
-    public void messageReceived(ChannelHandlerContext ctx, Object msg) {
-        if (msg instanceof FullHttpRequest) {
-            handleHttpRequest(ctx, (FullHttpRequest) msg);
-        }
-    }
-
-    @Override
-    public void channelReadComplete(ChannelHandlerContext ctx) {
-        ctx.flush();
-    }
-
-    private void handleHttpRequest(ChannelHandlerContext ctx,
-                                   FullHttpRequest req) {
+    public void messageReceived(ChannelHandlerContext ctx, FullHttpRequest req) {
         if (!req.decoderResult().isSuccess()) {
             HttpResponseStatus stat = HttpResponseStatus.BAD_REQUEST;
             FullHttpResponse resp = new DefaultFullHttpResponse(VERSION, stat);
@@ -66,6 +54,12 @@ public class WsServerHandler extends SimpleChannelInboundHandler<Object> {
         } else {
             sendForbidden(ctx);
         }
+
+    }
+
+    @Override
+    public void channelReadComplete(ChannelHandlerContext ctx) {
+        ctx.flush();
     }
 
     private void handleNewConn(ChannelHandlerContext ctx,
