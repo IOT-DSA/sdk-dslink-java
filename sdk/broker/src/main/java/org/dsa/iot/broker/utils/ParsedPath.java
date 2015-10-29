@@ -67,4 +67,20 @@ public class ParsedPath {
         return new ParsedPath(ir, split, path);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        } else if (!(o instanceof ParsedPath)) {
+            return false;
+        }
+
+        String other = ((ParsedPath) o).full();
+        return other == null ? full() == null : other.equals(full());
+    }
+
+    @Override
+    public int hashCode() {
+        return fullPath != null ? fullPath.hashCode() : 0;
+    }
 }
