@@ -1,5 +1,6 @@
 package org.dsa.iot.broker.processor.stream;
 
+import org.dsa.iot.broker.node.DSLinkNode;
 import org.dsa.iot.broker.processor.Responder;
 import org.dsa.iot.broker.server.client.Client;
 import org.dsa.iot.broker.utils.ParsedPath;
@@ -7,6 +8,8 @@ import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -68,6 +71,7 @@ public class ListStream extends Stream {
     public void dispatch(StreamState state, JsonObject response) {
         JsonArray updates = response.get("updates");
         if (updates != null) {
+            List<JsonArray> injectedData = null;
             for (Object obj : updates) {
                 cacheLock.writeLock().lock();
                 try {
@@ -83,11 +87,28 @@ public class ListStream extends Stream {
                         String name = array.get(0);
                         if (name.equals("$is")) {
                             cache.clear();
+                            if (path().base().equals("/")) {
+                                DSLinkNode node = responder().node();
+                                JsonArray update = node.linkDataUpdate();
+                                if (update != null) {
+                                    String confName = update.get(0);
+                                    cache.put(confName, update);
+                                    if (injectedData == null) {
+                                        injectedData = new ArrayList<>();
+                                    }
+                                    injectedData.add(update);
+                                }
+                            }
                         }
                         cache.put(name, array);
                     }
                 } finally {
                     cacheLock.writeLock().unlock();
+                }
+            }
+            if (injectedData != null) {
+                for (JsonArray update : injectedData) {
+                    updates.add(update);
                 }
             }
         }

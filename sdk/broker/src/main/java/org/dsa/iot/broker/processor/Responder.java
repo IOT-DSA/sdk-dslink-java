@@ -150,7 +150,7 @@ public class Responder extends LinkHandler {
 
             listLock.writeLock().lock();
             streamLock.writeLock().lock();
-            Integer respRid = pathListMap.remove(stream.path());
+            Integer respRid = pathListMap.remove(stream.path().full());
             if (respRid != null) {
                 streamMap.remove(respRid);
             }
@@ -193,9 +193,9 @@ public class Responder extends LinkHandler {
                 stream = streamMap.remove(rid);
                 if (stream instanceof ListStream) {
                     listLock.writeLock().lock();
-                    String path = stream.path();
+                    ParsedPath path = stream.path();
                     if (path != null) {
-                        pathListMap.remove(stream.path());
+                        pathListMap.remove(stream.path().full());
                     }
                     listLock.writeLock().unlock();
                 } else if (stream != null) {

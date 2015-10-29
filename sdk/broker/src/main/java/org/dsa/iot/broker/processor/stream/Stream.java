@@ -13,18 +13,18 @@ import org.dsa.iot.dslink.util.json.JsonObject;
 public abstract class Stream {
 
     private final Responder responder;
-    private final String path;
+    private final ParsedPath path;
 
     public Stream(Responder responder, ParsedPath path) {
         this.responder = responder;
-        this.path = path.full();
+        this.path = path;
     }
 
     public final Responder responder() {
         return responder;
     }
 
-    public final String path() {
+    public final ParsedPath path() {
         return path;
     }
 

@@ -122,4 +122,15 @@ public class DSLinkNode extends BrokerNode {
         }
         return tmp;
     }
+
+    public JsonArray linkDataUpdate() {
+        JsonObject linkData = this.linkData;
+        if (linkData == null) {
+            return null;
+        }
+        JsonArray update = new JsonArray();
+        update.add("$linkData");
+        update.add(linkData);
+        return update;
+    }
 }
