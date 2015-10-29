@@ -49,7 +49,6 @@ public class DSLinkNode extends BrokerNode {
         this.dsId = cDsId;
         this.client = client;
         this.disconnected = null;
-        client.node(this);
         processor.initialize(this);
         if (client.handshake().isResponder()) {
             this.linkData = client.handshake().linkData();
@@ -65,7 +64,6 @@ public class DSLinkNode extends BrokerNode {
         if (client == this.client) {
             this.disconnected = TimeUtils.format(System.currentTimeMillis());
             this.client = null;
-            client.node(null);
             LOGGER.info("Client `{}` has disconnected", client.handshake().dsId());
         } else {
             if (client() != null && client().handshake().isResponder()

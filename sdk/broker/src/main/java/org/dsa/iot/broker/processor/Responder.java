@@ -9,7 +9,10 @@ import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
@@ -22,8 +25,6 @@ public class Responder extends LinkHandler {
 
     private final ReentrantReadWriteLock streamLock = new ReentrantReadWriteLock();
     private final Map<Integer, Stream> streamMap = new HashMap<>();
-
-    private final Map<Client, List<Stream>> reqStreams = new HashMap<>();
 
     public Responder(DSLinkNode node) {
         super(node);
@@ -124,7 +125,6 @@ public class Responder extends LinkHandler {
             }
         }
 
-        addRequesterStream(requester, stream);
         stream.add(requester, requesterRid);
         requester.processor().requester().addStream(requesterRid, stream);
     }
@@ -175,31 +175,11 @@ public class Responder extends LinkHandler {
         }
     }
 
-    @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
-    public void addRequesterStream(Client requester, Stream stream) {
-        List<Stream> streams;
-        synchronized (reqStreams) {
-            streams = reqStreams.get(requester);
-            if (streams == null) {
-                streams = new ArrayList<>();
-                reqStreams.put(requester, streams);
-            }
-        }
-        synchronized (streams) {
-            streams.add(stream);
-        }
-    }
-
-    @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
-    public void requesterDisconnected(Client requester) {
-        List<Stream> streams;
-        synchronized (reqStreams) {
-            streams = reqStreams.remove(requester);
-        }
+    public void requesterDisconnected(Client client) {
+        Requester req = client.node().processor().requester();
+        Map<Integer, Stream> streams = req.getReqStreams();
         if (streams != null) {
-            synchronized (streams) {
-                closeStream(requester, streams);
-            }
+            closeStream(client, streams.values());
         }
     }
 

@@ -30,10 +30,12 @@ public class BrokerTree {
     public void connected(Client client) {
         root.connected(client);
         root.propagateConnected(client);
+        client.node(downstream.getChild(client.handshake().name()));
     }
 
     public void disconnected(Client client) {
         root.disconnected(client);
         root.propagateDisconnected(client);
+        client.node(null);
     }
 }

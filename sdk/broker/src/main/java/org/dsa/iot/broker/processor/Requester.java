@@ -7,6 +7,7 @@ import org.dsa.iot.broker.processor.stream.Stream;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -30,6 +31,10 @@ public class Requester extends LinkHandler {
 
     public Stream removeStream(int rid) {
         return reqStreams.remove(rid);
+    }
+
+    protected Map<Integer, Stream> getReqStreams() {
+        return Collections.unmodifiableMap(reqStreams);
     }
 
     protected void processRequest(JsonObject request) {
