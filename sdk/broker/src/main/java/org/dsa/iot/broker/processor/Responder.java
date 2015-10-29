@@ -87,6 +87,12 @@ public class Responder extends LinkHandler {
                                 update.add(node().disconnected());
                                 updates.add(update);
                             }
+                            {
+                                JsonArray update = node().linkDataUpdate();
+                                if (update != null) {
+                                    updates.add(update);
+                                }
+                            }
                             resp.put("updates", updates);
                         }
 
