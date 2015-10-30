@@ -7,6 +7,7 @@ import org.dsa.iot.dslink.util.StringUtils;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
+import java.lang.ref.WeakReference;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -16,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class BrokerNode<T extends BrokerNode> {
 
     private final Map<String, T> children = new ConcurrentHashMap<>();
+    private final WeakReference<BrokerNode> parent;
     private final String profile;
     private final String name;
     private final String path;
@@ -29,6 +31,7 @@ public class BrokerNode<T extends BrokerNode> {
         }
         this.profile = profile;
         if (parent == null) {
+            this.parent = null;
             this.name = null;
             this.path = "";
         } else {
@@ -36,6 +39,7 @@ public class BrokerNode<T extends BrokerNode> {
             if (name == null || name.isEmpty()) {
                 throw new IllegalArgumentException("name");
             }
+            this.parent = new WeakReference<>(parent);
             this.name = name;
             this.path = parent.path + "/" + name;
         }
@@ -65,7 +69,13 @@ public class BrokerNode<T extends BrokerNode> {
     }
 
     public void accessible(boolean accessible) {
-        // TODO: notify list listeners if this flag changes
+        boolean post = this.accessible != accessible;
+        if (post && parent != null) {
+            BrokerNode parent = this.parent.get();
+            if (parent != null) {
+                parent.childUpdate(this, !accessible);
+            }
+        }
         this.accessible = accessible;
     }
 
@@ -86,27 +96,8 @@ public class BrokerNode<T extends BrokerNode> {
             return;
         }
         children.put(child.getName(), child);
-        if (pathSubs != null && pathSubs.size() > 0) {
-            JsonArray update = new JsonArray();
-            update.add(child.getName());
-            update.add(child.getChildUpdate());
-
-            JsonArray updates = new JsonArray();
-            updates.add(update);
-
-            JsonObject resp = new JsonObject();
-            resp.put("stream", StreamState.OPEN.getJsonName());
-            resp.put("updates", updates);
-
-
-            JsonArray resps = new JsonArray();
-            resps.add(resp);
-            JsonObject top = new JsonObject();
-            top.put("responses", resps);
-            for (Map.Entry<Client, Integer> sub : pathSubs.entrySet()) {
-                resp.put("rid", sub.getValue());
-                sub.getKey().write(top.encode());
-            }
+        if (child.accessible()) {
+            childUpdate(child, false);
         }
     }
 
@@ -152,6 +143,40 @@ public class BrokerNode<T extends BrokerNode> {
         JsonObject obj = new JsonObject();
         obj.put("$is", profile);
         return obj;
+    }
+
+    protected void childUpdate(BrokerNode node, boolean removed) {
+        if (node == null || pathSubs == null || pathSubs.size() <= 0) {
+            return;
+        }
+        if (pathSubs != null && pathSubs.size() > 0) {
+            JsonArray updates = new JsonArray();
+            if (removed) {
+                JsonObject update = new JsonObject();
+                update.put("name", node.getName());
+                update.put("change", "remove");
+                updates.add(update);
+            } else {
+                JsonArray update = new JsonArray();
+                update.add(node.getName());
+                update.add(node.getChildUpdate());
+                updates.add(update);
+            }
+
+            JsonObject resp = new JsonObject();
+            resp.put("stream", StreamState.OPEN.getJsonName());
+            resp.put("updates", updates);
+
+
+            JsonArray resps = new JsonArray();
+            resps.add(resp);
+            JsonObject top = new JsonObject();
+            top.put("responses", resps);
+            for (Map.Entry<Client, Integer> sub : pathSubs.entrySet()) {
+                resp.put("rid", sub.getValue());
+                sub.getKey().write(top.encode());
+            }
+        }
     }
 
     private synchronized void initializePathSubs() {

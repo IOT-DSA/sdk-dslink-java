@@ -38,7 +38,7 @@ public class ListResponse {
                 node = tmp;
             }
         }
-        return node.list(pp, client, rid);
+        return node.accessible() ? node.list(pp, client, rid) : null;
     }
 
     public static JsonObject generateRequest(ParsedPath path, int rid) {
