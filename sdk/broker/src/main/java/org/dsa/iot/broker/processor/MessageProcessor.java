@@ -16,14 +16,22 @@ public class MessageProcessor {
     public void initialize(DSLinkNode node) {
         DsaHandshake handshake = node.client().handshake();
         if (handshake.isResponder()) {
-            this.responder = new Responder(node);
+            if (responder == null) {
+                responder = new Responder(node);
+            }
         } else {
-            this.responder = null;
+            responder = null;
         }
         if (handshake.isRequester()) {
-            this.requester = new Requester(node);
+            if (requester == null) {
+                requester = new Requester(node);
+            }
         } else {
-            this.requester = null;
+            requester = null;
+        }
+
+        if (responder != null) {
+            responder.responderConnected();
         }
     }
 

@@ -166,7 +166,6 @@ public class BrokerNode<T extends BrokerNode> {
         resp.put("stream", StreamState.OPEN.getJsonName());
         resp.put("updates", updates);
 
-
         JsonArray resps = new JsonArray();
         resps.add(resp);
         JsonObject top = new JsonObject();

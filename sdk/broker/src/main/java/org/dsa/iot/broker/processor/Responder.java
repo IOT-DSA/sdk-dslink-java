@@ -126,6 +126,26 @@ public class Responder extends LinkHandler {
         requester.processor().requester().addStream(requesterRid, stream);
     }
 
+    public void moveListStream(ListStream stream, int rid) {
+        Integer orig;
+        listLock.writeLock().lock();
+        try {
+            orig = pathListMap.put(stream.path(), rid);
+        } finally {
+            listLock.writeLock().unlock();
+        }
+
+        streamLock.writeLock().lock();
+        try {
+            if (orig != null) {
+                streamMap.remove(orig);
+            }
+            streamMap.put(rid, stream);
+        } finally {
+            streamLock.writeLock().unlock();
+        }
+    }
+
     public void closeStream(Client requester, Stream stream) {
         closeStream(requester, Collections.singleton(stream));
     }
@@ -181,14 +201,20 @@ public class Responder extends LinkHandler {
         }
     }
 
+    public void responderConnected() {
+        for (Stream stream : streamSet) {
+            stream.responderConnected();
+        }
+    }
+
     public void responderDisconnected() {
-        streamLock.writeLock().lock();
+        streamLock.readLock().lock();
         try {
             for (Stream stream : streamMap.values()) {
                 stream.responderDisconnected();
             }
         } finally {
-            streamLock.writeLock().unlock();
+            streamLock.readLock().unlock();
         }
     }
 
