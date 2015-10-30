@@ -33,12 +33,18 @@ public class ListResponse {
             for (String name : split) {
                 BrokerNode tmp = node.getChild(name);
                 if (tmp == null) {
+                    if (!pp.isRemote()) {
+                        node = null;
+                    }
                     break;
                 }
                 node = tmp;
             }
         }
-        return node.accessible() ? node.list(pp, client, rid) : null;
+        if (node != null && node.accessible()) {
+            return node.list(pp, client, rid);
+        }
+        return null;
     }
 
     public static JsonObject generateRequest(ParsedPath path, int rid) {
