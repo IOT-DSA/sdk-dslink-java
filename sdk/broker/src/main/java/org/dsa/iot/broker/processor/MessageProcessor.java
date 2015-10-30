@@ -28,11 +28,21 @@ public class MessageProcessor {
     }
 
     public void processData(JsonObject data) {
+        Requester requester = this.requester;
         if (requester != null) {
             processRequests((JsonArray) data.get("requests"));
         }
+
+        Responder responder = this.responder;
         if (responder != null) {
             processResponses((JsonArray) data.get("responses"));
+        }
+    }
+
+    public void disconnected() {
+        Responder responder = this.responder;
+        if (responder != null) {
+            responder.responderDisconnected();
         }
     }
 

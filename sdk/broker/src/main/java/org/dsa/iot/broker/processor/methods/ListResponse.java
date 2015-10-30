@@ -4,6 +4,7 @@ import org.dsa.iot.broker.Broker;
 import org.dsa.iot.broker.node.BrokerNode;
 import org.dsa.iot.broker.server.client.Client;
 import org.dsa.iot.broker.utils.ParsedPath;
+import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
 /**
@@ -38,5 +39,18 @@ public class ListResponse {
             }
         }
         return node.list(pp, client, rid);
+    }
+
+    public static JsonObject generateRequest(ParsedPath path, int rid) {
+        JsonObject req = new JsonObject();
+        req.put("method", "list");
+        req.put("rid", rid);
+        req.put("path", path.base());
+
+        JsonArray reqs = new JsonArray();
+        reqs.add(req);
+        JsonObject top = new JsonObject();
+        top.put("requests", reqs);
+        return top;
     }
 }

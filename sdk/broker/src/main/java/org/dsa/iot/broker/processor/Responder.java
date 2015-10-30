@@ -2,6 +2,7 @@ package org.dsa.iot.broker.processor;
 
 import io.netty.util.internal.ConcurrentSet;
 import org.dsa.iot.broker.node.DSLinkNode;
+import org.dsa.iot.broker.processor.methods.ListResponse;
 import org.dsa.iot.broker.processor.stream.ListStream;
 import org.dsa.iot.broker.processor.stream.Stream;
 import org.dsa.iot.broker.server.client.Client;
@@ -58,16 +59,7 @@ public class Responder extends LinkHandler {
                         rid = responder.nextRid();
                         pathListMap.put(path, rid);
 
-                        JsonObject req = new JsonObject();
-                        req.put("method", "list");
-                        req.put("rid", rid);
-                        req.put("path", path.base());
-
-                        JsonArray reqs = new JsonArray();
-                        reqs.add(req);
-                        JsonObject top = new JsonObject();
-                        top.put("requests", reqs);
-
+                        JsonObject top = ListResponse.generateRequest(path, rid);
                         responder.write(top.encode());
                     } else if (path.base().equals("/")) {
                         JsonObject resp = new JsonObject();
@@ -186,6 +178,17 @@ public class Responder extends LinkHandler {
         Map<Integer, Stream> streams = req.getReqStreams();
         if (streams != null) {
             closeStream(client, streams.values());
+        }
+    }
+
+    public void responderDisconnected() {
+        streamLock.writeLock().lock();
+        try {
+            for (Stream stream : streamMap.values()) {
+                stream.responderDisconnected();
+            }
+        } finally {
+            streamLock.writeLock().unlock();
         }
     }
 

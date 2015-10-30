@@ -39,4 +39,8 @@ public abstract class Stream {
     public abstract boolean isEmpty();
 
     public abstract void dispatch(StreamState state, JsonObject response);
+
+    public abstract void responderConnected();
+
+    public abstract void responderDisconnected();
 }

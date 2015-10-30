@@ -2,6 +2,7 @@ package org.dsa.iot.broker.processor.stream;
 
 import org.dsa.iot.broker.node.DSLinkNode;
 import org.dsa.iot.broker.processor.Responder;
+import org.dsa.iot.broker.processor.methods.ListResponse;
 import org.dsa.iot.broker.server.client.Client;
 import org.dsa.iot.broker.utils.ParsedPath;
 import org.dsa.iot.dslink.methods.StreamState;
@@ -30,7 +31,13 @@ public class ListStream extends Stream {
 
     @Override
     public void add(Client requester, int requesterRid) {
-        reqMap.put(requester, requesterRid);
+        {
+            Integer old = reqMap.put(requester, requesterRid);
+            if (old != null) {
+                return;
+            }
+        }
+
         cacheLock.readLock().lock();
         try {
             if (cache.isEmpty()) {
@@ -125,6 +132,46 @@ public class ListStream extends Stream {
                 client.processor().requester().removeStream(rid);
             }
 
+            response.put("rid", rid);
+            client.write(top.encode());
+        }
+    }
+
+    @Override
+    public void responderConnected() {
+        Client client = responder().client();
+        JsonObject top = ListResponse.generateRequest(path(), client.nextRid());
+        client.write(top.encode());
+    }
+
+    @Override
+    public void responderDisconnected() {
+        cacheLock.writeLock().lock();
+        try {
+            cache.clear();
+        } finally {
+            cacheLock.writeLock().unlock();
+        }
+
+        JsonObject response = new JsonObject();
+        {
+            JsonArray updates = new JsonArray();
+            {
+                JsonArray update = new JsonArray();
+                update.add("$disconnectedTs");
+                update.add(responder().node().disconnected());
+                updates.add(update);
+            }
+            response.put("updates", updates);
+        }
+
+        JsonArray resps = new JsonArray();
+        resps.add(response);
+        JsonObject top = new JsonObject();
+        top.put("responses", resps);
+        for (Map.Entry<Client, Integer> entry : reqMap.entrySet()) {
+            Client client = entry.getKey();
+            int rid = entry.getValue();
             response.put("rid", rid);
             client.write(top.encode());
         }
