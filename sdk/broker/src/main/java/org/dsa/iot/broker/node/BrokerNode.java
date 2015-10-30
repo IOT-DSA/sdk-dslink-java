@@ -149,33 +149,31 @@ public class BrokerNode<T extends BrokerNode> {
         if (node == null || pathSubs == null || pathSubs.size() <= 0) {
             return;
         }
-        if (pathSubs != null && pathSubs.size() > 0) {
-            JsonArray updates = new JsonArray();
-            if (removed) {
-                JsonObject update = new JsonObject();
-                update.put("name", node.getName());
-                update.put("change", "remove");
-                updates.add(update);
-            } else {
-                JsonArray update = new JsonArray();
-                update.add(node.getName());
-                update.add(node.getChildUpdate());
-                updates.add(update);
-            }
+        JsonArray updates = new JsonArray();
+        if (removed) {
+            JsonObject update = new JsonObject();
+            update.put("name", node.getName());
+            update.put("change", "remove");
+            updates.add(update);
+        } else {
+            JsonArray update = new JsonArray();
+            update.add(node.getName());
+            update.add(node.getChildUpdate());
+            updates.add(update);
+        }
 
-            JsonObject resp = new JsonObject();
-            resp.put("stream", StreamState.OPEN.getJsonName());
-            resp.put("updates", updates);
+        JsonObject resp = new JsonObject();
+        resp.put("stream", StreamState.OPEN.getJsonName());
+        resp.put("updates", updates);
 
 
-            JsonArray resps = new JsonArray();
-            resps.add(resp);
-            JsonObject top = new JsonObject();
-            top.put("responses", resps);
-            for (Map.Entry<Client, Integer> sub : pathSubs.entrySet()) {
-                resp.put("rid", sub.getValue());
-                sub.getKey().write(top.encode());
-            }
+        JsonArray resps = new JsonArray();
+        resps.add(resp);
+        JsonObject top = new JsonObject();
+        top.put("responses", resps);
+        for (Map.Entry<Client, Integer> sub : pathSubs.entrySet()) {
+            resp.put("rid", sub.getValue());
+            sub.getKey().write(top.encode());
         }
     }
 
