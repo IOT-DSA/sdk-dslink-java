@@ -89,6 +89,7 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
     public void channelActive(ChannelHandlerContext ctx) {
         this.ctx = ctx;
         write("{}");
+        broker.getClientManager().clientConnected(this);
     }
 
     @Override

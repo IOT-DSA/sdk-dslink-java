@@ -109,7 +109,6 @@ public class WsServerHandler extends SimpleChannelInboundHandler<FullHttpRequest
             ctx.pipeline().addLast(client);
             ctx.pipeline().remove(WsServerHandler.class);
             handshake.handshake(ctx.channel(), req);
-            broker.getClientManager().clientConnected(client);
             client.channelActive(ctx);
         }
     }
