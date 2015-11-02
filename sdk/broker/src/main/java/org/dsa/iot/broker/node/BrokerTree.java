@@ -1,6 +1,7 @@
 package org.dsa.iot.broker.node;
 
 import org.dsa.iot.broker.server.client.Client;
+import org.dsa.iot.broker.utils.ParsedPath;
 
 /**
  * @author Samuel Grenier
@@ -21,6 +22,24 @@ public class BrokerTree {
 
     public BrokerNode getRoot() {
         return root;
+    }
+
+    public BrokerNode getNode(ParsedPath path) {
+        BrokerNode<?> node = getRoot();
+        {
+            String[] split = path.split();
+            for (String name : split) {
+                BrokerNode tmp = node.getChild(name);
+                if (tmp == null) {
+                    if (!path.isRemote()) {
+                        node = null;
+                    }
+                    break;
+                }
+                node = tmp;
+            }
+        }
+        return node != null && node.accessible() ? node : null;
     }
 
     public String initDslink(String name, String dsId) {

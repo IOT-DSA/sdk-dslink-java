@@ -25,26 +25,11 @@ public class ListResponse extends Response {
         this.path = path;
     }
 
+    @Override
     public JsonObject getResponse(Client client, int rid) {
         ParsedPath pp = ParsedPath.parse(broker.getDownstreamName(), path);
-        BrokerNode<?> node = broker.getTree().getRoot();
-        {
-            String[] split = pp.split();
-            for (String name : split) {
-                BrokerNode tmp = node.getChild(name);
-                if (tmp == null) {
-                    if (!pp.isRemote()) {
-                        node = null;
-                    }
-                    break;
-                }
-                node = tmp;
-            }
-        }
-        if (node != null && node.accessible()) {
-            return node.list(pp, client, rid);
-        }
-        return null;
+        BrokerNode<?> node = broker.getTree().getNode(pp);
+        return node != null ? node.list(pp, client, rid) : null;
     }
 
     public static JsonObject generateRequest(ParsedPath path, int rid) {
