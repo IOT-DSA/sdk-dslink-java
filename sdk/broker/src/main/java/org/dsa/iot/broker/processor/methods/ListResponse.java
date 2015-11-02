@@ -10,7 +10,7 @@ import org.dsa.iot.dslink.util.json.JsonObject;
 /**
  * @author Samuel Grenier
  */
-public class ListResponse {
+public class ListResponse extends Response {
 
     private final Broker broker;
     private final String path;
