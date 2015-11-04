@@ -141,7 +141,7 @@ public class ListStream extends Stream {
     public void responderConnected() {
         Client client = responder().client();
         int rid = client.nextRid();
-        responder().moveListStream(this, rid);
+        responder().stream().list().move(this, rid);
         JsonObject top = ListResponse.generateRequest(path(), rid);
         client.write(top.encode());
     }

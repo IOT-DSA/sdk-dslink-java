@@ -99,7 +99,7 @@ public class DSLinkNode extends BrokerNode {
     public JsonObject list(ParsedPath pp, Client requester, int rid) {
         if (pp.isRemote()) {
             Responder responder = processor().responder();
-            responder.addListStream(pp, requester, rid);
+            responder.stream().list().add(pp, requester, rid);
         }
         return null;
     }

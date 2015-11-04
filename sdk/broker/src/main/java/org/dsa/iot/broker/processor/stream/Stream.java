@@ -29,7 +29,7 @@ public abstract class Stream {
     }
 
     public void close(Requester requester) {
-        responder().closeStream(requester.client(), this);
+        responder().stream().close(requester.client(), this);
     }
 
     public abstract void add(Client requester, int requesterRid);
