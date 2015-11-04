@@ -17,7 +17,9 @@ public class TimeParser {
 
     public static long parse(String time) {
         try {
-            if (time.matches(".+[+|-]\\d+:\\d+")) {
+            if (time.endsWith("Z")) {
+                time = time.substring(0, time.length() - 1) + "-0000";
+            } else if (time.matches(".+[+|-]\\d+:\\d+")) {
                 StringBuilder b = new StringBuilder(time);
                 b.deleteCharAt(time.lastIndexOf(":"));
                 time = b.toString();
