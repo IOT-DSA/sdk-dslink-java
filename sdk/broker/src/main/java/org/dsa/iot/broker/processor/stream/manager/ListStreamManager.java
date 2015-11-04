@@ -1,4 +1,4 @@
-package org.dsa.iot.broker.processor.manager;
+package org.dsa.iot.broker.processor.stream.manager;
 
 import org.dsa.iot.broker.node.DSLinkNode;
 import org.dsa.iot.broker.processor.methods.ListResponse;

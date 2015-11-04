@@ -1,4 +1,4 @@
-package org.dsa.iot.broker.processor.manager;
+package org.dsa.iot.broker.processor.stream.manager;
 
 import io.netty.util.internal.ConcurrentSet;
 import org.dsa.iot.broker.processor.Responder;
