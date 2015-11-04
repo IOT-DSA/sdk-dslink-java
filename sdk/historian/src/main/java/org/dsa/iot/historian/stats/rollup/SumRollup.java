@@ -16,7 +16,10 @@ public class SumRollup extends Rollup {
 
     @Override
     public void update(Value value, long ts) {
-        sum += value.getNumber().doubleValue();
+        Number number = value.getNumber();
+        if (number != null) {
+            sum += number.doubleValue();
+        }
     }
 
     @Override

@@ -20,13 +20,18 @@ public class DeltaRollup extends Rollup {
 
     @Override
     public void update(Value value, long ts) {
+        Number number = value.getNumber();
+        if (number == null) {
+            return;
+        }
+
         if (start == null) {
-            start = value.getNumber();
+            start = number;
         }
         if (previousStart == null) {
             previousStart = start;
         }
-        end = value.getNumber();
+        end = number;
     }
 
     @Override

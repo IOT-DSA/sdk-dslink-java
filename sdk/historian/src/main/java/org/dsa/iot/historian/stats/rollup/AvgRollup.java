@@ -19,9 +19,14 @@ public class AvgRollup extends Rollup {
     @Override
     public void update(Value value, long ts) {
         count++;
-        total += value.getNumber().doubleValue();
+
+        Number number = value.getNumber();
+        if (number != null) {
+            total += number.doubleValue();
+        }
     }
 
+    @Override
     public Value getValue() {
         double avg = total / count;
         return new Value(avg);
