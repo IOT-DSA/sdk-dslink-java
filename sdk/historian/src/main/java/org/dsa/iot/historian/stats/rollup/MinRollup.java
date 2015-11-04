@@ -19,7 +19,7 @@ public class MinRollup extends Rollup {
         Number num = value.getNumber();
         if (number == null) {
             number = num;
-        } else {
+        } else if (num != null) {
             double a = num.doubleValue();
             double b = number.doubleValue();
             number = Math.min(a, b);
