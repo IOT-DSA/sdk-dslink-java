@@ -37,7 +37,8 @@ public class Requester extends LinkHandler {
         return Collections.unmodifiableMap(reqStreams);
     }
 
-    protected void processRequest(JsonObject request) {
+    @Override
+    protected void process(JsonObject request) {
         final Broker broker = client().broker();
         final String method = request.get("method");
         final int rid = request.get("rid");

@@ -40,7 +40,8 @@ public class Responder extends LinkHandler {
         streamManager.responderDisconnected();
     }
 
-    protected void processResponse(JsonObject response) {
+    @Override
+    protected void process(JsonObject response) {
         Integer rid = response.get("rid");
         StreamState state = StreamState.toEnum((String) response.get("stream"));
         Stream stream;

@@ -65,7 +65,7 @@ public class MessageProcessor {
     protected void processRequests(JsonArray requests) {
         if (requests != null) {
             for (Object obj : requests) {
-                requester.processRequest((JsonObject) obj);
+                requester.process((JsonObject) obj);
             }
         }
     }
@@ -73,7 +73,7 @@ public class MessageProcessor {
     protected void processResponses(JsonArray responses) {
         if (responses != null) {
             for (Object obj : responses) {
-                responder.processResponse((JsonObject) obj);
+                responder.process((JsonObject) obj);
             }
         }
     }
