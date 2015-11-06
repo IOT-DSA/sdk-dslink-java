@@ -76,7 +76,7 @@ public class DsaHandshake {
 
         this.name = broker.getTree().initDslink(name, dsId);
         if (isResponder) {
-            obj.put("path", "/" + broker.getDownstreamName() + "/" + name);
+            obj.put("path", "/" + broker.downstream() + "/" + name);
         }
         obj.put("wsUri", "/ws");
 

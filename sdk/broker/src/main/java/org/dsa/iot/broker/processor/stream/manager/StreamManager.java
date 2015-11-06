@@ -22,6 +22,7 @@ public class StreamManager {
     private final Set<Stream> streamSet = new ConcurrentSet<>();
 
     private final ListStreamManager lsm = new ListStreamManager(this);
+    private final SubStreamManager ssm = new SubStreamManager(this);
     private final WeakReference<Responder> responder;
 
     public StreamManager(Responder responder) {
@@ -31,6 +32,10 @@ public class StreamManager {
 
     public ListStreamManager list() {
         return lsm;
+    }
+
+    public SubStreamManager sub() {
+        return ssm;
     }
 
     public void close(Client requester, Stream stream) {

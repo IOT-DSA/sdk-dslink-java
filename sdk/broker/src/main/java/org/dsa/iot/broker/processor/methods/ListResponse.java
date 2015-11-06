@@ -27,7 +27,7 @@ public class ListResponse extends Response {
 
     @Override
     public JsonObject getResponse(Client client, int rid) {
-        ParsedPath pp = ParsedPath.parse(broker.getDownstreamName(), path);
+        ParsedPath pp = ParsedPath.parse(broker.downstream(), path);
         BrokerNode<?> node = broker.getTree().getNode(pp);
         return node != null ? node.list(pp, client, rid) : null;
     }

@@ -1,5 +1,6 @@
 package org.dsa.iot.broker.node;
 
+import org.dsa.iot.broker.processor.stream.SubStream;
 import org.dsa.iot.broker.server.client.Client;
 import org.dsa.iot.broker.utils.ParsedPath;
 import org.dsa.iot.dslink.methods.StreamState;
@@ -103,6 +104,10 @@ public class BrokerNode<T extends BrokerNode> {
 
     public T getChild(String name) {
         return children.get(name);
+    }
+
+    public SubStream subscribe(ParsedPath path, Client requester, int sid) {
+        throw new UnsupportedOperationException();
     }
 
     public JsonObject list(ParsedPath path, Client requester, int rid) {

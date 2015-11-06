@@ -17,7 +17,6 @@ public class LogManager {
      *
      * @param logBridge Custom log manager to set.
      */
-    @SuppressWarnings("unused")
     public static void setBridge(LogBridge logBridge) {
         if (logBridge == null) {
             throw new NullPointerException("logBridge");
@@ -28,7 +27,7 @@ public class LogManager {
 
     private static LogBridge getBridge() {
         if (instance == null) {
-            instance = new LoggingBridge();
+            setBridge(new LoggingBridge());
         }
         return instance;
     }

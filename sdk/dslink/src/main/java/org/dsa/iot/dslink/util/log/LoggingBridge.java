@@ -44,6 +44,7 @@ public class LoggingBridge implements LogBridge {
         this.level = level;
     }
 
+    @Override
     public LogLevel getLevel() {
         return level;
     }

@@ -76,7 +76,7 @@ public class Broker {
         return tree;
     }
 
-    public String getDownstreamName() {
+    public String downstream() {
         if (downstreamName != null) {
             return downstreamName;
         }
@@ -89,7 +89,7 @@ public class Broker {
             String err = "Bad downstream name: " + downstreamName;
             throw new IllegalStateException(err);
         }
-        return getDownstreamName();
+        return downstream();
     }
 
     protected void addShutdownHook() {
@@ -126,7 +126,7 @@ public class Broker {
         BrokerTree bt = new BrokerTree();
 
         Broker b = new Broker(conf, cm, bt);
-        bt.initialize(b.getDownstreamName());
+        bt.initialize(b.downstream());
         b.addShutdownHook();
         return b;
     }

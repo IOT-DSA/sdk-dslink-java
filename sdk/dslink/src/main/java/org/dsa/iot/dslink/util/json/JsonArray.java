@@ -45,6 +45,11 @@ public class JsonArray implements Iterable<Object> {
         return (T) Json.update(list.get(index));
     }
 
+    public <T> T set(int index, Object value) {
+        value = Json.checkAndUpdate(value);
+        return (T) list.set(index, value);
+    }
+
     public JsonArray add(Object value) {
         value = Json.checkAndUpdate(value);
         list.add(value);

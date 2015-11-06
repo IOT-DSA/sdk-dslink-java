@@ -1,14 +1,20 @@
 package org.dsa.iot.broker.processor;
 
 import org.dsa.iot.broker.Broker;
+import org.dsa.iot.broker.node.BrokerNode;
 import org.dsa.iot.broker.node.DSLinkNode;
 import org.dsa.iot.broker.processor.methods.ListResponse;
 import org.dsa.iot.broker.processor.stream.Stream;
+import org.dsa.iot.broker.processor.stream.SubStream;
+import org.dsa.iot.broker.utils.ParsedPath;
+import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -17,16 +23,15 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Requester extends LinkHandler {
 
     private final Map<Integer, Stream> reqStreams = new ConcurrentHashMap<>();
+    private final Map<Integer, SubStream> subStreams = new HashMap<>();
+    private final Map<ParsedPath, Integer> subPathSids = new HashMap<>();
 
     public Requester(DSLinkNode node) {
         super(node);
     }
 
     public void addStream(int rid, Stream stream) {
-        if (stream == null) {
-            throw new NullPointerException("stream");
-        }
-        reqStreams.put(rid, stream);
+        reqStreams.put(rid, Objects.requireNonNull(stream, "stream"));
     }
 
     public Stream removeStream(int rid) {
@@ -64,9 +69,42 @@ public class Requester extends LinkHandler {
                 break;
             }
             case "subscribe": {
+                JsonArray paths = request.get("paths");
+                for (Object object : paths) {
+                    JsonObject obj = (JsonObject) object;
+                    String p = obj.get("path");
+                    ParsedPath path = ParsedPath.parse(broker.downstream(), p);
+                    Integer sid = obj.get("sid");
+
+                    BrokerNode node = broker.getTree().getNode(path);
+                    SubStream stream = node.subscribe(path, client(), sid);
+
+                    synchronized (subPathSids) {
+                        Integer prev = subPathSids.put(path, sid);
+                        if (prev != null) {
+                            subStreams.remove(prev);
+                        }
+                        subStreams.put(sid, stream);
+                    }
+                }
+                writeClosed(rid);
                 break;
             }
             case "unsubscribe": {
+                JsonArray sids = request.get("sids");
+                for (Object object : sids) {
+                    Integer sid = (Integer) object;
+
+                    synchronized (subPathSids) {
+                        SubStream stream = subStreams.remove(sid);
+                        if (stream != null) {
+                            subPathSids.remove(stream.path());
+                            Responder r = stream.responder();
+                            r.stream().sub().unsubscribe(stream, client());
+                        }
+                    }
+                }
+                writeClosed(rid);
                 break;
             }
             case "invoke": {
@@ -86,5 +124,18 @@ public class Requester extends LinkHandler {
 
             client().write(top.encode());
         }
+    }
+
+    private void writeClosed(int rid) {
+        JsonObject resp = new JsonObject();
+        resp.put("rid", rid);
+        resp.put("stream", StreamState.CLOSED.getJsonName());
+
+        JsonArray resps = new JsonArray();
+        resps.add(resp);
+
+        JsonObject top = new JsonObject();
+        top.put("responses", resps);
+        client().write(top.encode());
     }
 }

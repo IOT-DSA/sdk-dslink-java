@@ -2,6 +2,7 @@ package org.dsa.iot.broker.node;
 
 import org.dsa.iot.broker.processor.MessageProcessor;
 import org.dsa.iot.broker.processor.Responder;
+import org.dsa.iot.broker.processor.stream.SubStream;
 import org.dsa.iot.broker.server.client.Client;
 import org.dsa.iot.broker.utils.ParsedPath;
 import org.dsa.iot.dslink.util.TimeUtils;
@@ -96,10 +97,19 @@ public class DSLinkNode extends BrokerNode {
     }
 
     @Override
-    public JsonObject list(ParsedPath pp, Client requester, int rid) {
-        if (pp.isRemote()) {
+    public SubStream subscribe(ParsedPath path, Client requester, int sid) {
+        if (path.isRemote()) {
             Responder responder = processor().responder();
-            responder.stream().list().add(pp, requester, rid);
+            return responder.stream().sub().subscribe(path, requester, sid);
+        }
+        return null;
+    }
+
+    @Override
+    public JsonObject list(ParsedPath path, Client requester, int rid) {
+        if (path.isRemote()) {
+            Responder responder = processor().responder();
+            responder.stream().list().add(path, requester, rid);
         }
         return null;
     }
