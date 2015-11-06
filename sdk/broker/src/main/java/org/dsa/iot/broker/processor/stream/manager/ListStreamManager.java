@@ -58,7 +58,7 @@ public class ListStreamManager {
                     Responder responder = manager().responder();
                     Client client = responder.client();
                     if (client != null) {
-                        rid = manager().responder().nextRid();
+                        rid = responder.nextRid();
                         pathListMap.put(path, rid);
 
                         JsonObject top = ListResponse.generateRequest(path, rid);
@@ -78,11 +78,11 @@ public class ListStreamManager {
                             {
                                 JsonArray update = new JsonArray();
                                 update.add("$disconnectedTs");
-                                update.add(manager().responder().node().disconnected());
+                                update.add(responder.node().disconnected());
                                 updates.add(update);
                             }
                             {
-                                JsonArray update = manager().responder().node().linkDataUpdate();
+                                JsonArray update = responder.node().linkDataUpdate();
                                 if (update != null) {
                                     updates.add(update);
                                 }
