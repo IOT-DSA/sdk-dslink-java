@@ -139,11 +139,10 @@ public class ListStream extends Stream {
 
     @Override
     public void responderConnected() {
-        Client client = responder().client();
-        int rid = client.nextRid();
+        int rid = responder().nextRid();
         responder().stream().list().move(this, rid);
         JsonObject top = ListResponse.generateRequest(path(), rid);
-        client.write(top.encode());
+        responder().client().write(top.encode());
     }
 
     @Override

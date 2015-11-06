@@ -13,8 +13,6 @@ import org.dsa.iot.dslink.util.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 /**
  * @author Samuel Grenier
  */
@@ -22,7 +20,6 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Client.class);
     private final DsaHandshake handshake;
-    private final AtomicInteger rid;
     private final Broker broker;
 
     private ChannelHandlerContext ctx;
@@ -36,15 +33,6 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
         }
         this.broker = broker;
         this.handshake = handshake;
-        if (handshake.isResponder()) {
-            this.rid = new AtomicInteger();
-        } else {
-            this.rid = null;
-        }
-    }
-
-    public int nextRid() {
-        return rid.incrementAndGet();
     }
 
     public void node(DSLinkNode node) {
