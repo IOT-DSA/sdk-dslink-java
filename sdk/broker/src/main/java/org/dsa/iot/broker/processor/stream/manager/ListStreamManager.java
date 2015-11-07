@@ -2,11 +2,11 @@ package org.dsa.iot.broker.processor.stream.manager;
 
 import org.dsa.iot.broker.node.DSLinkNode;
 import org.dsa.iot.broker.processor.Responder;
-import org.dsa.iot.broker.processor.methods.ListResponse;
 import org.dsa.iot.broker.processor.stream.ListStream;
 import org.dsa.iot.broker.processor.stream.Stream;
 import org.dsa.iot.broker.server.client.Client;
 import org.dsa.iot.broker.utils.ParsedPath;
+import org.dsa.iot.broker.utils.RequestGenerator;
 import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
@@ -61,7 +61,7 @@ public class ListStreamManager {
                         rid = responder.nextRid();
                         pathListMap.put(path, rid);
 
-                        JsonObject top = ListResponse.generateRequest(path, rid);
+                        JsonObject top = RequestGenerator.list(path, rid);
                         client.write(top.encode());
                     } else if (path.base().equals("/")) {
                         JsonObject resp = new JsonObject();

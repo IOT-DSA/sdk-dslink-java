@@ -2,9 +2,9 @@ package org.dsa.iot.broker.processor.stream;
 
 import org.dsa.iot.broker.node.DSLinkNode;
 import org.dsa.iot.broker.processor.Responder;
-import org.dsa.iot.broker.processor.methods.ListResponse;
 import org.dsa.iot.broker.server.client.Client;
 import org.dsa.iot.broker.utils.ParsedPath;
+import org.dsa.iot.broker.utils.RequestGenerator;
 import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
@@ -141,7 +141,7 @@ public class ListStream extends Stream {
     public void responderConnected() {
         int rid = responder().nextRid();
         responder().stream().list().move(this, rid);
-        JsonObject top = ListResponse.generateRequest(path(), rid);
+        JsonObject top = RequestGenerator.list(path(), rid);
         responder().client().write(top.encode());
     }
 

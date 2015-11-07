@@ -4,6 +4,7 @@ import org.dsa.iot.broker.processor.Responder;
 import org.dsa.iot.broker.processor.stream.SubStream;
 import org.dsa.iot.broker.server.client.Client;
 import org.dsa.iot.broker.utils.ParsedPath;
+import org.dsa.iot.broker.utils.RequestGenerator;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
@@ -27,50 +28,33 @@ public class SubStreamManager {
     }
 
     public SubStream subscribe(ParsedPath path, Client requester, int sid) {
-        Integer responderSid;
+        Integer respSid;
         SubStream stream = null;
 
         subLock.readLock().lock();
         try {
-            responderSid = subPaths.get(path);
-            if (responderSid != null) {
-                stream = subStreams.get(responderSid);
+            respSid = subPaths.get(path);
+            if (respSid != null) {
+                stream = subStreams.get(respSid);
             }
         } finally {
             subLock.readLock().unlock();
         }
 
         JsonObject top = null;
-        if (responderSid == null) {
+        if (respSid == null) {
             subLock.writeLock().lock();
             try {
-                responderSid = subPaths.get(path);
-                if (responderSid != null) {
-                    stream = subStreams.get(responderSid);
+                respSid = subPaths.get(path);
+                if (respSid != null) {
+                    stream = subStreams.get(respSid);
                 } else {
-                    JsonObject req = new JsonObject();
-                    req.put("rid", responder().nextRid());
-                    req.put("method", "subscribe");
-                    {
-                        JsonArray paths = new JsonArray();
-                        {
-                            responderSid = responder().nextSid();
-                            subPaths.put(path, responderSid);
-                            JsonObject obj = new JsonObject();
-                            obj.put("path", path.base());
-                            obj.put("sid", responderSid);
-                            paths.add(obj);
-                        }
-                        req.put("paths", paths);
-                    }
-
-                    JsonArray reqs = new JsonArray();
-                    reqs.add(req);
-                    top = new JsonObject();
-                    top.put("requests", reqs);
-
+                    int rid = responder().nextRid();
+                    respSid = responder().nextSid();
+                    subPaths.put(path, respSid);
+                    top = RequestGenerator.subscribe(path, respSid, rid);
                     stream = new SubStream(responder(), path);
-                    subStreams.put(responderSid, stream);
+                    subStreams.put(respSid, stream);
                 }
             } finally {
                 subLock.writeLock().unlock();
@@ -105,18 +89,8 @@ public class SubStreamManager {
                 subLock.writeLock().unlock();
             }
 
-            JsonObject req = new JsonObject();
-            req.put("rid", responder().nextRid());
-            req.put("method", "unsubscribe");
-            JsonArray sids = new JsonArray();
-            sids.add(sid);
-            req.put("sids", sids);
-
-            JsonArray reqs = new JsonArray();
-            reqs.add(req);
-
-            JsonObject top = new JsonObject();
-            top.put("requests", reqs);
+            int rid = responder().nextRid();
+            JsonObject top = RequestGenerator.unsubscribe(rid, sid);
             responder().client().write(top.encode());
         }
     }

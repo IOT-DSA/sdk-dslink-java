@@ -3,7 +3,6 @@ package org.dsa.iot.broker.processor;
 import org.dsa.iot.broker.Broker;
 import org.dsa.iot.broker.node.BrokerNode;
 import org.dsa.iot.broker.node.DSLinkNode;
-import org.dsa.iot.broker.processor.methods.ListResponse;
 import org.dsa.iot.broker.processor.stream.Stream;
 import org.dsa.iot.broker.processor.stream.SubStream;
 import org.dsa.iot.broker.utils.ParsedPath;
@@ -51,8 +50,9 @@ public class Requester extends LinkHandler {
         switch (method) {
             case "list": {
                 String path = request.get("path");
-                ListResponse list = new ListResponse(broker, path);
-                resp = list.getResponse(client(), rid);
+                ParsedPath pp = ParsedPath.parse(broker.downstream(), path);
+                BrokerNode<?> node = broker.getTree().getNode(pp);
+                resp = node != null ? node.list(pp, client(), rid) : null;
                 break;
             }
             case "set": {
@@ -87,7 +87,7 @@ public class Requester extends LinkHandler {
                         subStreams.put(sid, stream);
                     }
                 }
-                writeClosed(rid);
+                resp = closed();
                 break;
             }
             case "unsubscribe": {
@@ -104,7 +104,7 @@ public class Requester extends LinkHandler {
                         }
                     }
                 }
-                writeClosed(rid);
+                resp = closed();
                 break;
             }
             case "invoke": {
@@ -126,16 +126,9 @@ public class Requester extends LinkHandler {
         }
     }
 
-    private void writeClosed(int rid) {
+    private JsonObject closed() {
         JsonObject resp = new JsonObject();
-        resp.put("rid", rid);
         resp.put("stream", StreamState.CLOSED.getJsonName());
-
-        JsonArray resps = new JsonArray();
-        resps.add(resp);
-
-        JsonObject top = new JsonObject();
-        top.put("responses", resps);
-        client().write(top.encode());
+        return resp;
     }
 }
