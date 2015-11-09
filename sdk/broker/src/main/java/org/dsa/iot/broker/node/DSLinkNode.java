@@ -2,7 +2,7 @@ package org.dsa.iot.broker.node;
 
 import org.dsa.iot.broker.processor.MessageProcessor;
 import org.dsa.iot.broker.processor.Responder;
-import org.dsa.iot.broker.processor.stream.InvokeStream;
+import org.dsa.iot.broker.processor.stream.GenericStream;
 import org.dsa.iot.broker.processor.stream.SubStream;
 import org.dsa.iot.broker.processor.stream.manager.StreamManager;
 import org.dsa.iot.broker.server.client.Client;
@@ -117,13 +117,13 @@ public class DSLinkNode extends BrokerNode {
     }
 
     @Override
-    public InvokeStream invoke(ParsedPath path,
-                       Client requester,
-                       int rid,
-                       JsonObject params,
-                       String permit) {
+    public GenericStream invoke(ParsedPath path,
+                                Client requester,
+                                int rid,
+                                JsonObject params,
+                                String permit) {
         Responder responder = processor().responder();
-        InvokeStream stream = new InvokeStream(responder, path);
+        GenericStream stream = new GenericStream(responder, path);
         stream.add(requester, rid);
         int responderRid = responder.nextRid();
         responder.stream().addIfNull(responderRid, stream);
@@ -135,6 +135,62 @@ public class DSLinkNode extends BrokerNode {
         if (params != null) {
             req.put("params", params);
         }
+        if (permit != null) {
+            req.put("permit", permit);
+        }
+
+        JsonArray reqs = new JsonArray();
+        reqs.add(req);
+        JsonObject top = new JsonObject();
+        top.put("requests", reqs);
+        client().write(top.encode());
+        return stream;
+    }
+
+    @Override
+    public GenericStream set(ParsedPath path,
+                    Client requester,
+                    int rid,
+                    Object value,
+                    String permit) {
+        Responder responder = processor().responder();
+        GenericStream stream = new GenericStream(responder, path);
+        stream.add(requester, rid);
+        int responderRid = responder.nextRid();
+        responder.stream().addIfNull(responderRid, stream);
+
+        JsonObject req = new JsonObject();
+        req.put("rid", responderRid);
+        req.put("path", path.base());
+        req.put("method", "set");
+        req.put("value", value);
+        if (permit != null) {
+            req.put("permit", permit);
+        }
+
+        JsonArray reqs = new JsonArray();
+        reqs.add(req);
+        JsonObject top = new JsonObject();
+        top.put("requests", reqs);
+        client().write(top.encode());
+        return stream;
+    }
+
+    @Override
+    public GenericStream remove(ParsedPath path,
+                             Client requester,
+                             int rid,
+                             String permit) {
+        Responder responder = processor().responder();
+        GenericStream stream = new GenericStream(responder, path);
+        stream.add(requester, rid);
+        int responderRid = responder.nextRid();
+        responder.stream().addIfNull(responderRid, stream);
+
+        JsonObject req = new JsonObject();
+        req.put("rid", responderRid);
+        req.put("path", path.base());
+        req.put("method", "remove");
         if (permit != null) {
             req.put("permit", permit);
         }

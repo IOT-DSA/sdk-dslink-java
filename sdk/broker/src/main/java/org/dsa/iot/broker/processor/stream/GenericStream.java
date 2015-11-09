@@ -10,12 +10,12 @@ import org.dsa.iot.dslink.util.json.JsonObject;
 /**
  * @author Samuel Grenier
  */
-public class InvokeStream extends Stream {
+public class GenericStream extends Stream {
 
     private Client requester;
     private int rid;
 
-    public InvokeStream(Responder responder, ParsedPath path) {
+    public GenericStream(Responder responder, ParsedPath path) {
         super(responder, path);
     }
 

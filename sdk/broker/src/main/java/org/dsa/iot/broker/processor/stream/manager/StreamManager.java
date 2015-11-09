@@ -2,7 +2,7 @@ package org.dsa.iot.broker.processor.stream.manager;
 
 import io.netty.util.internal.ConcurrentSet;
 import org.dsa.iot.broker.processor.Responder;
-import org.dsa.iot.broker.processor.stream.InvokeStream;
+import org.dsa.iot.broker.processor.stream.GenericStream;
 import org.dsa.iot.broker.processor.stream.ListStream;
 import org.dsa.iot.broker.processor.stream.Stream;
 import org.dsa.iot.broker.server.client.Client;
@@ -153,7 +153,7 @@ public class StreamManager {
         if (stream instanceof ListStream) {
             lsm.remove(stream);
         } else if (stream != null
-                    && !(stream instanceof InvokeStream)) {
+                    && !(stream instanceof GenericStream)) {
             String name = stream.getClass().getName();
             throw new IllegalStateException("Unhandled class: " + name);
         }

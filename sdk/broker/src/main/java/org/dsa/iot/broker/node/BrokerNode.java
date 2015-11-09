@@ -1,6 +1,6 @@
 package org.dsa.iot.broker.node;
 
-import org.dsa.iot.broker.processor.stream.InvokeStream;
+import org.dsa.iot.broker.processor.stream.GenericStream;
 import org.dsa.iot.broker.processor.stream.SubStream;
 import org.dsa.iot.broker.server.client.Client;
 import org.dsa.iot.broker.utils.ParsedPath;
@@ -115,11 +115,26 @@ public class BrokerNode<T extends BrokerNode> {
         throw new UnsupportedOperationException();
     }
 
-    public InvokeStream invoke(ParsedPath path,
-                               Client requester,
-                               int rid,
-                               JsonObject params,
-                               String permit) {
+    public GenericStream set(ParsedPath path,
+                             Client requester,
+                             int rid,
+                             Object value,
+                             String permit) {
+        throw new UnsupportedOperationException();
+    }
+
+    public GenericStream remove(ParsedPath path,
+                                Client requester,
+                                int rid,
+                                String permit) {
+        throw new UnsupportedOperationException();
+    }
+
+    public GenericStream invoke(ParsedPath path,
+                                Client requester,
+                                int rid,
+                                JsonObject params,
+                                String permit) {
         throw new UnsupportedOperationException();
     }
 
