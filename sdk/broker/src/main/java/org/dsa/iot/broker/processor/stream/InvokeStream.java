@@ -74,7 +74,6 @@ public class InvokeStream extends Stream {
     }
 
     private void close() {
-        responder().stream().close(requester, this, false);
         close(requester, false);
         requester = null;
     }
