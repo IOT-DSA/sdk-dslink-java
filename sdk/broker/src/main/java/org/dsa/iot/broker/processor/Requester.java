@@ -3,6 +3,7 @@ package org.dsa.iot.broker.processor;
 import org.dsa.iot.broker.Broker;
 import org.dsa.iot.broker.node.BrokerNode;
 import org.dsa.iot.broker.node.DSLinkNode;
+import org.dsa.iot.broker.processor.stream.InvokeStream;
 import org.dsa.iot.broker.processor.stream.Stream;
 import org.dsa.iot.broker.processor.stream.SubStream;
 import org.dsa.iot.broker.utils.ParsedPath;
@@ -107,6 +108,11 @@ public class Requester extends LinkHandler {
                 break;
             }
             case "invoke": {
+                ParsedPath path = parse(request.get("path"));
+                JsonObject params = request.get("params");
+                BrokerNode<?> node = broker.getTree().getNode(path);
+                InvokeStream stream = node.invoke(path, client(), rid, params, null);
+                addStream(rid, stream);
                 break;
             }
             default:
@@ -136,6 +142,7 @@ public class Requester extends LinkHandler {
     }
 
     private ParsedPath parse(String path) {
+        Objects.requireNonNull(path, "path");
         return ParsedPath.parse(client().broker().downstream(), path);
     }
 }

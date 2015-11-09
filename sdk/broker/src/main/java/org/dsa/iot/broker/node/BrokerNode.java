@@ -1,5 +1,6 @@
 package org.dsa.iot.broker.node;
 
+import org.dsa.iot.broker.processor.stream.InvokeStream;
 import org.dsa.iot.broker.processor.stream.SubStream;
 import org.dsa.iot.broker.server.client.Client;
 import org.dsa.iot.broker.utils.ParsedPath;
@@ -111,6 +112,14 @@ public class BrokerNode<T extends BrokerNode> {
     }
 
     public void unsubscribe(SubStream stream, Client requester) {
+        throw new UnsupportedOperationException();
+    }
+
+    public InvokeStream invoke(ParsedPath path,
+                               Client requester,
+                               int rid,
+                               JsonObject params,
+                               String permit) {
         throw new UnsupportedOperationException();
     }
 

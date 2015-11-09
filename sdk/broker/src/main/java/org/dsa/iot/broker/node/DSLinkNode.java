@@ -2,6 +2,7 @@ package org.dsa.iot.broker.node;
 
 import org.dsa.iot.broker.processor.MessageProcessor;
 import org.dsa.iot.broker.processor.Responder;
+import org.dsa.iot.broker.processor.stream.InvokeStream;
 import org.dsa.iot.broker.processor.stream.SubStream;
 import org.dsa.iot.broker.processor.stream.manager.StreamManager;
 import org.dsa.iot.broker.server.client.Client;
@@ -113,6 +114,37 @@ public class DSLinkNode extends BrokerNode {
         Responder responder = processor.responder();
         StreamManager sm = responder.stream();
         sm.sub().unsubscribe(stream, requester);
+    }
+
+    @Override
+    public InvokeStream invoke(ParsedPath path,
+                       Client requester,
+                       int rid,
+                       JsonObject params,
+                       String permit) {
+        Responder responder = processor().responder();
+        InvokeStream stream = new InvokeStream(responder, path);
+        stream.add(requester, rid);
+        int responderRid = responder.nextRid();
+        responder.stream().addIfNull(responderRid, stream);
+
+        JsonObject req = new JsonObject();
+        req.put("rid", responderRid);
+        req.put("path", path.base());
+        req.put("method", "invoke");
+        if (params != null) {
+            req.put("params", params);
+        }
+        if (permit != null) {
+            req.put("permit", permit);
+        }
+
+        JsonArray reqs = new JsonArray();
+        reqs.add(req);
+        JsonObject top = new JsonObject();
+        top.put("requests", reqs);
+        client().write(top.encode());
+        return stream;
     }
 
     @Override
