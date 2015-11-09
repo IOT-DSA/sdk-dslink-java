@@ -1,6 +1,5 @@
 package org.dsa.iot.broker.processor.stream;
 
-import org.dsa.iot.broker.processor.Responder;
 import org.dsa.iot.broker.server.client.Client;
 import org.dsa.iot.broker.utils.ParsedPath;
 import org.dsa.iot.dslink.util.json.JsonArray;
@@ -15,19 +14,13 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class SubStream {
 
-    private final Responder responder;
     private final ParsedPath path;
 
     private Map<Client, Integer> clientMap = new ConcurrentHashMap<>();
     private JsonArray lastValueUpdate;
 
-    public SubStream(Responder responder, ParsedPath path) {
-        this.responder = Objects.requireNonNull(responder, "responder");
+    public SubStream(ParsedPath path) {
         this.path = Objects.requireNonNull(path, "path");
-    }
-
-    public Responder responder() {
-        return responder;
     }
 
     public ParsedPath path() {

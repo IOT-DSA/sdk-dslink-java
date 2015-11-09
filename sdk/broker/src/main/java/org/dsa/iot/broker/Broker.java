@@ -7,6 +7,7 @@ import org.dsa.iot.broker.config.broker.BrokerMemoryConfig;
 import org.dsa.iot.broker.node.BrokerTree;
 import org.dsa.iot.broker.server.ServerManager;
 import org.dsa.iot.broker.server.client.ClientManager;
+import org.dsa.iot.broker.utils.Metrics;
 import org.dsa.iot.dslink.util.json.JsonObject;
 import org.dsa.iot.dslink.util.log.LogManager;
 import org.slf4j.Logger;
@@ -21,10 +22,12 @@ public class Broker {
     private final ClientManager clients;
     private final BrokerConfig config;
     private final BrokerTree tree;
+    private final Metrics metrics;
 
-    private ServerManager server;
     private String downstreamName;
+    private ServerManager server;
 
+    @SuppressWarnings("unchecked")
     public Broker(BrokerConfig config,
                   ClientManager clients,
                   BrokerTree tree) {
@@ -38,6 +41,7 @@ public class Broker {
         this.clients = clients;
         this.config = config;
         this.tree = tree;
+        this.metrics = Metrics.create(this);
         config.readAndUpdate();
     }
 
@@ -50,6 +54,7 @@ public class Broker {
         stop();
         try {
             LOGGER.info("Broker is starting");
+            metrics().start();
             JsonObject serverConf = config.get().get("server");
             server = new ServerManager(this, serverConf);
             server.start();
@@ -62,18 +67,23 @@ public class Broker {
      * Shuts down the broker.
      */
     public void stop() {
+        metrics().stop();
         if (server != null) {
             LOGGER.info("Broker is shutting down");
             server.stop();
         }
     }
 
-    public ClientManager getClientManager() {
+    public ClientManager clientManager() {
         return clients;
     }
 
-    public BrokerTree getTree() {
+    public BrokerTree tree() {
         return tree;
+    }
+
+    public Metrics metrics() {
+        return metrics;
     }
 
     public String downstream() {

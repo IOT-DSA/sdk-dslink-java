@@ -59,7 +59,7 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
         if (ctx != null) {
             ctx.close();
             ctx = null;
-            broker().getClientManager().clientDisconnected(this);
+            broker().clientManager().clientDisconnected(this);
         }
     }
 
@@ -68,6 +68,7 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
         ByteBuf buf = Unpooled.wrappedBuffer(bytes);
         TextWebSocketFrame frame = new TextWebSocketFrame(buf);
         ctx.channel().writeAndFlush(frame);
+        broker().metrics().incrementOut();
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("[Sent] {}: {}", handshake().dsId(), data);
         }
@@ -77,7 +78,7 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
     public void channelActive(ChannelHandlerContext ctx) {
         this.ctx = ctx;
         write("{}");
-        broker.getClientManager().clientConnected(this);
+        broker.clientManager().clientConnected(this);
     }
 
     @Override
@@ -91,6 +92,7 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
         final Channel channel = ctx.channel();
         if (frame instanceof TextWebSocketFrame) {
             String data = ((TextWebSocketFrame) frame).text();
+            broker().metrics().incrementIn();
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("[Received] {}: {}", handshake().dsId(), data);
             }

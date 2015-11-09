@@ -67,14 +67,14 @@ public class DsaHandshake {
     public ByteBuf initialize(Broker broker) {
         Client client = new Client(broker, this);
 
-        ClientManager manager = broker.getClientManager();
+        ClientManager manager = broker.clientManager();
         manager.clientConnecting(client);
 
         JsonObject obj = new JsonObject();
         obj.put("tempKey", tempKey.encodedPublicKey());
         obj.put("salt", salt);
 
-        this.name = broker.getTree().initDslink(name, dsId);
+        this.name = broker.tree().initDslink(name, dsId);
         if (isResponder) {
             obj.put("path", "/" + broker.downstream() + "/" + name);
         }

@@ -5,6 +5,9 @@ import org.dsa.iot.broker.processor.stream.SubStream;
 import org.dsa.iot.broker.server.client.Client;
 import org.dsa.iot.broker.utils.ParsedPath;
 import org.dsa.iot.dslink.methods.StreamState;
+import org.dsa.iot.dslink.node.value.Value;
+import org.dsa.iot.dslink.node.value.ValueType;
+import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.dsa.iot.dslink.util.StringUtils;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
@@ -27,6 +30,14 @@ public class BrokerNode<T extends BrokerNode> {
 
     private Map<Client, Integer> pathSubs;
 
+    private SubStream subStream;
+    private ValueType type;
+    private Value value;
+
+    public BrokerNode(BrokerNode parent, String name) {
+        this(parent, name, "node");
+    }
+
     public BrokerNode(BrokerNode parent, String name, String profile) {
         if (profile == null || profile.isEmpty()) {
             throw new IllegalArgumentException("profile");
@@ -45,6 +56,21 @@ public class BrokerNode<T extends BrokerNode> {
             this.name = name;
             this.path = parent.path + "/" + name;
         }
+    }
+
+    public void setValueType(ValueType type) {
+        this.type = type;
+    }
+
+    public void setValue(Value value) {
+        this.value = value;
+        SubStream subs = this.subStream;
+        if (subs == null) {
+            return;
+        }
+
+        JsonArray update = generateValueUpdate();
+        subs.dispatch(update);
     }
 
     public void connected(Client client) {
@@ -108,11 +134,15 @@ public class BrokerNode<T extends BrokerNode> {
     }
 
     public SubStream subscribe(ParsedPath path, Client requester, int sid) {
-        throw new UnsupportedOperationException();
+        if (subStream == null) {
+            initializeValueSubs();
+        }
+        subStream.add(requester, sid);
+        return subStream;
     }
 
     public void unsubscribe(SubStream stream, Client requester) {
-        throw new UnsupportedOperationException();
+        stream.remove(requester);
     }
 
     public GenericStream set(ParsedPath path,
@@ -159,6 +189,13 @@ public class BrokerNode<T extends BrokerNode> {
             update.add(profile);
             updates.add(update);
         }
+        ValueType type = this.type;
+        if (type != null) {
+            JsonArray update = new JsonArray();
+            update.add("$type");
+            update.add(type.toJsonString());
+            updates.add(update);
+        }
         {
             for (BrokerNode node : children.values()) {
                 if (!node.accessible()) {
@@ -175,6 +212,12 @@ public class BrokerNode<T extends BrokerNode> {
     protected JsonObject getChildUpdate() {
         JsonObject obj = new JsonObject();
         obj.put("$is", profile);
+
+        ValueType type = this.type;
+        if (type != null) {
+            obj.put("$type", type.toJsonString());
+        }
+
         return obj;
     }
 
@@ -209,9 +252,25 @@ public class BrokerNode<T extends BrokerNode> {
         }
     }
 
+    protected JsonArray generateValueUpdate() {
+        JsonArray update = new JsonArray();
+        update.add(null);
+        ValueUtils.toJson(update, value);
+        update.add(value.getTimeStamp());
+        return update;
+    }
+
     private synchronized void initializePathSubs() {
         if (pathSubs == null) {
             pathSubs = new ConcurrentHashMap<>();
+        }
+    }
+
+    private synchronized void initializeValueSubs() {
+        if (subStream == null) {
+            ParsedPath pp = ParsedPath.parse(null, path);
+            subStream = new SubStream(pp);
+            subStream.dispatch(generateValueUpdate());
         }
     }
 }

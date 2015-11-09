@@ -50,21 +50,21 @@ public class Requester extends LinkHandler {
         switch (method) {
             case "list": {
                 ParsedPath pp = parse(request.get("path"));
-                BrokerNode<?> node = broker.getTree().getNode(pp);
+                BrokerNode<?> node = broker.tree().getNode(pp);
                 resp = node != null ? node.list(pp, client(), rid) : null;
                 break;
             }
             case "set": {
                 ParsedPath path = parse(request.get("path"));
                 Object value = request.get("value");
-                BrokerNode<?> node = broker.getTree().getNode(path);
+                BrokerNode<?> node = broker.tree().getNode(path);
                 Stream stream = node.set(path, client(), rid, value, null);
                 addStream(rid, stream);
                 break;
             }
             case "remove": {
                 ParsedPath path = parse(request.get("path"));
-                BrokerNode<?> node = broker.getTree().getNode(path);
+                BrokerNode<?> node = broker.tree().getNode(path);
                 Stream stream = node.remove(path, client(), rid, null);
                 addStream(rid, stream);
                 break;
@@ -83,7 +83,7 @@ public class Requester extends LinkHandler {
                     ParsedPath path = parse(obj.get("path"));
                     Integer sid = obj.get("sid");
 
-                    BrokerNode node = broker.getTree().getNode(path);
+                    BrokerNode node = broker.tree().getNode(path);
                     SubStream stream = node.subscribe(path, client(), sid);
 
                     synchronized (subPathSids) {
@@ -107,7 +107,7 @@ public class Requester extends LinkHandler {
                         if (stream != null) {
                             ParsedPath pp = stream.path();
                             subPathSids.remove(pp);
-                            BrokerNode<?> node = broker.getTree().getNode(pp);
+                            BrokerNode<?> node = broker.tree().getNode(pp);
                             node.unsubscribe(stream, client());
                         }
                     }
@@ -118,7 +118,7 @@ public class Requester extends LinkHandler {
             case "invoke": {
                 ParsedPath path = parse(request.get("path"));
                 JsonObject params = request.get("params");
-                BrokerNode<?> node = broker.getTree().getNode(path);
+                BrokerNode<?> node = broker.tree().getNode(path);
                 Stream stream = node.invoke(path, client(), rid, params, null);
                 addStream(rid, stream);
                 break;

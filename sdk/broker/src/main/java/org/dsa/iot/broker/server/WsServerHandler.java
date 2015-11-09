@@ -91,7 +91,7 @@ public class WsServerHandler extends SimpleChannelInboundHandler<FullHttpRequest
         Client client;
         // Validate the auth and dsId
         {
-            client = broker.getClientManager().getPendingClient(dsId);
+            client = broker.clientManager().getPendingClient(dsId);
             if (client == null || !client.handshake().validate(auth)) {
                 sendForbidden(ctx);
                 return;

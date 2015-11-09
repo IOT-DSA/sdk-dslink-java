@@ -43,7 +43,7 @@ public class ClientManager {
                 }
             }
         }
-        client.broker().getTree().connected(client);
+        client.broker().tree().connected(client);
     }
 
     public void clientDisconnected(Client client) {
@@ -54,7 +54,7 @@ public class ClientManager {
                 old.close();
             }
         }
-        client.broker().getTree().disconnected(client);
+        client.broker().tree().disconnected(client);
     }
 
     public Client getPendingClient(String dsId) {
