@@ -42,8 +42,8 @@ public class BrokerTree {
         return node != null && node.accessible() ? node : null;
     }
 
-    public String initDslink(String name, String dsId) {
-        return downstream.init(name, dsId);
+    public String initDslink(String name) {
+        return downstream.init(name);
     }
 
     public void connected(Client client) {
