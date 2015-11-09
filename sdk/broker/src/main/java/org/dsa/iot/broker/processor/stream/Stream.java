@@ -1,6 +1,5 @@
 package org.dsa.iot.broker.processor.stream;
 
-import org.dsa.iot.broker.processor.Requester;
 import org.dsa.iot.broker.processor.Responder;
 import org.dsa.iot.broker.server.client.Client;
 import org.dsa.iot.broker.utils.ParsedPath;
@@ -28,8 +27,8 @@ public abstract class Stream {
         return path;
     }
 
-    public void close(Requester requester) {
-        responder().stream().close(requester.client(), this);
+    public void close(Client requester, boolean write) {
+        responder().stream().close(requester, this, write);
     }
 
     public abstract void add(Client requester, int requesterRid);

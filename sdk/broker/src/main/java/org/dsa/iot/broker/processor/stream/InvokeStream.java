@@ -35,7 +35,7 @@ public class InvokeStream extends Stream {
 
     @Override
     public boolean isEmpty() {
-        return requester != null;
+        return requester == null;
     }
 
     @Override
@@ -74,7 +74,8 @@ public class InvokeStream extends Stream {
     }
 
     private void close() {
-        responder().stream().close(requester, this);
+        responder().stream().close(requester, this, false);
+        close(requester, false);
         requester = null;
     }
 }

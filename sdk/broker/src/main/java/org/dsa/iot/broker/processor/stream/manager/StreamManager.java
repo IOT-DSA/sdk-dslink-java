@@ -39,11 +39,13 @@ public class StreamManager {
         return ssm;
     }
 
-    public void close(Client requester, Stream stream) {
-        close(requester, Collections.singleton(stream));
+    public void close(Client requester, Stream stream, boolean write) {
+        close(requester, Collections.singleton(stream), write);
     }
 
-    public void close(Client requester, Collection<Stream> streams) {
+    public void close(Client requester,
+                      Collection<Stream> streams,
+                      boolean write) {
         if (streams == null) {
             return;
         }
@@ -71,10 +73,12 @@ public class StreamManager {
                 req.put("rid", respRid);
                 req.put("method", "close");
 
-                if (reqs == null) {
+                if (reqs == null && write) {
                     reqs = new JsonArray();
                 }
-                reqs.add(req);
+                if (reqs != null) {
+                    reqs.add(req);
+                }
             }
         }
         if (reqs != null) {

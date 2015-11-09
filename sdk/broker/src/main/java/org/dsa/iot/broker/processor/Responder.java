@@ -40,7 +40,7 @@ public class Responder extends LinkHandler {
         Requester req = client.node().processor().requester();
         Map<Integer, Stream> streams = req.getReqStreams();
         if (streams != null) {
-            stream().close(client, streams.values());
+            stream().close(client, streams.values(), true);
         }
     }
 

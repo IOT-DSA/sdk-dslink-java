@@ -64,7 +64,7 @@ public class Requester extends LinkHandler {
             case "close": {
                 Stream stream = removeStream(rid);
                 if (stream != null) {
-                    stream.close(this);
+                    stream.close(client(), true);
                 }
                 break;
             }
