@@ -110,10 +110,12 @@ public class ValueUtils {
      * @param value Value to inject into the JSON array.
      */
     public static void toJson(JsonArray array, Value value) {
-        if (array == null)
+        if (array == null) {
             throw new NullPointerException("array");
-        else if (value == null)
-            throw new NullPointerException("value");
+        } else if (value == null) {
+            array.add(null);
+            return;
+        }
         switch (value.getType().toJsonString()) {
             case ValueType.JSON_BOOL:
                 array.add(value.getBool());
