@@ -74,6 +74,7 @@ public class InvokeStream extends Stream {
     }
 
     private void close() {
+        requester.processor().requester().removeStream(rid);
         close(requester, false);
         requester = null;
     }
