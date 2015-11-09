@@ -83,7 +83,9 @@ public class Responder {
         Objects.getDaemonThreadPool().scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
-                child.setValue(new Value(RANDOM.nextInt()));
+                Value val = new Value(RANDOM.nextInt());
+                val.setSerializable(false);
+                child.setValue(val);
             }
         }, 0, 5, TimeUnit.SECONDS);
     }
