@@ -49,8 +49,7 @@ public class Requester extends LinkHandler {
         JsonObject resp = null;
         switch (method) {
             case "list": {
-                String path = request.get("path");
-                ParsedPath pp = ParsedPath.parse(broker.downstream(), path);
+                ParsedPath pp = parse(request.get("path"));
                 BrokerNode<?> node = broker.getTree().getNode(pp);
                 resp = node != null ? node.list(pp, client(), rid) : null;
                 break;
@@ -72,8 +71,7 @@ public class Requester extends LinkHandler {
                 JsonArray paths = request.get("paths");
                 for (Object object : paths) {
                     JsonObject obj = (JsonObject) object;
-                    String p = obj.get("path");
-                    ParsedPath path = ParsedPath.parse(broker.downstream(), p);
+                    ParsedPath path = parse(obj.get("path"));
                     Integer sid = obj.get("sid");
 
                     BrokerNode node = broker.getTree().getNode(path);
@@ -98,9 +96,10 @@ public class Requester extends LinkHandler {
                     synchronized (subPathSids) {
                         SubStream stream = subStreams.remove(sid);
                         if (stream != null) {
-                            subPathSids.remove(stream.path());
-                            Responder r = stream.responder();
-                            r.stream().sub().unsubscribe(stream, client());
+                            ParsedPath pp = stream.path();
+                            subPathSids.remove(pp);
+                            BrokerNode<?> node = broker.getTree().getNode(pp);
+                            node.unsubscribe(stream, client());
                         }
                     }
                 }
@@ -130,5 +129,13 @@ public class Requester extends LinkHandler {
         JsonObject resp = new JsonObject();
         resp.put("stream", StreamState.CLOSED.getJsonName());
         return resp;
+    }
+
+    private ParsedPath parse(Object obj) {
+        return parse((String) obj);
+    }
+
+    private ParsedPath parse(String path) {
+        return ParsedPath.parse(client().broker().downstream(), path);
     }
 }

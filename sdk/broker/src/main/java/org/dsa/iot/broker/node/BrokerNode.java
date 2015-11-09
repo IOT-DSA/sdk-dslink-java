@@ -110,6 +110,10 @@ public class BrokerNode<T extends BrokerNode> {
         throw new UnsupportedOperationException();
     }
 
+    public void unsubscribe(SubStream stream, Client requester) {
+        throw new UnsupportedOperationException();
+    }
+
     public JsonObject list(ParsedPath path, Client requester, int rid) {
         if (pathSubs == null) {
             initializePathSubs();
