@@ -107,8 +107,18 @@ public class SubscriptionManager {
     public void addValueSub(String path, int sid) {
         path = NodeManager.normalizePath(path, true);
         synchronized (valueLock) {
-            valueSubsPaths.put(path, sid);
+            Integer prev = valueSubsPaths.put(path, sid);
+            if (prev != null) {
+                if (prev > sid) {
+                    valueSubsPaths.put(path, prev);
+                    return;
+                }
+                valueSubsSids.remove(prev);
+            }
             valueSubsSids.put(sid, path);
+            if (prev != null) {
+                return;
+            }
         }
         NodeManager man = link.getNodeManager();
         Node node = man.getNode(path, false, false).getNode();
