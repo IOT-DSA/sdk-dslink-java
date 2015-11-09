@@ -70,8 +70,9 @@ public class DSLinkNode extends BrokerNode {
             processor.disconnected();
             LOGGER.info("Client `{}` has disconnected", client.handshake().dsId());
         } else {
-            if (client() != null && client().handshake().isResponder()
-                    && client.handshake().isRequester()) {
+            Client curr = client();
+            if (curr != null && curr.handshake().isResponder()
+                                && client.handshake().isRequester()) {
                 processor().responder().requesterDisconnected(client);
             }
         }
