@@ -166,6 +166,9 @@ public class Table {
         this.rid = rid;
         this.writer = writer;
         this.closeHandler = closeHandler;
+        if (ready) {
+            sendReady();
+        }
 
         rows = null;
         columns = null;
@@ -246,6 +249,7 @@ public class Table {
             ready = true;
             return;
         }
+        ready = false;
         JsonObject obj = new JsonObject();
         obj.put("rid", rid);
         obj.put("stream", StreamState.OPEN.getJsonName());
