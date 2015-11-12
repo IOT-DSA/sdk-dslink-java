@@ -61,7 +61,7 @@ public class Interval {
      */
     private long realTimeTime;
 
-    private Interval(Rollup rollup) {
+    protected Interval(Rollup rollup) {
         this.rollup = rollup;
     }
 
@@ -128,6 +128,13 @@ public class Interval {
         return row;
     }
 
+    private void setRealTime(Value value, long time) {
+        // Subtract the increment time since the time must point to the
+        // start time of the row, not the end.
+        realTimeTime = time - incrementTime;
+        realTimeValue = value;
+    }
+
     private long alignTime(long ts) {
         Calendar c = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         c.setTimeInMillis(ts);
@@ -180,13 +187,6 @@ public class Interval {
         }
 
         return c.getTime().getTime();
-    }
-
-    private void setRealTime(Value value, long time) {
-        // Subtract the increment time since the time must point to the
-        // start time of the row, not the end.
-        realTimeTime = time - incrementTime;
-        realTimeValue = value;
     }
 
     private void update(char interval, String number) {
