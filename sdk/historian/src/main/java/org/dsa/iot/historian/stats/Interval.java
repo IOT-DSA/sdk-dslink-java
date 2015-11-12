@@ -288,23 +288,24 @@ public class Interval {
         }
 
         Rollup roll = null;
-        if ("avg".equals(rollup)) {
+        Rollup.Type type = Rollup.Type.toEnum(rollup);
+        if (Rollup.Type.AVERAGE == type) {
             roll = new AvgRollup();
-        } else if ("count".equals(rollup)) {
+        } else if (Rollup.Type.COUNT == type) {
             roll = new CountRollup();
-        } else if ("first".equals(rollup)) {
+        } else if (Rollup.Type.FIRST == type) {
             roll = new FirstRollup();
-        } else if ("last".equals(rollup)) {
+        } else if (Rollup.Type.LAST == type) {
             roll = new LastRollup();
-        } else if ("max".equals(rollup)) {
+        } else if (Rollup.Type.MAX == type) {
             roll = new MaxRollup();
-        } else if ("min".equals(rollup)) {
+        } else if (Rollup.Type.MIN == type) {
             roll = new MinRollup();
-        } else if ("sum".equals(rollup)) {
+        } else if (Rollup.Type.SUM == type) {
             roll = new SumRollup();
-        } else if ("delta".equals(rollup)) {
+        } else if (Rollup.Type.DELTA == type) {
             roll = new DeltaRollup();
-        } else if (!"none".equals(rollup)) {
+        } else if (Rollup.Type.NONE != type) {
             throw new RuntimeException("Invalid rollup: " + rollup);
         }
 
