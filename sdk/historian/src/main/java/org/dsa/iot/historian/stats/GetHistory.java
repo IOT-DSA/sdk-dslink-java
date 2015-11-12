@@ -32,8 +32,8 @@ public class GetHistory implements Handler<ActionResult> {
     private final Database db;
     private final String path;
 
-    public GetHistory(String path, Database db) {
-        this.path = path;
+    public GetHistory(Node node, Database db) {
+        this.path = StringUtils.decodeName(node.getName());
         this.db = db;
     }
 
@@ -153,8 +153,11 @@ public class GetHistory implements Handler<ActionResult> {
     }
 
     public static void initAction(Node node, Database db) {
-        String path = StringUtils.decodeName(node.getName());
-        Action a =  new Action(Permission.READ, new GetHistory(path, db));
+        initAction(node, new GetHistory(node, db));
+    }
+
+    public static void initAction(Node node, GetHistory history) {
+        Action a =  new Action(Permission.READ, history);
         a.setHidden(true);
 
         NodeBuilder b = node.createChild("getHistory", "getHistory_");
