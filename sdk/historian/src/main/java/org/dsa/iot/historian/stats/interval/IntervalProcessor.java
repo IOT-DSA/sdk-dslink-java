@@ -111,6 +111,9 @@ public class IntervalProcessor {
 
     public static IntervalProcessor parse(IntervalParser parser,
                                           Rollup.Type rollup) {
+        if (parser == null) {
+            return null;
+        }
         Rollup roll = null;
         if (Rollup.Type.AVERAGE == rollup) {
             roll = new AvgRollup();
