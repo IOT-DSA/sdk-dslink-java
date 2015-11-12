@@ -84,15 +84,15 @@ public class GetHistory implements Handler<ActionResult> {
 
         IntervalParser parser = IntervalParser.parse(sInterval);
         Rollup.Type type = Rollup.Type.toEnum(sRollup);
-        performQuery(event, from, to, rt, type, parser);
+        process(event, from, to, rt, type, parser);
     }
 
-    protected void performQuery(final ActionResult event,
-                                final long from,
-                                final long to,
-                                final boolean realTime,
-                                final Rollup.Type rollup,
-                                final IntervalParser parser) {
+    protected void process(final ActionResult event,
+                           final long from,
+                           final long to,
+                           final boolean realTime,
+                           final Rollup.Type rollup,
+                           final IntervalParser parser) {
         final IntervalProcessor interval = IntervalProcessor.parse(parser, rollup);
         ScheduledThreadPoolExecutor stpe = Objects.getDaemonThreadPool();
         stpe.execute(new Runnable() {
@@ -114,7 +114,7 @@ public class GetHistory implements Handler<ActionResult> {
                     }
                 });
 
-                db.query(path, from, to, new CompleteHandler<QueryData>() {
+                query(from, to, rollup, parser, new CompleteHandler<QueryData>() {
                     @Override
                     public void handle(QueryData data) {
                         processQueryData(table, interval, data);
@@ -145,6 +145,15 @@ public class GetHistory implements Handler<ActionResult> {
                 });
             }
         });
+    }
+
+    @SuppressWarnings("UnusedParameters")
+    protected void query(long from,
+                         long to,
+                         Rollup.Type type,
+                         IntervalParser parser,
+                         CompleteHandler<QueryData> handler) {
+        db.query(path, from, to, handler);
     }
 
     protected void processQueryData(Table table,
