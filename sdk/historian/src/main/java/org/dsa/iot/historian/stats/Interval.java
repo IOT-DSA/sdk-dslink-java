@@ -280,7 +280,7 @@ public class Interval {
         }
     }
 
-    public static Interval parse(String interval, String rollup) {
+    public static Interval parse(String interval, Rollup.Type rollup) {
         if (interval == null
                 || "none".equals(interval)
                 || "default".equals(interval)) {
@@ -288,24 +288,23 @@ public class Interval {
         }
 
         Rollup roll = null;
-        Rollup.Type type = Rollup.Type.toEnum(rollup);
-        if (Rollup.Type.AVERAGE == type) {
+        if (Rollup.Type.AVERAGE == rollup) {
             roll = new AvgRollup();
-        } else if (Rollup.Type.COUNT == type) {
+        } else if (Rollup.Type.COUNT == rollup) {
             roll = new CountRollup();
-        } else if (Rollup.Type.FIRST == type) {
+        } else if (Rollup.Type.FIRST == rollup) {
             roll = new FirstRollup();
-        } else if (Rollup.Type.LAST == type) {
+        } else if (Rollup.Type.LAST == rollup) {
             roll = new LastRollup();
-        } else if (Rollup.Type.MAX == type) {
+        } else if (Rollup.Type.MAX == rollup) {
             roll = new MaxRollup();
-        } else if (Rollup.Type.MIN == type) {
+        } else if (Rollup.Type.MIN == rollup) {
             roll = new MinRollup();
-        } else if (Rollup.Type.SUM == type) {
+        } else if (Rollup.Type.SUM == rollup) {
             roll = new SumRollup();
-        } else if (Rollup.Type.DELTA == type) {
+        } else if (Rollup.Type.DELTA == rollup) {
             roll = new DeltaRollup();
-        } else if (Rollup.Type.NONE != type) {
+        } else if (Rollup.Type.NONE != rollup) {
             throw new RuntimeException("Invalid rollup: " + rollup);
         }
 

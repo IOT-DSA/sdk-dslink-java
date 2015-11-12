@@ -15,6 +15,7 @@ import org.dsa.iot.dslink.util.handler.CompleteHandler;
 import org.dsa.iot.dslink.util.handler.Handler;
 import org.dsa.iot.historian.database.Database;
 import org.dsa.iot.historian.database.Watch;
+import org.dsa.iot.historian.stats.rollup.Rollup;
 import org.dsa.iot.historian.utils.QueryData;
 import org.dsa.iot.historian.utils.TimeParser;
 
@@ -70,7 +71,6 @@ public class GetHistory implements Handler<ActionResult> {
         final String sInterval = event.getParameter("Interval", def).getString();
         final String sRollup = event.getParameter("Rollup", def).getString();
         final boolean rt = event.getParameter("Real Time", new Value(false)).getBool();
-        final Interval interval = Interval.parse(sInterval, sRollup);
 
         final Table table = event.getTable();
         event.setStreamState(StreamState.INITIALIZED);
@@ -80,6 +80,17 @@ public class GetHistory implements Handler<ActionResult> {
             table.setMode(Table.Mode.APPEND);
         }
 
+        Rollup.Type type = Rollup.Type.toEnum(sRollup);
+        performQuery(event, from, to, rt, type, sInterval);
+    }
+
+    protected void performQuery(final ActionResult event,
+                                final long from,
+                                final long to,
+                                final boolean realTime,
+                                final Rollup.Type rollup,
+                                final String unparsedInterval) {
+        final Interval interval = Interval.parse(unparsedInterval, rollup);
         ScheduledThreadPoolExecutor stpe = Objects.getDaemonThreadPool();
         stpe.execute(new Runnable() {
 
@@ -88,6 +99,7 @@ public class GetHistory implements Handler<ActionResult> {
 
             @Override
             public void run() {
+                final Table table = event.getTable();
                 event.setCloseHandler(new Handler<Void>() {
                     @Override
                     public void handle(Void ignored) {
@@ -108,7 +120,7 @@ public class GetHistory implements Handler<ActionResult> {
                     @Override
                     public void complete() {
                         table.sendReady();
-                        if (!rt) {
+                        if (!realTime) {
                             if (interval != null) {
                                 Row row = interval.complete();
                                 if (row != null) {
@@ -132,9 +144,9 @@ public class GetHistory implements Handler<ActionResult> {
         });
     }
 
-    private void processQueryData(Table table,
-                                  Interval interval,
-                                  QueryData data) {
+    protected void processQueryData(Table table,
+                                    Interval interval,
+                                    QueryData data) {
         Row row;
         Value value = data.getValue();
         long time = data.getTimestamp();
