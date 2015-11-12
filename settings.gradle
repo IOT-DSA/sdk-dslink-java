@@ -18,3 +18,8 @@ include 'examples/responder'
 include 'examples/dual'
 
 rootProject.name = 'sdk-dslink-java'
+rootProject.children.each { it ->
+    if ("runtimes/broker".equals(it.name)) {
+        it.name = "runtimes/broker_runtime"
+    }
+}

@@ -1,4 +1,17 @@
+apply plugin: 'application'
+
+mainClassName = 'org.dsa.iot.broker.Main'
+
 dependencies {
     compile 'org.javassist:javassist:3.20.0-GA'
     compile project(':sdk/broker')
+}
+
+run {
+    args System.getProperty("exec.args", "").split()
+    workingDir project.buildDir
+}
+
+tasks.withType(CreateStartScripts) {
+    applicationName = "broker"
 }
