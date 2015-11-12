@@ -29,14 +29,10 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
  */
 public class GetHistory implements Handler<ActionResult> {
 
-    private final IntervalFactory factory;
     private final Database db;
     private final String path;
 
-    public GetHistory(String path,
-                      Database db,
-                      IntervalFactory factory) {
-        this.factory = factory;
+    public GetHistory(String path, Database db) {
         this.path = path;
         this.db = db;
     }
@@ -74,7 +70,7 @@ public class GetHistory implements Handler<ActionResult> {
         final String sInterval = event.getParameter("Interval", def).getString();
         final String sRollup = event.getParameter("Rollup", def).getString();
         final boolean rt = event.getParameter("Real Time", new Value(false)).getBool();
-        final Interval interval = factory.create(sInterval, sRollup);
+        final Interval interval = Interval.parse(sInterval, sRollup);
 
         final Table table = event.getTable();
         event.setStreamState(StreamState.INITIALIZED);
@@ -157,15 +153,8 @@ public class GetHistory implements Handler<ActionResult> {
     }
 
     public static void initAction(Node node, Database db) {
-        initAction(node, db, IntervalFactory.getDefault());
-    }
-
-    public static void initAction(Node node,
-                                  Database db,
-                                  IntervalFactory factory) {
         String path = StringUtils.decodeName(node.getName());
-        GetHistory gh = new GetHistory(path, db, factory);
-        Action a =  new Action(Permission.READ, gh);
+        Action a =  new Action(Permission.READ, new GetHistory(path, db));
         a.setHidden(true);
 
         NodeBuilder b = node.createChild("getHistory", "getHistory_");
