@@ -1,9 +1,4 @@
-package org.dsa.iot.historian.stats;
-
-import org.dsa.iot.dslink.node.actions.table.Row;
-import org.dsa.iot.dslink.node.value.Value;
-import org.dsa.iot.historian.stats.rollup.*;
-import org.dsa.iot.historian.utils.TimeParser;
+package org.dsa.iot.historian.stats.interval;
 
 import java.util.Calendar;
 import java.util.TimeZone;
@@ -11,9 +6,7 @@ import java.util.TimeZone;
 /**
  * @author Samuel Grenier
  */
-public class Interval {
-
-    private final Rollup rollup;
+public class IntervalParser {
 
     private int seconds = -1;
     private boolean alignSeconds;
@@ -36,99 +29,20 @@ public class Interval {
     private int years = -1;
     private boolean alignYears;
 
-    /**
-     * The total amount of time combined to increment by.
-     */
     private long incrementTime;
 
     /**
-     * Last timestamp of the last value.
+     * @return The total amount of time combined to increment by.
      */
-    private long lastValueTimeTrunc = -1;
-
-    /**
-     * Last updated value used for roll ups.
-     */
-    private Value lastValue;
-
-    /**
-     * Last real time value.
-     */
-    private Value realTimeValue;
-
-    /**
-     * Last real time timestamp.
-     */
-    private long realTimeTime;
-
-    private Interval(Rollup rollup) {
-        this.rollup = rollup;
+    public long incrementTime() {
+        return incrementTime;
     }
 
     /**
-     *
-     * @param value Value retrieved from the database.
-     * @param fullTs Full timestamp of the value.
-     * @return An update or null to skip the update.
+     * @param ts Timestamp to align
+     * @return Aligned timestamp
      */
-    public Row getRowUpdate(Value value, long fullTs) {
-        setRealTime(value, fullTs);
-        final long alignedTs = alignTime(fullTs);
-
-        Row row = null;
-        if (alignedTs - lastValueTimeTrunc < incrementTime) {
-            // Update the last value within the same interval
-            lastValue = value;
-            if (rollup != null) {
-                rollup.update(value, fullTs);
-            }
-        } else if (lastValue != null) {
-            // Finish up the rollup, the interval for this period is completed
-            if (rollup == null) {
-                row = makeRow(lastValue, lastValueTimeTrunc);
-            } else {
-                row = makeRow(rollup.getValue(), lastValueTimeTrunc);
-            }
-            lastValue = null;
-            setRealTime(value, alignedTs);
-        }
-
-        // New interval period has been started
-        if (alignedTs - lastValueTimeTrunc >= incrementTime) {
-            lastValueTimeTrunc = alignedTs;
-            lastValue = value;
-            if (rollup != null) {
-                rollup.reset();
-                rollup.update(lastValue, fullTs);
-            }
-        }
-        return row;
-    }
-
-    public Row complete() {
-        if (lastValue == null) {
-            // Don't duplicate the value if the interval finished and there
-            // is no more data.
-            return null;
-        }
-        Value val = realTimeValue;
-        if (val != null) {
-            if (rollup != null) {
-                val = rollup.getValue();
-            }
-            return makeRow(val, realTimeTime);
-        }
-        return null;
-    }
-
-    private Row makeRow(Value value, long ts) {
-        Row row = new Row();
-        row.addValue(new Value(TimeParser.parse(ts)));
-        row.addValue(value);
-        return row;
-    }
-
-    private long alignTime(long ts) {
+    public long alignTime(long ts) {
         Calendar c = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         c.setTimeInMillis(ts);
 
@@ -180,13 +94,6 @@ public class Interval {
         }
 
         return c.getTime().getTime();
-    }
-
-    private void setRealTime(Value value, long time) {
-        // Subtract the increment time since the time must point to the
-        // start time of the row, not the end.
-        realTimeTime = time - incrementTime;
-        realTimeValue = value;
     }
 
     private void update(char interval, String number) {
@@ -280,42 +187,20 @@ public class Interval {
         }
     }
 
-    public static Interval parse(String interval, Rollup.Type rollup) {
+    public static IntervalParser parse(String interval) {
         if (interval == null
                 || "none".equals(interval)
                 || "default".equals(interval)) {
             return null;
         }
-
-        Rollup roll = null;
-        if (Rollup.Type.AVERAGE == rollup) {
-            roll = new AvgRollup();
-        } else if (Rollup.Type.COUNT == rollup) {
-            roll = new CountRollup();
-        } else if (Rollup.Type.FIRST == rollup) {
-            roll = new FirstRollup();
-        } else if (Rollup.Type.LAST == rollup) {
-            roll = new LastRollup();
-        } else if (Rollup.Type.MAX == rollup) {
-            roll = new MaxRollup();
-        } else if (Rollup.Type.MIN == rollup) {
-            roll = new MinRollup();
-        } else if (Rollup.Type.SUM == rollup) {
-            roll = new SumRollup();
-        } else if (Rollup.Type.DELTA == rollup) {
-            roll = new DeltaRollup();
-        } else if (Rollup.Type.NONE != rollup) {
-            throw new RuntimeException("Invalid rollup: " + rollup);
-        }
-
-        final Interval i = new Interval(roll);
+        final IntervalParser parser = new IntervalParser();
         char[] chars = interval.toCharArray();
         StringBuilder number = new StringBuilder();
         for (char c : chars) {
             if (Character.isDigit(c)) {
                 number.append(c);
             } else {
-                i.update(c, number.toString());
+                parser.update(c, number.toString());
                 number.delete(0, number.length());
             }
         }
@@ -324,7 +209,7 @@ public class Interval {
             throw new RuntimeException("Invalid expression");
         }
 
-        i.finishParsing();
-        return i;
+        parser.finishParsing();
+        return parser;
     }
 }

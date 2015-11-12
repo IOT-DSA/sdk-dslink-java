@@ -15,6 +15,8 @@ import org.dsa.iot.dslink.util.handler.CompleteHandler;
 import org.dsa.iot.dslink.util.handler.Handler;
 import org.dsa.iot.historian.database.Database;
 import org.dsa.iot.historian.database.Watch;
+import org.dsa.iot.historian.stats.interval.IntervalParser;
+import org.dsa.iot.historian.stats.interval.IntervalProcessor;
 import org.dsa.iot.historian.stats.rollup.Rollup;
 import org.dsa.iot.historian.utils.QueryData;
 import org.dsa.iot.historian.utils.TimeParser;
@@ -80,8 +82,9 @@ public class GetHistory implements Handler<ActionResult> {
             table.setMode(Table.Mode.APPEND);
         }
 
+        IntervalParser parser = IntervalParser.parse(sInterval);
         Rollup.Type type = Rollup.Type.toEnum(sRollup);
-        performQuery(event, from, to, rt, type, sInterval);
+        performQuery(event, from, to, rt, type, parser);
     }
 
     protected void performQuery(final ActionResult event,
@@ -89,8 +92,8 @@ public class GetHistory implements Handler<ActionResult> {
                                 final long to,
                                 final boolean realTime,
                                 final Rollup.Type rollup,
-                                final String unparsedInterval) {
-        final Interval interval = Interval.parse(unparsedInterval, rollup);
+                                final IntervalParser parser) {
+        final IntervalProcessor interval = IntervalProcessor.parse(parser, rollup);
         ScheduledThreadPoolExecutor stpe = Objects.getDaemonThreadPool();
         stpe.execute(new Runnable() {
 
@@ -145,7 +148,7 @@ public class GetHistory implements Handler<ActionResult> {
     }
 
     protected void processQueryData(Table table,
-                                    Interval interval,
+                                    IntervalProcessor interval,
                                     QueryData data) {
         Row row;
         Value value = data.getValue();
