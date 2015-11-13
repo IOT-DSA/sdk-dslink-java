@@ -96,8 +96,12 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("[Received] {}: {}", handshake().dsId(), data);
             }
-            JsonObject obj = new JsonObject(data);
-            processor().processData(obj);
+            if ("{}".equals(data)) {
+                write("{}");
+            } else {
+                JsonObject obj = new JsonObject(data);
+                processor().processData(obj);
+            }
         } else if (frame instanceof PingWebSocketFrame) {
             ByteBuf buf = frame.content().retain();
             channel.writeAndFlush(new PongWebSocketFrame(buf));
