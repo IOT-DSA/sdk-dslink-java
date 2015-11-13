@@ -230,12 +230,20 @@ public class Node {
         setValue(value, false);
     }
 
+    public void setValue(Value value, boolean externalSource) {
+        setValue(value, externalSource, true);
+    }
+
     /**
      * @param value Value to set.
      * @param externalSource Whether the value was set from an external source
      *                       like an action that got invoked.
+     * @param publish Whether to allow a publish to the network.
+     * @return Whether a value was actually set.
      */
-    public void setValue(Value value, boolean externalSource) {
+    protected boolean setValue(Value value,
+                            boolean externalSource,
+                            boolean publish) {
         ValueType type = valueType;
         if (type == null && value != null) {
             String err = "Value type not set on node (" + getPath() + ")";
@@ -247,7 +255,7 @@ public class Node {
             pair = new ValuePair(this.value, value, externalSource);
         }
         if (listener.postValueUpdate(pair)) {
-            return;
+            return false;
         }
         if (value != null) {
             value.setImmutable();
@@ -285,13 +293,14 @@ public class Node {
                     || (prev == null && value == null)) {
                 markChanged();
             }
-            if (link != null) {
+            if (publish && link != null) {
                 SubscriptionManager manager = link.getSubscriptionManager();
                 if (manager != null) {
                     manager.postValueUpdate(this);
                 }
             }
         }
+        return true;
     }
 
     /**

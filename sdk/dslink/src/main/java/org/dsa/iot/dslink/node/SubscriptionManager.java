@@ -219,6 +219,42 @@ public class SubscriptionManager {
         }
     }
 
+    public void batchValueUpdate(Map<Node, Value> updates) {
+        if (updates == null) {
+            return;
+        }
+        JsonArray jsonUpdates = null;
+        for (Map.Entry<Node, Value> entry : updates.entrySet()) {
+            Node node = entry.getKey();
+            Value val = entry.getValue();
+            node.setValue(val, false, false);
+
+            Integer sid = valueSubsPaths.get(node.getPath());
+            if (sid != null) {
+                JsonArray update = new JsonArray();
+                update.add(sid);
+
+                if (val != null) {
+                    ValueUtils.toJson(update, val);
+                    update.add(val.getTimeStamp());
+                } else {
+                    update.add(null);
+                }
+                if (jsonUpdates == null) {
+                    jsonUpdates = new JsonArray();
+                }
+                jsonUpdates.add(update);
+            }
+        }
+
+        if (jsonUpdates != null) {
+            JsonObject resp = new JsonObject();
+            resp.put("rid", 0);
+            resp.put("updates", jsonUpdates);
+            link.getWriter().writeResponse(resp);
+        }
+    }
+
     /**
      * Posts a value update to notify all the remote endpoints of a node
      * value update.

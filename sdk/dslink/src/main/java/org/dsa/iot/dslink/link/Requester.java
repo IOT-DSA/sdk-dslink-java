@@ -11,6 +11,7 @@ import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.NodePair;
 import org.dsa.iot.dslink.node.SubscriptionManager;
 import org.dsa.iot.dslink.node.value.SubscriptionValue;
+import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.util.Objects;
 import org.dsa.iot.dslink.util.SubData;
 import org.dsa.iot.dslink.util.handler.Handler;
@@ -69,6 +70,11 @@ public class Requester extends Linkable {
     public Requester(DSLinkHandler handler) {
         super(handler);
         reqs = new ConcurrentHashMap<>();
+    }
+
+    @Override
+    public void batchSet(Map<Node, Value> updates) {
+        throw new UnsupportedOperationException();
     }
 
     @SuppressWarnings("unused")
