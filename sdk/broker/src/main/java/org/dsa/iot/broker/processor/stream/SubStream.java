@@ -1,5 +1,6 @@
 package org.dsa.iot.broker.processor.stream;
 
+import org.dsa.iot.broker.node.BrokerNode;
 import org.dsa.iot.broker.server.client.Client;
 import org.dsa.iot.broker.utils.ParsedPath;
 import org.dsa.iot.dslink.util.json.JsonArray;
@@ -15,16 +16,22 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SubStream {
 
     private final ParsedPath path;
+    private final BrokerNode node;
 
     private Map<Client, Integer> clientMap = new ConcurrentHashMap<>();
     private JsonArray lastValueUpdate;
 
-    public SubStream(ParsedPath path) {
+    public SubStream(ParsedPath path, BrokerNode node) {
         this.path = Objects.requireNonNull(path, "path");
+        this.node = Objects.requireNonNull(node, "node");
     }
 
     public ParsedPath path() {
         return path;
+    }
+
+    public BrokerNode node() {
+        return node;
     }
 
     public void add(Client requester, int sid) {
@@ -85,7 +92,9 @@ public class SubStream {
             update.set(0, sid);
 
             Client requester = entry.getKey();
-            requester.write(top.encode());
+            if (!requester.write(top.encode())) {
+                node().unsubscribe(this, requester);
+            }
         }
     }
 }

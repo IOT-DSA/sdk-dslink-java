@@ -5,12 +5,12 @@ import org.dsa.iot.broker.node.BrokerNode;
 import org.dsa.iot.broker.node.DSLinkNode;
 import org.dsa.iot.broker.processor.stream.Stream;
 import org.dsa.iot.broker.processor.stream.SubStream;
+import org.dsa.iot.broker.server.client.Client;
 import org.dsa.iot.broker.utils.ParsedPath;
 import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -37,8 +37,13 @@ public class Requester extends LinkHandler {
         return reqStreams.remove(rid);
     }
 
-    protected Map<Integer, Stream> getReqStreams() {
-        return Collections.unmodifiableMap(reqStreams);
+    public void requesterDisconnected(Client client) {
+        for (Stream stream : reqStreams.values()) {
+            stream.close(client, true);
+        }
+        for (SubStream stream : subStreams.values()) {
+            stream.node().unsubscribe(stream, client);
+        }
     }
 
     @Override

@@ -3,12 +3,10 @@ package org.dsa.iot.broker.processor;
 import org.dsa.iot.broker.node.DSLinkNode;
 import org.dsa.iot.broker.processor.stream.Stream;
 import org.dsa.iot.broker.processor.stream.manager.StreamManager;
-import org.dsa.iot.broker.server.client.Client;
 import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -34,14 +32,6 @@ public class Responder extends LinkHandler {
 
     public int nextSid() {
         return sid.incrementAndGet();
-    }
-
-    public void requesterDisconnected(Client client) {
-        Requester req = client.node().processor().requester();
-        Map<Integer, Stream> streams = req.getReqStreams();
-        if (streams != null) {
-            stream().close(client, streams.values(), true);
-        }
     }
 
     public void responderConnected() {

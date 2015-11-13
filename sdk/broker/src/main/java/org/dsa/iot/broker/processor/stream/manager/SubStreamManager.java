@@ -53,7 +53,7 @@ public class SubStreamManager {
                     respSid = responder().nextSid();
                     subPaths.put(path, respSid);
                     top = RequestGenerator.subscribe(path, respSid, rid);
-                    stream = new SubStream(path);
+                    stream = new SubStream(path, responder().node());
                     subStreams.put(respSid, stream);
                 }
             } finally {

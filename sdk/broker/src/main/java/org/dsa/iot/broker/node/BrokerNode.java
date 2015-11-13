@@ -269,7 +269,7 @@ public class BrokerNode<T extends BrokerNode> {
     private synchronized void initializeValueSubs() {
         if (subStream == null) {
             ParsedPath pp = ParsedPath.parse(null, path);
-            subStream = new SubStream(pp);
+            subStream = new SubStream(pp, this);
             subStream.dispatch(generateValueUpdate());
         }
     }

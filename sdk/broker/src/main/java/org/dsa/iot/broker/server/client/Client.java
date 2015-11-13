@@ -63,7 +63,11 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
         }
     }
 
-    public void write(String data) {
+    public boolean write(String data) {
+        ChannelHandlerContext ctx = this.ctx;
+        if (ctx == null) {
+            return false;
+        }
         byte[] bytes = data.getBytes(CharsetUtil.UTF_8);
         ByteBuf buf = Unpooled.wrappedBuffer(bytes);
         TextWebSocketFrame frame = new TextWebSocketFrame(buf);
@@ -72,6 +76,7 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("[Sent] {}: {}", handshake().dsId(), data);
         }
+        return true;
     }
 
     @Override

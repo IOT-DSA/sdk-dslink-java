@@ -2,6 +2,7 @@ package org.dsa.iot.broker.processor;
 
 import org.dsa.iot.broker.node.DSLinkNode;
 import org.dsa.iot.broker.server.DsaHandshake;
+import org.dsa.iot.broker.server.client.Client;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
@@ -47,7 +48,11 @@ public class MessageProcessor {
         }
     }
 
-    public void disconnected() {
+    public void disconnected(Client client) {
+        Requester requester = this.requester;
+        if (requester != null) {
+            requester.requesterDisconnected(client);
+        }
         Responder responder = this.responder;
         if (responder != null) {
             responder.responderDisconnected();
