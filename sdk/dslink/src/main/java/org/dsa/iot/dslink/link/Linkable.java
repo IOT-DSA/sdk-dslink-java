@@ -30,7 +30,6 @@ public abstract class Linkable {
      *
      * @param updates Updates to batch set.
      */
-    @SuppressWarnings("unused")
     public abstract void batchSet(Map<Node, Value> updates);
 
     /**

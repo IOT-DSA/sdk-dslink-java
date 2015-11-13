@@ -1,5 +1,6 @@
 package org.dsa.iot.responder.rng;
 
+import io.netty.util.internal.ConcurrentSet;
 import org.dsa.iot.dslink.node.MetaData;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeBuilder;
@@ -10,10 +11,10 @@ import org.dsa.iot.dslink.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ScheduledFuture;
+import java.util.Set;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -27,11 +28,26 @@ public class RNG implements MetaData {
     private static final Random RANDOM = new Random();
     private static final Logger LOGGER;
 
-    private final Map<Node, ScheduledFuture<?>> futures;
+    private final Set<Node> nodes;
     private Node parent;
 
     private RNG() {
-        this.futures = new ConcurrentHashMap<>();
+        this.nodes = new ConcurrentSet<>();
+        ScheduledThreadPoolExecutor stpe = Objects.getDaemonThreadPool();
+        stpe.scheduleWithFixedDelay(new Runnable() {
+            @Override
+            public void run() {
+                Map<Node, Value> updates = new HashMap<>();
+                for (Node node : nodes) {
+                    int value = RANDOM.nextInt();
+                    updates.put(node, new Value(value));
+                    LOGGER.info(node.getPath() + " has new value of " + value);
+                }
+                if (!(updates.isEmpty() || parent == null)) {
+                    parent.getLink().batchSet(updates);
+                }
+            }
+        }, 0, 2, TimeUnit.SECONDS);
     }
 
     @Override
@@ -90,38 +106,21 @@ public class RNG implements MetaData {
             LOGGER.info(msg);
 
             // Remove RNG task if possible
-            ScheduledFuture<?> fut = futures.remove(child);
-            if (fut != null) {
-                // Cancel out the RNG task
-                fut.cancel(false);
-            }
+            nodes.remove(child);
         }
         return min;
     }
 
     void subscribe(final Node event) {
         LOGGER.info("Subscribed to {}", event.getPath());
-        if (futures.containsKey(event)) {
+        if (nodes.contains(event)) {
             return;
         }
-        ScheduledThreadPoolExecutor stpe = Objects.getDaemonThreadPool();
-        ScheduledFuture<?> fut = stpe.scheduleWithFixedDelay(new Runnable() {
-            @Override
-            public void run() {
-                Value val = new Value(RANDOM.nextInt());
-                event.setValue(val);
-
-                int value = val.getNumber().intValue();
-                LOGGER.info(event.getPath() + " has new value of " + value);
-            }
-        }, 0, 2, TimeUnit.SECONDS);
-        futures.put(event, fut);
+        nodes.add(event);
     }
 
     void unsubscribe(final Node event) {
-        ScheduledFuture<?> fut = futures.remove(event);
-        if (fut != null) {
-            fut.cancel(false);
+        if (nodes.remove(event)) {
             LOGGER.info("Unsubscribed to {}", event.getPath());
         }
     }
