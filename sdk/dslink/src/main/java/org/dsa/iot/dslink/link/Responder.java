@@ -31,6 +31,9 @@ public class Responder extends Linkable {
     public void batchSet(Map<Node, Value> updates) {
         SubscriptionManager sm = getSubscriptionManager();
         if (sm == null) {
+            for (Map.Entry<Node, Value> update : updates.entrySet()) {
+                update.getKey().setValue(update.getValue());
+            }
             return;
         }
         sm.batchValueUpdate(updates);
