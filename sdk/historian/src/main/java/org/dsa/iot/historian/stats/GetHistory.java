@@ -122,7 +122,7 @@ public class GetHistory implements Handler<ActionResult> {
                         if (updates != null) {
                             updates.add(data);
                             if (updates.size() >= 500) {
-                                processQueryData(table, interval, updates);
+                                processQueryData(table, interval, updates, true);
                             }
                         }
                     }
@@ -130,7 +130,7 @@ public class GetHistory implements Handler<ActionResult> {
                     @Override
                     public void complete() {
                         if (!updates.isEmpty()) {
-                            processQueryData(table, interval, updates);
+                            processQueryData(table, interval, updates, true);
                         }
                         updates = null;
 
@@ -148,7 +148,7 @@ public class GetHistory implements Handler<ActionResult> {
                                 @Override
                                 public void handle(QueryData event) {
                                     Collection<QueryData> single = Collections.singleton(event);
-                                    processQueryData(table, interval, single);
+                                    processQueryData(table, interval, single, false);
                                 }
                             };
                             Watch w = event.getNode().getParent().getMetaData();
@@ -171,7 +171,8 @@ public class GetHistory implements Handler<ActionResult> {
 
     protected void processQueryData(Table table,
                                     IntervalProcessor interval,
-                                    Collection<QueryData> data) {
+                                    Collection<QueryData> data,
+                                    boolean performRemove) {
         if (data.isEmpty()) {
             return;
         }
@@ -195,7 +196,9 @@ public class GetHistory implements Handler<ActionResult> {
                 batch.addRow(row);
             }
             update.setValue(null);
-            it.remove();
+            if (performRemove) {
+                it.remove();
+            }
         }
         table.addBatchRows(batch);
     }
