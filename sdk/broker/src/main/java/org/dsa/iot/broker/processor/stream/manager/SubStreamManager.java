@@ -91,7 +91,11 @@ public class SubStreamManager {
 
             int rid = responder().nextRid();
             JsonObject top = RequestGenerator.unsubscribe(rid, sid);
-            responder().client().write(top.encode());
+
+            Client responder = responder().client();
+            if (responder != null) {
+                responder.write(top.encode());
+            }
         }
     }
 
