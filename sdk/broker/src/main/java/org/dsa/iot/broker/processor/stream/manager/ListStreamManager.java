@@ -56,11 +56,10 @@ public class ListStreamManager {
                 rid = pathListMap.get(path);
                 if (rid == null) {
                     Responder responder = manager().responder();
+                    rid = responder.nextRid();
                     Client client = responder.client();
                     if (client != null) {
-                        rid = responder.nextRid();
                         pathListMap.put(path, rid);
-
                         JsonObject top = RequestGenerator.list(path, rid);
                         client.write(top.encode());
                     } else if (path.base().equals("/")) {
