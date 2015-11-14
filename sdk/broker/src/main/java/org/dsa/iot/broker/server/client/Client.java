@@ -104,8 +104,14 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
             if ("{}".equals(data)) {
                 write("{}");
             } else {
-                JsonObject obj = new JsonObject(data);
-                processor().processData(obj);
+                try {
+                    JsonObject obj = new JsonObject(data);
+                    processor().processData(obj);
+                } catch (RuntimeException e) {
+                    String dsId = handshake().dsId();
+                    String err = "Error occurred processing message for: {}\n{}";
+                    LOGGER.error(err, dsId, e);
+                }
             }
         } else if (frame instanceof PingWebSocketFrame) {
             ByteBuf buf = frame.content().retain();
