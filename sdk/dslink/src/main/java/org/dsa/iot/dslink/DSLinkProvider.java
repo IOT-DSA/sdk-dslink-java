@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 
-import static org.dsa.iot.dslink.connection.ConnectionManager.ClientConnected;
+import static org.dsa.iot.dslink.connection.ConnectionManager.Client;
 
 /**
  * Provides DSLinks as soon as a client connects to the server or vice versa.
@@ -48,9 +48,9 @@ public class DSLinkProvider {
         running = true;
 
         final String dsId = handler.getConfig().getDsIdWithHash();
-        manager.setPreInitHandler(new Handler<ClientConnected>() {
+        manager.setPreInitHandler(new Handler<Client>() {
             @Override
-            public void handle(final ClientConnected event) {
+            public void handle(final Client event) {
                 final CountDownLatch latch = new CountDownLatch(2);
                 final DataHandler writer = event.getHandler();
                 final String path = event.getPath();
@@ -71,9 +71,9 @@ public class DSLinkProvider {
                                 link = tmp;
                             }
 
-                            event.setRequesterOnConnected(new Handler<ClientConnected>() {
+                            event.setRequesterOnConnected(new Handler<Client>() {
                                 @Override
-                                public void handle(ClientConnected event) {
+                                public void handle(Client event) {
                                     handler.onRequesterConnected(link);
                                 }
                             });
@@ -115,9 +115,9 @@ public class DSLinkProvider {
                                 link = tmp;
                             }
 
-                            event.setResponderOnConnected(new Handler<ClientConnected>() {
+                            event.setResponderOnConnected(new Handler<Client>() {
                                 @Override
-                                public void handle(ClientConnected event) {
+                                public void handle(Client event) {
                                     handler.onResponderConnected(link);
                                 }
                             });
