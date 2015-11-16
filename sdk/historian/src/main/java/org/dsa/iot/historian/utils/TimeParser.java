@@ -1,5 +1,7 @@
 package org.dsa.iot.historian.utils;
 
+import org.dsa.iot.dslink.util.TimeUtils;
+
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -13,19 +15,10 @@ public class TimeParser {
 
     private static final ThreadLocal<DateFormat> FORMAT_TIME_ZONE;
     private static final ThreadLocal<DateFormat> FORMAT;
-    private static final String TIME_ZONE;
 
     public static long parse(String time) {
         try {
-            if (time.endsWith("Z")) {
-                time = time.substring(0, time.length() - 1) + "-0000";
-            } else if (time.matches(".+[+|-]\\d+:\\d+")) {
-                StringBuilder b = new StringBuilder(time);
-                b.deleteCharAt(time.lastIndexOf(":"));
-                time = b.toString();
-            } else {
-                time += TIME_ZONE;
-            }
+            time = TimeUtils.fixTime(time);
             return FORMAT_TIME_ZONE.get().parse(time).getTime();
         } catch (ParseException e) {
             throw new RuntimeException(e);
@@ -40,7 +33,8 @@ public class TimeParser {
         FORMAT_TIME_ZONE = new ThreadLocal<DateFormat>() {
             @Override
             protected DateFormat initialValue() {
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+                String pattern = TimeUtils.getTimePatternTz();
+                SimpleDateFormat sdf = new SimpleDateFormat(pattern);
                 sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
                 return sdf;
             }
@@ -49,21 +43,11 @@ public class TimeParser {
         FORMAT = new ThreadLocal<DateFormat>() {
             @Override
             protected DateFormat initialValue() {
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+                String pattern = TimeUtils.getTimePattern();
+                SimpleDateFormat sdf = new SimpleDateFormat(pattern);
                 sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
                 return sdf;
             }
         };
-
-        long currentTime = new Date().getTime();
-        int offset = TimeZone.getDefault().getOffset(currentTime) / (1000 * 60);
-        String s = "+";
-        if (offset < 0) {
-            offset = -offset;
-            s = "-";
-        }
-        int hh = offset / 60;
-        int mm = offset % 60;
-        TIME_ZONE = s + (hh < 10 ? "0" : "") + hh + (mm < 10 ? "0" : "") + mm;
     }
 }

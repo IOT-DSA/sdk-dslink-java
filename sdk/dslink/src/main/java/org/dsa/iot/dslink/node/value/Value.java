@@ -1,14 +1,11 @@
 package org.dsa.iot.dslink.node.value;
 
 import org.dsa.iot.dslink.node.Node;
+import org.dsa.iot.dslink.util.TimeUtils;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.TimeZone;
 
 /**
  * Common class for handling values. It is always recommended to check the type
@@ -17,10 +14,6 @@ import java.util.TimeZone;
  * @author Samuel Grenier
  */
 public class Value {
-
-    private static final ThreadLocal<DateFormat> FORMAT_TIME_ZONE;
-    private static final ThreadLocal<DateFormat> FORMAT;
-    private static final String TIME_ZONE;
 
     private ValueType type;
     private boolean immutable;
@@ -215,14 +208,7 @@ public class Value {
         if (time == null) {
             setTime(System.currentTimeMillis());
         } else {
-            if (time.matches(".+[+|-]\\d+:\\d+")) {
-                StringBuilder builder = new StringBuilder(time);
-                builder.deleteCharAt(time.lastIndexOf(":"));
-                time = builder.toString();
-            } else {
-                time += TIME_ZONE;
-            }
-            this.tsFormatted = time;
+            this.tsFormatted = TimeUtils.fixTime(time);
         }
 
         this.number = n;
@@ -274,7 +260,7 @@ public class Value {
      */
     public String getTimeStamp() {
         if (tsFormatted == null) {
-            tsFormatted = FORMAT.get().format(getDate()) + TIME_ZONE;
+            tsFormatted = TimeUtils.format(getDate());
         }
         return tsFormatted;
     }
@@ -286,11 +272,7 @@ public class Value {
      */
     public Date getDate() {
         if (tsDate == null) {
-            try {
-                this.tsDate = FORMAT_TIME_ZONE.get().parse(tsFormatted);
-            } catch (ParseException e) {
-                throw new RuntimeException(e);
-            }
+            tsDate = TimeUtils.parseTz(tsFormatted);
         }
         return new Date(tsDate.getTime());
     }
@@ -421,30 +403,5 @@ public class Value {
 
     private boolean objectEquals(Object a, Object b) {
         return (a == null && b == null) || (a != null && a.equals(b));
-    }
-
-    static {
-        long currentTime = new Date().getTime();
-        int offset = TimeZone.getDefault().getOffset(currentTime) / (1000 * 60);
-        String s = "+";
-        if (offset < 0) {
-            offset = -offset;
-            s = "-";
-        }
-        int hh = offset / 60;
-        int mm = offset % 60;
-        TIME_ZONE = s + (hh < 10 ? "0" : "") + hh + ":" + (mm < 10 ? "0" : "") + mm;
-        FORMAT = new ThreadLocal<DateFormat>() {
-            @Override
-            public DateFormat initialValue() {
-                return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
-            }
-        };
-        FORMAT_TIME_ZONE = new ThreadLocal<DateFormat>() {
-            @Override
-            public DateFormat initialValue() {
-                return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-            }
-        };
     }
 }
