@@ -109,10 +109,10 @@ public class ConnectionManager {
                         connector.setOnDisconnected(new Handler<Void>() {
                             @Override
                             public void handle(Void event) {
+                                cc.disconnected();
                                 if (running) {
                                     LOGGER.warn("WebSocket connection failed");
                                     reconnect();
-                                    cc.disconnected();
                                 }
                             }
                         });
