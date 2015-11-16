@@ -111,16 +111,9 @@ public class ConnectionManager {
                             public void handle(Void event) {
                                 if (running) {
                                     LOGGER.warn("WebSocket connection failed");
-                                    handler.close();
                                     reconnect();
+                                    cc.disconnected();
                                 }
-                            }
-                        });
-
-                        connector.setOnException(new Handler<Throwable>() {
-                            @Override
-                            public void handle(Throwable event) {
-                                LOGGER.error("Connector exception", event);
                             }
                         });
 
@@ -208,6 +201,8 @@ public class ConnectionManager {
 
         private Handler<Client> onRequesterConnected;
         private Handler<Client> onResponderConnected;
+        private Handler<Void> onRequesterDisconnected;
+        private Handler<Void> onResponderDisconnected;
         private DataHandler handler;
 
         public Client(boolean isRequester,
@@ -246,6 +241,14 @@ public class ConnectionManager {
             this.onResponderConnected = handler;
         }
 
+        public void setRequesterOnDisconnected(Handler<Void> handler) {
+            this.onRequesterDisconnected = handler;
+        }
+
+        public void setResponderOnDisconnected(Handler<Void> handler) {
+            this.onResponderDisconnected = handler;
+        }
+
         void connected() {
             if (onRequesterConnected != null) {
                 onRequesterConnected.handle(this);
@@ -253,6 +256,16 @@ public class ConnectionManager {
 
             if (onResponderConnected != null) {
                 onResponderConnected.handle(this);
+            }
+        }
+
+        void disconnected() {
+            if (onRequesterDisconnected != null) {
+                onRequesterDisconnected.handle(null);
+            }
+
+            if (onResponderDisconnected != null) {
+                onResponderDisconnected.handle(null);
             }
         }
     }

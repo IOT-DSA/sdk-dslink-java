@@ -165,15 +165,8 @@ public class DSLink {
                     getWriter().writeAck(event.getMsgId());
                 }
             });
-
-            getWriter().setReqCloseHandler(new Handler<Void>() {
-                @Override
-                public void handle(Void event) {
-                    DSLink.this.requester.clearSubscriptions();
-                    getLinkHandler().onRequesterDisconnected(DSLink.this);
-                }
-            });
         }
+
         if (responder) {
             getWriter().setReqHandler(new Handler<DataReceived>() {
                 @Override
@@ -207,15 +200,6 @@ public class DSLink {
 
                     Integer msgId = event.getMsgId();
                     getWriter().writeRequestResponses(msgId, responses);
-                }
-            });
-
-            getWriter().setRespCloseHandler(new Handler<Void>() {
-                @Override
-                public void handle(Void event) {
-                    Responder resp = DSLink.this.getResponder();
-                    resp.getSubscriptionManager().clearAllSubscriptions();
-                    getLinkHandler().onResponderDisconnected(DSLink.this);
                 }
             });
         }

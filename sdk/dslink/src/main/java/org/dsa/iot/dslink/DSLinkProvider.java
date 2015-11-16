@@ -2,6 +2,7 @@ package org.dsa.iot.dslink;
 
 import org.dsa.iot.dslink.connection.ConnectionManager;
 import org.dsa.iot.dslink.connection.DataHandler;
+import org.dsa.iot.dslink.link.Responder;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.serializer.SerializationManager;
 import org.dsa.iot.dslink.util.Objects;
@@ -77,6 +78,13 @@ public class DSLinkProvider {
                                     handler.onRequesterConnected(link);
                                 }
                             });
+                            event.setRequesterOnDisconnected(new Handler<Void>() {
+                                @Override
+                                public void handle(Void event) {
+                                    link.getRequester().clearSubscriptions();
+                                    handler.onRequesterDisconnected(link);
+                                }
+                            });
                         }
                         latch.countDown();
                     }
@@ -119,6 +127,14 @@ public class DSLinkProvider {
                                 @Override
                                 public void handle(Client event) {
                                     handler.onResponderConnected(link);
+                                }
+                            });
+                            event.setResponderOnDisconnected(new Handler<Void>() {
+                                @Override
+                                public void handle(Void event) {
+                                    Responder resp = link.getResponder();
+                                    resp.getSubscriptionManager().clearAllSubscriptions();
+                                    handler.onResponderDisconnected(link);
                                 }
                             });
                         }
