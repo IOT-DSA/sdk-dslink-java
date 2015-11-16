@@ -109,6 +109,13 @@ public class DSLink {
     }
 
     /**
+     * @return Whether the DSLink is connected or not.
+     */
+    public boolean isConnected() {
+        return dataHandler != null && dataHandler.isConnected();
+    }
+
+    /**
      * @return The path of the link on the broker.
      */
     public String getPath() {

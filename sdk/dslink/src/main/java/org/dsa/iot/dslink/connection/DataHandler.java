@@ -38,6 +38,10 @@ public class DataHandler {
         this.respHandler = handler;
     }
 
+    public boolean isConnected() {
+        return client != null && client.isConnected();
+    }
+
     /**
      * Processes incoming data from a remote endpoint.
      *
