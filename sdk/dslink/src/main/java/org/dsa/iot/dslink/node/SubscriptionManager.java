@@ -10,6 +10,7 @@ import org.dsa.iot.dslink.util.json.JsonObject;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 /**
  * Handles subscriptions for values and paths.
@@ -19,7 +20,7 @@ public class SubscriptionManager {
 
     private final Map<String, ListResponse> pathSubsMap = new ConcurrentHashMap<>();
 
-    private final Map<String, Integer> valueSubsPaths = new HashMap<>();
+    private final Map<String, Subscription> valueSubsPaths = new HashMap<>();
     private final Map<Integer, String> valueSubsSids = new HashMap<>();
 
     private final Object valueLock = new Object();
@@ -29,21 +30,33 @@ public class SubscriptionManager {
         this.link = link;
     }
 
-    public void clearAllSubscriptions() {
+    public void disconnected() {
+        ScheduledThreadPoolExecutor stpe = Objects.getDaemonThreadPool();
         NodeManager manager = link.getNodeManager();
 
-        Collection<String> paths;
+        Map<String, Subscription> subs;
         synchronized (valueLock) {
-            paths = new ArrayList<>(valueSubsPaths.keySet());
-            valueSubsPaths.clear();
+            subs = new HashMap<>(valueSubsPaths);
             valueSubsSids.clear();
         }
-        for (String path : paths) {
-            Node node = manager.getNode(path, false, false).getNode();
-            if (node != null) {
+
+        {
+            Iterator<Map.Entry<String, Subscription>> it = subs.entrySet().iterator();
+            while (it.hasNext()) {
+                Map.Entry<String, Subscription> entry = it.next();
+                Subscription sub = entry.getValue();
+                if (sub.qos() > 0) {
+                    continue;
+                }
+                it.remove();
+                String path = entry.getKey();
+                Node node = manager.getNode(path, false, false).getNode();
+                if (node == null) {
+                    continue;
+                }
                 final NodeListener listener = node.getListener();
                 if (listener != null) {
-                    Objects.getDaemonThreadPool().execute(new Runnable() {
+                    stpe.execute(new Runnable() {
                         @Override
                         public void run() {
                             listener.postOnUnsubscription();
@@ -53,15 +66,18 @@ public class SubscriptionManager {
             }
         }
 
-        Iterator<String> it = pathSubsMap.keySet().iterator();
-        while (it.hasNext()) {
-            String path = it.next();
-            it.remove();
-            Node node = manager.getNode(path, false, false).getNode();
-            if (node != null) {
+        {
+            Iterator<String> it = pathSubsMap.keySet().iterator();
+            while (it.hasNext()) {
+                String path = it.next();
+                it.remove();
+                Node node = manager.getNode(path, false, false).getNode();
+                if (node == null) {
+                    continue;
+                }
                 final NodeListener listener = node.getListener();
                 if (listener != null) {
-                    Objects.getDaemonThreadPool().execute(new Runnable() {
+                    stpe.execute(new Runnable() {
                         @Override
                         public void run() {
                             listener.postListClosed();
@@ -101,19 +117,25 @@ public class SubscriptionManager {
      * to publish a value update and have it updated to the remote endpoint if
      * it is subscribed.
      *
-     * @param path Path to subscribe to
-     * @param sid Subscription ID to send back to the client
+     * @param path Path to subscribe to.
+     * @param sid Subscription ID to send back to the client.
+     * @param qos The QoS level of the designated subscription.
      */
-    public void addValueSub(String path, int sid) {
+    public void addValueSub(String path, int sid, int qos) {
         path = NodeManager.normalizePath(path, true);
         synchronized (valueLock) {
-            Integer prev = valueSubsPaths.put(path, sid);
+            Subscription sub = new Subscription(sid, qos);
+            Subscription prev = valueSubsPaths.put(path, sub);
             if (prev != null) {
-                if (prev > sid) {
-                    valueSubsPaths.put(path, prev);
-                    return;
+                valueSubsSids.remove(prev.sid());
+
+                JsonArray updates = prev.generateUpdates();
+                if (updates != null) {
+                    JsonObject resp = new JsonObject();
+                    resp.put("rid", 0);
+                    resp.put("updates", updates);
+                    link.getWriter().writeResponse(resp);
                 }
-                valueSubsSids.remove(prev);
             }
             valueSubsSids.put(sid, path);
             if (prev != null) {
@@ -163,15 +185,12 @@ public class SubscriptionManager {
      * @param node Subscribed node to unsubscribe
      */
     public void removeValueSub(Node node) {
-        Integer sid;
+        Subscription sub;
         synchronized (valueLock) {
-            sid = valueSubsPaths.remove(node.getPath());
-            if (sid != null) {
-                valueSubsSids.remove(sid);
-            }
+            sub = valueSubsPaths.remove(node.getPath());
         }
-        if (sid != null) {
-            node.getListener().postOnUnsubscription();
+        if (sub != null) {
+            removeValueSub(sub.sid());
         }
     }
 
@@ -220,6 +239,11 @@ public class SubscriptionManager {
     }
 
     public void batchValueUpdate(Map<Node, Value> updates) {
+        batchValueUpdate(updates, true);
+    }
+
+    public void batchValueUpdate(Map<Node, Value> updates,
+                                 boolean set) {
         if (updates == null) {
             return;
         }
@@ -227,23 +251,22 @@ public class SubscriptionManager {
         for (Map.Entry<Node, Value> entry : updates.entrySet()) {
             Node node = entry.getKey();
             Value val = entry.getValue();
-            node.setValue(val, false, false);
+            if (set) {
+                node.setValue(val, false, false);
+            }
 
-            Integer sid = valueSubsPaths.get(node.getPath());
-            if (sid != null) {
-                JsonArray update = new JsonArray();
-                update.add(sid);
-
-                if (val != null) {
-                    ValueUtils.toJson(update, val);
-                    update.add(val.getTimeStamp());
-                } else {
-                    update.add(null);
+            Subscription sub = valueSubsPaths.get(node.getPath());
+            if (sub != null) {
+                if (!link.isConnected()) {
+                    if (sub.qos() > 0) {
+                        sub.addValue(val);
+                    }
+                    continue;
                 }
                 if (jsonUpdates == null) {
                     jsonUpdates = new JsonArray();
                 }
-                jsonUpdates.add(update);
+                jsonUpdates.add(sub.generateUpdate(val));
             }
         }
 
@@ -262,29 +285,9 @@ public class SubscriptionManager {
      * @param node Updated node.
      */
     public void postValueUpdate(Node node) {
-        Integer sid = valueSubsPaths.get(node.getPath());
-        if (sid != null) {
-            JsonArray updates = new JsonArray();
-            {
-                JsonArray update = new JsonArray();
-                update.add(sid);
-
-                Value value = node.getValue();
-                if (value != null) {
-                    ValueUtils.toJson(update, value);
-                    update.add(value.getTimeStamp());
-                } else {
-                    update.add(null);
-                }
-
-                updates.add(update);
-            }
-
-            JsonObject resp = new JsonObject();
-            resp.put("rid", 0);
-            resp.put("updates", updates);
-            link.getWriter().writeResponse(resp);
-        }
+        Value value = node.getValue();
+        Map<Node, Value> map = Collections.singletonMap(node, value);
+        batchValueUpdate(map, false);
     }
 
     /**
@@ -299,6 +302,65 @@ public class SubscriptionManager {
         ListResponse resp = pathSubsMap.get(node.getPath());
         if (resp != null) {
             resp.metaUpdate(name, value);
+        }
+    }
+
+    private static class Subscription {
+
+        private final List<Value> cache;
+        private final int sid;
+        private final int qos;
+
+        public Subscription(int sid, int qos) {
+            this.sid = sid;
+            this.qos = qos;
+            if (qos > 0) {
+                cache = new LinkedList<>();
+            } else {
+                cache = null;
+            }
+        }
+
+        public int sid() {
+            return sid;
+        }
+
+        public int qos() {
+            return qos;
+        }
+
+        public synchronized void addValue(Value value) {
+            if (cache == null) {
+                return;
+            }
+            cache.add(value);
+        }
+
+        public synchronized JsonArray generateUpdates() {
+            if (cache == null || cache.isEmpty()) {
+                return null;
+            }
+            JsonArray updates = new JsonArray();
+            Iterator<Value> it = cache.iterator();
+            while (it.hasNext()) {
+                JsonArray update = generateUpdate(it.next());
+                updates.add(update);
+                it.remove();
+            }
+            return updates;
+        }
+
+        public JsonArray generateUpdate(Value val) {
+            JsonArray update = new JsonArray();
+            update.add(sid());
+
+            if (val != null) {
+                ValueUtils.toJson(update, val);
+                update.add(val.getTimeStamp());
+            } else {
+                update.add(null);
+            }
+            return update;
         }
     }
 }

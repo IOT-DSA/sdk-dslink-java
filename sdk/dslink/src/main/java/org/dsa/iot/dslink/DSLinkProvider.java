@@ -133,7 +133,7 @@ public class DSLinkProvider {
                                 @Override
                                 public void handle(Void event) {
                                     Responder resp = link.getResponder();
-                                    resp.getSubscriptionManager().clearAllSubscriptions();
+                                    resp.getSubscriptionManager().disconnected();
                                     handler.onResponderDisconnected(link);
                                 }
                             });
