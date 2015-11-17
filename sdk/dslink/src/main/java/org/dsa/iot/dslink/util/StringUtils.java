@@ -2,7 +2,7 @@ package org.dsa.iot.dslink.util;
 
 import org.dsa.iot.dslink.node.Node;
 
-import java.util.Set;
+import java.util.Collection;
 
 /**
  * String utilities for manipulating strings
@@ -131,13 +131,27 @@ public class StringUtils {
 
     /**
      * Joins strings together into a single string using a designated
-     * builder.
+     * delimiter.
      *
-     * @param strings Strings to join
-     * @param delimiter Delimiter to join them by
-     * @return A single built string
+     * @param strings Strings to join.
+     * @param delimiter Delimiter to join each element by.
+     * @return A single built string.
      */
-    public static String join(Set<String> strings, String delimiter) {
+    public static String join(Collection<String> strings, String delimiter) {
+        return join(strings, false, delimiter);
+    }
+
+    /**
+     * Joins strings together into a single string using a designated
+     * delimiter.
+     *
+     * @param strings Strings to join.
+     * @param encode Whether or not to encode each element.
+     * @param delimiter Delimiter to join them by.
+     * @return A single built string.
+     */
+    public static String join(Collection<String> strings,
+                              boolean encode, String delimiter) {
         if (strings == null) {
             throw new NullPointerException("strings");
         } else if (delimiter == null) {
@@ -146,18 +160,33 @@ public class StringUtils {
 
         int size = strings.size();
         String[] array = strings.toArray(new String[size]);
-        return join(array, delimiter);
+        return join(array, encode, delimiter);
     }
 
     /**
      * Joins strings together into a single string using a designated
-     * builder.
+     * delimiter.
      *
-     * @param strings Strings to join
-     * @param delimiter Delimiter to join them by
-     * @return A single built string
+     * @param strings Strings to join.
+     * @param delimiter  Delimiter to join each element by.
+     * @return A single built string.
      */
     public static String join(String[] strings, String delimiter) {
+        return join(strings, false, delimiter);
+    }
+
+    /**
+     * Joins strings together into a single string using a designated
+     * delimiter.
+     *
+     * @param strings Strings to join.
+     * @param encode Whether or not to encode each element.
+     * @param delimiter Delimiter to join them by.
+     * @return A single built string.
+     */
+    public static String join(String[] strings,
+                              boolean encode,
+                              String delimiter) {
         if (strings == null) {
             throw new NullPointerException("strings");
         } else if (delimiter == null) {
@@ -171,7 +200,11 @@ public class StringUtils {
         StringBuilder builder = new StringBuilder();
         int size = strings.length;
         for (int i = 0;;) {
-            builder.append(strings[i]);
+            String s = strings[i];
+            if (encode) {
+                s = encodeName(s);
+            }
+            builder.append(s);
             if (++i < size) {
                 builder.append(delimiter);
             } else {
