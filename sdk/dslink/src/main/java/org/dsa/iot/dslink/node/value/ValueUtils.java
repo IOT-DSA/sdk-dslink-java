@@ -114,25 +114,7 @@ public class ValueUtils {
             throw new NullPointerException("array");
         else if (value == null)
             throw new NullPointerException("value");
-        switch (value.getType().toJsonString()) {
-            case ValueType.JSON_BOOL:
-                array.add(value.getBool());
-                break;
-            case ValueType.JSON_NUMBER:
-                array.add(value.getNumber());
-                break;
-            case ValueType.JSON_STRING:
-                array.add(value.getString());
-                break;
-            case ValueType.JSON_MAP:
-                array.add(value.getMap());
-                break;
-            case ValueType.JSON_ARRAY:
-                array.add(value.getArray());
-                break;
-            default:
-                throw new RuntimeException(ERROR_MSG + value.getType());
-        }
+        array.add(value);
     }
 
     /**
@@ -150,27 +132,7 @@ public class ValueUtils {
             throw new NullPointerException("name");
         else if (value == null)
             throw new NullPointerException("value");
-        switch (value.getType().toJsonString()) {
-            case ValueType.JSON_BOOL:
-                object.put(name, value.getBool());
-                break;
-            case ValueType.JSON_NUMBER:
-                object.put(name, value.getNumber());
-                break;
-            case ValueType.JSON_STRING:
-                object.put(name, value.getString());
-                break;
-            case ValueType.JSON_MAP:
-                JsonObject map = value.getMap();
-                object.put(name, map);
-                break;
-            case ValueType.JSON_ARRAY:
-                JsonArray arr = value.getArray();
-                object.put(name, arr);
-                break;
-            default:
-                throw new RuntimeException(ERROR_MSG + value.getType());
-        }
+        object.put(name, value);
     }
 
     /**

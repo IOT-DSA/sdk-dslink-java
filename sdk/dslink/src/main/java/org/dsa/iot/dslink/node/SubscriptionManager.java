@@ -337,7 +337,8 @@ public class SubscriptionManager {
                     Subscription sub = new Subscription(path, -1, qos);
                     valueSubsPaths.put(path, sub);
                     if (qos == 2) {
-                        Value val = ValueUtils.toValue(obj.get("value"));
+                        String ts = obj.get("ts");
+                        Value val = ValueUtils.toValue(obj.get("value"), ts);
                         sub.addValue(val);
                     } else if (qos == 3) {
                         JsonArray queue = obj.get("queue");
@@ -345,7 +346,10 @@ public class SubscriptionManager {
                             continue;
                         }
                         for (Object o : queue) {
-                            sub.addValue(ValueUtils.toValue(o));
+                            JsonArray array = (JsonArray) o;
+                            String ts = array.get(1);
+                            Value v = ValueUtils.toValue(array.get(0), ts);
+                            sub.addValue(v);
                         }
                     }
                 } catch (Exception e) {
@@ -394,7 +398,8 @@ public class SubscriptionManager {
                 obj = new JsonObject();
                 obj.put("qos", 2);
                 if (value != null) {
-                    ValueUtils.toJson(obj, "value", value);
+                    obj.put("value", value);
+                    obj.put("ts", value.getTimeStamp());
                 }
             } else if (qos() == 3) {
                 cache.add(value);
@@ -409,7 +414,10 @@ public class SubscriptionManager {
                     if (v == null) {
                         queue.add(null);
                     } else {
-                        ValueUtils.toJson(queue, v);
+                        JsonArray array = new JsonArray();
+                        array.add(v);
+                        array.add(v.getTimeStamp());
+                        queue.add(array);
                     }
                 }
             }
@@ -458,7 +466,7 @@ public class SubscriptionManager {
             update.add(sid());
 
             if (val != null) {
-                ValueUtils.toJson(update, val);
+                update.add(val);
                 update.add(val.getTimeStamp());
             } else {
                 update.add(null);
