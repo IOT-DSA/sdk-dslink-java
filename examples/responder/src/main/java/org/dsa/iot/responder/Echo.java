@@ -60,9 +60,9 @@ public class Echo {
             }
         });
         Set<String> enums = new LinkedHashSet<>();
-        enums.add("A");
-        enums.add("B");
-        enums.add("C");
+        enums.add("A: 1,2");
+        enums.add("B: 3,4");
+        enums.add("C: 5,6");
         a.addParameter(new Parameter("type", ValueType.makeEnum(enums))
                         .setDescription("Enumeration string to echo"));
         a.addResult(new Parameter("echo", ValueType.STRING));
