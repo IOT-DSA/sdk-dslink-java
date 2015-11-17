@@ -1,15 +1,22 @@
 package org.dsa.iot.dslink.node;
 
+import io.netty.util.CharsetUtil;
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.methods.responses.ListResponse;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueUtils;
+import org.dsa.iot.dslink.util.FileUtils;
 import org.dsa.iot.dslink.util.Objects;
+import org.dsa.iot.dslink.util.StringUtils;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 /**
@@ -18,16 +25,19 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
  */
 public class SubscriptionManager {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(SubscriptionManager.class);
     private final Map<String, ListResponse> pathSubsMap = new ConcurrentHashMap<>();
 
     private final Map<String, Subscription> valueSubsPaths = new HashMap<>();
     private final Map<Integer, String> valueSubsSids = new HashMap<>();
-
     private final Object valueLock = new Object();
+
+    private final File storageDir = new File("storage");
     private final DSLink link;
 
     public SubscriptionManager(DSLink link) {
         this.link = link;
+        readStorage();
     }
 
     public void disconnected() {
@@ -124,7 +134,7 @@ public class SubscriptionManager {
     public void addValueSub(String path, int sid, int qos) {
         path = NodeManager.normalizePath(path, true);
         synchronized (valueLock) {
-            Subscription sub = new Subscription(sid, qos);
+            Subscription sub = new Subscription(path, sid, qos);
             Subscription prev = valueSubsPaths.put(path, sub);
             if (prev != null) {
                 valueSubsSids.remove(prev.sid());
@@ -305,19 +315,63 @@ public class SubscriptionManager {
         }
     }
 
-    private static class Subscription {
+    protected void readStorage() {
+        if (!storageDir.isDirectory()) {
+            return;
+        }
+        File[] files = storageDir.listFiles();
+        if (files == null) {
+            return;
+        }
+        synchronized (valueLock) {
+            for (File f : files) {
+                if (f == null || !"%2F".startsWith(f.getName())) {
+                    continue;
+                }
+                try {
+                    String s = new String(FileUtils.readAllBytes(f), CharsetUtil.UTF_8);
+                    JsonObject obj = new JsonObject(s);
 
-        private final List<Value> cache;
+                    int qos = obj.get("qos");
+                    String path = StringUtils.decodeName(f.getName());
+                    Subscription sub = new Subscription(path, -1, qos);
+                    valueSubsPaths.put(path, sub);
+                    if (qos == 2) {
+                        Value val = ValueUtils.toValue(obj.get("value"));
+                        sub.addValue(val);
+                    } else if (qos == 3) {
+                        JsonArray queue = obj.get("queue");
+                        if (queue == null) {
+                            continue;
+                        }
+                        for (Object o : queue) {
+                            sub.addValue(ValueUtils.toValue(o));
+                        }
+                    }
+                } catch (Exception e) {
+                    String path = f.getName();
+                    String err = "Failed to handle QoS subscription data: {}\n{}";
+                    LOGGER.warn(err, path, e);
+                }
+            }
+        }
+    }
+
+    protected class Subscription {
+
+        private final String path;
         private final int sid;
         private final int qos;
 
-        public Subscription(int sid, int qos) {
+        private Queue<Value> cache;
+        private Value lastValue;
+
+        public Subscription(String path, int sid, int qos) {
+            this.path = path;
             this.sid = sid;
             this.qos = qos;
-            if (qos > 0) {
-                cache = new LinkedList<>();
-            } else {
-                cache = null;
+            if (qos == 1 || qos == 3) {
+                cache = new LinkedBlockingQueue<>();
             }
         }
 
@@ -330,15 +384,56 @@ public class SubscriptionManager {
         }
 
         public synchronized void addValue(Value value) {
-            if (cache == null) {
-                return;
+            JsonObject obj = null;
+            if (qos() == 2) {
+                lastValue = value;
+                if (!storageDir.exists() && storageDir.mkdir()) {
+                    String full = storageDir.getAbsolutePath();
+                    LOGGER.info("Created storage directory at {}", full);
+                }
+                obj = new JsonObject();
+                obj.put("qos", 2);
+                if (value != null) {
+                    ValueUtils.toJson(obj, "value", value);
+                }
+            } else if (qos() == 3) {
+                cache.add(value);
+                if (cache.size() > 1000) {
+                    cache.remove();
+                }
+                obj = new JsonObject();
+                JsonArray queue = new JsonArray();
+                obj.put("queue", queue);
+                obj.put("qos", 3);
+                for (Value v : cache) {
+                    if (v == null) {
+                        queue.add(null);
+                    } else {
+                        ValueUtils.toJson(queue, v);
+                    }
+                }
             }
-            cache.add(value);
+            if (obj != null) {
+                File f = new File(storageDir, StringUtils.encodeName(path));
+                try {
+                    FileUtils.write(f, obj.encode().getBytes(CharsetUtil.UTF_8));
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
         }
 
         public synchronized JsonArray generateUpdates() {
-            if (cache == null || cache.isEmpty()) {
-                return null;
+            {
+                Value tmp = lastValue;
+                if (lastValue != null) {
+                    JsonArray update = generateUpdate(tmp);
+                    lastValue = null;
+                    return update;
+                }
+                if (cache == null || cache.isEmpty()) {
+                    return null;
+                }
             }
             JsonArray updates = new JsonArray();
             Iterator<Value> it = cache.iterator();
@@ -346,6 +441,14 @@ public class SubscriptionManager {
                 JsonArray update = generateUpdate(it.next());
                 updates.add(update);
                 it.remove();
+            }
+            {
+                File f = new File(storageDir, StringUtils.encodeName(path));
+                if (f.exists()) {
+                    if (!f.delete()) {
+                        LOGGER.warn("Failed to delete QoS data at {}", path);
+                    }
+                }
             }
             return updates;
         }
