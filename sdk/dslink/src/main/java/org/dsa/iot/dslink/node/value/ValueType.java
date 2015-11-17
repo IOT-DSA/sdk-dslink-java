@@ -2,7 +2,9 @@ package org.dsa.iot.dslink.node.value;
 
 import org.dsa.iot.dslink.util.StringUtils;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * Type of the value
@@ -32,7 +34,7 @@ public final class ValueType {
 
     private final String rawName;
     private final String builtName;
-    private final Set<String> enums;
+    private final Collection<String> enums;
 
     private ValueType(String jsonName) {
         this(jsonName, jsonName);
@@ -42,14 +44,14 @@ public final class ValueType {
         this(rawName, builtName, null);
     }
 
-    private ValueType(String rawName, String builtName, Set<String> enums) {
+    private ValueType(String rawName, String builtName, Collection<String> enums) {
         this.rawName = rawName;
         this.builtName = builtName;
         this.enums = enums;
     }
 
-    private ValueType(Set<String> enums) {
-        this(JSON_ENUM, "enum[" + StringUtils.join(enums, ",") + "]", enums);
+    private ValueType(Collection<String> enums) {
+        this(JSON_ENUM, "enum[" + StringUtils.join(enums, true, ",") + "]", enums);
     }
 
     /**
@@ -80,21 +82,23 @@ public final class ValueType {
     /**
      * @return The enums this value type represents
      */
-    public Set<String> getEnums() {
-        return enums != null ? Collections.unmodifiableSet(enums) : null;
+    public Collection<String> getEnums() {
+        return enums != null ? Collections.unmodifiableCollection(enums) : null;
     }
 
     public static ValueType makeEnum(String... enums) {
-        Set<String> e = new LinkedHashSet<>(Arrays.asList(enums));
-        return makeEnum(e);
+        return makeEnum(Arrays.asList(enums));
     }
 
-    public static ValueType makeEnum(Set<String> enums) {
+    public static ValueType makeEnum(Collection<String> enums) {
         return new ValueType(enums);
     }
 
     public static ValueType makeBool(String true_, String false_) {
-        return new ValueType(JSON_BOOL, "bool[" + false_ + "," + true_ + "]", null);
+        true_ = StringUtils.encodeName(true_);
+        false_ = StringUtils.encodeName(false_);
+        String contents = false_ + "," + true_;
+        return new ValueType(JSON_BOOL, "bool[" + contents + "]", null);
     }
 
     /**
@@ -124,9 +128,7 @@ public final class ValueType {
                     type = type.substring(JSON_ENUM.length() + 1);
                     type = type.substring(0, type.length() - 1);
                     String[] split = type.split(",");
-                    List<String> list = Arrays.asList(split);
-                    Set<String> enums = new LinkedHashSet<>(list);
-                    return new ValueType(enums);
+                    return new ValueType(Arrays.asList(split));
                 }
                 throw new RuntimeException("Unknown type: " + type);
         }

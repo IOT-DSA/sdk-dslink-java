@@ -12,7 +12,6 @@ class NetworkHandlers {
 
     private Handler<Void> onConnected;
     private Handler<Void> onDisconnected;
-    private Handler<Throwable> onException;
     private Handler<JsonObject> onData;
 
     public Handler<Void> getOnConnected() {
@@ -29,14 +28,6 @@ class NetworkHandlers {
 
     public void setOnDisconnected(Handler<Void> onDisconnected) {
         this.onDisconnected = onDisconnected;
-    }
-
-    public Handler<Throwable> getOnException() {
-        return onException;
-    }
-
-    public void setOnException(Handler<Throwable> onException) {
-        this.onException = onException;
     }
 
     public Handler<JsonObject> getOnData() {

@@ -23,8 +23,6 @@ public class DataHandler {
     private NetworkClient client;
     private Handler<DataReceived> reqHandler;
     private Handler<DataReceived> respHandler;
-    private Handler<Void> reqCloseHandler;
-    private Handler<Void> respCloseHandler;
 
     private final AtomicInteger msgId = new AtomicInteger();
 
@@ -40,12 +38,8 @@ public class DataHandler {
         this.respHandler = handler;
     }
 
-    public void setReqCloseHandler(Handler<Void> handler) {
-        this.reqCloseHandler = handler;
-    }
-
-    public void setRespCloseHandler(Handler<Void> handler) {
-        this.respCloseHandler = handler;
+    public boolean isConnected() {
+        return client != null && client.isConnected();
     }
 
     /**
@@ -78,18 +72,6 @@ public class DataHandler {
                     respHandler.handle(new DataReceived(msgId, responses));
                 }
             });
-        }
-    }
-
-    public void close() {
-        Handler<Void> closeHandler = this.reqCloseHandler;
-        if (closeHandler != null) {
-            closeHandler.handle(null);
-        }
-
-        closeHandler = this.respCloseHandler;
-        if (closeHandler != null) {
-            closeHandler.handle(null);
         }
     }
 

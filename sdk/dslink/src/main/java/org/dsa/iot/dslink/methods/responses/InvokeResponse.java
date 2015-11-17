@@ -143,11 +143,7 @@ public class InvokeResponse extends Response {
                     List<Value> values = r.getValues();
                     if (values != null) {
                         for (Value v : values) {
-                            if (v != null) {
-                                ValueUtils.toJson(row, v);
-                            } else {
-                                row.add(null);
-                            }
+                            row.add(v);
                         }
                     }
                     results.add(row);

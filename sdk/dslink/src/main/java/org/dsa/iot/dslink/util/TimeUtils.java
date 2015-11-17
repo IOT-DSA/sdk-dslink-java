@@ -13,30 +13,50 @@ public class TimeUtils {
 
     private static final ThreadLocal<DateFormat> FORMAT_TIME_ZONE;
     private static final ThreadLocal<DateFormat> FORMAT;
+
+    private static final String TIME_PATTERN_TZ;
+    private static final String TIME_PATTERN;
     private static final String TIME_ZONE;
 
+    public static String getTimePatternTz() {
+        return TIME_PATTERN_TZ;
+    }
+
+    public static String getTimePattern() {
+        return TIME_PATTERN;
+    }
+
+    public static String getTimeZone() {
+        return TIME_ZONE;
+    }
+
     public static String format(long time) {
-        return FORMAT.get().format(time) + TIME_ZONE;
+        return format(new Date(time));
     }
 
-    public static String fix(String time) {
-        if (time.matches(".+[+|-]\\d+:\\d+")) {
-            StringBuilder builder = new StringBuilder(time);
-            builder.deleteCharAt(time.lastIndexOf(":"));
-            time = builder.toString();
-        } else {
-            time += TIME_ZONE;
-        }
-        return time;
+    public static String format(Date time) {
+        return FORMAT.get().format(time) + TimeUtils.getTimeZone();
     }
 
-    public static Date parse(String time) {
-        time = fix(time);
+    public static Date parseTz(String time) {
         try {
             return FORMAT_TIME_ZONE.get().parse(time);
         } catch (ParseException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static String fixTime(String time) {
+        if (time.endsWith("Z")) {
+            time = time.substring(0, time.length() - 1) + "-0000";
+        } else if (time.matches(".+[+|-]\\d+:\\d+")) {
+            StringBuilder b = new StringBuilder(time);
+            b.deleteCharAt(time.lastIndexOf(":"));
+            time = b.toString();
+        } else {
+            time += TIME_ZONE;
+        }
+        return time;
     }
 
     static {
@@ -50,16 +70,19 @@ public class TimeUtils {
         int hh = offset / 60;
         int mm = offset % 60;
         TIME_ZONE = s + (hh < 10 ? "0" : "") + hh + ":" + (mm < 10 ? "0" : "") + mm;
+        TIME_PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSS";
+        TIME_PATTERN_TZ = TIME_PATTERN + "Z";
+
         FORMAT = new ThreadLocal<DateFormat>() {
             @Override
             public DateFormat initialValue() {
-                return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+                return new SimpleDateFormat(getTimePattern());
             }
         };
         FORMAT_TIME_ZONE = new ThreadLocal<DateFormat>() {
             @Override
             public DateFormat initialValue() {
-                return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+                return new SimpleDateFormat(getTimePatternTz());
             }
         };
     }

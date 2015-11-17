@@ -82,10 +82,6 @@ public class DSLinkNode extends BrokerNode {
         return processor;
     }
 
-    public String dsId() {
-        return dsId;
-    }
-
     public JsonObject linkData() {
         return linkData;
     }

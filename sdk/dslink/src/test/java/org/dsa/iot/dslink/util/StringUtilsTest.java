@@ -13,12 +13,6 @@ import java.util.Set;
 public class StringUtilsTest {
 
     @Test
-    public void filter() {
-        String s = StringUtils.filterBannedChars(".test");
-        Assert.assertEquals("test", s);
-    }
-
-    @Test
     public void encode() {
         String s = "% . / \\ ? * : | < > $ @";
         s = StringUtils.encodeName(s);
@@ -82,27 +76,5 @@ public class StringUtilsTest {
             strings.add("3");
             Assert.assertEquals("1|2|3", StringUtils.join(strings, "|"));
         }
-    }
-
-    @Test
-    public void contains() {
-        try {
-            StringUtils.contains(null, null);
-        } catch (NullPointerException e) {
-            Assert.assertEquals("chars", e.getMessage());
-        }
-
-        final char[] test = new char[] {
-                'a',
-                'b',
-                'c',
-        };
-
-        Assert.assertFalse(StringUtils.contains("", test));
-        Assert.assertFalse(StringUtils.contains("d", test));
-        Assert.assertTrue(StringUtils.contains("a", test));
-        Assert.assertTrue(StringUtils.contains("b", test));
-        Assert.assertTrue(StringUtils.contains("c", test));
-        Assert.assertTrue(StringUtils.contains("abc", test));
     }
 }

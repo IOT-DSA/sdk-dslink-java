@@ -1,7 +1,7 @@
 package org.dsa.iot.dslink.node.value;
 
-import org.dsa.iot.dslink.util.TimeUtils;
 import org.dsa.iot.dslink.node.Node;
+import org.dsa.iot.dslink.util.TimeUtils;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
@@ -208,7 +208,7 @@ public class Value {
         if (time == null) {
             setTime(System.currentTimeMillis());
         } else {
-            this.tsFormatted = TimeUtils.fix(time);
+            this.tsFormatted = TimeUtils.fixTime(time);
         }
 
         this.number = n;
@@ -234,7 +234,6 @@ public class Value {
      *
      * @param serializable Whether this value is allowed to be serialized.
      */
-    @SuppressWarnings("unused")
     public void setSerializable(boolean serializable) {
         checkImmutable();
         this.serializable = serializable;
@@ -261,7 +260,7 @@ public class Value {
      */
     public String getTimeStamp() {
         if (tsFormatted == null) {
-            tsFormatted = TimeUtils.format(tsDate.getTime());
+            tsFormatted = TimeUtils.format(getDate());
         }
         return tsFormatted;
     }
@@ -273,7 +272,7 @@ public class Value {
      */
     public Date getDate() {
         if (tsDate == null) {
-            tsDate = TimeUtils.parse(tsFormatted);
+            tsDate = TimeUtils.parseTz(tsFormatted);
         }
         return new Date(tsDate.getTime());
     }

@@ -109,6 +109,13 @@ public class DSLink {
     }
 
     /**
+     * @return Whether the DSLink is connected or not.
+     */
+    public boolean isConnected() {
+        return dataHandler != null && dataHandler.isConnected();
+    }
+
+    /**
      * @return The path of the link on the broker.
      */
     public String getPath() {
@@ -165,15 +172,8 @@ public class DSLink {
                     getWriter().writeAck(event.getMsgId());
                 }
             });
-
-            getWriter().setReqCloseHandler(new Handler<Void>() {
-                @Override
-                public void handle(Void event) {
-                    DSLink.this.requester.clearSubscriptions();
-                    getLinkHandler().onRequesterDisconnected(DSLink.this);
-                }
-            });
         }
+
         if (responder) {
             getWriter().setReqHandler(new Handler<DataReceived>() {
                 @Override
@@ -207,15 +207,6 @@ public class DSLink {
 
                     Integer msgId = event.getMsgId();
                     getWriter().writeRequestResponses(msgId, responses);
-                }
-            });
-
-            getWriter().setRespCloseHandler(new Handler<Void>() {
-                @Override
-                public void handle(Void event) {
-                    Responder resp = DSLink.this.getResponder();
-                    resp.getSubscriptionManager().clearAllSubscriptions();
-                    getLinkHandler().onResponderDisconnected(DSLink.this);
                 }
             });
         }

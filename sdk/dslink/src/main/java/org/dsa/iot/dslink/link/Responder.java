@@ -8,6 +8,7 @@ import org.dsa.iot.dslink.methods.responses.*;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.SubscriptionManager;
+import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
 import java.util.Map;
@@ -24,6 +25,18 @@ public class Responder extends Linkable {
 
     public Responder(DSLinkHandler handler) {
         super(handler);
+    }
+
+    @Override
+    public void batchSet(Map<Node, Value> updates) {
+        SubscriptionManager sm = getSubscriptionManager();
+        if (sm == null) {
+            for (Map.Entry<Node, Value> update : updates.entrySet()) {
+                update.getKey().setValue(update.getValue());
+            }
+            return;
+        }
+        sm.batchValueUpdate(updates);
     }
 
     /**

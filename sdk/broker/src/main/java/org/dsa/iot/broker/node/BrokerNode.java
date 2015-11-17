@@ -7,7 +7,6 @@ import org.dsa.iot.broker.utils.ParsedPath;
 import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
-import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.dsa.iot.dslink.util.StringUtils;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
@@ -254,9 +253,13 @@ public class BrokerNode<T extends BrokerNode> {
 
     protected JsonArray generateValueUpdate() {
         JsonArray update = new JsonArray();
-        update.add(null);
-        ValueUtils.toJson(update, value);
-        update.add(value.getTimeStamp());
+        update.add(null); // sid goes here
+        if (value != null) {
+            update.add(value);
+            update.add(value.getTimeStamp());
+        } else {
+            update.add(null);
+        }
         return update;
     }
 

@@ -5,6 +5,7 @@ import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeBuilder;
 import org.dsa.iot.dslink.node.Permission;
 import org.dsa.iot.dslink.node.actions.*;
+import org.dsa.iot.dslink.node.actions.table.BatchRow;
 import org.dsa.iot.dslink.node.actions.table.Row;
 import org.dsa.iot.dslink.node.actions.table.Table;
 import org.dsa.iot.dslink.node.value.Value;
@@ -21,10 +22,7 @@ import org.dsa.iot.historian.stats.rollup.Rollup;
 import org.dsa.iot.historian.utils.QueryData;
 import org.dsa.iot.historian.utils.TimeParser;
 
-import java.util.Calendar;
-import java.util.Date;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 /**
@@ -94,7 +92,7 @@ public class GetHistory implements Handler<ActionResult> {
                            final Rollup.Type rollup,
                            final IntervalParser parser) {
         final IntervalProcessor interval = IntervalProcessor.parse(parser, rollup);
-        ScheduledThreadPoolExecutor stpe = Objects.getDaemonThreadPool();
+        final ScheduledThreadPoolExecutor stpe = Objects.getDaemonThreadPool();
         stpe.execute(new Runnable() {
 
             private boolean open = true;
@@ -115,13 +113,27 @@ public class GetHistory implements Handler<ActionResult> {
                 });
 
                 query(from, to, rollup, parser, new CompleteHandler<QueryData>() {
+
+                    private List<QueryData> updates = new LinkedList<>();
+
                     @Override
                     public void handle(QueryData data) {
-                        processQueryData(table, interval, data);
+                        List<QueryData> updates = this.updates;
+                        if (updates != null) {
+                            updates.add(data);
+                            if (updates.size() >= 500) {
+                                processQueryData(table, interval, updates, true);
+                            }
+                        }
                     }
 
                     @Override
                     public void complete() {
+                        if (!updates.isEmpty()) {
+                            processQueryData(table, interval, updates, true);
+                        }
+                        updates = null;
+
                         table.sendReady();
                         if (!realTime) {
                             if (interval != null) {
@@ -135,7 +147,8 @@ public class GetHistory implements Handler<ActionResult> {
                             handler = new Handler<QueryData>() {
                                 @Override
                                 public void handle(QueryData event) {
-                                    processQueryData(table, interval, event);
+                                    Collection<QueryData> single = Collections.singleton(event);
+                                    processQueryData(table, interval, single, false);
                                 }
                             };
                             Watch w = event.getNode().getParent().getMetaData();
@@ -158,22 +171,36 @@ public class GetHistory implements Handler<ActionResult> {
 
     protected void processQueryData(Table table,
                                     IntervalProcessor interval,
-                                    QueryData data) {
-        Row row;
-        Value value = data.getValue();
-        long time = data.getTimestamp();
-        if (interval == null) {
-            row = new Row();
-            String t = TimeParser.parse(time);
-            row.addValue(new Value(t));
-            row.addValue(value);
-        } else {
-            row = interval.getRowUpdate(value, time);
+                                    Collection<QueryData> data,
+                                    boolean performRemove) {
+        if (data.isEmpty()) {
+            return;
         }
+        BatchRow batch = new BatchRow();
+        Iterator<QueryData> it = data.iterator();
+        while (it.hasNext()) {
+            QueryData update = it.next();
+            Row row;
+            Value value = update.getValue();
+            long time = update.getTimestamp();
+            if (interval == null) {
+                row = new Row();
+                String t = TimeParser.parse(time);
+                row.addValue(new Value(t));
+                row.addValue(value);
+            } else {
+                row = interval.getRowUpdate(value, time);
+            }
 
-        if (row != null) {
-            table.addRow(row);
+            if (row != null) {
+                batch.addRow(row);
+            }
+            update.setValue(null);
+            if (performRemove) {
+                it.remove();
+            }
         }
+        table.addBatchRows(batch);
     }
 
     public static void initAction(Node node, Database db) {

@@ -48,6 +48,7 @@ public class SubscribeResponse extends Response {
                     JsonObject subData = (JsonObject) obj;
                     String path = subData.get("path");
                     int sid = subData.get("sid");
+                    int qos = subData.get("qos", 0);
 
                     NodeManager nm = link.getNodeManager();
                     NodePair pair = nm.getNode(path, false, false);
@@ -56,7 +57,7 @@ public class SubscribeResponse extends Response {
                         DSLinkHandler h = link.getLinkHandler();
                         h.onSubscriptionFail(path);
                     }
-                    manager.addValueSub(path, sid);
+                    manager.addValueSub(path, sid, qos);
                 } catch (Exception e) {
                     if (builder == null) {
                         builder = new StringBuilder();

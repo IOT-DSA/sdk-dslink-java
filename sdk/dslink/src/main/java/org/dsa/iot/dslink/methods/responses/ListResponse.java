@@ -358,7 +358,7 @@ public class ListResponse extends Response {
             JsonArray update = new JsonArray();
             update.add(name);
 
-            ValueUtils.toJson(update, value);
+            update.add(value);
             update.add(value.getTimeStamp());
 
             updates.add(update);
@@ -394,16 +394,16 @@ public class ListResponse extends Response {
     /**
      * @param prefix Prefix to use (whether its an attribute or config)
      * @param out Updates array
-     * @param vals Values to iterate and add to the updates array
+     * @param values Values to iterate and add to the updates array
      */
-    private void add(String prefix, JsonArray out, Map<String, Value> vals) {
-        if (vals == null) {
+    private void add(String prefix, JsonArray out, Map<String, Value> values) {
+        if (values == null) {
             return;
         }
-        for (Map.Entry<String, Value> entry : vals.entrySet()) {
+        for (Map.Entry<String, Value> entry : values.entrySet()) {
             JsonArray update = new JsonArray();
             update.add(prefix + entry.getKey());
-            ValueUtils.toJson(update, entry.getValue());
+            update.add(entry.getValue());
             out.add(update);
         }
     }

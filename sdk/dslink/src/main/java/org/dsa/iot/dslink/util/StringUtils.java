@@ -2,8 +2,7 @@ package org.dsa.iot.dslink.util;
 
 import org.dsa.iot.dslink.node.Node;
 
-import java.util.Set;
-import java.util.regex.Pattern;
+import java.util.Collection;
 
 /**
  * String utilities for manipulating strings
@@ -27,16 +26,26 @@ public class StringUtils {
     /**
      * Encodes a name so it will not have illegal characters.
      *
-     * @param name Name to encode.
+     * @param string String to encode.
      * @return Encoded name.
      */
-    public static String encodeName(String name) {
-        if (name == null) {
+    public static String encodeName(String string) {
+        return encodeName(string, Node.getBannedCharacters());
+    }
+
+    /**
+     * Encodes a name so it will not have illegal characters.
+     *
+     * @param string String to encode.
+     * @param encode Characters to encode in the name.
+     * @return Encoded name.
+     */
+    public static String encodeName(String string, char[] encode) {
+        if (string == null) {
             return null;
         }
         StringBuilder builder = new StringBuilder();
-        char[] nameChars = name.toCharArray();
-        char[] bannedChars = Node.getBannedCharacters();
+        char[] nameChars = string.toCharArray();
         nameLoop: for (int i = 0; i < nameChars.length; ++i) {
             char nameChar = nameChars[i];
             // Skip over already encoded characters
@@ -64,9 +73,9 @@ public class StringUtils {
                     }
                 }
             }
-            for (char bannedChar : bannedChars) {
-                if (nameChar == bannedChar) {
-                    String re = Integer.toHexString(bannedChar);
+            for (char c : encode) {
+                if (nameChar == c) {
+                    String re = Integer.toHexString(c);
                     re = re.toUpperCase();
                     builder.append('%');
                     builder.append(re);
@@ -81,15 +90,15 @@ public class StringUtils {
     /**
      * Decodes a name that may contain illegal characters.
      *
-     * @param name Name to decode.
+     * @param string String to decode.
      * @return Decoded name.
      */
-    public static String decodeName(String name) {
-        if (name == null) {
+    public static String decodeName(String string) {
+        if (string == null) {
             return null;
         }
         StringBuilder builder = new StringBuilder();
-        char[] nameChars = name.toCharArray();
+        char[] nameChars = string.toCharArray();
         for (int i = 0; i < nameChars.length; ++i) {
             char nameChar = nameChars[i];
             if (nameChar == '%') {
@@ -121,44 +130,28 @@ public class StringUtils {
     }
 
     /**
-     * Filters names based on banned characters for node names.
+     * Joins strings together into a single string using a designated
+     * delimiter.
      *
-     * @param name Name to filter.
-     * @return Filtered text.
-     * @see Node#getBannedCharacters
+     * @param strings Strings to join.
+     * @param delimiter Delimiter to join each element by.
+     * @return A single built string.
      */
-    public static String filterBannedChars(String name) {
-        return filterBannedChars(name, Node.getBannedCharacters(), "");
-    }
-
-    /**
-     *
-     * @param name Name to filter.
-     * @param chars Banned strings that are not allowed to be in the name.
-     * @param replacement What to replace the bad text with.
-     * @return Filtered text.
-     */
-    public static String filterBannedChars(String name,
-                                           char[] chars,
-                                           String replacement) {
-        for (char banned : chars) {
-            String s = String.valueOf(banned);
-            if (name.contains(String.valueOf(banned))) {
-                name = name.replaceAll(Pattern.quote(s), replacement);
-            }
-        }
-        return name;
+    public static String join(Collection<String> strings, String delimiter) {
+        return join(strings, false, delimiter);
     }
 
     /**
      * Joins strings together into a single string using a designated
-     * builder.
+     * delimiter.
      *
-     * @param strings Strings to join
-     * @param delimiter Delimiter to join them by
-     * @return A single built string
+     * @param strings Strings to join.
+     * @param encode Whether or not to encode each element.
+     * @param delimiter Delimiter to join them by.
+     * @return A single built string.
      */
-    public static String join(Set<String> strings, String delimiter) {
+    public static String join(Collection<String> strings,
+                              boolean encode, String delimiter) {
         if (strings == null) {
             throw new NullPointerException("strings");
         } else if (delimiter == null) {
@@ -167,18 +160,33 @@ public class StringUtils {
 
         int size = strings.size();
         String[] array = strings.toArray(new String[size]);
-        return join(array, delimiter);
+        return join(array, encode, delimiter);
     }
 
     /**
      * Joins strings together into a single string using a designated
-     * builder.
+     * delimiter.
      *
-     * @param strings Strings to join
-     * @param delimiter Delimiter to join them by
-     * @return A single built string
+     * @param strings Strings to join.
+     * @param delimiter  Delimiter to join each element by.
+     * @return A single built string.
      */
     public static String join(String[] strings, String delimiter) {
+        return join(strings, false, delimiter);
+    }
+
+    /**
+     * Joins strings together into a single string using a designated
+     * delimiter.
+     *
+     * @param strings Strings to join.
+     * @param encode Whether or not to encode each element.
+     * @param delimiter Delimiter to join them by.
+     * @return A single built string.
+     */
+    public static String join(String[] strings,
+                              boolean encode,
+                              String delimiter) {
         if (strings == null) {
             throw new NullPointerException("strings");
         } else if (delimiter == null) {
@@ -192,7 +200,11 @@ public class StringUtils {
         StringBuilder builder = new StringBuilder();
         int size = strings.length;
         for (int i = 0;;) {
-            builder.append(strings[i]);
+            String s = strings[i];
+            if (encode) {
+                s = encodeName(s);
+            }
+            builder.append(s);
             if (++i < size) {
                 builder.append(delimiter);
             } else {
@@ -202,26 +214,4 @@ public class StringUtils {
 
         return builder.toString();
     }
-
-    /**
-     * @param string String to check
-     * @param chars  Characters or strings to look for
-     * @return Whether the string contains any of the designated characters.
-     */
-    public static boolean contains(String string, char[] chars) {
-        if (chars == null) {
-            throw new NullPointerException("chars");
-        } else if (string == null || string.isEmpty() || chars.length == 0) {
-            return false;
-        } else {
-            for (char c : chars) {
-                String s = String.valueOf(c);
-                if (string.contains(s)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-    }
-
 }

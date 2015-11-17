@@ -25,7 +25,7 @@ public class ConnectionManager {
     private final Configuration configuration;
     private final LocalHandshake localHandshake;
 
-    private Handler<ClientConnected> preInitHandler;
+    private Handler<Client> preInitHandler;
     private DataHandler handler;
     private NetworkClient client;
     private int delay = 1;
@@ -45,11 +45,11 @@ public class ConnectionManager {
      *
      * @param onClientInit Client initialization handler
      */
-    public void setPreInitHandler(Handler<ClientConnected> onClientInit) {
+    public void setPreInitHandler(Handler<Client> onClientInit) {
         this.preInitHandler = onClientInit;
     }
 
-    public synchronized void start(final Handler<ClientConnected> onClientConnected) {
+    public synchronized void start(final Handler<Client> onClientConnected) {
         stop();
         running = true;
 
@@ -82,7 +82,7 @@ public class ConnectionManager {
                 boolean req = localHandshake.isRequester();
                 boolean resp = localHandshake.isResponder();
                 String path = remoteHandshake.getPath();
-                final ClientConnected cc = new ClientConnected(req, resp, path);
+                final Client cc = new Client(req, resp, path);
                 cc.setHandler(handler);
 
                 if (preInitHandler != null) {
@@ -109,18 +109,11 @@ public class ConnectionManager {
                         connector.setOnDisconnected(new Handler<Void>() {
                             @Override
                             public void handle(Void event) {
+                                cc.disconnected();
                                 if (running) {
                                     LOGGER.warn("WebSocket connection failed");
-                                    handler.close();
                                     reconnect();
                                 }
-                            }
-                        });
-
-                        connector.setOnException(new Handler<Throwable>() {
-                            @Override
-                            public void handle(Throwable event) {
-                                LOGGER.error("Connector exception", event);
                             }
                         });
 
@@ -182,9 +175,9 @@ public class ConnectionManager {
         future = Objects.getDaemonThreadPool().schedule(new Runnable() {
             @Override
             public void run() {
-                start(new Handler<ClientConnected>() {
+                start(new Handler<Client>() {
                     @Override
-                    public void handle(ClientConnected event) {
+                    public void handle(Client event) {
                         LOGGER.info("Connection established");
                         delay = 1;
                     }
@@ -200,19 +193,21 @@ public class ConnectionManager {
         }, delay, TimeUnit.SECONDS);
     }
 
-    public static class ClientConnected {
+    public static class Client {
 
         private final boolean isRequester;
         private final boolean isResponder;
         private final String path;
 
-        private Handler<ClientConnected> onRequesterConnected;
-        private Handler<ClientConnected> onResponderConnected;
+        private Handler<Client> onRequesterConnected;
+        private Handler<Client> onResponderConnected;
+        private Handler<Void> onRequesterDisconnected;
+        private Handler<Void> onResponderDisconnected;
         private DataHandler handler;
 
-        public ClientConnected(boolean isRequester,
-                               boolean isResponder,
-                               String path) {
+        public Client(boolean isRequester,
+                      boolean isResponder,
+                      String path) {
             this.isRequester = isRequester;
             this.isResponder = isResponder;
             this.path = path;
@@ -238,12 +233,20 @@ public class ConnectionManager {
             return path;
         }
 
-        public void setRequesterOnConnected(Handler<ClientConnected> handler) {
+        public void setRequesterOnConnected(Handler<Client> handler) {
             this.onRequesterConnected = handler;
         }
 
-        public void setResponderOnConnected(Handler<ClientConnected> handler) {
+        public void setResponderOnConnected(Handler<Client> handler) {
             this.onResponderConnected = handler;
+        }
+
+        public void setRequesterOnDisconnected(Handler<Void> handler) {
+            this.onRequesterDisconnected = handler;
+        }
+
+        public void setResponderOnDisconnected(Handler<Void> handler) {
+            this.onResponderDisconnected = handler;
         }
 
         void connected() {
@@ -253,6 +256,16 @@ public class ConnectionManager {
 
             if (onResponderConnected != null) {
                 onResponderConnected.handle(this);
+            }
+        }
+
+        void disconnected() {
+            if (onRequesterDisconnected != null) {
+                onRequesterDisconnected.handle(null);
+            }
+
+            if (onResponderDisconnected != null) {
+                onResponderDisconnected.handle(null);
             }
         }
     }
