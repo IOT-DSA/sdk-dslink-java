@@ -106,36 +106,6 @@ public class ValueUtils {
     }
 
     /**
-     * @param array JSON array to modify.
-     * @param value Value to inject into the JSON array.
-     */
-    public static void toJson(JsonArray array, Value value) {
-        if (array == null)
-            throw new NullPointerException("array");
-        else if (value == null)
-            throw new NullPointerException("value");
-        array.add(value);
-    }
-
-    /**
-     * Inserts the name and value pair into the object after converting
-     * the value to be json compatible.
-     *
-     * @param object JSON object to modify
-     * @param name   Name to put into the object
-     * @param value  Value to put into the object
-     */
-    public static void toJson(JsonObject object, String name, Value value) {
-        if (object == null)
-            throw new NullPointerException("object");
-        else if (name == null)
-            throw new NullPointerException("name");
-        else if (value == null)
-            throw new NullPointerException("value");
-        object.put(name, value);
-    }
-
-    /**
      * Tests the type of the {@code value} to see whether its type is valid
      * or not.
      *

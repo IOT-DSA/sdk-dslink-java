@@ -2,7 +2,6 @@ package org.dsa.iot.dslink.methods.requests;
 
 import org.dsa.iot.dslink.methods.Request;
 import org.dsa.iot.dslink.node.value.Value;
-import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
 /**
@@ -37,6 +36,6 @@ public class SetRequest extends Request {
     @Override
     public void addJsonValues(JsonObject out) {
         out.put("path", path);
-        ValueUtils.toJson(out, "value", value);
+        out.put("value", value);
     }
 }

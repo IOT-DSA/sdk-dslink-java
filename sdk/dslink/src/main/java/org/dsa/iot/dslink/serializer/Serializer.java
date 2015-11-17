@@ -5,7 +5,6 @@ import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.Writable;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
-import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.dsa.iot.dslink.util.StringUtils;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
@@ -60,7 +59,7 @@ public class Serializer {
             out.put("$type", type.toJsonString());
             Value value = parent.getValue();
             if (value != null && value.isSerializable()) {
-                ValueUtils.toJson(out, "?value", value);
+                out.put("?value", value);
             }
         }
 
@@ -103,7 +102,7 @@ public class Serializer {
             Value value = entry.getValue();
             if (value.isSerializable()) {
                 String name = prefix + entry.getKey();
-                ValueUtils.toJson(out, name, value);
+                out.put(name, value);
             }
         }
     }

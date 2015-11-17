@@ -4,7 +4,6 @@ import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.Permission;
 import org.dsa.iot.dslink.node.SubscriptionManager;
 import org.dsa.iot.dslink.node.value.Value;
-import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.dsa.iot.dslink.util.handler.Handler;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
@@ -218,7 +217,7 @@ public class Action {
         obj.put("type", param.getType().toJsonString());
         Value defVal = param.getDefault();
         if (defVal != null) {
-            ValueUtils.toJson(obj, "default", defVal);
+            obj.put("default", defVal);
         }
 
         EditorType type = param.getEditorType();

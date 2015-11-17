@@ -4,7 +4,6 @@ import org.dsa.iot.dslink.connection.DataHandler;
 import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.node.actions.Parameter;
 import org.dsa.iot.dslink.node.value.Value;
-import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.dsa.iot.dslink.util.handler.Handler;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
@@ -299,11 +298,7 @@ public class Table {
         List<Value> values = row.getValues();
         if (values != null) {
             for (Value v : values) {
-                if (v != null) {
-                    ValueUtils.toJson(rowArray, v);
-                } else {
-                    rowArray.add(null);
-                }
+                rowArray.add(v);
             }
         }
         return rowArray;
