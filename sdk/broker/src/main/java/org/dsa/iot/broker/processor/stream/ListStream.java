@@ -9,7 +9,7 @@ import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -75,6 +75,7 @@ public class ListStream extends Stream {
     public void dispatch(StreamState state, JsonObject response) {
         JsonArray updates = response.get("updates");
         if (updates != null) {
+            List<Object> preInject = null;
             List<JsonArray> injectedData = null;
             for (Object obj : updates) {
                 cacheLock.writeLock().lock();
@@ -91,6 +92,16 @@ public class ListStream extends Stream {
                         String name = array.get(0);
                         if (name.equals("$is")) {
                             cache.clear();
+                            {
+                                JsonArray base = new JsonArray();
+                                base.add("$base");
+                                base.add(responder().node().path());
+                                if (preInject == null) {
+                                    preInject = new LinkedList<>();
+                                }
+                                preInject.add(base);
+                                cache.put("$base", base);
+                            }
                             if (path().base().equals("/")) {
                                 DSLinkNode node = responder().node();
                                 JsonArray update = node.linkDataUpdate();
@@ -98,7 +109,7 @@ public class ListStream extends Stream {
                                     String confName = update.get(0);
                                     cache.put(confName, update);
                                     if (injectedData == null) {
-                                        injectedData = new ArrayList<>();
+                                        injectedData = new LinkedList<>();
                                     }
                                     injectedData.add(update);
                                 }
@@ -109,6 +120,9 @@ public class ListStream extends Stream {
                 } finally {
                     cacheLock.writeLock().unlock();
                 }
+            }
+            if (preInject != null) {
+                updates.addAll(0, preInject);
             }
             if (injectedData != null) {
                 for (JsonArray update : injectedData) {

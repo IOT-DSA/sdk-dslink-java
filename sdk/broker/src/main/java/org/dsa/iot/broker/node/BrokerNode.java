@@ -110,8 +110,12 @@ public class BrokerNode<T extends BrokerNode> {
         return accessible;
     }
 
-    public String getName() {
+    public String name() {
         return name;
+    }
+
+    public String path() {
+        return path;
     }
 
     public boolean hasChild(String name) {
@@ -122,7 +126,7 @@ public class BrokerNode<T extends BrokerNode> {
         if (child == null) {
             return;
         }
-        children.put(child.getName(), child);
+        children.put(child.name(), child);
         if (child.accessible()) {
             childUpdate(child, false);
         }
@@ -227,12 +231,12 @@ public class BrokerNode<T extends BrokerNode> {
         JsonArray updates = new JsonArray();
         if (removed) {
             JsonObject update = new JsonObject();
-            update.put("name", node.getName());
+            update.put("name", node.name());
             update.put("change", "remove");
             updates.add(update);
         } else {
             JsonArray update = new JsonArray();
-            update.add(node.getName());
+            update.add(node.name());
             update.add(node.getChildUpdate());
             updates.add(update);
         }

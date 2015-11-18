@@ -1,9 +1,6 @@
 package org.dsa.iot.dslink.util.json;
 
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author Samuel Grenier
@@ -53,6 +50,24 @@ public class JsonArray implements Iterable<Object> {
     public JsonArray add(Object value) {
         value = Json.checkAndUpdate(value);
         list.add(value);
+        return this;
+    }
+
+    public JsonArray add(int pos, Object value) {
+        value = Json.checkAndUpdate(value);
+        list.add(pos, value);
+        return this;
+    }
+
+    public JsonArray addAll(int pos, List<Object> values) {
+        if (values != null) {
+            ListIterator it = values.listIterator();
+            while (it.hasNext()) {
+                Object o = it.next();
+                it.set(Json.checkAndUpdate(o));
+            }
+            list.addAll(pos, values);
+        }
         return this;
     }
 

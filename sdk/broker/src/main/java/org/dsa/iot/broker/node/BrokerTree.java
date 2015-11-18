@@ -8,7 +8,7 @@ import org.dsa.iot.broker.utils.ParsedPath;
  */
 public class BrokerTree {
 
-    private final BrokerNode<BrokerNode> root = new BrokerNode<>(null, null, "broker");
+    private final BrokerNode<BrokerNode> root = new BrokerNode<>(null, null, "dsa/broker");
     private Downstream downstream;
 
     public void initialize(String downStreamName) {

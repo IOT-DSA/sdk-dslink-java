@@ -70,6 +70,11 @@ public class ListStreamManager {
                             JsonArray updates = new JsonArray();
                             {
                                 JsonArray update = new JsonArray();
+                                update.add("$base");
+                                update.add(responder.node().path());
+                            }
+                            {
+                                JsonArray update = new JsonArray();
                                 update.add("$is");
                                 update.add(DSLinkNode.PROFILE);
                                 updates.add(update);
