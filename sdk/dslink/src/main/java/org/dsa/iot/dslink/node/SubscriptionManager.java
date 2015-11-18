@@ -136,15 +136,15 @@ public class SubscriptionManager {
             Subscription prev = valueSubsPaths.put(path, sub);
             boolean ret = false;
             if (prev != null) {
-                if (valueSubsSids.remove(prev.sid()) != null) {
-                    ret = true;
-                }
+                ret = true;
+                valueSubsSids.remove(prev.sid());
                 JsonArray updates = DRIVER.getUpdates(sub);
                 if (updates != null) {
                     JsonObject resp = new JsonObject();
                     resp.put("rid", 0);
                     resp.put("updates", updates);
                     link.getWriter().writeResponse(resp);
+                    ret = true;
                 }
             }
             valueSubsSids.put(sid, path);
