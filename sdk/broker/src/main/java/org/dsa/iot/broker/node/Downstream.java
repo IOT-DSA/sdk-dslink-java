@@ -16,9 +16,16 @@ public class Downstream extends BrokerNode<DSLinkNode> {
         super(parent, name, "node");
     }
 
-    public String init(String name) {
+    public String init(String name, String dsId) {
         synchronized (this) {
-            if (hasChild(name)) {
+            DSLinkNode node = getChild(name);
+            if (node != null && node.dsId().equals(dsId)) {
+                if (node.client() != null) {
+                    return null;
+                }
+                return name;
+            }
+            if (node != null && hasChild(name)) {
                 StringBuilder tmp = new StringBuilder(name);
                 tmp.append("-");
                 tmp.append(randomChar());
@@ -29,7 +36,7 @@ public class Downstream extends BrokerNode<DSLinkNode> {
                 name = tmp.toString();
             }
 
-            DSLinkNode node = new DSLinkNode(this, name);
+            node = new DSLinkNode(this, name);
             node.accessible(false);
             addChild(node);
         }

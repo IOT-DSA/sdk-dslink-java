@@ -74,6 +74,10 @@ public class DSLinkNode extends BrokerNode {
         LOGGER.info("Client `{}` has disconnected", client.handshake().dsId());
     }
 
+    public String dsId() {
+        return dsId;
+    }
+
     public Client client() {
         return client;
     }

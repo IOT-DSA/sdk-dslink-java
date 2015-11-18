@@ -66,6 +66,10 @@ public class WsServerHandler extends SimpleChannelInboundHandler<FullHttpRequest
             JsonObject json = new JsonObject(data);
             DsaHandshake handshake = new DsaHandshake(json, dsId);
             content = handshake.initialize(broker);
+            if (content == null) {
+                sendForbidden(ctx);
+                return;
+            }
         }
         HttpResponseStatus stat = HttpResponseStatus.OK;
         FullHttpResponse res = new DefaultFullHttpResponse(VERSION, stat, content);
