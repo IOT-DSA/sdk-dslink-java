@@ -90,10 +90,6 @@ public class FileDriver implements StorageDriver {
         JsonObject obj = null;
         if (sub.qos() == 2) {
             updateCache.put(sub.path(), value);
-            if (!storageDir.exists() && storageDir.mkdir()) {
-                String full = storageDir.getAbsolutePath();
-                LOGGER.info("Created storage directory at {}", full);
-            }
             obj = new JsonObject();
             obj.put("qos", 2);
             if (value != null) {
@@ -134,9 +130,14 @@ public class FileDriver implements StorageDriver {
             }
         }
         if (obj != null) {
+            if (!(storageDir.exists() || storageDir.mkdir())) {
+                String full = storageDir.getAbsolutePath();
+                LOGGER.info("Failed to create storage directory at {}", full);
+            }
             File f = new File(storageDir, StringUtils.encodeName(sub.path()));
             try {
-                FileUtils.write(f, obj.encode().getBytes(CharsetUtil.UTF_8));
+                byte[] bytes = obj.encode().getBytes(CharsetUtil.UTF_8);
+                FileUtils.write(f, bytes);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
