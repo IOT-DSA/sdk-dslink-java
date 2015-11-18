@@ -9,6 +9,7 @@ import org.dsa.iot.broker.Broker;
 import org.dsa.iot.broker.node.DSLinkNode;
 import org.dsa.iot.broker.processor.MessageProcessor;
 import org.dsa.iot.broker.server.DsaHandshake;
+import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +64,19 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
         }
     }
 
-    public boolean write(String data) {
+    public boolean writeRequest(JsonArray requests) {
+        JsonObject top = new JsonObject();
+        top.put("requests", requests);
+        return write(top.encode());
+    }
+
+    public boolean writeResponse(JsonArray responses) {
+        JsonObject top = new JsonObject();
+        top.put("responses", responses);
+        return write(top.encode());
+    }
+
+    private boolean write(String data) {
         ChannelHandlerContext ctx = this.ctx;
         if (ctx == null) {
             return false;

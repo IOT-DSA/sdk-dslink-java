@@ -82,11 +82,9 @@ public class StreamManager {
             }
         }
         if (reqs != null) {
-            JsonObject top = new JsonObject();
-            top.put("requests", reqs);
             Client resp = responder().client();
             if (resp != null) {
-                resp.write(top.encode());
+                resp.writeRequest(reqs);
             }
         }
     }

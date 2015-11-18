@@ -60,8 +60,8 @@ public class ListStreamManager {
                     Client client = responder.client();
                     if (client != null) {
                         pathListMap.put(path, rid);
-                        JsonObject top = RequestGenerator.list(path, rid);
-                        client.write(top.encode());
+                        JsonArray req = RequestGenerator.list(path, rid);
+                        client.writeRequest(req);
                     } else if (path.base().equals("/")) {
                         JsonObject resp = new JsonObject();
                         resp.put("rid", requesterRid);
@@ -91,10 +91,7 @@ public class ListStreamManager {
 
                         JsonArray resps = new JsonArray();
                         resps.add(resp);
-
-                        JsonObject top = new JsonObject();
-                        top.put("responses", resps);
-                        requester.write(top.encode());
+                        requester.writeResponse(resps);
                     }
                 }
             } finally {

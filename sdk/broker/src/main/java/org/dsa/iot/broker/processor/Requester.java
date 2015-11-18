@@ -133,14 +133,9 @@ public class Requester extends LinkHandler {
         }
         if (resp != null) {
             resp.put("rid", rid);
-
             JsonArray resps = new JsonArray();
             resps.add(resp);
-
-            JsonObject top = new JsonObject();
-            top.put("responses", resps);
-
-            client().write(top.encode());
+            client().writeResponse(resps);
         }
     }
 

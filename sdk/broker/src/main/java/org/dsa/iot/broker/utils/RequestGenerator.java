@@ -8,7 +8,7 @@ import org.dsa.iot.dslink.util.json.JsonObject;
  */
 public class RequestGenerator {
 
-    public static JsonObject list(ParsedPath path, int rid) {
+    public static JsonArray list(ParsedPath path, int rid) {
         JsonObject req = new JsonObject();
         req.put("method", "list");
         req.put("rid", rid);
@@ -16,12 +16,10 @@ public class RequestGenerator {
 
         JsonArray reqs = new JsonArray();
         reqs.add(req);
-        JsonObject top = new JsonObject();
-        top.put("requests", reqs);
-        return top;
+        return reqs;
     }
 
-    public static JsonObject subscribe(ParsedPath path, int sid, int rid) {
+    public static JsonArray subscribe(ParsedPath path, int sid, int rid) {
         JsonObject req = new JsonObject();
         req.put("rid", rid);
         req.put("method", "subscribe");
@@ -38,12 +36,10 @@ public class RequestGenerator {
 
         JsonArray reqs = new JsonArray();
         reqs.add(req);
-        JsonObject top = new JsonObject();
-        top.put("requests", reqs);
-        return top;
+        return reqs;
     }
 
-    public static JsonObject unsubscribe(int rid, int sid) {
+    public static JsonArray unsubscribe(int rid, int sid) {
         JsonObject req = new JsonObject();
         req.put("rid", rid);
         req.put("method", "unsubscribe");
@@ -53,9 +49,6 @@ public class RequestGenerator {
 
         JsonArray reqs = new JsonArray();
         reqs.add(req);
-
-        JsonObject top = new JsonObject();
-        top.put("requests", reqs);
-        return top;
+        return reqs;
     }
 }

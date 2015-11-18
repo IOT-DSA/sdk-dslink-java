@@ -6,7 +6,6 @@ import org.dsa.iot.broker.server.client.Client;
 import org.dsa.iot.broker.utils.ParsedPath;
 import org.dsa.iot.broker.utils.RequestGenerator;
 import org.dsa.iot.dslink.util.json.JsonArray;
-import org.dsa.iot.dslink.util.json.JsonObject;
 
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
@@ -41,7 +40,7 @@ public class SubStreamManager {
             subLock.readLock().unlock();
         }
 
-        JsonObject top = null;
+        JsonArray req = null;
         if (respSid == null) {
             subLock.writeLock().lock();
             try {
@@ -52,7 +51,7 @@ public class SubStreamManager {
                     int rid = responder().nextRid();
                     respSid = responder().nextSid();
                     subPaths.put(path, respSid);
-                    top = RequestGenerator.subscribe(path, respSid, rid);
+                    req = RequestGenerator.subscribe(path, respSid, rid);
                     stream = new SubStream(path, responder().node());
                     subStreams.put(respSid, stream);
                 }
@@ -62,8 +61,8 @@ public class SubStreamManager {
         }
 
         stream.add(requester, sid);
-        if (top != null) {
-            responder().client().write(top.encode());
+        if (req != null) {
+            responder().client().writeRequest(req);
         }
         return stream;
     }
@@ -90,11 +89,11 @@ public class SubStreamManager {
             }
 
             int rid = responder().nextRid();
-            JsonObject top = RequestGenerator.unsubscribe(rid, sid);
+            JsonArray req = RequestGenerator.unsubscribe(rid, sid);
 
             Client responder = responder().client();
             if (responder != null) {
-                responder.write(top.encode());
+                responder.writeRequest(req);
             }
         }
     }

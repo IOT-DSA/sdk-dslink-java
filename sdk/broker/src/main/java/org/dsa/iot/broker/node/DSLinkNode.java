@@ -132,9 +132,7 @@ public class DSLinkNode extends BrokerNode {
 
         JsonArray reqs = new JsonArray();
         reqs.add(req);
-        JsonObject top = new JsonObject();
-        top.put("requests", reqs);
-        client().write(top.encode());
+        client().writeRequest(reqs);
         return stream;
     }
 
@@ -161,9 +159,7 @@ public class DSLinkNode extends BrokerNode {
 
         JsonArray reqs = new JsonArray();
         reqs.add(req);
-        JsonObject top = new JsonObject();
-        top.put("requests", reqs);
-        client().write(top.encode());
+        client().writeRequest(reqs);
         return stream;
     }
 
@@ -188,9 +184,7 @@ public class DSLinkNode extends BrokerNode {
 
         JsonArray reqs = new JsonArray();
         reqs.add(req);
-        JsonObject top = new JsonObject();
-        top.put("requests", reqs);
-        client().write(top.encode());
+        client().writeRequest(reqs);
         return stream;
     }
 

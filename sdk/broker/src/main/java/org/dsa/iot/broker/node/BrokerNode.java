@@ -243,11 +243,9 @@ public class BrokerNode<T extends BrokerNode> {
 
         JsonArray resps = new JsonArray();
         resps.add(resp);
-        JsonObject top = new JsonObject();
-        top.put("responses", resps);
         for (Map.Entry<Client, Integer> sub : pathSubs.entrySet()) {
             resp.put("rid", sub.getValue());
-            sub.getKey().write(top.encode());
+            sub.getKey().writeResponse(resps);
         }
     }
 

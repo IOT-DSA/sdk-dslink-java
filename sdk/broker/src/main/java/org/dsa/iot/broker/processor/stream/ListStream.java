@@ -55,10 +55,7 @@ public class ListStream extends Stream {
 
             JsonArray resps = new JsonArray();
             resps.add(resp);
-
-            JsonObject top = new JsonObject();
-            top.put("responses", resps);
-            requester.write(top.encode());
+            requester.writeResponse(resps);
         } finally {
             cacheLock.readLock().unlock();
         }
@@ -122,8 +119,6 @@ public class ListStream extends Stream {
 
         JsonArray resps = new JsonArray();
         resps.add(response);
-        JsonObject top = new JsonObject();
-        top.put("responses", resps);
 
         for (Map.Entry<Client, Integer> entry : reqMap.entrySet()) {
             Client client = entry.getKey();
@@ -133,7 +128,7 @@ public class ListStream extends Stream {
             }
 
             response.put("rid", rid);
-            client.write(top.encode());
+            client.writeResponse(resps);
         }
     }
 
@@ -141,8 +136,8 @@ public class ListStream extends Stream {
     public void responderConnected() {
         int rid = responder().nextRid();
         responder().stream().list().move(this, rid);
-        JsonObject top = RequestGenerator.list(path(), rid);
-        responder().client().write(top.encode());
+        JsonArray reqs = RequestGenerator.list(path(), rid);
+        responder().client().writeRequest(reqs);
     }
 
     @Override
@@ -168,13 +163,11 @@ public class ListStream extends Stream {
 
         JsonArray resps = new JsonArray();
         resps.add(response);
-        JsonObject top = new JsonObject();
-        top.put("responses", resps);
         for (Map.Entry<Client, Integer> entry : reqMap.entrySet()) {
             Client client = entry.getKey();
             int rid = entry.getValue();
             response.put("rid", rid);
-            client.write(top.encode());
+            client.writeResponse(resps);
         }
     }
 }

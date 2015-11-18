@@ -55,11 +55,7 @@ public class SubStream {
 
             JsonArray resps = new JsonArray();
             resps.add(resp);
-
-            JsonObject top = new JsonObject();
-            top.put("responses", resps);
-
-            requester.write(top.encode());
+            requester.writeResponse(resps);
         }
     }
 
@@ -84,15 +80,12 @@ public class SubStream {
         JsonArray resps = new JsonArray();
         resps.add(resp);
 
-        JsonObject top = new JsonObject();
-        top.put("responses", resps);
-
         for (Map.Entry<Client, Integer> entry : clientMap.entrySet()) {
             Integer sid = entry.getValue();
             update.set(0, sid);
 
             Client requester = entry.getKey();
-            if (!requester.write(top.encode())) {
+            if (!requester.writeResponse(resps)) {
                 node().unsubscribe(this, requester);
             }
         }

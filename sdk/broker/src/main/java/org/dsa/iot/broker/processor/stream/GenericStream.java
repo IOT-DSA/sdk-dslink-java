@@ -47,9 +47,7 @@ public class GenericStream extends Stream {
         response.put("rid", rid);
         JsonArray resps = new JsonArray();
         resps.add(response);
-        JsonObject top = new JsonObject();
-        top.put("responses", resps);
-        requester.write(top.encode());
+        requester.writeResponse(resps);
 
         if (state == StreamState.CLOSED) {
             close();
@@ -67,9 +65,7 @@ public class GenericStream extends Stream {
         resp.put("stream", StreamState.CLOSED);
         JsonArray resps = new JsonArray();
         resps.add(resp);
-        JsonObject top = new JsonObject();
-        top.put("responses", resps);
-        requester.write(top.encode());
+        requester.writeResponse(resps);
         close();
     }
 
