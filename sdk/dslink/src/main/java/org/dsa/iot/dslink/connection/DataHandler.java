@@ -15,21 +15,25 @@ import java.util.Collections;
  *
  * @author Samuel Grenier
  */
-public class DataHandler {
+public class DataHandler implements MessageTracker {
 
     private static final Logger LOGGER;
+
+    private final Object msgLock = new Object();
+    private int messageId = 0;
+    private int lastReceivedAck = 0;
 
     private NetworkClient client;
     private Handler<DataReceived> reqHandler;
     private Handler<DataReceived> respHandler;
 
-    private QueuedWriteManager requestsManager;
-    private QueuedWriteManager responsesManager;
+    private QueuedWriteManager reqsManager;
+    private QueuedWriteManager respsManager;
 
     public void setClient(NetworkClient client) {
         this.client = client;
-        this.requestsManager = new QueuedWriteManager(client, "requests");
-        this.responsesManager = new QueuedWriteManager(client, "responses");
+        this.reqsManager = new QueuedWriteManager(client, this, "requests");
+        this.respsManager = new QueuedWriteManager(client, this, "responses");
     }
 
     public void setReqHandler(Handler<DataReceived> handler) {
@@ -75,13 +79,18 @@ public class DataHandler {
                 }
             });
         }
+
+        final Integer ackId = obj.get("ack");
+        if (ackId != null) {
+            ackReceived(ackId);
+        }
     }
 
     public void writeRequest(JsonObject object) {
         if (object == null) {
             throw new NullPointerException("object");
         }
-        requestsManager.post(object);
+        reqsManager.post(object);
     }
 
     public void writeAck(Integer ack) {
@@ -119,11 +128,33 @@ public class DataHandler {
             throw new NullPointerException("objects");
         }
 
-        responsesManager.post(objects);
+        respsManager.post(objects);
         if (ackId != null) {
             JsonObject ack = new JsonObject();
             ack.put("ack", ackId);
             client.write(ack.encode());
+        }
+    }
+
+    @Override
+    public void ackReceived(int ack) {
+        synchronized (msgLock) {
+            lastReceivedAck = Math.max(lastReceivedAck, ack);
+        }
+    }
+
+    @Override
+    public int missingAckCount() {
+        synchronized (msgLock) {
+            return messageId - lastReceivedAck;
+        }
+    }
+
+    @Override
+    public int incrementMessageId() {
+        synchronized (msgLock) {
+            lastReceivedAck = ++messageId;
+            return lastReceivedAck;
         }
     }
 

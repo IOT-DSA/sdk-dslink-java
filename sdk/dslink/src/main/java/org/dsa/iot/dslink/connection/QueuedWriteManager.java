@@ -21,16 +21,22 @@ public class QueuedWriteManager {
     private static final int DISPATCH_DELAY;
 
     private final Map<Integer, JsonObject> tasks = new HashMap<>();
+    private final MessageTracker tracker;
     private final NetworkClient client;
     private final String topName;
     private ScheduledFuture<?> fut;
 
-    public QueuedWriteManager(NetworkClient client, String topName) {
+    public QueuedWriteManager(NetworkClient client,
+                              MessageTracker tracker,
+                              String topName) {
         if (client == null) {
             throw new NullPointerException("client");
+        } else if (tracker == null) {
+            throw new NullPointerException("tracker");
         } else if (topName == null) {
             throw new NullPointerException("topName");
         }
+        this.tracker = tracker;
         this.topName = topName;
         this.client = client;
     }
@@ -42,19 +48,19 @@ public class QueuedWriteManager {
     }
 
     public synchronized boolean post(JsonObject content) {
-        if (client.writable()) {
-            JsonArray updates = new JsonArray();
-            updates.add(content);
-
-            JsonObject top = new JsonObject();
-            top.put(topName, updates);
-            client.write(top.encode());
-            return true;
-        } else {
+        if (shouldQueue()) {
             addTask(content);
             schedule();
+            return false;
         }
-        return false;
+
+        JsonArray updates = new JsonArray();
+        updates.add(content);
+
+        JsonObject top = new JsonObject();
+        top.put(topName, updates);
+        forceWrite(top);
+        return true;
     }
 
     private synchronized void addTask(JsonObject content) {
@@ -94,7 +100,9 @@ public class QueuedWriteManager {
                 boolean schedule = false;
                 synchronized (QueuedWriteManager.this) {
                     fut = null;
-                    if (client.writable()) {
+                    if (shouldQueue()) {
+                        schedule = true;
+                    } else {
                         if (tasks.isEmpty()) {
                             return;
                         }
@@ -106,9 +114,7 @@ public class QueuedWriteManager {
                         }
                         JsonObject top = new JsonObject();
                         top.put(topName, updates);
-                        client.write(top.encode());
-                    } else {
-                        schedule = true;
+                        forceWrite(top);
                     }
                 }
                 if (schedule) {
@@ -116,6 +122,15 @@ public class QueuedWriteManager {
                 }
             }
         }, DISPATCH_DELAY, TimeUnit.MILLISECONDS);
+    }
+
+    private boolean shouldQueue() {
+        return !client.writable() || tracker.missingAckCount() > 8;
+    }
+
+    private synchronized void forceWrite(JsonObject obj) {
+        obj.put("msg", tracker.incrementMessageId());
+        client.write(obj.encode());
     }
 
     static {
