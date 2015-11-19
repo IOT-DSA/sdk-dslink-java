@@ -40,7 +40,7 @@ public class ServerManager {
     public void start() throws Exception {
         stop();
         LOGGER.info("Servers are starting");
-        bossLoop = new NioEventLoopGroup();
+        bossLoop = new NioEventLoopGroup(1);
         workerLoop = new NioEventLoopGroup();
 
         final JsonObject httpConf = serverConf.get("http");

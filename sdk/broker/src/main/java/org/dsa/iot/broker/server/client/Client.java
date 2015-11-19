@@ -1,5 +1,6 @@
 package org.dsa.iot.broker.server.client;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
@@ -25,6 +26,9 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
 
     private ChannelHandlerContext ctx;
     private DSLinkNode node;
+
+    private JsonArray requestsCache;
+    private JsonArray responsesCache;
 
     public Client(Broker broker, DsaHandshake handshake) {
         if (broker == null) {
@@ -64,13 +68,61 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
         }
     }
 
+    @SuppressFBWarnings("IS2_INCONSISTENT_SYNC")
     public boolean writeRequest(JsonArray requests) {
+        ChannelHandlerContext ctx = this.ctx;
+        if (ctx == null) {
+            return false;
+        }
+        if (!ctx.channel().isWritable()) {
+            synchronized (this) {
+                if (requestsCache == null) {
+                    requestsCache = requests;
+                } else {
+                    requestsCache.mergeIn(requests);
+                }
+            }
+            return true;
+        }
+        if (requestsCache != null) {
+            synchronized (this) {
+                if (requestsCache != null) {
+                    requestsCache.mergeIn(requests);
+                    requests = requestsCache;
+                    requestsCache = null;
+                }
+            }
+        }
         JsonObject top = new JsonObject();
         top.put("requests", requests);
         return write(top.encode());
     }
 
+    @SuppressFBWarnings("IS2_INCONSISTENT_SYNC")
     public boolean writeResponse(JsonArray responses) {
+        ChannelHandlerContext ctx = this.ctx;
+        if (ctx == null) {
+            return false;
+        }
+        if (!ctx.channel().isWritable()) {
+            synchronized (this) {
+                if (responsesCache == null) {
+                    responsesCache = responses;
+                } else {
+                    responsesCache.mergeIn(responses);
+                }
+            }
+            return true;
+        }
+        if (responsesCache != null) {
+            synchronized (this) {
+                if (responsesCache != null) {
+                    responsesCache.mergeIn(responses);
+                    responses = responsesCache;
+                    responsesCache = null;
+                }
+            }
+        }
         JsonObject top = new JsonObject();
         top.put("responses", responses);
         return write(top.encode());
