@@ -1,10 +1,10 @@
-apply from: '../build.gradle'
+//apply from: '../build.gradle'
 
 dependencies {
     compile project(':sdk/dslink')
 }
 
-uploadArchives {
+/*uploadArchives {
     repositories {
         mavenDeployer {
             pom.project {
@@ -14,4 +14,4 @@ uploadArchives {
             }
         }
     }
-}
+}*/
