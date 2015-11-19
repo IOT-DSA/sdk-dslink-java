@@ -44,12 +44,8 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
         this.node = node;
     }
 
-    public DSLinkNode node() {
-        return node;
-    }
-
     public MessageProcessor processor() {
-        return node().processor();
+        return node.processor();
     }
 
     public DsaHandshake handshake() {
@@ -61,9 +57,10 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
     }
 
     public void close() {
+        ChannelHandlerContext ctx = this.ctx;
         if (ctx != null) {
             ctx.close();
-            ctx = null;
+            this.ctx = null;
             broker().clientManager().clientDisconnected(this);
         }
     }
@@ -95,7 +92,8 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
         }
         JsonObject top = new JsonObject();
         top.put("requests", requests);
-        return write(top.encode());
+        write(ctx, top.encode());
+        return true;
     }
 
     @SuppressFBWarnings("IS2_INCONSISTENT_SYNC")
@@ -125,14 +123,11 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
         }
         JsonObject top = new JsonObject();
         top.put("responses", responses);
-        return write(top.encode());
+        write(ctx, top.encode());
+        return true;
     }
 
-    private boolean write(String data) {
-        ChannelHandlerContext ctx = this.ctx;
-        if (ctx == null) {
-            return false;
-        }
+    private void write(ChannelHandlerContext ctx, String data) {
         byte[] bytes = data.getBytes(CharsetUtil.UTF_8);
         ByteBuf buf = Unpooled.wrappedBuffer(bytes);
         TextWebSocketFrame frame = new TextWebSocketFrame(buf);
@@ -141,13 +136,12 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("[Sent] {}: {}", handshake().dsId(), data);
         }
-        return true;
     }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
         this.ctx = ctx;
-        write("{}");
+        write(ctx, "{}");
         broker.clientManager().clientConnected(this);
     }
 
@@ -167,7 +161,7 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
                 LOGGER.debug("[Received] {}: {}", handshake().dsId(), data);
             }
             if ("{}".equals(data)) {
-                write("{}");
+                write(ctx, "{}");
             } else {
                 try {
                     JsonObject obj = new JsonObject(data);
