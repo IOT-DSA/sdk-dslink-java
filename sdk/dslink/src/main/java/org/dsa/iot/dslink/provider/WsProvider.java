@@ -26,24 +26,4 @@ public abstract class WsProvider {
 
     public abstract void connect(WsClient client);
 
-    /**
-     * Handles writing data over the network.
-     */
-    public interface Writer {
-
-        /**
-         * @return Whether the data can be written to the network immediately.
-         */
-        boolean writable();
-
-        /**
-         * @param data Data to write to the network
-         */
-        void write(String data);
-
-        /**
-         * Closes the connection to the remote endpoint.
-         */
-        void close();
-    }
 }

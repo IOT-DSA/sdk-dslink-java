@@ -12,6 +12,7 @@ import io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketCl
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.util.CharsetUtil;
+import org.dsa.iot.dslink.connection.NetworkClient;
 import org.dsa.iot.dslink.provider.WsProvider;
 import org.dsa.iot.dslink.util.URLInfo;
 import org.dsa.iot.dslink.util.http.WsClient;
@@ -117,7 +118,7 @@ public class DefaultWsProvider extends WsProvider {
                     handshakeFuture.setSuccess();
                     handshakeFuture = null;
                 }
-                client.onConnected(new Writer() {
+                client.onConnected(new NetworkClient() {
 
                     @Override
                     public boolean writable() {
@@ -135,6 +136,11 @@ public class DefaultWsProvider extends WsProvider {
                     @Override
                     public void close() {
                         ctx.close();
+                    }
+
+                    @Override
+                    public boolean isConnected() {
+                        return ch.isOpen();
                     }
                 });
                 return;

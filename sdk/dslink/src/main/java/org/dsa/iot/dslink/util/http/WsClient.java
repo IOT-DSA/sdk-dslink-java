@@ -1,5 +1,6 @@
 package org.dsa.iot.dslink.util.http;
 
+import org.dsa.iot.dslink.connection.NetworkClient;
 import org.dsa.iot.dslink.provider.WsProvider;
 import org.dsa.iot.dslink.util.URLInfo;
 
@@ -27,7 +28,7 @@ public abstract class WsClient {
 
     public abstract void onData(String data);
 
-    public abstract void onConnected(WsProvider.Writer writer);
+    public abstract void onConnected(NetworkClient writer);
 
     public abstract void onDisconnected();
 

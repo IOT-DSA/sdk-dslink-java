@@ -1,5 +1,6 @@
 package org.dsa.iot.dslink.connection.connector;
 
+import org.dsa.iot.dslink.connection.NetworkClient;
 import org.dsa.iot.dslink.connection.RemoteEndpoint;
 import org.dsa.iot.dslink.provider.WsProvider;
 import org.dsa.iot.dslink.util.Objects;
@@ -23,7 +24,7 @@ public class WebSocketConnector extends RemoteEndpoint {
     private static final Logger LOGGER;
 
     private ScheduledFuture<?> pingHandler;
-    private WsProvider.Writer writer;
+    private NetworkClient writer;
     private long lastSentMessage;
 
     @Override
@@ -71,7 +72,7 @@ public class WebSocketConnector extends RemoteEndpoint {
 
     @Override
     public boolean isConnected() {
-        return writer != null;
+        return writer != null && writer.isConnected();
     }
 
     private void setupPingHandler() {
@@ -125,7 +126,7 @@ public class WebSocketConnector extends RemoteEndpoint {
         }
 
         @Override
-        public void onConnected(WsProvider.Writer writer) {
+        public void onConnected(NetworkClient writer) {
             WebSocketConnector.this.writer = writer;
             setupPingHandler();
             Handler<Void> onConnected = getOnConnected();
