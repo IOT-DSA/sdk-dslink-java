@@ -109,7 +109,7 @@ public class DefaultWsProvider extends WsProvider {
         @Override
         public void messageReceived(final ChannelHandlerContext ctx,
                                     Object msg) {
-            Channel ch = ctx.channel();
+            final Channel ch = ctx.channel();
             if (handshake != null && !handshake.isHandshakeComplete()) {
                 handshake.finishHandshake(ch, (FullHttpResponse) msg);
                 handshake = null;
@@ -118,12 +118,18 @@ public class DefaultWsProvider extends WsProvider {
                     handshakeFuture = null;
                 }
                 client.onConnected(new Writer() {
+
+                    @Override
+                    public boolean writable() {
+                        return ch.isWritable();
+                    }
+
                     @Override
                     public void write(String data) {
                         byte[] bytes = data.getBytes(CharsetUtil.UTF_8);
                         ByteBuf buf = Unpooled.wrappedBuffer(bytes);
                         WebSocketFrame frame = new TextWebSocketFrame(buf);
-                        ctx.channel().writeAndFlush(frame);
+                        ch.writeAndFlush(frame);
                     }
 
                     @Override

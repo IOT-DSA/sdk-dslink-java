@@ -9,6 +9,13 @@ package org.dsa.iot.dslink.connection;
 public interface NetworkClient {
 
     /**
+     *
+     * @return Whether the client can write immediately to the network without
+     * being queued.
+     */
+    boolean writable();
+
+    /**
      * Writes data to the network.
      *
      * @param data Data to write

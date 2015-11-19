@@ -11,6 +11,15 @@ public class PropertyReference {
     public static final String NAMESPACE = "dslink";
 
     /**
+     * An integer property that determines the dispatch delay when a client
+     * is unable to write to the network. During this delay, messages will be
+     * merged until they can be sent over the network.
+     *
+     * Default value is 75.
+     */
+    public static final String DISPATCH_DELAY = NAMESPACE + ".dispatchDelay";
+
+    /**
      * A boolean property that determines the sdk should perform any
      * validations. Currently only the dslink.json is validated.
      *

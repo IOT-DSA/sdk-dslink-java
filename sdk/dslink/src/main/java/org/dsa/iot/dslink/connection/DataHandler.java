@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Handles all incoming and outgoing data in a network endpoint.
@@ -24,10 +23,13 @@ public class DataHandler {
     private Handler<DataReceived> reqHandler;
     private Handler<DataReceived> respHandler;
 
-    private final AtomicInteger msgId = new AtomicInteger();
+    private QueuedWriteManager requestsManager;
+    private QueuedWriteManager responsesManager;
 
     public void setClient(NetworkClient client) {
         this.client = client;
+        this.requestsManager = new QueuedWriteManager(client, "requests");
+        this.responsesManager = new QueuedWriteManager(client, "responses");
     }
 
     public void setReqHandler(Handler<DataReceived> handler) {
@@ -79,11 +81,7 @@ public class DataHandler {
         if (object == null) {
             throw new NullPointerException("object");
         }
-        JsonArray reqs = new JsonArray();
-        reqs.add(object);
-        JsonObject top = new JsonObject();
-        top.put("requests", reqs);
-        client.write(top.encode());
+        requestsManager.post(object);
     }
 
     public void writeAck(Integer ack) {
@@ -121,18 +119,12 @@ public class DataHandler {
             throw new NullPointerException("objects");
         }
 
-        JsonArray responses = new JsonArray();
-        for (JsonObject obj : objects) {
-            responses.add(obj);
-        }
-        JsonObject top = new JsonObject();
-        top.put("responses", responses);
-        top.put("msg", msgId.getAndIncrement());
+        responsesManager.post(objects);
         if (ackId != null) {
-            top.put("ack", ackId);
+            JsonObject ack = new JsonObject();
+            ack.put("ack", ackId);
+            client.write(ack.encode());
         }
-
-        client.write(top.encode());
     }
 
     public static class DataReceived {

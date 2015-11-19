@@ -53,6 +53,12 @@ public class WebSocketConnector extends RemoteEndpoint {
     }
 
     @Override
+    public boolean writable() {
+        checkConnected();
+        return writer.writable();
+    }
+
+    @Override
     public void write(String data) {
         checkConnected();
 
