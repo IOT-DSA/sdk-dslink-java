@@ -348,9 +348,9 @@ public class Value {
             case ValueType.JSON_STRING:
                 return string;
             case ValueType.JSON_MAP:
-                return map.encode();
+                return map.toString();
             case ValueType.JSON_ARRAY:
-                return array.encode();
+                return array.toString();
             default:
                 throw new RuntimeException("Unhandled type: " + type);
         }

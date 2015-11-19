@@ -3,6 +3,7 @@ package org.dsa.iot.dslink.handshake;
 import io.netty.util.CharsetUtil;
 import org.bouncycastle.jcajce.provider.digest.SHA256;
 import org.dsa.iot.dslink.config.Configuration;
+import org.dsa.iot.dslink.connection.TransportFormat;
 import org.dsa.iot.dslink.util.UrlBase64;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
@@ -108,6 +109,7 @@ public class LocalHandshake {
         obj.put("isResponder", isResponder);
         obj.put("linkData", linkData);
         obj.put("version", "1.0.4");
+        obj.put("formats", TransportFormat.toJsonArray());
         return obj;
     }
 }

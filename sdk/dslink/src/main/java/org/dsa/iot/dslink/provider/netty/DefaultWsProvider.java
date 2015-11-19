@@ -13,10 +13,14 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.util.CharsetUtil;
 import org.dsa.iot.dslink.connection.NetworkClient;
+import org.dsa.iot.dslink.connection.TransportFormat;
 import org.dsa.iot.dslink.provider.WsProvider;
 import org.dsa.iot.dslink.util.URLInfo;
 import org.dsa.iot.dslink.util.http.WsClient;
+import org.dsa.iot.dslink.util.json.JsonObject;
 import org.dsa.iot.shared.SharedObjects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.TrustManagerFactory;
 import java.net.URI;
@@ -26,6 +30,8 @@ import java.net.URISyntaxException;
  * @author Samuel Grenier
  */
 public class DefaultWsProvider extends WsProvider {
+
+    private static final Logger LOGGER;
 
     @Override
     public void connect(WsClient client) {
@@ -126,11 +132,29 @@ public class DefaultWsProvider extends WsProvider {
                     }
 
                     @Override
-                    public void write(String data) {
-                        byte[] bytes = data.getBytes(CharsetUtil.UTF_8);
-                        ByteBuf buf = Unpooled.wrappedBuffer(bytes);
-                        WebSocketFrame frame = new TextWebSocketFrame(buf);
-                        ch.writeAndFlush(frame);
+                    public void write(TransportFormat format,
+                                      JsonObject data) {
+                        switch (format) {
+                            case MESSAGE_PACK: {
+                                byte[] bytes = data.encode(format);
+                                ByteBuf buf = Unpooled.wrappedBuffer(bytes);
+                                BinaryWebSocketFrame f = new BinaryWebSocketFrame(buf);
+                                ch.writeAndFlush(f);
+                                break;
+                            }
+                            case JSON: {
+                                byte[] bytes = data.encode(format);
+                                ByteBuf buf = Unpooled.wrappedBuffer(bytes);
+                                WebSocketFrame frame = new TextWebSocketFrame(buf);
+                                ch.writeAndFlush(frame);
+                                break;
+                            }
+                            default: {
+                                String err = "Unsupported transport format: {}";
+                                LOGGER.error(err, format);
+                            }
+                        }
+
                     }
 
                     @Override
@@ -154,10 +178,19 @@ public class DefaultWsProvider extends WsProvider {
             }
 
             WebSocketFrame frame = (WebSocketFrame) msg;
-            if (frame instanceof TextWebSocketFrame) {
-                TextWebSocketFrame textFrame = (TextWebSocketFrame) frame;
-                String data = textFrame.text();
-                client.onData(data);
+            if (frame instanceof TextWebSocketFrame
+                    || frame instanceof BinaryWebSocketFrame) {
+                byte[] bytes;
+                {
+                    ByteBuf content = frame.content();
+                    if (content.hasArray()) {
+                        bytes = content.array();
+                    } else {
+                        bytes = new byte[content.readableBytes()];
+                        content.readBytes(bytes);
+                    }
+                }
+                client.onData(bytes);
             } else if (frame instanceof PingWebSocketFrame) {
                 ByteBuf buf = frame.content().retain();
                 PongWebSocketFrame pong = new PongWebSocketFrame(buf);
@@ -176,5 +209,9 @@ public class DefaultWsProvider extends WsProvider {
             }
             ctx.close();
         }
+    }
+
+    static {
+        LOGGER = LoggerFactory.getLogger(DefaultWsProvider.class);
     }
 }

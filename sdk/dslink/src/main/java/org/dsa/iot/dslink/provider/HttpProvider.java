@@ -37,6 +37,6 @@ public abstract class HttpProvider {
      * @return A response from the HTTP server.
      */
     public abstract HttpResp post(URLInfo url,
-                                  String content,
+                                  byte[] content,
                                   Map<String, String> headers);
 }

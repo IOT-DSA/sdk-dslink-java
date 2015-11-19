@@ -46,8 +46,8 @@ public class BrokerFileConfig extends BrokerConfig {
 
     protected void writeConfig(JsonObject opts) {
         try {
-            String data = opts.encodePrettily();
-            FileUtils.write(path, data.getBytes("UTF-8"));
+            byte[] data = opts.encodePrettily();
+            FileUtils.write(path, data);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

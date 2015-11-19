@@ -24,7 +24,7 @@ public class DefaultHttpProvider extends HttpProvider {
 
     @Override
     public HttpResp post(URLInfo url,
-                         String content,
+                         byte[] content,
                          Map<String, String> headers) {
         if (url == null) {
             throw new NullPointerException("url");
@@ -48,14 +48,13 @@ public class DefaultHttpProvider extends HttpProvider {
     }
 
     private HttpRequest populateRequest(String uri,
-                                        String content,
+                                        byte[] content,
                                         Map<String, String> headers) {
         DefaultFullHttpRequest request = new DefaultFullHttpRequest(
                 HttpVersion.HTTP_1_1, HttpMethod.POST, uri);
         ByteBuf buf = request.content();
         if (content != null) {
-            byte[] bytes = content.getBytes(CharsetUtil.UTF_8);
-            buf.writeBytes(bytes);
+            buf.writeBytes(content);
         }
         {
             HttpHeaders h = request.headers();

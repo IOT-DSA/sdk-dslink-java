@@ -65,7 +65,7 @@ public class SubscriptionUpdate extends Response {
                     min = update.get("min");
                     max = update.get("max");
                 } else {
-                    String err = "Invalid subscription update: " + in.encode();
+                    String err = "Invalid subscription update: " + in;
                     throw new RuntimeException(err);
                 }
                 if (path == null) {

@@ -99,7 +99,7 @@ public class ListResponse extends Response {
                 }
             }
         } else {
-            throw new RuntimeException("Unhandled update: " + in.encode());
+            throw new RuntimeException("Unhandled update: " + in);
         }
     }
 

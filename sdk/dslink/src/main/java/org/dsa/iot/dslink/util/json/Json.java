@@ -5,14 +5,17 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.PrettyPrinter;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import org.dsa.iot.dslink.connection.TransportFormat;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.dsa.iot.dslink.util.json.decoders.ListDecoder;
 import org.dsa.iot.dslink.util.json.decoders.MapDecoder;
 import org.dsa.iot.dslink.util.json.encoders.ListEncoder;
 import org.dsa.iot.dslink.util.json.encoders.MapEncoder;
+import org.msgpack.jackson.dataformat.MessagePackFactory;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -21,23 +24,40 @@ import java.util.Map;
  */
 public class Json {
 
-    private static final JsonFactory FACTORY = new JsonFactory();
+    private static final MessagePackFactory MSG_FACTORY;
+    private static final JsonFactory JSON_FACTORY;
 
     private Json() {
     }
 
-    public static String encode(Object obj) {
-        return performEncode(obj, null);
+    public static byte[] encode(TransportFormat format,
+                                Object obj) {
+        return performEncode(format, obj, null);
     }
 
-    public static String encodePrettily(Object obj) {
-        return performEncode(obj, new DefaultPrettyPrinter());
+    public static byte[] encodePrettily(TransportFormat format,
+                                        Object obj) {
+        return performEncode(format, obj, new DefaultPrettyPrinter());
     }
 
-    private static String performEncode(Object obj, PrettyPrinter printer) {
+    private static byte[] performEncode(TransportFormat format,
+                                        Object obj,
+                                        PrettyPrinter printer) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         JsonEncoding enc = JsonEncoding.UTF8;
-        try (JsonGenerator gen = FACTORY.createGenerator(baos, enc)) {
+        JsonGenerator gen;
+        try {
+            if (format == TransportFormat.JSON) {
+                gen = JSON_FACTORY.createGenerator(baos, enc);
+            } else if (format == TransportFormat.MESSAGE_PACK) {
+                gen = MSG_FACTORY.createGenerator(baos, enc);
+            } else {
+                throw new UnsupportedOperationException(format.toJson());
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        try {
             gen.setPrettyPrinter(printer);
             if (obj instanceof JsonObject) {
                 MapEncoder.write(gen, (JsonObject) obj);
@@ -45,18 +65,30 @@ public class Json {
                 ListEncoder.write(gen, (JsonArray) obj);
             }
             gen.close();
-            return baos.toString("UTF-8");
+            return baos.toByteArray();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static Map<String, Object> decodeMap(String content) {
-        return MapDecoder.decode(FACTORY, content);
+    public static Map<String, Object> decodeMap(TransportFormat format,
+                                                byte[] content) {
+        if (format == TransportFormat.JSON) {
+            return MapDecoder.decode(JSON_FACTORY, content);
+        } else if (format == TransportFormat.MESSAGE_PACK) {
+            return MapDecoder.decode(MSG_FACTORY, content);
+        }
+        throw new UnsupportedOperationException(format.toJson());
     }
 
-    public static List<Object> decodeList(String content) {
-        return ListDecoder.decode(FACTORY, content);
+    public static List<Object> decodeList(TransportFormat format,
+                                          byte[] content) {
+        if (format == TransportFormat.JSON) {
+            return ListDecoder.decode(JSON_FACTORY, content);
+        } else if (format == TransportFormat.MESSAGE_PACK) {
+            return ListDecoder.decode(MSG_FACTORY, content);
+        }
+        throw new UnsupportedOperationException(format.toJson());
     }
 
     @SuppressWarnings("unchecked")
@@ -94,5 +126,10 @@ public class Json {
             return new JsonArray((List) value);
         }
         return value;
+    }
+
+    static {
+        MSG_FACTORY = new MessagePackFactory();
+        JSON_FACTORY = new JsonFactory();
     }
 }

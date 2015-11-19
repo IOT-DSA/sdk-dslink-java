@@ -136,7 +136,7 @@ public class FileDriver implements StorageDriver {
             }
             File f = new File(storageDir, StringUtils.encodeName(sub.path()));
             try {
-                byte[] bytes = obj.encode().getBytes(CharsetUtil.UTF_8);
+                byte[] bytes = obj.encode();
                 FileUtils.write(f, bytes);
             } catch (Exception e) {
                 throw new RuntimeException(e);

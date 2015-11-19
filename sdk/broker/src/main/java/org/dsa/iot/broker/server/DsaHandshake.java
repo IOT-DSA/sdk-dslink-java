@@ -83,7 +83,7 @@ public class DsaHandshake {
         }
         obj.put("wsUri", "/ws");
 
-        byte[] bytes = obj.encode().getBytes(CharsetUtil.UTF_8);
+        byte[] bytes = obj.encode();
         return Unpooled.wrappedBuffer(bytes);
     }
 

@@ -92,7 +92,7 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
         }
         JsonObject top = new JsonObject();
         top.put("requests", requests);
-        write(ctx, top.encode());
+        write(ctx, new String(top.encode(), CharsetUtil.UTF_8));
         return true;
     }
 
@@ -123,7 +123,7 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
         }
         JsonObject top = new JsonObject();
         top.put("responses", responses);
-        write(ctx, top.encode());
+        write(ctx, new String(top.encode(), CharsetUtil.UTF_8));
         return true;
     }
 

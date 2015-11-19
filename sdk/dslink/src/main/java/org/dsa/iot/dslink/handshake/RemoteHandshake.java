@@ -1,6 +1,7 @@
 package org.dsa.iot.dslink.handshake;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
+import org.dsa.iot.dslink.connection.TransportFormat;
 import org.dsa.iot.dslink.util.URLInfo;
 import org.dsa.iot.dslink.util.http.HttpClient;
 import org.dsa.iot.dslink.util.http.HttpResp;
@@ -17,6 +18,7 @@ public class RemoteHandshake {
     private final String wsUri;
     private final String salt;
     private final String path;
+    private final TransportFormat format;
 
     /**
      * Populates the handshake with data from the server.
@@ -34,6 +36,7 @@ public class RemoteHandshake {
         this.wsUri = in.get("wsUri");
         this.salt = in.get("salt");
         this.path = in.get("path");
+        this.format = TransportFormat.toEnum((String) in.get("format"));
     }
 
     /**
@@ -65,6 +68,13 @@ public class RemoteHandshake {
     }
 
     /**
+     * @return The format to be used when communicating to the endpoint.
+     */
+    public TransportFormat getFormat() {
+        return format;
+    }
+
+    /**
      * Generates a remote handshake by connecting to the authentication
      * endpoint. Once the handshake is complete, a populated handshake
      * is returned. This enables the DSLink to connect to the data
@@ -87,8 +97,8 @@ public class RemoteHandshake {
             fullPath += "&token=" + token;
         }
 
-        HttpResp resp = client.post(fullPath, lh.toJson().encode());
-
+        byte[] content = lh.toJson().encode();
+        HttpResp resp = client.post(fullPath, content);
         HttpResponseStatus status = resp.getStatus();
         if (status.code() != HttpResponseStatus.OK.code()) {
             throw new RuntimeException("Bad status: " + status);

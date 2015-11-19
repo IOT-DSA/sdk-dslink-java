@@ -63,6 +63,10 @@ public abstract class RemoteEndpoint extends NetworkHandlers implements NetworkC
         return endpoint;
     }
 
+    public TransportFormat getFormat() {
+        return remoteHandshake.getFormat();
+    }
+
     public String getUri() {
         RemoteHandshake handshake = getRemoteHandshake();
         String uri = handshake.getWsUri() + "?auth=";
@@ -82,6 +86,8 @@ public abstract class RemoteEndpoint extends NetworkHandlers implements NetworkC
             // Fake auth parameter
             uri += "_";
         }
+
+        uri += "&format=" + handshake.getFormat().toJson();
         uri += "&dsId=" + getLocalHandshake().getDsId();
         return uri;
     }

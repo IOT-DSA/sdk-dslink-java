@@ -92,13 +92,11 @@ public class SerializationManager {
                 }
                 LOGGER.debug("Copying serialized data to a backup");
             }
-            String out = json.encodePrettily();
-            byte[] bytes = out.getBytes("UTF-8");
+            byte[] bytes = json.encodePrettily();
             FileUtils.write(file, bytes);
 
             if (LOGGER.isDebugEnabled()) {
-                out = json.encode();
-                LOGGER.debug("Wrote serialized data: " + out);
+                LOGGER.debug("Wrote serialized data: {}", json);
             }
         } catch (IOException e) {
             LOGGER.error("Failed to save serialized data", e);
@@ -154,8 +152,7 @@ public class SerializationManager {
         String in = new String(bytes, "UTF-8");
         JsonObject obj = new JsonObject(in);
         if (LOGGER.isDebugEnabled()) {
-            in = obj.encode();
-            LOGGER.debug("Read serialized data: " + in);
+            LOGGER.debug("Read serialized data: " + obj);
         }
         deserializer.deserialize(obj);
     }

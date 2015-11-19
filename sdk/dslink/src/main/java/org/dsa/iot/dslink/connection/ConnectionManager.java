@@ -125,7 +125,7 @@ public class ConnectionManager {
                         });
 
                         client = connector;
-                        handler.setClient(connector);
+                        handler.setClient(connector, remoteHandshake.getFormat());
                         connector.start();
                         break;
                     default:

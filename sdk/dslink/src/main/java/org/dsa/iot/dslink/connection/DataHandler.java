@@ -23,17 +23,21 @@ public class DataHandler implements MessageTracker {
     private int messageId = 0;
     private int lastReceivedAck = 0;
 
+    private TransportFormat format;
     private NetworkClient client;
+
     private Handler<DataReceived> reqHandler;
     private Handler<DataReceived> respHandler;
 
     private QueuedWriteManager reqsManager;
     private QueuedWriteManager respsManager;
 
-    public void setClient(NetworkClient client) {
+    public void setClient(NetworkClient client,
+                          TransportFormat format) {
         this.client = client;
-        this.reqsManager = new QueuedWriteManager(client, this, "requests");
-        this.respsManager = new QueuedWriteManager(client, this, "responses");
+        this.format = format;
+        this.reqsManager = new QueuedWriteManager(client, this, format, "requests");
+        this.respsManager = new QueuedWriteManager(client, this, format, "responses");
     }
 
     public void setReqHandler(Handler<DataReceived> handler) {
@@ -55,9 +59,9 @@ public class DataHandler implements MessageTracker {
      */
     public void processData(JsonObject obj) {
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Received data: {}", obj.encode());
+            String f = format.toJson();
+            LOGGER.debug("Received data ({}): {}", f, obj);
         }
-
 
         final Integer msgId = obj.get("msg");
         final JsonArray requests = obj.get("requests");
@@ -99,7 +103,7 @@ public class DataHandler implements MessageTracker {
         }
         JsonObject obj = new JsonObject();
         obj.put("ack", ack);
-        client.write(obj.encode());
+        client.write(format, obj);
     }
 
     /**
@@ -132,7 +136,7 @@ public class DataHandler implements MessageTracker {
         if (ackId != null) {
             JsonObject ack = new JsonObject();
             ack.put("ack", ackId);
-            client.write(ack.encode());
+            client.write(format, ack);
         }
     }
 

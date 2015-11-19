@@ -1,5 +1,8 @@
 package org.dsa.iot.dslink.util.json;
 
+import io.netty.util.CharsetUtil;
+import org.dsa.iot.dslink.connection.TransportFormat;
+
 import java.util.*;
 
 /**
@@ -15,7 +18,11 @@ public class JsonObject implements Iterable<Map.Entry<String, Object>> {
     }
 
     public JsonObject(String json) {
-        this(Json.decodeMap(json));
+        this(TransportFormat.JSON, json.getBytes(CharsetUtil.UTF_8));
+    }
+
+    public JsonObject(TransportFormat format, byte[] json) {
+        this(Json.decodeMap(format, json));
     }
 
     public JsonObject(Map<String, Object> map) {
@@ -28,13 +35,20 @@ public class JsonObject implements Iterable<Map.Entry<String, Object>> {
         }
     }
 
-    public String encode() {
-        return Json.encode(this);
+    public byte[] encode() {
+        return encode(TransportFormat.JSON);
     }
 
-    @SuppressWarnings("unused")
-    public String encodePrettily() {
-        return Json.encodePrettily(this);
+    public byte[] encode(TransportFormat format) {
+        return Json.encode(format, this);
+    }
+
+    public byte[] encodePrettily() {
+        return encodePrettily(TransportFormat.JSON);
+    }
+
+    public byte[] encodePrettily(TransportFormat format) {
+        return Json.encodePrettily(format, this);
     }
 
     public boolean contains(String key) {
@@ -101,7 +115,7 @@ public class JsonObject implements Iterable<Map.Entry<String, Object>> {
 
     @Override
     public String toString() {
-        return encode();
+        return new String(encode(TransportFormat.JSON), CharsetUtil.UTF_8);
     }
 
     @Override

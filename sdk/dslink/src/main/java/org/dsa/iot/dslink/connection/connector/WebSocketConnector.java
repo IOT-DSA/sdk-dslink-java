@@ -2,6 +2,7 @@ package org.dsa.iot.dslink.connection.connector;
 
 import org.dsa.iot.dslink.connection.NetworkClient;
 import org.dsa.iot.dslink.connection.RemoteEndpoint;
+import org.dsa.iot.dslink.connection.TransportFormat;
 import org.dsa.iot.dslink.provider.WsProvider;
 import org.dsa.iot.dslink.util.Objects;
 import org.dsa.iot.dslink.util.URLInfo;
@@ -60,12 +61,13 @@ public class WebSocketConnector extends RemoteEndpoint {
     }
 
     @Override
-    public void write(String data) {
+    public void write(TransportFormat format, JsonObject data) {
         checkConnected();
 
-        writer.write(data);
+        writer.write(getRemoteHandshake().getFormat(), data);
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Sent data: {}", data);
+            String s = getFormat().toJson();
+            LOGGER.debug("Sent data ({}): {}", s, data);
         }
         lastSentMessage = System.currentTimeMillis();
     }
@@ -85,7 +87,7 @@ public class WebSocketConnector extends RemoteEndpoint {
             public void run() {
                 if (System.currentTimeMillis() - lastSentMessage >= 29000) {
                     try {
-                        write("{}");
+                        write(getFormat(), new JsonObject());
                         LOGGER.debug("Sent ping");
                     } catch (Exception e) {
                         close();
@@ -108,14 +110,14 @@ public class WebSocketConnector extends RemoteEndpoint {
         }
 
         @Override
-        public void onData(String data) {
-            JsonObject obj = new JsonObject(data);
+        public void onData(byte[] data) {
+            JsonObject obj = new JsonObject(getFormat(), data);
             if (obj.contains("ping")) {
-                String pong = data.replaceFirst("i", "o");
-                WebSocketConnector.this.write(pong);
+                obj.put("pong", obj.remove("ping"));
+                WebSocketConnector.this.write(getFormat(), obj);
                 if (LOGGER.isDebugEnabled()) {
-                    String s = "Received ping, sending pong: {}";
-                    LOGGER.debug(s, pong);
+                    String s = "Received ping, sending pong";
+                    LOGGER.debug(s);
                 }
                 return;
             }

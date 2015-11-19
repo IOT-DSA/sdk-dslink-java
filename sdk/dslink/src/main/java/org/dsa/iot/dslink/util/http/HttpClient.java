@@ -20,7 +20,7 @@ public class HttpClient {
         this.url = url;
     }
 
-    public HttpResp post(String uri, String content) {
+    public HttpResp post(String uri, byte[] content) {
         HttpProvider provider = HttpProvider.getProvider();
         Map<String, String> headers = new HashMap<>();
         {

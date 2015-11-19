@@ -21,6 +21,7 @@ public class QueuedWriteManager {
     private static final int DISPATCH_DELAY;
 
     private final Map<Integer, JsonObject> tasks = new HashMap<>();
+    private final TransportFormat format;
     private final MessageTracker tracker;
     private final NetworkClient client;
     private final String topName;
@@ -28,14 +29,18 @@ public class QueuedWriteManager {
 
     public QueuedWriteManager(NetworkClient client,
                               MessageTracker tracker,
+                              TransportFormat format,
                               String topName) {
         if (client == null) {
             throw new NullPointerException("client");
         } else if (tracker == null) {
             throw new NullPointerException("tracker");
+        } else if (format == null) {
+            throw new NullPointerException("format");
         } else if (topName == null) {
             throw new NullPointerException("topName");
         }
+        this.format = format;
         this.tracker = tracker;
         this.topName = topName;
         this.client = client;
@@ -130,7 +135,7 @@ public class QueuedWriteManager {
 
     private synchronized void forceWrite(JsonObject obj) {
         obj.put("msg", tracker.incrementMessageId());
-        client.write(obj.encode());
+        client.write(format, obj);
     }
 
     static {
