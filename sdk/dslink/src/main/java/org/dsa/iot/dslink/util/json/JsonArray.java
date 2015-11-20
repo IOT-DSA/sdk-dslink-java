@@ -32,11 +32,20 @@ public class JsonArray implements Iterable<Object> {
         this.list = list;
     }
 
+    @SuppressWarnings("unused")
+    public byte[] encode() {
+        return encode(TransportFormat.JSON);
+    }
+
     public byte[] encode(TransportFormat format) {
         return Json.encode(format, this);
     }
 
     @SuppressWarnings("unused")
+    public byte[] encodePrettily() {
+        return encodePrettily(TransportFormat.JSON);
+    }
+
     public byte[] encodePrettily(TransportFormat format) {
         return Json.encodePrettily(format, this);
     }
