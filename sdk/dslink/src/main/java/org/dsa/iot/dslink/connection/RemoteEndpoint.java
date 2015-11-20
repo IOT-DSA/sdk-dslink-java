@@ -87,6 +87,11 @@ public abstract class RemoteEndpoint extends NetworkHandlers implements NetworkC
             uri += "_";
         }
 
+        String token = getLocalHandshake().getToken();
+        if (token != null) {
+            uri += "&token=" + token;
+        }
+
         uri += "&format=" + handshake.getFormat().toJson();
         uri += "&dsId=" + getLocalHandshake().getDsId();
         return uri;
