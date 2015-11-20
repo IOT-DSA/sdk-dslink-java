@@ -57,6 +57,8 @@ public class MapDecoder {
             } else if (token == JsonToken.VALUE_NUMBER_INT
                     || token == JsonToken.VALUE_NUMBER_FLOAT) {
                 in.put(name, parser.getNumberValue());
+            } else if (token == JsonToken.VALUE_EMBEDDED_OBJECT) {
+                in.put(name, parser.getBinaryValue());
             } else if (token == JsonToken.START_ARRAY) {
                 List<Object> list = new LinkedList<>();
                 ListDecoder.performDecodeList(list, parser);

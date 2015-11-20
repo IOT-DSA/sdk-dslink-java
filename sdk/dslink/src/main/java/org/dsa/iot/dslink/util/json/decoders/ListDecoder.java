@@ -55,6 +55,8 @@ public class ListDecoder {
             } else if (token == JsonToken.VALUE_NUMBER_INT
                     || token == JsonToken.VALUE_NUMBER_FLOAT) {
                 in.add(parser.getNumberValue());
+            } else if (token == JsonToken.VALUE_EMBEDDED_OBJECT) {
+                in.add(parser.getBinaryValue());
             } else if (token == JsonToken.START_ARRAY) {
                 List<Object> list = new LinkedList<>();
                 performDecodeList(list, parser);
