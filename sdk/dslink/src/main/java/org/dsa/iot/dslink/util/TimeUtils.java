@@ -16,6 +16,8 @@ public class TimeUtils {
 
     private static final String TIME_PATTERN_TZ;
     private static final String TIME_PATTERN;
+
+    private static final String TIME_ZONE_COLON;
     private static final String TIME_ZONE;
 
     public static String getTimePatternTz() {
@@ -26,16 +28,12 @@ public class TimeUtils {
         return TIME_PATTERN;
     }
 
-    public static String getTimeZone() {
-        return TIME_ZONE;
-    }
-
     public static String format(long time) {
         return format(new Date(time));
     }
 
     public static String format(Date time) {
-        return FORMAT.get().format(time) + TimeUtils.getTimeZone();
+        return FORMAT.get().format(time) + TIME_ZONE_COLON;
     }
 
     public static Date parseTz(String time) {
@@ -69,7 +67,8 @@ public class TimeUtils {
         }
         int hh = offset / 60;
         int mm = offset % 60;
-        TIME_ZONE = s + (hh < 10 ? "0" : "") + hh + ":" + (mm < 10 ? "0" : "") + mm;
+        TIME_ZONE_COLON = s + (hh < 10 ? "0" : "") + hh + ":" + (mm < 10 ? "0" : "") + mm;
+        TIME_ZONE = TIME_ZONE_COLON.replace(":", "");
         TIME_PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSS";
         TIME_PATTERN_TZ = TIME_PATTERN + "Z";
 

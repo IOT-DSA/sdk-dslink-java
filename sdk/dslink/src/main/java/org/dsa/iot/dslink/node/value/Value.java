@@ -249,7 +249,7 @@ public class Value {
         if (time == null) {
             setTime(System.currentTimeMillis());
         } else {
-            this.tsFormatted = TimeUtils.fixTime(time);
+            this.tsFormatted = time;
         }
 
         this.binary = binary == null ? null : binary.clone();
