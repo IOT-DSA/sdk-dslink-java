@@ -23,6 +23,11 @@ public class Values {
         NodeBuilder builder = parent.createChild("values");
         parent = builder.build();
 
+        builder = parent.createChild("binary");
+        builder.setValueType(ValueType.BINARY);
+        builder.setValue(new Value(new byte[] {0, 1, 2, 3}));
+        builder.build();
+
         builder = parent.createChild("number");
         builder.setValueType(ValueType.NUMBER);
         builder.setValue(new Value(0));

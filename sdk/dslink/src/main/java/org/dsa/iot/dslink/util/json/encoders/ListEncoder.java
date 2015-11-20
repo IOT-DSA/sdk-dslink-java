@@ -42,6 +42,8 @@ public class ListEncoder {
             } else if (instance instanceof JsonArray) {
                 gen.writeStartArray();
                 performWrite(gen, (JsonArray) instance);
+            } else if (instance instanceof byte[]) {
+                gen.writeBinary((byte[]) instance);
             } else if (instance == null) {
                 gen.writeNull();
             } else {

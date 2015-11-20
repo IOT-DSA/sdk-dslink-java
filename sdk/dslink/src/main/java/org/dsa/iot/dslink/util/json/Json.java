@@ -1,13 +1,13 @@
 package org.dsa.iot.dslink.util.json;
 
-import com.fasterxml.jackson.core.JsonEncoding;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.PrettyPrinter;
+import com.fasterxml.jackson.core.*;
+import com.fasterxml.jackson.core.io.IOContext;
+import com.fasterxml.jackson.core.json.UTF8JsonGenerator;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import org.dsa.iot.dslink.connection.TransportFormat;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueUtils;
+import org.dsa.iot.dslink.util.UrlBase64;
 import org.dsa.iot.dslink.util.json.decoders.ListDecoder;
 import org.dsa.iot.dslink.util.json.decoders.MapDecoder;
 import org.dsa.iot.dslink.util.json.encoders.ListEncoder;
@@ -16,6 +16,8 @@ import org.msgpack.jackson.dataformat.MessagePackFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.Writer;
 import java.util.List;
 import java.util.Map;
 
@@ -105,7 +107,8 @@ public class Json {
                 || (value instanceof List)
                 || (value instanceof JsonObject)
                 || (value instanceof JsonArray)
-                || (value instanceof Value))) {
+                || (value instanceof Value)
+                || (value instanceof byte[]))) {
             throw new IllegalArgumentException("Invalid class: " + value.getClass());
         }
         if (value instanceof Map) {
@@ -130,6 +133,38 @@ public class Json {
 
     static {
         MSG_FACTORY = new MessagePackFactory();
-        JSON_FACTORY = new JsonFactory();
+        JSON_FACTORY = new JsonFactory() {
+            @Override
+            protected JsonGenerator _createGenerator(Writer out,
+                                                     IOContext ctxt)
+                                                    throws IOException {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            protected JsonGenerator _createUTF8Generator(OutputStream out,
+                                                         IOContext ctxt)
+                                                        throws IOException {
+                UTF8JsonGenerator gen = new UTF8JsonGenerator(ctxt,
+                        _generatorFeatures, _objectCodec, out) {
+                    @Override
+                    public void writeBinary(Base64Variant bv,
+                                            byte[] data,
+                                            int offset,
+                                            int len) throws IOException {
+                        String s = "\u001Bbytes:" + UrlBase64.encode(data);
+                        writeString(s);
+                    }
+                };
+                if (_characterEscapes != null) {
+                    gen.setCharacterEscapes(_characterEscapes);
+                }
+                SerializableString rootSep = _rootValueSeparator;
+                if (rootSep != DefaultPrettyPrinter.DEFAULT_ROOT_VALUE_SEPARATOR) {
+                    gen.setRootValueSeparator(rootSep);
+                }
+                return gen;
+            }
+        };
     }
 }

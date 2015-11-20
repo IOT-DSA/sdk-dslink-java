@@ -33,6 +33,8 @@ public class ValueUtils {
             return new Value((JsonObject) null, time);
         } else if (type.compare(ValueType.ARRAY)) {
             return new Value((JsonArray) null, time);
+        } else if (type.compare(ValueType.BINARY)) {
+            return new Value((byte[]) null, time);
         }
         throw new RuntimeException(ERROR_MSG + type.getRawName());
     }
@@ -75,6 +77,8 @@ public class ValueUtils {
             val = new Value((JsonArray) object, time);
         } else if (object instanceof List) {
             val = new Value(new JsonArray((List) object), time);
+        } else if (object instanceof byte[]) {
+            val = new Value((byte[]) object, time);
         } else {
             throw new RuntimeException(ERROR_MSG + object.getClass().getName());
         }
@@ -100,6 +104,8 @@ public class ValueUtils {
                 return value.getMap();
             case ValueType.JSON_ARRAY:
                 return value.getArray();
+            case ValueType.JSON_BINARY:
+                return value.getBinary();
             default:
                 throw new RuntimeException(ERROR_MSG + value.getType());
         }

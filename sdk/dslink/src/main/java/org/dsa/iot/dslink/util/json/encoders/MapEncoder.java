@@ -45,6 +45,8 @@ public class MapEncoder {
             } else if (instance instanceof JsonArray) {
                 gen.writeArrayFieldStart(name);
                 ListEncoder.performWrite(gen, (JsonArray) instance);
+            } else if (instance instanceof byte[]) {
+                gen.writeBinaryField(name, (byte[]) instance);
             } else if (instance == null) {
                 gen.writeNullField(name);
             } else {

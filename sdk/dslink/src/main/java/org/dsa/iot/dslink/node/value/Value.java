@@ -2,9 +2,11 @@ package org.dsa.iot.dslink.node.value;
 
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.util.TimeUtils;
+import org.dsa.iot.dslink.util.UrlBase64;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
+import java.util.Arrays;
 import java.util.Date;
 
 /**
@@ -27,10 +29,29 @@ public class Value {
     private String string;
     private JsonObject map;
     private JsonArray array;
+    private byte[] binary;
 
     /**
-     * Creates a value with an initial type of a number. The value type
-     * cannot be changed through the setter.
+     * Creates a value with an initial type of binary.
+     *
+     * @param b Initial binary type.
+     */
+    public Value(byte[] b) {
+        set(b);
+    }
+
+    /**
+     * Creates a value with an initial type of a binary.
+     *
+     * @param b Initial binary data.
+     * @param time Initial time to set.
+     */
+    public Value(byte[] b, String time) {
+        set(b, time);
+    }
+
+    /**
+     * Creates a value with an initial type of a number.
      *
      * @param n Initial number to set.
      */
@@ -115,6 +136,17 @@ public class Value {
     }
 
     /**
+     * @param b Binary data to set.
+     */
+    public void set(byte[] b) {
+        set(b, null);
+    }
+
+    public void set(byte[] b, String time) {
+        set(ValueType.BINARY, b, null, null, null, null, null, time);
+    }
+
+    /**
      * @param n Number to set
      */
     public void set(Number n) {
@@ -126,7 +158,7 @@ public class Value {
      * @param time Initial time to set.
      */
     public void set(Number n, String time) {
-        set(ValueType.NUMBER, n, null, null, null, null, time);
+        set(ValueType.NUMBER, null, n, null, null, null, null, time);
     }
 
     /**
@@ -141,7 +173,7 @@ public class Value {
      * @param time Initial time to set.
      */
     public void set(Boolean b, String time) {
-        set(ValueType.BOOL, null, b, null, null, null, time);
+        set(ValueType.BOOL, null, null, b, null, null, null, time);
     }
 
     /**
@@ -156,7 +188,16 @@ public class Value {
      * @param time Initial time to set.
      */
     public void set(String s, String time) {
-        set(ValueType.STRING, null, null, s, null, null, time);
+        if (s != null) {
+            String start = "\u001Bbytes:";
+            if (s.startsWith(start)) {
+                s = s.substring(start.length(), s.length());
+                byte[] bytes = UrlBase64.decode(s);
+                set(bytes, time);
+                return;
+            }
+        }
+        set(ValueType.STRING, null, null, null, s, null, null, time);
     }
 
     /**
@@ -171,7 +212,7 @@ public class Value {
      * @param time Initial time to set.
      */
     public void set(JsonObject object, String time) {
-        set(ValueType.MAP, null, null, null, null, object, time);
+        set(ValueType.MAP, null, null, null, null, null, object, time);
     }
 
     /**
@@ -186,7 +227,7 @@ public class Value {
      * @param time Initial time to set.
      */
     public void set(JsonArray array, String time) {
-        set(ValueType.ARRAY, null, null, null, array, null, time);
+        set(ValueType.ARRAY, null, null, null, null, array, null, time);
     }
 
     /**
@@ -201,8 +242,8 @@ public class Value {
      * @param a    JSON array to set, or null
      * @param o    JSON object to set, or null
      */
-    private void set(ValueType type, Number n, Boolean b, String s,
-                     JsonArray a, JsonObject o, String time) {
+    private void set(ValueType type, byte[] binary, Number n, Boolean b,
+                     String s, JsonArray a, JsonObject o, String time) {
         checkImmutable();
         this.type = type;
         if (time == null) {
@@ -211,6 +252,7 @@ public class Value {
             this.tsFormatted = TimeUtils.fixTime(time);
         }
 
+        this.binary = binary == null ? null : binary.clone();
         this.number = n;
         this.bool = b;
         this.string = s;
@@ -277,11 +319,8 @@ public class Value {
         return new Date(tsDate.getTime());
     }
 
-    /**
-     * @return Boolean of the value
-     */
-    public Boolean getBool() {
-        return bool;
+    public byte[] getBinary() {
+        return binary == null ? null : binary.clone();
     }
 
     /**
@@ -289,6 +328,13 @@ public class Value {
      */
     public Number getNumber() {
         return number;
+    }
+
+    /**
+     * @return Boolean of the value
+     */
+    public Boolean getBool() {
+        return bool;
     }
 
     /**
@@ -351,6 +397,8 @@ public class Value {
                 return map.toString();
             case ValueType.JSON_ARRAY:
                 return array.toString();
+            case ValueType.JSON_BINARY:
+                return Arrays.toString(binary);
             default:
                 throw new RuntimeException("Unhandled type: " + type);
         }

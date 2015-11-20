@@ -21,6 +21,7 @@ public final class ValueType {
     public static final String JSON_ARRAY = "array";
     public static final String JSON_TIME = "time";
     public static final String JSON_ENUM = "enum";
+    public static final String JSON_BINARY = "binary";
     public static final String JSON_DYNAMIC = "dynamic";
 
     public static final ValueType NUMBER = new ValueType(JSON_NUMBER);
@@ -31,6 +32,7 @@ public final class ValueType {
     public static final ValueType TIME = new ValueType(JSON_TIME);
     public static final ValueType DYNAMIC = new ValueType(JSON_DYNAMIC);
     public static final ValueType ENUM = new ValueType(JSON_ENUM);
+    public static final ValueType BINARY = new ValueType(JSON_BINARY);
 
     private final String rawName;
     private final String builtName;
@@ -121,6 +123,8 @@ public final class ValueType {
                 return TIME;
             case JSON_DYNAMIC:
                 return DYNAMIC;
+            case JSON_BINARY:
+                return BINARY;
             default:
                 if (type.startsWith(JSON_BOOL + "[") && type.endsWith("]")) {
                     return new ValueType(JSON_BOOL, type);
