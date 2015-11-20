@@ -11,6 +11,7 @@ import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValuePair;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.util.handler.Handler;
+import org.dsa.iot.dslink.util.json.JsonObject;
 import org.dsa.iot.historian.stats.GetHistory;
 import org.dsa.iot.historian.utils.QueryData;
 import org.dsa.iot.historian.utils.TimeParser;
@@ -105,7 +106,16 @@ public class Watch {
         path = node.getName().replaceAll("%2F", "/");
         initData(node);
         GetHistory.initAction(node, getGroup().getDb());
+        {
+            JsonObject obj = new JsonObject();
+            obj.put("@", "merge");
+            obj.put("types", "paths");
 
+            String p = node.getLink().getDSLink().getPath();
+            p += node.getPath() + "/getHistory";
+            obj.put("val", p);
+            node.setAttribute("getHistoryAlias", new Value(p));
+        }
         {
             NodeBuilder b = node.createChild("unsubscribe");
             b.setSerializable(false);
