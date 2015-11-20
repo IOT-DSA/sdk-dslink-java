@@ -2,6 +2,7 @@ package org.dsa.iot.dslink.connection;
 
 import org.dsa.iot.dslink.util.Objects;
 import org.dsa.iot.dslink.util.handler.Handler;
+import org.dsa.iot.dslink.util.json.EncodingFormat;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 import org.slf4j.Logger;
@@ -23,7 +24,7 @@ public class DataHandler implements MessageTracker {
     private int messageId = 0;
     private int lastReceivedAck = 0;
 
-    private TransportFormat format;
+    private EncodingFormat format;
     private NetworkClient client;
 
     private Handler<DataReceived> reqHandler;
@@ -33,7 +34,7 @@ public class DataHandler implements MessageTracker {
     private QueuedWriteManager respsManager;
 
     public void setClient(NetworkClient client,
-                          TransportFormat format) {
+                          EncodingFormat format) {
         this.client = client;
         this.format = format;
         this.reqsManager = new QueuedWriteManager(client, this, format, "requests");

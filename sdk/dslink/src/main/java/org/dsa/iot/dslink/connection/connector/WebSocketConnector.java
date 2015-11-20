@@ -2,12 +2,12 @@ package org.dsa.iot.dslink.connection.connector;
 
 import org.dsa.iot.dslink.connection.NetworkClient;
 import org.dsa.iot.dslink.connection.RemoteEndpoint;
-import org.dsa.iot.dslink.connection.TransportFormat;
 import org.dsa.iot.dslink.provider.WsProvider;
 import org.dsa.iot.dslink.util.Objects;
 import org.dsa.iot.dslink.util.URLInfo;
 import org.dsa.iot.dslink.util.handler.Handler;
 import org.dsa.iot.dslink.util.http.WsClient;
+import org.dsa.iot.dslink.util.json.EncodingFormat;
 import org.dsa.iot.dslink.util.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,7 +61,7 @@ public class WebSocketConnector extends RemoteEndpoint {
     }
 
     @Override
-    public void write(TransportFormat format, JsonObject data) {
+    public void write(EncodingFormat format, JsonObject data) {
         checkConnected();
 
         writer.write(getRemoteHandshake().getFormat(), data);

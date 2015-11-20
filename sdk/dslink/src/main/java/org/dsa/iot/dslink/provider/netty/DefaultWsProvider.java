@@ -13,10 +13,10 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.util.CharsetUtil;
 import org.dsa.iot.dslink.connection.NetworkClient;
-import org.dsa.iot.dslink.connection.TransportFormat;
 import org.dsa.iot.dslink.provider.WsProvider;
 import org.dsa.iot.dslink.util.URLInfo;
 import org.dsa.iot.dslink.util.http.WsClient;
+import org.dsa.iot.dslink.util.json.EncodingFormat;
 import org.dsa.iot.dslink.util.json.JsonObject;
 import org.dsa.iot.shared.SharedObjects;
 import org.slf4j.Logger;
@@ -132,7 +132,7 @@ public class DefaultWsProvider extends WsProvider {
                     }
 
                     @Override
-                    public void write(TransportFormat format,
+                    public void write(EncodingFormat format,
                                       JsonObject data) {
                         switch (format) {
                             case MESSAGE_PACK: {
@@ -150,7 +150,7 @@ public class DefaultWsProvider extends WsProvider {
                                 break;
                             }
                             default: {
-                                String err = "Unsupported transport format: {}";
+                                String err = "Unsupported encoding format: {}";
                                 LOGGER.error(err, format);
                             }
                         }

@@ -1,5 +1,6 @@
 package org.dsa.iot.dslink.connection;
 
+import org.dsa.iot.dslink.util.json.EncodingFormat;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
 /**
@@ -23,7 +24,7 @@ public interface NetworkClient {
      * @param format Format the data should be encoded in.
      * @param data Data to write.
      */
-    void write(TransportFormat format, JsonObject data);
+    void write(EncodingFormat format, JsonObject data);
 
     /**
      * Closes the connection to the client

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.io.IOContext;
 import com.fasterxml.jackson.core.json.UTF8JsonGenerator;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
-import org.dsa.iot.dslink.connection.TransportFormat;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.dsa.iot.dslink.util.UrlBase64;
@@ -32,26 +31,26 @@ public class Json {
     private Json() {
     }
 
-    public static byte[] encode(TransportFormat format,
+    public static byte[] encode(EncodingFormat format,
                                 Object obj) {
         return performEncode(format, obj, null);
     }
 
-    public static byte[] encodePrettily(TransportFormat format,
+    public static byte[] encodePrettily(EncodingFormat format,
                                         Object obj) {
         return performEncode(format, obj, new DefaultPrettyPrinter());
     }
 
-    private static byte[] performEncode(TransportFormat format,
+    private static byte[] performEncode(EncodingFormat format,
                                         Object obj,
                                         PrettyPrinter printer) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         JsonEncoding enc = JsonEncoding.UTF8;
         JsonGenerator gen;
         try {
-            if (format == TransportFormat.JSON) {
+            if (format == EncodingFormat.JSON) {
                 gen = JSON_FACTORY.createGenerator(baos, enc);
-            } else if (format == TransportFormat.MESSAGE_PACK) {
+            } else if (format == EncodingFormat.MESSAGE_PACK) {
                 gen = MSG_FACTORY.createGenerator(baos, enc);
             } else {
                 throw new UnsupportedOperationException(format.toJson());
@@ -73,21 +72,21 @@ public class Json {
         }
     }
 
-    public static Map<String, Object> decodeMap(TransportFormat format,
+    public static Map<String, Object> decodeMap(EncodingFormat format,
                                                 byte[] content) {
-        if (format == TransportFormat.JSON) {
+        if (format == EncodingFormat.JSON) {
             return MapDecoder.decode(JSON_FACTORY, content);
-        } else if (format == TransportFormat.MESSAGE_PACK) {
+        } else if (format == EncodingFormat.MESSAGE_PACK) {
             return MapDecoder.decode(MSG_FACTORY, content);
         }
         throw new UnsupportedOperationException(format.toJson());
     }
 
-    public static List<Object> decodeList(TransportFormat format,
+    public static List<Object> decodeList(EncodingFormat format,
                                           byte[] content) {
-        if (format == TransportFormat.JSON) {
+        if (format == EncodingFormat.JSON) {
             return ListDecoder.decode(JSON_FACTORY, content);
-        } else if (format == TransportFormat.MESSAGE_PACK) {
+        } else if (format == EncodingFormat.MESSAGE_PACK) {
             return ListDecoder.decode(MSG_FACTORY, content);
         }
         throw new UnsupportedOperationException(format.toJson());

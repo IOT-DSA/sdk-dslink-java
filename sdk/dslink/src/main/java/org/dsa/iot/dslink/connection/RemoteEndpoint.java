@@ -6,6 +6,7 @@ import org.dsa.iot.dslink.handshake.LocalHandshake;
 import org.dsa.iot.dslink.handshake.RemoteHandshake;
 import org.dsa.iot.dslink.util.URLInfo;
 import org.dsa.iot.dslink.util.UrlBase64;
+import org.dsa.iot.dslink.util.json.EncodingFormat;
 
 /**
  * Common interface for handling remote endpoints.
@@ -63,7 +64,7 @@ public abstract class RemoteEndpoint extends NetworkHandlers implements NetworkC
         return endpoint;
     }
 
-    public TransportFormat getFormat() {
+    public EncodingFormat getFormat() {
         return remoteHandshake.getFormat();
     }
 

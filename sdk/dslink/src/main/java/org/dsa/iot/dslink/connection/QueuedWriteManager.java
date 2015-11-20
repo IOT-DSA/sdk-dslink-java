@@ -3,6 +3,7 @@ package org.dsa.iot.dslink.connection;
 import io.netty.util.internal.SystemPropertyUtil;
 import org.dsa.iot.dslink.util.Objects;
 import org.dsa.iot.dslink.util.PropertyReference;
+import org.dsa.iot.dslink.util.json.EncodingFormat;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 import org.slf4j.Logger;
@@ -21,7 +22,7 @@ public class QueuedWriteManager {
     private static final int DISPATCH_DELAY;
 
     private final Map<Integer, JsonObject> tasks = new HashMap<>();
-    private final TransportFormat format;
+    private final EncodingFormat format;
     private final MessageTracker tracker;
     private final NetworkClient client;
     private final String topName;
@@ -29,7 +30,7 @@ public class QueuedWriteManager {
 
     public QueuedWriteManager(NetworkClient client,
                               MessageTracker tracker,
-                              TransportFormat format,
+                              EncodingFormat format,
                               String topName) {
         if (client == null) {
             throw new NullPointerException("client");

@@ -1,7 +1,6 @@
 package org.dsa.iot.dslink.util.json;
 
 import io.netty.util.CharsetUtil;
-import org.dsa.iot.dslink.connection.TransportFormat;
 
 import java.util.*;
 
@@ -18,10 +17,10 @@ public class JsonObject implements Iterable<Map.Entry<String, Object>> {
     }
 
     public JsonObject(String json) {
-        this(TransportFormat.JSON, json.getBytes(CharsetUtil.UTF_8));
+        this(EncodingFormat.JSON, json.getBytes(CharsetUtil.UTF_8));
     }
 
-    public JsonObject(TransportFormat format, byte[] json) {
+    public JsonObject(EncodingFormat format, byte[] json) {
         this(Json.decodeMap(format, json));
     }
 
@@ -36,18 +35,18 @@ public class JsonObject implements Iterable<Map.Entry<String, Object>> {
     }
 
     public byte[] encode() {
-        return encode(TransportFormat.JSON);
+        return encode(EncodingFormat.JSON);
     }
 
-    public byte[] encode(TransportFormat format) {
+    public byte[] encode(EncodingFormat format) {
         return Json.encode(format, this);
     }
 
     public byte[] encodePrettily() {
-        return encodePrettily(TransportFormat.JSON);
+        return encodePrettily(EncodingFormat.JSON);
     }
 
-    public byte[] encodePrettily(TransportFormat format) {
+    public byte[] encodePrettily(EncodingFormat format) {
         return Json.encodePrettily(format, this);
     }
 
@@ -115,7 +114,7 @@ public class JsonObject implements Iterable<Map.Entry<String, Object>> {
 
     @Override
     public String toString() {
-        return new String(encode(TransportFormat.JSON), CharsetUtil.UTF_8);
+        return new String(encode(EncodingFormat.JSON), CharsetUtil.UTF_8);
     }
 
     @Override
