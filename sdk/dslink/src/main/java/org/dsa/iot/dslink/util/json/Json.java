@@ -73,21 +73,25 @@ public class Json {
     }
 
     public static Map<String, Object> decodeMap(EncodingFormat format,
-                                                byte[] content) {
+                                                byte[] content,
+                                                int offset,
+                                                int length) {
         if (format == EncodingFormat.JSON) {
-            return MapDecoder.decode(JSON_FACTORY, content);
+            return MapDecoder.decode(JSON_FACTORY, content, offset, length);
         } else if (format == EncodingFormat.MESSAGE_PACK) {
-            return MapDecoder.decode(MSG_FACTORY, content);
+            return MapDecoder.decode(MSG_FACTORY, content, offset, length);
         }
         throw new UnsupportedOperationException(format.toJson());
     }
 
     public static List<Object> decodeList(EncodingFormat format,
-                                          byte[] content) {
+                                          byte[] content,
+                                          int offset,
+                                          int length) {
         if (format == EncodingFormat.JSON) {
-            return ListDecoder.decode(JSON_FACTORY, content);
+            return ListDecoder.decode(JSON_FACTORY, content, offset, length);
         } else if (format == EncodingFormat.MESSAGE_PACK) {
-            return ListDecoder.decode(MSG_FACTORY, content);
+            return ListDecoder.decode(MSG_FACTORY, content, offset, length);
         }
         throw new UnsupportedOperationException(format.toJson());
     }

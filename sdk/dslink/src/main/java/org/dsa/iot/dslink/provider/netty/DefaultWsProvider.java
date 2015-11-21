@@ -180,17 +180,20 @@ public class DefaultWsProvider extends WsProvider {
             WebSocketFrame frame = (WebSocketFrame) msg;
             if (frame instanceof TextWebSocketFrame
                     || frame instanceof BinaryWebSocketFrame) {
+                ByteBuf content = frame.content();
+                int offset = 0;
+                int length = content.readableBytes();
                 byte[] bytes;
                 {
-                    ByteBuf content = frame.content();
                     if (content.hasArray()) {
+                        offset = content.arrayOffset();
                         bytes = content.array();
                     } else {
-                        bytes = new byte[content.readableBytes()];
+                        bytes = new byte[length];
                         content.readBytes(bytes);
                     }
                 }
-                client.onData(bytes);
+                client.onData(bytes, offset, length);
             } else if (frame instanceof PingWebSocketFrame) {
                 ByteBuf buf = frame.content().retain();
                 PongWebSocketFrame pong = new PongWebSocketFrame(buf);

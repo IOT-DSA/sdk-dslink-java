@@ -20,8 +20,16 @@ public class JsonArray implements Iterable<Object> {
         this(EncodingFormat.JSON, content.getBytes(CharsetUtil.UTF_8));
     }
 
-    public JsonArray(EncodingFormat format, byte[] content) {
-        this(Json.decodeList(format, content));
+    public JsonArray(EncodingFormat format,
+                     byte[] content) {
+        this(format, content, 0, content.length);
+    }
+
+    public JsonArray(EncodingFormat format,
+                     byte[] content,
+                     int offset,
+                     int length) {
+        this(Json.decodeList(format, content, offset, length));
     }
 
     public JsonArray(List list) {

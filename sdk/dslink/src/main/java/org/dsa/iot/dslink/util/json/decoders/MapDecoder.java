@@ -18,11 +18,13 @@ import java.util.Map;
 public class MapDecoder {
 
     public static Map<String, Object> decode(JsonFactory factory,
-                                                byte[] content) {
+                                             byte[] content,
+                                             int offset,
+                                             int length) {
         final Map<String, Object> map = new LinkedHashMap<>();
         JsonParser parser = null;
         try {
-            parser = factory.createParser(content);
+            parser = factory.createParser(content, offset, length);
             parser.nextToken();
             performDecodeMap(map, parser);
         } catch (IOException e) {

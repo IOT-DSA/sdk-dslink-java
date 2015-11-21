@@ -110,8 +110,8 @@ public class WebSocketConnector extends RemoteEndpoint {
         }
 
         @Override
-        public void onData(byte[] data) {
-            JsonObject obj = new JsonObject(getFormat(), data);
+        public void onData(byte[] data, int offset, int length) {
+            JsonObject obj = new JsonObject(getFormat(), data, offset, length);
             if (obj.contains("ping")) {
                 obj.put("pong", obj.remove("ping"));
                 WebSocketConnector.this.write(getFormat(), obj);

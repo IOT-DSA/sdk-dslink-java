@@ -26,7 +26,7 @@ public abstract class WsClient {
         WsProvider.getProvider().connect(this);
     }
 
-    public abstract void onData(byte[] data);
+    public abstract void onData(byte[] data, int offset, int length);
 
     public abstract void onConnected(NetworkClient writer);
 

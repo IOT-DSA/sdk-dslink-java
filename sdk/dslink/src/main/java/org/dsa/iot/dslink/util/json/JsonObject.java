@@ -20,8 +20,16 @@ public class JsonObject implements Iterable<Map.Entry<String, Object>> {
         this(EncodingFormat.JSON, json.getBytes(CharsetUtil.UTF_8));
     }
 
-    public JsonObject(EncodingFormat format, byte[] json) {
-        this(Json.decodeMap(format, json));
+    public JsonObject(EncodingFormat format,
+                      byte[] json) {
+        this(format, json, 0, json.length);
+    }
+
+    public JsonObject(EncodingFormat format,
+                      byte[] json,
+                      int offset,
+                      int length) {
+        this(Json.decodeMap(format, json, offset, length));
     }
 
     public JsonObject(Map<String, Object> map) {

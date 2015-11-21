@@ -18,11 +18,13 @@ import java.util.Map;
 public class ListDecoder {
 
     public static List<Object> decode(JsonFactory factory,
-                                          byte[] content) {
+                                      byte[] content,
+                                      int offset,
+                                      int length) {
         List<Object> list = new LinkedList<>();
         JsonParser parser = null;
         try {
-            parser = factory.createParser(content);
+            parser = factory.createParser(content, offset, length);
             parser.nextToken();
             performDecodeList(list, parser);
         } catch (IOException e) {
