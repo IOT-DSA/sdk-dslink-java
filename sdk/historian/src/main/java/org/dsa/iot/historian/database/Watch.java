@@ -114,7 +114,9 @@ public class Watch {
             String p = node.getLink().getDSLink().getPath();
             p += node.getPath() + "/getHistory";
             obj.put("val", p);
-            node.setAttribute("getHistoryAlias", new Value(obj));
+            Value v = new Value(obj);
+            v.setSerializable(false);
+            node.setAttribute("getHistoryAlias", v);
         }
         {
             NodeBuilder b = node.createChild("unsubscribe");
