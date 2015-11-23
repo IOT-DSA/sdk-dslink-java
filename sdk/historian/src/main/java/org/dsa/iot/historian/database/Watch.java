@@ -124,7 +124,7 @@ public class Watch {
                 DSLink link = p.getRequesters().get(dsId);
                 req = link.getRequester();
             }
-            req.set(new SetRequest(path + "/@getHistoryAlias", v), null);
+            req.set(new SetRequest(path + "/@@getHistory", v), null);
         }
     }
 

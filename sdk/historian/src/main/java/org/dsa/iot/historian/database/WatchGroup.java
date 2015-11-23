@@ -212,7 +212,7 @@ public class WatchGroup {
                         String dsId = h.getConfig().getDsIdWithHash();
                         DSLink link = p.getRequesters().get(dsId);
                         Requester req = link.getRequester();
-                        path += "/@getHistoryAlias";
+                        path += "/@@getHistory";
                         req.set(new SetRequest(path, v), null);
                     }
                 });
