@@ -108,7 +108,7 @@ public class Watch {
         pool.unsubscribe(path, Watch.this);
         {
             JsonObject obj = new JsonObject();
-            obj.put("@", "merge_remove");
+            obj.put("@", "remove");
             obj.put("type", "path");
 
             JsonArray array = new JsonArray();

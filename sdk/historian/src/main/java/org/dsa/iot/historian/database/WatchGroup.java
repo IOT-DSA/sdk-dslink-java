@@ -199,7 +199,7 @@ public class WatchGroup {
                         initWatch(path);
 
                         JsonObject obj = new JsonObject();
-                        obj.put("@", "merge_add");
+                        obj.put("@", "merge");
                         obj.put("type", "paths");
 
                         JsonArray array = new JsonArray();
