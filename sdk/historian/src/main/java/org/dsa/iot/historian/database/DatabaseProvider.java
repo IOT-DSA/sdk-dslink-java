@@ -68,6 +68,7 @@ public abstract class DatabaseProvider {
      *            the database node.
      * @return An incomplete node builder that must be built after initialized.
      */
+    @SuppressWarnings("unused")
     public NodeBuilder createDbNode(String name, ActionResult res) {
         Node parent = res.getNode().getParent();
         if (parent.hasChild(name)) {

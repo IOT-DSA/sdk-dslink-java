@@ -1,5 +1,10 @@
 package org.dsa.iot.historian.database;
 
+import org.dsa.iot.dslink.DSLink;
+import org.dsa.iot.dslink.DSLinkHandler;
+import org.dsa.iot.dslink.DSLinkProvider;
+import org.dsa.iot.dslink.link.Requester;
+import org.dsa.iot.dslink.methods.requests.SetRequest;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeBuilder;
 import org.dsa.iot.dslink.node.Permission;
@@ -11,6 +16,7 @@ import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValuePair;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.util.handler.Handler;
+import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 import org.dsa.iot.historian.stats.GetHistory;
 import org.dsa.iot.historian.utils.QueryData;
@@ -100,24 +106,32 @@ public class Watch {
         DatabaseProvider provider = group.getDb().getProvider();
         SubscriptionPool pool = provider.getPool();
         pool.unsubscribe(path, Watch.this);
+        {
+            JsonObject obj = new JsonObject();
+            obj.put("@", "merge_remove");
+            obj.put("type", "path");
+
+            JsonArray array = new JsonArray();
+            array.add(path + "/getHistory");
+            obj.put("val", path + "/getHistory");
+            Value v = new Value(obj);
+
+            Requester req;
+            {
+                DSLinkHandler h = node.getLink().getHandler();
+                DSLinkProvider p = h.getProvider();
+                String dsId = h.getConfig().getDsIdWithHash();
+                DSLink link = p.getRequesters().get(dsId);
+                req = link.getRequester();
+            }
+            req.set(new SetRequest(path + "/@getHistoryAlias", v), null);
+        }
     }
 
     public void init(Permission perm) {
         path = node.getName().replaceAll("%2F", "/");
         initData(node);
         GetHistory.initAction(node, getGroup().getDb());
-        {
-            JsonObject obj = new JsonObject();
-            obj.put("@", "merge");
-            obj.put("types", "paths");
-
-            String p = node.getLink().getDSLink().getPath();
-            p += node.getPath() + "/getHistory";
-            obj.put("val", p);
-            Value v = new Value(obj);
-            v.setSerializable(false);
-            node.setAttribute("getHistoryAlias", v);
-        }
         {
             NodeBuilder b = node.createChild("unsubscribe");
             b.setSerializable(false);

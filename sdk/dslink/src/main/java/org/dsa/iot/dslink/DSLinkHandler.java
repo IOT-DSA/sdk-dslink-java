@@ -20,6 +20,7 @@ import org.dsa.iot.dslink.util.json.JsonObject;
 public abstract class DSLinkHandler {
 
     private Configuration configuration;
+    private DSLinkProvider provider;
 
     /**
      * The default setting from here is what is used in the
@@ -81,6 +82,22 @@ public abstract class DSLinkHandler {
      */
     public Configuration getConfig() {
         return configuration;
+    }
+
+    /**
+     * Sets the provider that is attached to this handler.
+     *
+     * @param provider DSLink provider.
+     */
+    public void setProvider(DSLinkProvider provider) {
+        this.provider = provider;
+    }
+
+    /**
+     * @return DSLink provider attached to this DSLink.
+     */
+    public DSLinkProvider getProvider() {
+        return provider;
     }
 
     /**

@@ -1,5 +1,10 @@
 package org.dsa.iot.historian.database;
 
+import org.dsa.iot.dslink.DSLink;
+import org.dsa.iot.dslink.DSLinkHandler;
+import org.dsa.iot.dslink.DSLinkProvider;
+import org.dsa.iot.dslink.link.Requester;
+import org.dsa.iot.dslink.methods.requests.SetRequest;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeBuilder;
 import org.dsa.iot.dslink.node.Permission;
@@ -12,6 +17,8 @@ import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.util.NodeUtils;
 import org.dsa.iot.dslink.util.Objects;
 import org.dsa.iot.dslink.util.handler.Handler;
+import org.dsa.iot.dslink.util.json.JsonArray;
+import org.dsa.iot.dslink.util.json.JsonObject;
 import org.dsa.iot.historian.utils.QueryData;
 import org.dsa.iot.historian.utils.TimeParser;
 import org.dsa.iot.historian.utils.WatchUpdate;
@@ -190,6 +197,23 @@ public class WatchGroup {
                         Value v = event.getParameter("Path", vt);
                         String path = v.getString();
                         initWatch(path);
+
+                        JsonObject obj = new JsonObject();
+                        obj.put("@", "merge_add");
+                        obj.put("type", "paths");
+
+                        JsonArray array = new JsonArray();
+                        array.add(path + "/getHistory");
+                        obj.put("val", array);
+                        v = new Value(obj);
+
+                        DSLinkHandler h = node.getLink().getHandler();
+                        DSLinkProvider p = h.getProvider();
+                        String dsId = h.getConfig().getDsIdWithHash();
+                        DSLink link = p.getRequesters().get(dsId);
+                        Requester req = link.getRequester();
+                        path += "/@getHistoryAlias";
+                        req.set(new SetRequest(path, v), null);
                     }
                 });
                 {

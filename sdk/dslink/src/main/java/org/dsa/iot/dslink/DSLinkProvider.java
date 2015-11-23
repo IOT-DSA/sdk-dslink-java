@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -37,6 +38,7 @@ public class DSLinkProvider {
             throw new NullPointerException("manager");
         else if (handler == null)
             throw new NullPointerException("handler");
+        handler.setProvider(this);
         this.linkRequesterCache = new ConcurrentHashMap<>();
         this.linkResponderCache = new ConcurrentHashMap<>();
         this.lock = new Object();
@@ -164,6 +166,15 @@ public class DSLinkProvider {
         for (DSLink link : linkResponderCache.values()) {
             link.stop();
         }
+    }
+
+    @SuppressWarnings("unused")
+    public Map<String, DSLink> getResponders() {
+        return Collections.unmodifiableMap(linkResponderCache);
+    }
+
+    public Map<String, DSLink> getRequesters() {
+        return Collections.unmodifiableMap(linkRequesterCache);
     }
 
     /**
