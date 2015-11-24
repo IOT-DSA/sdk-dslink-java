@@ -203,7 +203,7 @@ public class WatchGroup {
                         obj.put("type", "paths");
 
                         JsonArray array = new JsonArray();
-                        array.add(path + "/getHistory");
+                        array.add(path);
                         obj.put("val", array);
                         v = new Value(obj);
 

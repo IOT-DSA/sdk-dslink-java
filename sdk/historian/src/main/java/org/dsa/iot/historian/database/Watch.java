@@ -16,7 +16,6 @@ import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValuePair;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.util.handler.Handler;
-import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 import org.dsa.iot.historian.stats.GetHistory;
 import org.dsa.iot.historian.utils.QueryData;
@@ -111,9 +110,7 @@ public class Watch {
             obj.put("@", "remove");
             obj.put("type", "path");
 
-            JsonArray array = new JsonArray();
-            array.add(path + "/getHistory");
-            obj.put("val", path + "/getHistory");
+            obj.put("val", path);
             Value v = new Value(obj);
 
             Requester req;
