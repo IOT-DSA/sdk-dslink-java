@@ -110,15 +110,16 @@ public class Watch {
             obj.put("@", "remove");
             obj.put("type", "path");
 
-            obj.put("val", path);
+            String p = node.getLink().getDSLink().getPath();
+            obj.put("val", p + node.getPath());
             Value v = new Value(obj);
 
             Requester req;
             {
                 DSLinkHandler h = node.getLink().getHandler();
-                DSLinkProvider p = h.getProvider();
+                DSLinkProvider pr = h.getProvider();
                 String dsId = h.getConfig().getDsIdWithHash();
-                DSLink link = p.getRequesters().get(dsId);
+                DSLink link = pr.getRequesters().get(dsId);
                 req = link.getRequester();
             }
             req.set(new SetRequest(path + "/@@getHistory", v), null);

@@ -202,15 +202,17 @@ public class WatchGroup {
                         obj.put("@", "merge");
                         obj.put("type", "paths");
 
+                        String p = node.getLink().getDSLink().getPath();
+                        p += node.getPath();
                         JsonArray array = new JsonArray();
-                        array.add(path);
+                        array.add(p);
                         obj.put("val", array);
                         v = new Value(obj);
 
                         DSLinkHandler h = node.getLink().getHandler();
-                        DSLinkProvider p = h.getProvider();
+                        DSLinkProvider pr = h.getProvider();
                         String dsId = h.getConfig().getDsIdWithHash();
-                        DSLink link = p.getRequesters().get(dsId);
+                        DSLink link = pr.getRequesters().get(dsId);
                         Requester req = link.getRequester();
                         path += "/@@getHistory";
                         req.set(new SetRequest(path, v), null);
