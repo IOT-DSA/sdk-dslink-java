@@ -111,7 +111,7 @@ public class Watch {
             obj.put("type", "path");
 
             String p = node.getLink().getDSLink().getPath();
-            obj.put("val", p + node.getPath());
+            obj.put("val", p + node.getPath() + "/getHistory");
             Value v = new Value(obj);
 
             Requester req;

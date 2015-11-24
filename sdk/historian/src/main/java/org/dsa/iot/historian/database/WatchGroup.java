@@ -203,7 +203,7 @@ public class WatchGroup {
                         obj.put("type", "paths");
 
                         String p = node.getLink().getDSLink().getPath();
-                        p += node.getPath();
+                        p += node.getPath() + "/getHistory";
                         JsonArray array = new JsonArray();
                         array.add(p);
                         obj.put("val", array);
