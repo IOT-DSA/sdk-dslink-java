@@ -16,6 +16,7 @@ import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.util.NodeUtils;
 import org.dsa.iot.dslink.util.Objects;
+import org.dsa.iot.dslink.util.StringUtils;
 import org.dsa.iot.dslink.util.handler.Handler;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
@@ -203,7 +204,8 @@ public class WatchGroup {
                         obj.put("type", "paths");
 
                         String p = node.getLink().getDSLink().getPath();
-                        p += node.getPath() + "/getHistory";
+                        p += node.getPath() + "/";
+                        p += StringUtils.encodeName(path) + "/getHistory";
                         JsonArray array = new JsonArray();
                         array.add(p);
                         obj.put("val", array);
