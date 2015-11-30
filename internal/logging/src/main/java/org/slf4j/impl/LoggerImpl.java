@@ -336,7 +336,7 @@ public class LoggerImpl implements Logger {
         if (factory.getLogLevel().getLevel() < level.getLevel()) {
             return;
         }
-        if (args != null) {
+        if (msg != null && args != null) {
             Matcher matcher = PATTERN.matcher(msg);
             StringBuffer sb = new StringBuffer();
             int index = 0;
