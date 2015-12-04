@@ -11,6 +11,13 @@ public class PropertyReference {
     public static final String NAMESPACE = "dslink";
 
     /**
+     * A string property of CSV values for the supported encoding formats
+     * that can be used over the network for communication. If the property
+     * is not specified then the SDK will allow using any supported format.
+     */
+    public static final String FORMATS = NAMESPACE + ".formats";
+
+    /**
      * An integer property that determines the dispatch delay when a client
      * is unable to write to the network. During this delay, messages will be
      * merged until they can be sent over the network.
