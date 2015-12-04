@@ -38,6 +38,7 @@ public class TimeUtils {
 
     public static Date parseTz(String time) {
         try {
+            time = fixTime(time);
             return FORMAT_TIME_ZONE.get().parse(time);
         } catch (ParseException e) {
             throw new RuntimeException(e);
