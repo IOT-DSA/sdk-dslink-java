@@ -280,7 +280,9 @@ public class Requester extends Linkable {
         request.addJsonValues(obj);
         {
             obj.put("rid", rid);
-            reqs.put(rid, wrapper);
+            if (wrapper.shouldStore()) {
+                reqs.put(rid, wrapper);
+            }
         }
         obj.put("method", request.getName());
         link.getWriter().writeRequest(obj);
@@ -308,6 +310,9 @@ public class Requester extends Linkable {
             return;
         }
         RequestWrapper wrapper = reqs.get(rid);
+        if (wrapper == null) {
+            return;
+        }
         Request request = wrapper.request;
         String method = request.getName();
 
@@ -450,6 +455,14 @@ public class Requester extends Linkable {
 
         public RequestWrapper(Request request) {
             this.request = request;
+        }
+
+        public boolean shouldStore() {
+            return !(invokeHandler == null
+                    && listHandler == null
+                    && removeHandler == null
+                    && setHandler == null
+                    && unsubHandler == null);
         }
     }
 }
