@@ -158,8 +158,7 @@ public class DataHandler implements MessageTracker {
     @Override
     public int incrementMessageId() {
         synchronized (msgLock) {
-            lastReceivedAck = ++messageId;
-            return lastReceivedAck;
+            return ++messageId;
         }
     }
 
