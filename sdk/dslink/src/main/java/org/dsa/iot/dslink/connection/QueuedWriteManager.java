@@ -115,7 +115,7 @@ public class QueuedWriteManager {
                     if (shouldQueue()) {
                         schedule = true;
                     } else {
-                        if (rawTasks.isEmpty()) {
+                        if (rawTasks.isEmpty() && mergedTasks.isEmpty()) {
                             return;
                         }
                         JsonArray updates = new JsonArray();
@@ -124,7 +124,7 @@ public class QueuedWriteManager {
                             updates.add(it.next());
                             it.remove();
                         }
-                        it = rawTasks.listIterator();
+                        it = rawTasks.iterator();
                         while (it.hasNext()) {
                             updates.add(it.next());
                             it.remove();
