@@ -53,20 +53,29 @@ public class QueuedWriteManager {
         }
     }
 
-    public synchronized boolean post(JsonObject content) {
-        if (shouldQueue()) {
-            addTask(content);
-            schedule();
-            return false;
+    public boolean post(JsonObject content) {
+        while (shouldBlock()) {
+            try {
+                Thread.sleep(5);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
+        synchronized (this) {
+            if (shouldQueue()) {
+                addTask(content);
+                schedule();
+                return false;
+            }
 
-        JsonArray updates = new JsonArray();
-        updates.add(content);
+            JsonArray updates = new JsonArray();
+            updates.add(content);
 
-        JsonObject top = new JsonObject();
-        top.put(topName, updates);
-        forceWrite(top);
-        return true;
+            JsonObject top = new JsonObject();
+            top.put(topName, updates);
+            forceWrite(top);
+            return true;
+        }
     }
 
     private synchronized void addTask(JsonObject content) {
@@ -128,6 +137,10 @@ public class QueuedWriteManager {
                 }
             }
         }, DISPATCH_DELAY, TimeUnit.MILLISECONDS);
+    }
+
+    private boolean shouldBlock() {
+        return tasks.size() > 50000;
     }
 
     private boolean shouldQueue() {
