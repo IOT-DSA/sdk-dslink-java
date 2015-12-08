@@ -91,11 +91,11 @@ public class DataHandler implements MessageTracker {
         }
     }
 
-    public void writeRequest(JsonObject object) {
+    public void writeRequest(JsonObject object, boolean merge) {
         if (object == null) {
             throw new NullPointerException("object");
         }
-        reqsManager.post(object);
+        reqsManager.post(object, merge);
     }
 
     public void writeAck(Integer ack) {
@@ -133,7 +133,9 @@ public class DataHandler implements MessageTracker {
             throw new NullPointerException("objects");
         }
 
-        respsManager.post(objects);
+        for (JsonObject o : objects) {
+            respsManager.post(o, true);
+        }
         if (ackId != null) {
             JsonObject ack = new JsonObject();
             ack.put("ack", ackId);

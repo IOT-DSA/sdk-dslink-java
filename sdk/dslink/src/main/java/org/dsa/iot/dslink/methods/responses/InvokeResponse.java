@@ -2,6 +2,7 @@ package org.dsa.iot.dslink.methods.responses;
 
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.DSLinkHandler;
+import org.dsa.iot.dslink.link.Requester;
 import org.dsa.iot.dslink.methods.Response;
 import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.node.Node;
@@ -32,6 +33,7 @@ public class InvokeResponse extends Response {
 
     private Table results;
     private ActionResult actRes;
+    private StreamState state;
 
     public InvokeResponse(DSLink link, int rid, String path) {
         this.link = link;
@@ -42,6 +44,37 @@ public class InvokeResponse extends Response {
     @Override
     public int getRid() {
         return rid;
+    }
+
+    public Table getTable() {
+        return results;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    @SuppressWarnings("unused")
+    public StreamState getState() {
+        return state;
+    }
+
+    /**
+     * Continuously invokes the action. The stream must not be closed.
+     *
+     * @param params Parameters for the invocation.
+     * @see Requester#continuousInvoke
+     * @throws IllegalStateException If the stream has been closed.
+     */
+    public void invoke(JsonObject params) {
+        if (state == StreamState.CLOSED) {
+            throw new IllegalStateException("Stream already closed");
+        }
+        link.getRequester().continuousInvoke(getRid(), params);
+    }
+
+    public void setStreamState(StreamState state) {
+        this.state = state;
     }
 
     @Override
@@ -78,14 +111,6 @@ public class InvokeResponse extends Response {
                 }
             }
         }
-    }
-
-    public Table getTable() {
-        return results;
-    }
-
-    public String getPath() {
-        return path;
     }
 
     @Override

@@ -9,10 +9,7 @@ import org.dsa.iot.dslink.util.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -21,7 +18,8 @@ public class QueuedWriteManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(QueuedWriteManager.class);
     private static final int DISPATCH_DELAY;
 
-    private final Map<Integer, JsonObject> tasks = new HashMap<>();
+    private final Map<Integer, JsonObject> mergedTasks = new HashMap<>();
+    private final List<JsonObject> rawTasks = new LinkedList<>();
     private final EncodingFormat format;
     private final MessageTracker tracker;
     private final NetworkClient client;
@@ -47,13 +45,7 @@ public class QueuedWriteManager {
         this.client = client;
     }
 
-    public synchronized void post(Collection<JsonObject> content) {
-        for (JsonObject obj : content) {
-            post(obj);
-        }
-    }
-
-    public boolean post(JsonObject content) {
+    public boolean post(JsonObject content, boolean merge) {
         while (shouldBlock()) {
             try {
                 Thread.sleep(5);
@@ -63,7 +55,7 @@ public class QueuedWriteManager {
         }
         synchronized (this) {
             if (shouldQueue()) {
-                addTask(content);
+                addTask(content, merge);
                 schedule();
                 return false;
             }
@@ -78,30 +70,35 @@ public class QueuedWriteManager {
         }
     }
 
-    private synchronized void addTask(JsonObject content) {
-        int rid = content.get("rid");
-        JsonObject obj = tasks.get(rid);
-        if (obj == null) {
-            tasks.put(rid, content);
-        } else {
-            JsonArray oldUpdates = obj.get("updates");
-            if (oldUpdates != null) {
-                JsonArray newUpdates = content.remove("updates");
-                if (newUpdates != null) {
-                    for (Object update : newUpdates) {
-                        if (update instanceof JsonArray
-                                || update instanceof JsonObject) {
-                            oldUpdates.add(update);
-                        } else {
-                            String clazz = update.getClass().getName();
-                            throw new RuntimeException("Unhandled type: " + clazz);
+    private synchronized void addTask(JsonObject content, boolean merge) {
+        if (merge) {
+            int rid = content.get("rid");
+            JsonObject obj = mergedTasks.get(rid);
+            if (obj == null) {
+                mergedTasks.put(rid, content);
+            } else {
+                JsonArray oldUpdates = obj.get("updates");
+                if (oldUpdates != null) {
+                    JsonArray newUpdates = content.remove("updates");
+                    if (newUpdates != null) {
+                        for (Object update : newUpdates) {
+                            if (update instanceof JsonArray
+                                    || update instanceof JsonObject) {
+                                oldUpdates.add(update);
+                            } else {
+                                String clazz = update.getClass().getName();
+                                String err = "Unhandled type: " + clazz;
+                                throw new RuntimeException(err);
+                            }
                         }
                     }
+                    obj.mergeIn(content);
+                } else {
+                    obj.mergeIn(content);
                 }
-                obj.mergeIn(content);
-            } else {
-                obj.mergeIn(content);
             }
+        } else {
+            rawTasks.add(content);
         }
     }
 
@@ -118,15 +115,21 @@ public class QueuedWriteManager {
                     if (shouldQueue()) {
                         schedule = true;
                     } else {
-                        if (tasks.isEmpty()) {
+                        if (rawTasks.isEmpty()) {
                             return;
                         }
                         JsonArray updates = new JsonArray();
-                        Iterator<JsonObject> it = tasks.values().iterator();
+                        Iterator<JsonObject> it = mergedTasks.values().iterator();
                         while (it.hasNext()) {
                             updates.add(it.next());
                             it.remove();
                         }
+                        it = rawTasks.listIterator();
+                        while (it.hasNext()) {
+                            updates.add(it.next());
+                            it.remove();
+                        }
+
                         JsonObject top = new JsonObject();
                         top.put(topName, updates);
                         forceWrite(top);
@@ -140,7 +143,7 @@ public class QueuedWriteManager {
     }
 
     private boolean shouldBlock() {
-        return tasks.size() > 50000;
+        return (rawTasks.size() + rawTasks.size()) > 100000;
     }
 
     private boolean shouldQueue() {

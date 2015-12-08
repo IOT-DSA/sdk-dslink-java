@@ -209,11 +209,27 @@ public class Requester extends Linkable {
      * @param request Invocation request.
      * @param onResponse Response.
      * @return Request ID that can be used to close the stream.
+     * @see InvokeResponse#getState To determine if the stream is open. If the
+     * stream isn't closed then it can be continuously invoked.
      */
     public int invoke(InvokeRequest request, Handler<InvokeResponse> onResponse) {
         RequestWrapper wrapper = new RequestWrapper(request);
         wrapper.invokeHandler = onResponse;
         return sendRequest(wrapper);
+    }
+
+    /**
+     * Invokes a previously open invocation stream. The stream must not be
+     * closed.
+     *
+     * @param rid Previous invocation request ID
+     * @param params Parameters of the invocation, can be {@code null}
+     * @see #invoke
+     */
+    public void continuousInvoke(int rid, JsonObject params) {
+        Request req = new ContinuousInvokeRequest(params);
+        RequestWrapper wrapper = new RequestWrapper(req);
+        sendRequest(wrapper, rid, false);
     }
 
     /**
@@ -267,10 +283,23 @@ public class Requester extends Linkable {
     /**
      * Sends a request to the client with a given request ID.
      *
-     * @param wrapper Request to send to the client
-     * @param rid Request ID to use
+     * @param wrapper Request to send to the client.
+     * @param rid Request ID to use.
      */
     private void sendRequest(RequestWrapper wrapper, int rid) {
+        sendRequest(wrapper, rid, true);
+    }
+
+    /**
+     * Sends a request to the client with a given request ID.
+     *
+     * @param wrapper Request to send to the client.
+     * @param rid Request ID to use.
+     * @param merge Whether the request should merge.
+     */
+    private void sendRequest(RequestWrapper wrapper,
+                             int rid,
+                             boolean merge) {
         final DSLink link = getDSLink();
         if (link == null) {
             return;
@@ -284,8 +313,13 @@ public class Requester extends Linkable {
                 reqs.put(rid, wrapper);
             }
         }
-        obj.put("method", request.getName());
-        link.getWriter().writeRequest(obj);
+        {
+            String name = request.getName();
+            if (name != null) {
+                obj.put("method", request.getName());
+            }
+        }
+        link.getWriter().writeRequest(obj, merge);
     }
 
     /**
@@ -410,6 +444,7 @@ public class Requester extends Linkable {
                         inResp = new InvokeResponse(link, rid, path);
                     }
                 }
+                inResp.setStreamState(stream);
                 inResp.setError(error);
                 inResp.populate(in);
                 boolean invoke = false;
@@ -441,6 +476,7 @@ public class Requester extends Linkable {
         subPaths.clear();
         subSids.clear();
         subUpdates.clear();
+        invokeResponses.clear();
     }
 
     private static class RequestWrapper {
