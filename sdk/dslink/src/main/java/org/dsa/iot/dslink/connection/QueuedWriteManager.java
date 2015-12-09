@@ -53,21 +53,19 @@ public class QueuedWriteManager {
                 e.printStackTrace();
             }
         }
-        synchronized (this) {
-            if (shouldQueue()) {
-                addTask(content, merge);
-                schedule();
-                return false;
-            }
-
-            JsonArray updates = new JsonArray();
-            updates.add(content);
-
-            JsonObject top = new JsonObject();
-            top.put(topName, updates);
-            forceWrite(top);
-            return true;
+        if (shouldQueue()) {
+            addTask(content, merge);
+            schedule();
+            return false;
         }
+
+        JsonArray updates = new JsonArray();
+        updates.add(content);
+
+        JsonObject top = new JsonObject();
+        top.put(topName, updates);
+        forceWrite(top);
+        return true;
     }
 
     private synchronized void addTask(JsonObject content, boolean merge) {
@@ -142,7 +140,7 @@ public class QueuedWriteManager {
         }, DISPATCH_DELAY, TimeUnit.MILLISECONDS);
     }
 
-    private boolean shouldBlock() {
+    private synchronized boolean shouldBlock() {
         return (rawTasks.size() + rawTasks.size()) > 100000;
     }
 
