@@ -36,10 +36,7 @@ public class JsonObject implements Iterable<Map.Entry<String, Object>> {
         if (map == null) {
             throw new NullPointerException("map");
         }
-        this.map = new LinkedHashMap<>();
-        for (Map.Entry<String, Object> entry : map.entrySet()) {
-            put(entry.getKey(), entry.getValue());
-        }
+        this.map = map;
     }
 
     public byte[] encode() {
