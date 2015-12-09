@@ -134,27 +134,20 @@ public class DefaultWsProvider extends WsProvider {
                     @Override
                     public void write(EncodingFormat format,
                                       JsonObject data) {
-                        switch (format) {
-                            case MESSAGE_PACK: {
-                                byte[] bytes = data.encode(format);
-                                ByteBuf buf = Unpooled.wrappedBuffer(bytes);
-                                BinaryWebSocketFrame f = new BinaryWebSocketFrame(buf);
-                                ch.writeAndFlush(f);
-                                break;
-                            }
-                            case JSON: {
-                                byte[] bytes = data.encode(format);
-                                ByteBuf buf = Unpooled.wrappedBuffer(bytes);
-                                WebSocketFrame frame = new TextWebSocketFrame(buf);
-                                ch.writeAndFlush(frame);
-                                break;
-                            }
-                            default: {
-                                String err = "Unsupported encoding format: {}";
-                                LOGGER.error(err, format);
-                            }
+                        byte[] bytes = data.encode(format);
+                        ByteBuf buf = Unpooled.wrappedBuffer(bytes);
+                        WebSocketFrame frame = null;
+                        if (format == EncodingFormat.MESSAGE_PACK) {
+                            frame = new BinaryWebSocketFrame(buf);
+                        } else if (format == EncodingFormat.JSON) {
+                            frame = new TextWebSocketFrame(buf);
+                        } else {
+                            String err = "Unsupported encoding format: {}";
+                            LOGGER.error(err, format);
                         }
-
+                        if (frame != null) {
+                            ch.writeAndFlush(frame);
+                        }
                     }
 
                     @Override
