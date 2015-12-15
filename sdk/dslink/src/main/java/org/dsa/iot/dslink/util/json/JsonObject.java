@@ -147,5 +147,10 @@ public class JsonObject implements Iterable<Map.Entry<String, Object>> {
             entry.setValue(Json.update(entry.getValue()));
             return entry;
         }
+
+        @Override
+        public void remove() {
+            it.remove();
+        }
     }
 }

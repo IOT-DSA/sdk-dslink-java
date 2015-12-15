@@ -133,5 +133,10 @@ public class JsonArray implements Iterable<Object> {
         public Object next() {
             return Json.update(it.next());
         }
+
+        @Override
+        public void remove() {
+            it.remove();
+        }
     }
 }
