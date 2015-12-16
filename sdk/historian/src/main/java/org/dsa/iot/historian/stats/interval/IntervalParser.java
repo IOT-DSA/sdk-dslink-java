@@ -8,6 +8,9 @@ import java.util.TimeZone;
  */
 public class IntervalParser {
 
+    private static final ThreadLocal<Calendar> CAL;
+    private static final TimeZone TZ;
+
     private int seconds = -1;
     private boolean alignSeconds;
 
@@ -43,7 +46,7 @@ public class IntervalParser {
      * @return Aligned timestamp
      */
     public long alignTime(long ts) {
-        Calendar c = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        Calendar c = CAL.get();
         c.setTimeInMillis(ts);
 
         if (alignSeconds) {
@@ -211,5 +214,15 @@ public class IntervalParser {
 
         parser.finishParsing();
         return parser;
+    }
+
+    static {
+        TZ = TimeZone.getTimeZone("UTC");
+        CAL = new ThreadLocal<Calendar>() {
+            @Override
+            protected Calendar initialValue() {
+                return Calendar.getInstance(TZ);
+            }
+        };
     }
 }
