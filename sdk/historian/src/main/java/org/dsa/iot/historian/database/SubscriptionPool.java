@@ -83,7 +83,6 @@ public class SubscriptionPool {
 
         @Override
         public void handle(SubscriptionValue event) {
-            event.getValue().setTime(System.currentTimeMillis());
             lock.readLock().lock();
             try {
                 for (Watch w : watches) {
