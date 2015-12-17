@@ -2,6 +2,7 @@ package org.dsa.iot.dslink.node.value;
 
 import org.dsa.iot.dslink.util.StringUtils;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -125,6 +126,8 @@ public final class ValueType {
                 return DYNAMIC;
             case JSON_BINARY:
                 return BINARY;
+            case JSON_ENUM:
+                return new ValueType(new ArrayList<String>(0));
             default:
                 if (type.startsWith(JSON_BOOL + "[") && type.endsWith("]")) {
                     return new ValueType(JSON_BOOL, type);
