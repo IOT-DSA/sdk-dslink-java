@@ -87,7 +87,7 @@ public class WatchGroup {
                 break;
             }
             case INTERVAL: {
-                long currTime = sv.getValue().getDate().getTime();
+                long currTime = sv.getValue().getTime();
                 long lastTime = watch.getLastWrittenTime();
                 if (currTime - lastTime > interval) {
                     doWrite = true;
@@ -109,8 +109,8 @@ public class WatchGroup {
             case POINT_TIME: {
                 Value vCurr = watch.getLastValue();
                 Value vUpdate = sv.getValue();
-                long curr = (vCurr == null) ? 0 : vCurr.getDate().getTime();
-                long update = (vUpdate == null) ? 0 : vUpdate.getDate().getTime();
+                long curr = (vCurr == null) ? 0 : vCurr.getTime();
+                long update = (vUpdate == null) ? 0 : vUpdate.getTime();
 
                 if ((vCurr != null) && (curr < update)) {
                     doWrite = true;

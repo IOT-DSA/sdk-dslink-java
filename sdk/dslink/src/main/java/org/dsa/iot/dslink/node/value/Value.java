@@ -7,7 +7,6 @@ import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
 import java.util.Arrays;
-import java.util.Date;
 
 /**
  * Common class for handling values. It is always recommended to check the type
@@ -21,7 +20,7 @@ public class Value {
     private boolean immutable;
     private boolean serializable = true;
 
-    private Date tsDate;
+    private long tsDate = -1;
     private String tsFormatted;
 
     private Number number;
@@ -267,7 +266,7 @@ public class Value {
      */
     public void setTime(long ms) {
         checkImmutable();
-        this.tsDate = new Date(ms);
+        this.tsDate = ms;
         this.tsFormatted = null;
     }
 
@@ -302,7 +301,7 @@ public class Value {
      */
     public String getTimeStamp() {
         if (tsFormatted == null) {
-            tsFormatted = TimeUtils.format(getDate());
+            tsFormatted = TimeUtils.format(getTime());
         }
         return tsFormatted;
     }
@@ -312,11 +311,11 @@ public class Value {
      *
      * @return The raw date this value was set or created.
      */
-    public Date getDate() {
-        if (tsDate == null) {
-            tsDate = TimeUtils.parseTz(tsFormatted);
+    public long getTime() {
+        if (tsDate == -1) {
+            tsDate = TimeUtils.parseTz(tsFormatted).getTime();
         }
-        return new Date(tsDate.getTime());
+        return tsDate;
     }
 
     public byte[] getBinary() {

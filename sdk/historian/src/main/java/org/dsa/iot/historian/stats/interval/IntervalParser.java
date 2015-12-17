@@ -1,15 +1,9 @@
 package org.dsa.iot.historian.stats.interval;
 
-import java.util.Calendar;
-import java.util.TimeZone;
-
 /**
  * @author Samuel Grenier
  */
 public class IntervalParser {
-
-    private static final ThreadLocal<Calendar> CAL;
-    private static final TimeZone TZ;
 
     private int seconds = -1;
     private boolean alignSeconds;
@@ -46,57 +40,35 @@ public class IntervalParser {
      * @return Aligned timestamp
      */
     public long alignTime(long ts) {
-        Calendar c = CAL.get();
-        c.setTimeInMillis(ts);
-
         if (alignSeconds) {
-            c.set(Calendar.MILLISECOND, 0);
+            ts -= (ts % 1e+3);
         }
 
         if (alignMinutes) {
-            c.set(Calendar.SECOND, 0);
-            c.set(Calendar.MILLISECOND, 0);
+            ts -= (ts % 6e+4);
         }
 
         if (alignHours) {
-            c.set(Calendar.MINUTE, 0);
-            c.set(Calendar.SECOND, 0);
-            c.set(Calendar.MILLISECOND, 0);
+            ts -= (ts % 3.6e6);
         }
 
         if (alignDays) {
-            c.set(Calendar.HOUR_OF_DAY, 0);
-            c.set(Calendar.MINUTE, 0);
-            c.set(Calendar.SECOND, 0);
-            c.set(Calendar.MILLISECOND, 0);
+            ts -= (ts % 8.64e+7);
         }
 
         if (alignWeeks) {
-            c.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
-            c.set(Calendar.HOUR_OF_DAY, 0);
-            c.set(Calendar.MINUTE, 0);
-            c.set(Calendar.SECOND, 0);
-            c.set(Calendar.MILLISECOND, 0);
+            ts -= (ts % 6.048e+8);
         }
 
         if (alignMonths) {
-            c.set(Calendar.DAY_OF_MONTH, 1);
-            c.set(Calendar.HOUR, 0);
-            c.set(Calendar.MINUTE, 0);
-            c.set(Calendar.SECOND, 0);
-            c.set(Calendar.MILLISECOND, 0);
+            ts -= (ts % 2.628e+9);
         }
 
         if (alignYears) {
-            c.set(Calendar.MONTH, 0);
-            c.set(Calendar.DAY_OF_MONTH, 1);
-            c.set(Calendar.HOUR_OF_DAY, 0);
-            c.set(Calendar.MINUTE, 0);
-            c.set(Calendar.SECOND, 0);
-            c.set(Calendar.MILLISECOND, 0);
+            ts -= (ts % 3.154e+10);
         }
 
-        return c.getTime().getTime();
+        return ts;
     }
 
     private void update(char interval, String number) {
@@ -150,38 +122,37 @@ public class IntervalParser {
     }
 
     private void finishParsing() {
-        Calendar c = Calendar.getInstance();
-        c.setTimeInMillis(0);
+        long ts = 0;
 
         if (years > -1) {
-            c.add(Calendar.YEAR, years);
+            ts += (3.154e+10 * years);
         }
 
         if (months > -1) {
-            c.add(Calendar.MONTH, months);
+            ts += (2.628e+9 * months);
         }
 
         if (weeks > -1) {
-            c.add(Calendar.WEEK_OF_MONTH, weeks);
+            ts += (6.048e+8 * weeks);
         }
 
         if (days > -1) {
-            c.add(Calendar.DAY_OF_MONTH, days);
+            ts += (8.64e+7 * days);
         }
 
         if (hours > -1) {
-            c.add(Calendar.HOUR, hours);
+            ts += (3.6e+6 * hours);
         }
 
         if (minutes > -1) {
-            c.add(Calendar.MINUTE, minutes);
+            ts += (6e+4 * minutes);
         }
 
         if (seconds > -1) {
-            c.add(Calendar.SECOND, seconds);
+            ts += (1e+3 * seconds);
         }
 
-        incrementTime = c.getTime().getTime();
+        incrementTime = ts;
     }
 
     private void check(String type, int num) {
@@ -214,15 +185,5 @@ public class IntervalParser {
 
         parser.finishParsing();
         return parser;
-    }
-
-    static {
-        TZ = TimeZone.getTimeZone("UTC");
-        CAL = new ThreadLocal<Calendar>() {
-            @Override
-            protected Calendar initialValue() {
-                return Calendar.getInstance(TZ);
-            }
-        };
     }
 }

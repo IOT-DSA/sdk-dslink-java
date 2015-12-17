@@ -30,7 +30,7 @@ public class SubscriptionValue {
     /**
      * @return Timestamp of the value
      * @see Value#getTimeStamp()
-     * @see Value#getDate()
+     * @see Value#getTime()
      */
     @Deprecated
     public String getTimestamp() {

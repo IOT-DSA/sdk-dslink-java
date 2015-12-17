@@ -107,7 +107,7 @@ public abstract class ParameterizedAction extends Action {
                 ValueUtils.checkType(name, info.getType(), value);
                 Handler<Value> validator = info.getValidator();
                 if (validator != null) {
-                    long time = value.getDate().getTime();
+                    long time = value.getTime();
                     validator.handle(value);
                     // Ensure original time stamp is preserved
                     value.setTime(time);

@@ -81,7 +81,7 @@ public class Watch {
         }
 
         endDate.setValue(value);
-        lastWrittenTime = value.getDate().getTime();
+        lastWrittenTime = value.getTime();
     }
 
     public void setLastWrittenTime(long time) {
