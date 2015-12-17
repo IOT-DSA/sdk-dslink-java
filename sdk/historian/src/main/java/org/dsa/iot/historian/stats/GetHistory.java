@@ -176,10 +176,13 @@ public class GetHistory implements Handler<ActionResult> {
         if (data.isEmpty()) {
             return;
         }
-        BatchRow batch = new BatchRow();
+        BatchRow batch = null;
         Iterator<QueryData> it = data.iterator();
         while (it.hasNext()) {
             QueryData update = it.next();
+            if (performRemove) {
+                it.remove();
+            }
             Row row;
             Value value = update.getValue();
             long time = update.getTimestamp();
@@ -193,14 +196,16 @@ public class GetHistory implements Handler<ActionResult> {
             }
 
             if (row != null) {
+                if (batch == null) {
+                    batch = new BatchRow();
+                }
                 batch.addRow(row);
             }
             update.setValue(null);
-            if (performRemove) {
-                it.remove();
-            }
         }
-        table.addBatchRows(batch);
+        if (batch != null) {
+            table.addBatchRows(batch);
+        }
     }
 
     public static void initAction(Node node, Database db) {
