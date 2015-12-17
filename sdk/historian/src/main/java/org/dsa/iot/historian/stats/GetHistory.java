@@ -184,15 +184,14 @@ public class GetHistory implements Handler<ActionResult> {
                 it.remove();
             }
             Row row;
-            Value value = update.getValue();
             long time = update.getTimestamp();
             if (interval == null) {
                 row = new Row();
                 String t = TimeParser.parse(time);
                 row.addValue(new Value(t));
-                row.addValue(value);
+                row.addValue(update.getValue());
             } else {
-                row = interval.getRowUpdate(value, time);
+                row = interval.getRowUpdate(update, time);
             }
 
             if (row != null) {
@@ -201,7 +200,6 @@ public class GetHistory implements Handler<ActionResult> {
                 }
                 batch.addRow(row);
             }
-            update.setValue(null);
         }
         if (batch != null) {
             table.addBatchRows(batch);

@@ -3,6 +3,7 @@ package org.dsa.iot.historian.stats.interval;
 import org.dsa.iot.dslink.node.actions.table.Row;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.historian.stats.rollup.*;
+import org.dsa.iot.historian.utils.QueryData;
 import org.dsa.iot.historian.utils.TimeParser;
 
 /**
@@ -21,12 +22,12 @@ public class IntervalProcessor {
     /**
      * Last updated value used for roll ups.
      */
-    private Value lastValue;
+    private QueryData lastValue;
 
     /**
      * Last real time value.
      */
-    private Value realTimeValue;
+    private QueryData realTimeValue;
 
     /**
      * Last real time timestamp.
@@ -41,39 +42,39 @@ public class IntervalProcessor {
 
     /**
      *
-     * @param value Value retrieved from the database.
+     * @param data Value retrieved from the database.
      * @param fullTs Full timestamp of the value.
      * @return An update or null to skip the update.
      */
-    public Row getRowUpdate(Value value, long fullTs) {
-        setRealTime(value, fullTs);
+    public Row getRowUpdate(QueryData data, long fullTs) {
+        setRealTime(data, fullTs);
         final long alignedTs = parser.alignTime(fullTs);
 
         Row row = null;
         if (alignedTs - lastValueTimeTrunc < parser.incrementTime()) {
             // Update the last value within the same interval
-            lastValue = value;
+            lastValue = data;
             if (rollup != null) {
-                rollup.update(value, fullTs);
+                rollup.update(data.getValue(), fullTs);
             }
         } else if (lastValue != null) {
             // Finish up the rollup, the interval for this period is completed
             if (rollup == null) {
-                row = makeRow(lastValue, lastValueTimeTrunc);
+                row = makeRow(lastValue.getValue(), lastValueTimeTrunc);
             } else {
                 row = makeRow(rollup.getValue(), lastValueTimeTrunc);
             }
             lastValue = null;
-            setRealTime(value, alignedTs);
+            setRealTime(data, alignedTs);
         }
 
         // New interval period has been started
         if (alignedTs - lastValueTimeTrunc >= parser.incrementTime()) {
             lastValueTimeTrunc = alignedTs;
-            lastValue = value;
+            lastValue = data;
             if (rollup != null) {
                 rollup.reset();
-                rollup.update(lastValue, fullTs);
+                rollup.update(lastValue.getValue(), fullTs);
             }
         }
         return row;
@@ -85,7 +86,10 @@ public class IntervalProcessor {
             // is no more data.
             return null;
         }
-        Value val = realTimeValue;
+        Value val = null;
+        if (realTimeValue != null) {
+            val = realTimeValue.getValue();
+        }
         if (val != null) {
             if (rollup != null) {
                 val = rollup.getValue();
@@ -102,11 +106,11 @@ public class IntervalProcessor {
         return row;
     }
 
-    private void setRealTime(Value value, long time) {
+    private void setRealTime(QueryData data, long time) {
         // Subtract the increment time since the time must point to the
         // start time of the row, not the end.
         realTimeTime = time - parser.incrementTime();
-        realTimeValue = value;
+        realTimeValue = data;
     }
 
     public static IntervalProcessor parse(IntervalParser parser,
