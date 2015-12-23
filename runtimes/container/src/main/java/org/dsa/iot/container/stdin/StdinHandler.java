@@ -32,6 +32,11 @@ public class StdinHandler implements LinkHandler {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
+                {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("event", "runtime.ready");
+                    output(map);
+                }
                 ByteArrayOutputStream baos = new ByteArrayOutputStream(4096);
                 try {
                     int b;
