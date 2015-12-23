@@ -99,18 +99,18 @@ public class IntervalProcessor {
         return null;
     }
 
-    private Row makeRow(Value value, long ts) {
-        Row row = new Row();
-        row.addValue(new Value(TimeParser.parse(ts)));
-        row.addValue(value);
-        return row;
-    }
-
     private void setRealTime(QueryData data, long time) {
         // Subtract the increment time since the time must point to the
         // start time of the row, not the end.
         realTimeTime = time - parser.incrementTime();
         realTimeValue = data;
+    }
+
+    public static Row makeRow(Value value, long ts) {
+        Row row = new Row();
+        row.addValue(new Value(TimeParser.parse(ts)));
+        row.addValue(value);
+        return row;
     }
 
     public static IntervalProcessor parse(IntervalParser parser,
