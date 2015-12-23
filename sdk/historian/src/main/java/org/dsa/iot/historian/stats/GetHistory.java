@@ -186,7 +186,10 @@ public class GetHistory implements Handler<ActionResult> {
             Row row;
             long time = update.getTimestamp();
             if (interval == null) {
-                row = IntervalProcessor.makeRow(update.getValue(), time);
+                row = new Row();
+                String t = TimeParser.parse(time);
+                row.addValue(new Value(t));
+                row.addValue(update.getValue());
             } else {
                 row = interval.getRowUpdate(update, time);
             }
