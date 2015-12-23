@@ -1,5 +1,6 @@
 package org.dsa.iot.dslink.connection;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.netty.util.internal.SystemPropertyUtil;
 import org.dsa.iot.dslink.util.Objects;
 import org.dsa.iot.dslink.util.PropertyReference;
@@ -45,18 +46,22 @@ public class QueuedWriteManager {
         this.client = client;
     }
 
+    @SuppressFBWarnings("SWL_SLEEP_WITH_LOCK_HELD")
     public boolean post(JsonObject content, boolean merge) {
-        while (shouldBlock()) {
-            try {
-                Thread.sleep(5);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+        synchronized (this) {
+            while (shouldBlock()) {
+                try {
+                    Thread.sleep(5);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
-        }
-        if (shouldQueue()) {
-            addTask(content, merge);
-            schedule();
-            return false;
+
+            if (shouldQueue()) {
+                addTask(content, merge);
+                schedule();
+                return false;
+            }
         }
 
         JsonArray updates = new JsonArray();
@@ -132,9 +137,9 @@ public class QueuedWriteManager {
                         top.put(topName, updates);
                         forceWrite(top);
                     }
-                }
-                if (schedule) {
-                    schedule();
+                    if (schedule) {
+                        schedule();
+                    }
                 }
             }
         }, DISPATCH_DELAY, TimeUnit.MILLISECONDS);
@@ -144,8 +149,9 @@ public class QueuedWriteManager {
         return (rawTasks.size() + rawTasks.size()) > 100000;
     }
 
-    private boolean shouldQueue() {
-        return !client.writable() || tracker.missingAckCount() > 8;
+    private synchronized boolean shouldQueue() {
+        return !client.writable()
+                || tracker.missingAckCount() > 8 || fut != null;
     }
 
     private synchronized void forceWrite(JsonObject obj) {
