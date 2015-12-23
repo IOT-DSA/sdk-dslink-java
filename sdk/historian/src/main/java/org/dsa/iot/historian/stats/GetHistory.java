@@ -134,7 +134,6 @@ public class GetHistory implements Handler<ActionResult> {
                         }
                         updates = null;
 
-                        table.sendReady();
                         if (!realTime) {
                             if (interval != null) {
                                 Row row = interval.complete();
@@ -151,6 +150,7 @@ public class GetHistory implements Handler<ActionResult> {
                                     processQueryData(table, interval, single, false);
                                 }
                             };
+                            table.sendReady();
                             Watch w = event.getNode().getParent().getMetaData();
                             w.addHandler(handler);
                         }
