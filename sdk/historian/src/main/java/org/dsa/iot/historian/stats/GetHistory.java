@@ -237,6 +237,8 @@ public class GetHistory implements Handler<ActionResult> {
         {
             Set<String> enums = new LinkedHashSet<>();
             enums.add("none");
+            enums.add("and");
+            enums.add("or");
             enums.add("avg");
             enums.add("min");
             enums.add("max");

@@ -119,7 +119,11 @@ public class IntervalProcessor {
             return null;
         }
         Rollup roll = null;
-        if (Rollup.Type.AVERAGE == rollup) {
+        if (Rollup.Type.AND == rollup) {
+            roll = new AndRollup();
+        } else if (Rollup.Type.OR == rollup) {
+            roll = new OrRollup();
+        } else if (Rollup.Type.AVERAGE == rollup) {
             roll = new AvgRollup();
         } else if (Rollup.Type.COUNT == rollup) {
             roll = new CountRollup();

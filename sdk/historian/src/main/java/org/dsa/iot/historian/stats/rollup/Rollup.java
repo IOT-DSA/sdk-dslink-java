@@ -26,6 +26,8 @@ public abstract class Rollup {
     public abstract Value getValue();
 
     public enum Type {
+        AND("and"),
+        OR("or"),
         AVERAGE("avg"),
         COUNT("count"),
         FIRST("first"),
@@ -43,7 +45,11 @@ public abstract class Rollup {
         }
 
         public static Type toEnum(String rollup) {
-            if (AVERAGE.name.equals(rollup)) {
+            if (AND.name.equals(rollup)) {
+                return AND;
+            } else if (OR.name.equals(rollup)) {
+                return OR;
+            } else if (AVERAGE.name.equals(rollup)) {
                 return AVERAGE;
             } else if (COUNT.name.equals(rollup)) {
                 return COUNT;
