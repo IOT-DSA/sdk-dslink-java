@@ -20,12 +20,12 @@ public class AndRollup extends Rollup {
         if (value.getType().equals(ValueType.NUMBER)) {
             Number number = value.getNumber();
             if (number != null) {
-                this.value &= (number.doubleValue() != 0);
+                this.value = this.value && (number.doubleValue() != 0);
             }
         } else {
             Boolean bool = value.getBool();
             if (bool != null) {
-                this.value &= bool;
+                this.value = this.value && bool;
             }
         }
     }
