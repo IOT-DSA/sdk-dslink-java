@@ -65,10 +65,8 @@ public abstract class Rollup {
                 return SUM;
             } else if (DELTA.name.equals(rollup)) {
                 return DELTA;
-            } else if (NONE.name.equals(rollup)) {
-                return NONE;
             }
-            return null;
+            return NONE;
         }
     }
 }
