@@ -20,7 +20,7 @@ public class OrRollup extends Rollup {
         if (value.getType().equals(ValueType.NUMBER)) {
             Number number = value.getNumber();
             if (number != null) {
-                this.value |= (number != 0);
+                this.value |= (number.doubleValue() != 0);
             }
         } else {
             Boolean bool = value.getBool();
