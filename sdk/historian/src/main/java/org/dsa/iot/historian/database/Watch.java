@@ -20,6 +20,8 @@ import org.dsa.iot.dslink.util.json.JsonObject;
 import org.dsa.iot.historian.stats.GetHistory;
 import org.dsa.iot.historian.utils.QueryData;
 import org.dsa.iot.historian.utils.TimeParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +31,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @author Samuel Grenier
  */
 public class Watch {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Watch.class);
 
     private final ReentrantReadWriteLock rtLock = new ReentrantReadWriteLock();
     private final List<Handler<QueryData>> rtHandlers = new ArrayList<>();
@@ -170,7 +174,7 @@ public class Watch {
             enabled = n.getValue().getBool();
         }
 
-        {
+        try {
             NodeBuilder b = node.createChild("startDate");
             b.setDisplayName("Start Date");
             b.setValueType(ValueType.TIME);
@@ -188,9 +192,11 @@ public class Watch {
             if (needsDate) {
                 startDate = n;
             }
+        } catch (Exception e) {
+            LOGGER.error("Failed to set start date", e);
         }
 
-        {
+        try {
             NodeBuilder b = node.createChild("endDate");
             b.setDisplayName("End Date");
             b.setValueType(ValueType.TIME);
@@ -202,6 +208,8 @@ public class Watch {
                     endDate.setValue(v);
                 }
             }
+        } catch (Exception e) {
+            LOGGER.error("Failed to set end date", e);
         }
 
         {
