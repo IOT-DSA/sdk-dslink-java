@@ -85,6 +85,9 @@ public class SubscriptionPool {
         public void handle(SubscriptionValue event) {
             lock.readLock().lock();
             try {
+                if (event.getValue() != null) {
+                    event.getValue().setTime(System.currentTimeMillis());
+                }
                 for (Watch w : watches) {
                     w.onData(event);
                 }
