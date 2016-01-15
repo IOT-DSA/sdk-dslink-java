@@ -38,7 +38,7 @@ public class LogManager {
         }
         level = level.toLowerCase();
         switch (level) {
-            case "none":
+            case "none": case "off":
                 setLevel(LogLevel.OFF);
                 break;
             case "error":
