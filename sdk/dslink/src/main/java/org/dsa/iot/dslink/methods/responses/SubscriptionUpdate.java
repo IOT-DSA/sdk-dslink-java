@@ -83,15 +83,15 @@ public class SubscriptionUpdate extends Response {
                     }
                 }
 
-                node.setValueType(val.getType());
-                node.setValue(val);
-
                 Handler<SubscriptionValue> handler = handlers.get(rid);
                 SubscriptionValue value;
                 if (handler != null) {
                     value = new SubscriptionValue(path, val, count, sum, min, max);
                     handler.handle(value);
                 }
+
+                node.setValueType(val.getType());
+                node.setValue(val);
             }
         }
     }
