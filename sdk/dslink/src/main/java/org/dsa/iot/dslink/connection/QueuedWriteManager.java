@@ -146,7 +146,7 @@ public class QueuedWriteManager {
     }
 
     private synchronized boolean shouldBlock() {
-        return (rawTasks.size() + rawTasks.size()) > 100000;
+        return (mergedTasks.size() + rawTasks.size()) > 100000;
     }
 
     private synchronized boolean shouldQueue() {
