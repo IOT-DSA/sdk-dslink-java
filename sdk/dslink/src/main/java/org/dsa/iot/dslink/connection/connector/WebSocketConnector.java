@@ -63,9 +63,9 @@ public class WebSocketConnector extends RemoteEndpoint {
     public void write(EncodingFormat format, JsonObject data) {
         checkConnected();
 
-        writer.write(getRemoteHandshake().getFormat(), data);
+        writer.write(format, data);
         if (LOGGER.isDebugEnabled()) {
-            String s = getFormat().toJson();
+            String s = format.toJson();
             LOGGER.debug("Sent data ({}): {}", s, data);
         }
         lastSentMessage = System.currentTimeMillis();
@@ -73,7 +73,14 @@ public class WebSocketConnector extends RemoteEndpoint {
 
     @Override
     public boolean isConnected() {
-        return writer != null && writer.isConnected();
+        if (writer != null) {
+            if (writer.isConnected()) {
+                return true;
+            }
+            close();
+            getOnDisconnected().handle(null);
+        }
+        return false;
     }
 
     private void setupPingHandler() {
@@ -138,14 +145,7 @@ public class WebSocketConnector extends RemoteEndpoint {
 
         @Override
         public void onDisconnected() {
-            if (!isConnected()) {
-                return;
-            }
-            WebSocketConnector.this.close();
-            Handler<Void> onDisconnected = getOnDisconnected();
-            if (onDisconnected != null) {
-                onDisconnected.handle(null);
-            }
+            isConnected();
         }
 
         @Override
