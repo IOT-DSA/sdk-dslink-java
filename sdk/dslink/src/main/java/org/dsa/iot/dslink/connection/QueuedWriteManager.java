@@ -1,6 +1,5 @@
 package org.dsa.iot.dslink.connection;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.netty.util.internal.SystemPropertyUtil;
 import org.dsa.iot.dslink.util.Objects;
 import org.dsa.iot.dslink.util.PropertyReference;
@@ -46,17 +45,16 @@ public class QueuedWriteManager {
         this.client = client;
     }
 
-    @SuppressFBWarnings("SWL_SLEEP_WITH_LOCK_HELD")
     public boolean post(JsonObject content, boolean merge) {
-        synchronized (this) {
-            while (shouldBlock()) {
-                try {
-                    Thread.sleep(5);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+        while (shouldBlock()) {
+            try {
+                Thread.sleep(1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
+        }
 
+        synchronized (this) {
             if (shouldQueue()) {
                 addTask(content, merge);
                 schedule();
