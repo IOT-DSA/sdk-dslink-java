@@ -3,6 +3,7 @@ package org.dsa.iot.dslink.handshake;
 import io.netty.util.CharsetUtil;
 import org.bouncycastle.jcajce.provider.digest.SHA256;
 import org.dsa.iot.dslink.config.Configuration;
+import org.dsa.iot.dslink.util.StringUtils;
 import org.dsa.iot.dslink.util.UrlBase64;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
@@ -33,7 +34,12 @@ public class LocalHandshake {
         config.validate();
         this.keys = config.getKeys();
         this.publicKey = keys.encodedPublicKey();
-        this.dsId = config.getDsIdWithHash();
+        {
+            String tmp = config.getDsIdWithHash();
+            tmp = tmp.replaceAll("%", "%25");
+            tmp = StringUtils.encodeName(tmp);
+            this.dsId = tmp;
+        }
         this.isRequester = config.isRequester();
         this.isResponder = config.isResponder();
         this.linkData = config.getLinkData();

@@ -41,6 +41,7 @@ public class DefaultWsProvider extends WsProvider {
         final URLInfo url = client.getUrl();
         String full = url.protocol + "://" + url.host
                 + ":" + url.port + url.path;
+        full = full.replaceAll("%", "%25");
         URI uri;
         try {
             uri = new URI(full);
