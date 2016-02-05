@@ -122,7 +122,7 @@ public class GetHistory implements Handler<ActionResult> {
                         if (updates != null) {
                             updates.add(data);
                             if (updates.size() >= 500) {
-                                processQueryData(table, interval, updates, true);
+                                processQueryData(table, interval, updates);
                             }
                         }
                     }
@@ -130,7 +130,7 @@ public class GetHistory implements Handler<ActionResult> {
                     @Override
                     public void complete() {
                         if (!updates.isEmpty()) {
-                            processQueryData(table, interval, updates, true);
+                            processQueryData(table, interval, updates);
                         }
                         updates = null;
 
@@ -146,8 +146,7 @@ public class GetHistory implements Handler<ActionResult> {
                             handler = new Handler<QueryData>() {
                                 @Override
                                 public void handle(QueryData event) {
-                                    Collection<QueryData> single = Collections.singleton(event);
-                                    processQueryData(table, interval, single, false);
+                                    processQueryData(table, interval, event);
                                 }
                             };
                             table.sendReady();
@@ -171,8 +170,7 @@ public class GetHistory implements Handler<ActionResult> {
 
     protected void processQueryData(Table table,
                                     IntervalProcessor interval,
-                                    Collection<QueryData> data,
-                                    boolean performRemove) {
+                                    Collection<QueryData> data) {
         if (data.isEmpty()) {
             return;
         }
@@ -180,9 +178,7 @@ public class GetHistory implements Handler<ActionResult> {
         Iterator<QueryData> it = data.iterator();
         while (it.hasNext()) {
             QueryData update = it.next();
-            if (performRemove) {
-                it.remove();
-            }
+            it.remove();
             Row row;
             long time = update.getTimestamp();
             if (interval == null) {
@@ -203,6 +199,28 @@ public class GetHistory implements Handler<ActionResult> {
         }
         if (batch != null) {
             table.addBatchRows(batch);
+        }
+    }
+
+    protected void processQueryData(Table table,
+                                    IntervalProcessor interval,
+                                    QueryData data) {
+        if (data == null) {
+            return;
+        }
+        Row row;
+        long time = data.getTimestamp();
+        if (interval == null) {
+            row = new Row();
+            String t = TimeParser.parse(time);
+            row.addValue(new Value(t));
+            row.addValue(data.getValue());
+        } else {
+            row = interval.getRowUpdate(data, time);
+        }
+
+        if (row != null) {
+            table.addRow(row);
         }
     }
 
