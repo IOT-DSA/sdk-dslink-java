@@ -2,6 +2,7 @@ package org.dsa.iot.historian.database;
 
 import org.dsa.iot.dslink.link.Requester;
 import org.dsa.iot.dslink.node.value.SubscriptionValue;
+import org.dsa.iot.dslink.util.SubData;
 import org.dsa.iot.dslink.util.handler.Handler;
 
 import java.util.ArrayList;
@@ -30,7 +31,7 @@ public class SubscriptionPool {
             handler = new SubHandler();
             subscriptions.put(path, handler);
             handler.addWatch(watch);
-            requester.subscribe(path, handler);
+            requester.subscribe(new SubData(path, 1), handler);
         } else {
             handler.addWatch(watch);
         }
