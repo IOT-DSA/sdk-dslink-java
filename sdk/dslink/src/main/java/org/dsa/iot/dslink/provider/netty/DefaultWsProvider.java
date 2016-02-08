@@ -69,7 +69,7 @@ public class DefaultWsProvider extends WsProvider {
 
                 p.addLast(new HttpClientCodec());
                 p.addLast(new HttpObjectAggregator(8192));
-                p.addLast(new WebSocketClientCompressionHandler());
+                p.addLast(new WsClientCompressionHandler());
                 p.addLast(handler);
             }
         });
