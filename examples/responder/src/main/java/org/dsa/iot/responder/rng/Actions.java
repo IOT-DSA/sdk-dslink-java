@@ -30,12 +30,17 @@ public class Actions {
 
     private static final Action ADD_ACTION;
     private static final Action REMOVE_ACTION;
+    private static final Action TABLE_ACTION;
     private static final Action TABLE_STREAM_ACTION;
     private static final Action TABLE_REFRESH_ACTION;
     private static final Action TABLE_REPLACE_ACTION;
 
     private static final Handler<Node> SUB_HANDLER;
     private static final Handler<Node> UNSUB_HANDLER;
+
+    static Action getTableAction() {
+        return TABLE_ACTION;
+    }
 
     static Action getTableStreamAction() {
         return TABLE_STREAM_ACTION;
@@ -112,6 +117,21 @@ public class Actions {
             REMOVE_ACTION.addParameter(new Parameter("count", ValueType.NUMBER, def)
                     .setDescription("How many RNGs to remove"));
             REMOVE_ACTION.addResult(new Parameter("count", ValueType.NUMBER));
+        }
+
+        {
+            TABLE_ACTION = new Action(Permission.READ, new Handler<ActionResult>() {
+                @Override
+                public void handle(ActionResult event) {
+                    Table table = event.getTable();
+                    table.addRow(Row.make(new Value("a"), new Value(1)));
+                    table.addRow(Row.make(new Value("b"), new Value(2)));
+                    table.addRow(Row.make(new Value("c"), new Value(3)));
+                }
+            });
+            TABLE_ACTION.addResult(new Parameter("letter", ValueType.STRING));
+            TABLE_ACTION.addResult(new Parameter("number", ValueType.STRING));
+            TABLE_ACTION.setResultType(ResultType.TABLE);
         }
 
         {
