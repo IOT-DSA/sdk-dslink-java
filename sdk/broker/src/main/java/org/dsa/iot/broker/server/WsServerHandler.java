@@ -4,10 +4,10 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.codec.AsciiString;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
+import io.netty.util.AsciiString;
 import io.netty.util.CharsetUtil;
 import org.dsa.iot.broker.Broker;
 import org.dsa.iot.broker.server.client.Client;
@@ -34,7 +34,7 @@ public class WsServerHandler extends SimpleChannelInboundHandler<FullHttpRequest
     }
 
     @Override
-    public void messageReceived(ChannelHandlerContext ctx, FullHttpRequest req) {
+    public void channelRead0(ChannelHandlerContext ctx, FullHttpRequest req) {
         if (!req.decoderResult().isSuccess()) {
             HttpResponseStatus stat = HttpResponseStatus.BAD_REQUEST;
             FullHttpResponse resp = new DefaultFullHttpResponse(VERSION, stat);
@@ -124,7 +124,7 @@ public class WsServerHandler extends SimpleChannelInboundHandler<FullHttpRequest
     }
 
     private String getWebSocketLocation(FullHttpRequest req) {
-        String host = req.headers().get(HttpHeaderNames.HOST).toString();
+        String host = req.headers().get(HttpHeaderNames.HOST);
         String location = host + "/ws";
         if (secure) {
             return "wss://" + location;

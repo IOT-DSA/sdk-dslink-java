@@ -151,8 +151,8 @@ public class Client extends SimpleChannelInboundHandler<WebSocketFrame> {
     }
 
     @Override
-    protected void messageReceived(ChannelHandlerContext ctx,
-                                   WebSocketFrame frame) throws Exception {
+    protected void channelRead0(ChannelHandlerContext ctx,
+                                WebSocketFrame frame) throws Exception {
         final Channel channel = ctx.channel();
         if (frame instanceof TextWebSocketFrame) {
             String data = ((TextWebSocketFrame) frame).text();
