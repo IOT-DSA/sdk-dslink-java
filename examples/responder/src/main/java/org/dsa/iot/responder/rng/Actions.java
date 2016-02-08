@@ -130,7 +130,7 @@ public class Actions {
                 }
             });
             TABLE_ACTION.addResult(new Parameter("letter", ValueType.STRING));
-            TABLE_ACTION.addResult(new Parameter("number", ValueType.STRING));
+            TABLE_ACTION.addResult(new Parameter("number", ValueType.NUMBER));
             TABLE_ACTION.setResultType(ResultType.TABLE);
         }
 
