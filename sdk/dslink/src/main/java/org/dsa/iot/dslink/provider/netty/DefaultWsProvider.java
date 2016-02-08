@@ -8,8 +8,11 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.websocketx.*;
-import io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketClientCompressionHandler;
+import io.netty.handler.codec.http.websocketx.extensions.WebSocketClientExtensionHandler;
+import io.netty.handler.codec.http.websocketx.extensions.WebSocketClientExtensionHandshaker;
+import io.netty.handler.codec.http.websocketx.extensions.compression.PerMessageDeflateClientExtensionHandshaker;
 import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.util.CharsetUtil;
 import org.dsa.iot.dslink.connection.NetworkClient;
@@ -63,13 +66,16 @@ public class DefaultWsProvider extends WsProvider {
                 ChannelPipeline p = ch.pipeline();
                 if (url.secure) {
                     TrustManagerFactory man = InsecureTrustManagerFactory.INSTANCE;
-                    SslContext con = SslContext.newClientContext(man);
+                    SslContextBuilder scb = SslContextBuilder.forClient();
+                    SslContext con = scb.trustManager(man).build();
                     p.addLast(con.newHandler(ch.alloc()));
                 }
 
                 p.addLast(new HttpClientCodec());
                 p.addLast(new HttpObjectAggregator(8192));
-                p.addLast(new WsClientCompressionHandler());
+                WebSocketClientExtensionHandshaker com
+                        = new PerMessageDeflateClientExtensionHandshaker();
+                p.addLast(new WebSocketClientExtensionHandler(com));
                 p.addLast(handler);
             }
         });
@@ -115,8 +121,8 @@ public class DefaultWsProvider extends WsProvider {
         }
 
         @Override
-        public void messageReceived(final ChannelHandlerContext ctx,
-                                    Object msg) {
+        public void channelRead0(final ChannelHandlerContext ctx,
+                                 Object msg) {
             final Channel ch = ctx.channel();
             if (handshake != null && !handshake.isHandshakeComplete()) {
                 handshake.finishHandshake(ch, (FullHttpResponse) msg);

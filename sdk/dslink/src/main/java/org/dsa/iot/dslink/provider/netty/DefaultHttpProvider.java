@@ -7,6 +7,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.util.CharsetUtil;
 import org.dsa.iot.dslink.provider.HttpProvider;
@@ -99,7 +100,8 @@ public class DefaultHttpProvider extends HttpProvider {
 
             if (secure) {
                 TrustManagerFactory man = InsecureTrustManagerFactory.INSTANCE;
-                SslContext con = SslContext.newClientContext(man);
+                SslContextBuilder scb = SslContextBuilder.forClient();
+                SslContext con = scb.trustManager(man).build();
                 p.addLast(con.newHandler(ch.alloc()));
             }
 
@@ -116,8 +118,8 @@ public class DefaultHttpProvider extends HttpProvider {
         private Throwable t;
 
         @Override
-        protected void messageReceived(ChannelHandlerContext ctx,
-                                       Object msg) throws Exception {
+        protected void channelRead0(ChannelHandlerContext ctx,
+                                    Object msg) throws Exception {
             if (msg instanceof HttpResponse) {
                 HttpResponse resp = (HttpResponse) msg;
                 status = resp.status();
