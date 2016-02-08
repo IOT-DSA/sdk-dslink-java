@@ -48,7 +48,9 @@ public class Replicator {
                 try {
                     for (int i = 0; i < 5; i++) {
                         Thread.sleep(1000);
-                        node.createChild(String.valueOf(i)).build();
+                        NodeBuilder b = node.createChild(String.valueOf(i));
+                        b.setSerializable(false);
+                        b.build();
                     }
                 } catch (InterruptedException ignored) {
                 }
