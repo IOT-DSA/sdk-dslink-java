@@ -20,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class Node {
 
-    static final char[] BANNED_CHARS = new char[] {
+    private static final char[] BANNED_CHARS = new char[] {
         '%', '.', '/', '\\', '?', '*', ':', '|', '<', '>', '$', '@', ','
     };
 
