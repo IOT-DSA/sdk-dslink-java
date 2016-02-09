@@ -255,20 +255,20 @@ public class Configuration {
      */
     public void validate() {
         if (dsId == null) {
-            throw new RuntimeException("dsId not set");
+            throw new IllegalStateException("dsId not set");
         } else if (dsId.isEmpty()) {
             // Should never happen
-            throw new RuntimeException("dsId is empty");
+            throw new IllegalStateException("dsId is empty");
         } else if (type == null) {
-            throw new RuntimeException("connection type not set");
+            throw new IllegalStateException("connection type not set");
         } else if (authEndpoint == null) {
-            throw new RuntimeException("authentication endpoint not set");
+            throw new IllegalStateException("authentication endpoint not set");
         } else if (keys == null) {
-            throw new RuntimeException("keys not set");
+            throw new IllegalStateException("keys not set");
         } else if (!(isRequester || isResponder)) {
-            throw new RuntimeException("Neither a requester nor a responder");
+            throw new IllegalStateException("Neither a requester nor a responder");
         } else if (token != null && token.length() != 48) {
-            throw new RuntimeException("Token is not 48 characters long");
+            throw new IllegalStateException("Token is not 48 characters long");
         }
     }
 
