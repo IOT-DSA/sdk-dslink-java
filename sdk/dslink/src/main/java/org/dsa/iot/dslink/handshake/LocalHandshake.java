@@ -36,8 +36,8 @@ public class LocalHandshake {
         this.publicKey = keys.encodedPublicKey();
         {
             String tmp = config.getDsIdWithHash();
-            tmp = tmp.replaceAll("%", "%25");
             tmp = StringUtils.encodeName(tmp);
+            tmp = tmp.replaceAll("%", "%25");
             this.dsId = tmp;
         }
         this.isRequester = config.isRequester();
