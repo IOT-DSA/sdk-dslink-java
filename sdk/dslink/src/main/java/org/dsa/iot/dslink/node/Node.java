@@ -245,7 +245,7 @@ public class Node {
                             boolean externalSource,
                             boolean publish) {
         ValueType type = valueType;
-        if (type == null) {
+        if (type == null && value != null) {
             String err = "Value type not set on node (" + getPath() + ")";
             throw new RuntimeException(err);
         }
@@ -259,6 +259,10 @@ public class Node {
         }
         value = pair.getCurrent();
         if (value != null) {
+            if (type == null) {
+                String err = "Value type not set on node (" + getPath() + ")";
+                throw new RuntimeException(err);
+            }
             value.setImmutable();
             if (type.compare(ValueType.ENUM)) {
                 if (!value.getType().compare(ValueType.STRING)) {
