@@ -2,7 +2,9 @@ package org.dsa.iot.dslink.methods.responses;
 
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.DSLinkHandler;
+import org.dsa.iot.dslink.connection.DataHandler;
 import org.dsa.iot.dslink.link.Requester;
+import org.dsa.iot.dslink.link.Responder;
 import org.dsa.iot.dslink.methods.Response;
 import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.node.Node;
@@ -181,7 +183,9 @@ public class InvokeResponse extends Response {
             link.getResponder().removeResponse(rid);
         } else {
             Handler<Void> ch = actRes.getCloseHandler();
-            table.setStreaming(rid, link.getWriter(), ch);
+            DataHandler writer = link.getWriter();
+            Responder resp = link.getResponder();
+            table.setStreaming(rid, writer, resp, ch);
         }
 
         return out;
