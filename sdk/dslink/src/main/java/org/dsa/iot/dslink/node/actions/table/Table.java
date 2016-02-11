@@ -1,6 +1,7 @@
 package org.dsa.iot.dslink.node.actions.table;
 
 import org.dsa.iot.dslink.connection.DataHandler;
+import org.dsa.iot.dslink.link.Responder;
 import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.node.actions.Parameter;
 import org.dsa.iot.dslink.node.value.Value;
@@ -27,6 +28,7 @@ public class Table {
 
     private int rid;
     private DataHandler writer;
+    private Responder responder;
     private Handler<Void> closeHandler;
 
     /**
@@ -157,13 +159,16 @@ public class Table {
      *
      * @param rid Request ID
      * @param writer Writer endpoint
+     * @param responder Responder that holds the stream
      * @param closeHandler Close handler
      */
     public synchronized void setStreaming(int rid,
-                             DataHandler writer,
-                             Handler<Void> closeHandler) {
+                                          DataHandler writer,
+                                          Responder responder,
+                                          Handler<Void> closeHandler) {
         this.rid = rid;
         this.writer = writer;
+        this.responder = responder;
         this.closeHandler = closeHandler;
         if (ready) {
             sendReady();
@@ -201,12 +206,16 @@ public class Table {
      * requester closes the table to prevent unnecessary updates.
      */
     public synchronized void setClosed() {
+        if (responder != null) {
+            responder.removeResponse(rid);
+        }
         this.writer = null;
         this.columns = null;
         this.rows = null;
         this.mode = null;
         this.closeHandler = null;
         this.meta = null;
+        this.responder = null;
     }
 
     /**

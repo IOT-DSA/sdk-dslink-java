@@ -48,14 +48,11 @@ public class RemoveResponse extends Response {
 
     private void removeConfig() {
         String ref = pair.getReference();
-        if (ref.startsWith("$")) {
-            ref = ref.substring(1);
-            pair.getNode().removeConfig(ref);
-        } else if (ref.startsWith("@")) {
+        if (ref.startsWith("@")) {
             ref = ref.substring(1);
             pair.getNode().removeAttribute(ref);
         } else {
-            throw new RuntimeException("Not a reference: " + ref);
+            throw new RuntimeException("Unable to set reference: " + ref);
         }
     }
 }

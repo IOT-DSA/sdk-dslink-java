@@ -4,6 +4,7 @@ subprojects {
     apply plugin: 'idea'
 
     version = '0.14.1-SNAPSHOT'
+
     sourceCompatibility = 1.7
     targetCompatibility = 1.7
 

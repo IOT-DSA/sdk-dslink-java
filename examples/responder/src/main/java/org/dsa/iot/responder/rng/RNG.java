@@ -163,18 +163,6 @@ public class RNG implements MetaData {
         builder.setAction(Actions.getRemoveAction());
         builder.build();
 
-        builder = parent.createChild("tableStream");
-        builder.setAction(Actions.getTableStreamAction());
-        builder.build();
-
-        builder = parent.createChild("tableRefresh");
-        builder.setAction(Actions.getTableRefreshAction());
-        builder.build();
-
-        builder = parent.createChild("tableReplace");
-        builder.setAction(Actions.getTableReplaceAction());
-        builder.build();
-
         rng.initChildren();
     }
 

@@ -62,25 +62,22 @@ public class SetResponse extends Response {
             handler.onSetFail(path, value);
             return;
         }
-        Writable writable = node.getWritable();
-        if (writable == null || writable == Writable.NEVER) {
-            throw new RuntimeException("Not writable");
-        }
 
         String ref = pair.getReference();
-        Value current = node.getValue();
-
         if (ref != null) {
-            if (ref.startsWith("$")) {
-                ref = ref.substring(1);
-                node.setConfig(ref, value);
-            } else if (ref.startsWith("@")) {
+            if (ref.startsWith("@")) {
                 ref = ref.substring(1);
                 node.setAttribute(ref, value);
             } else {
-                throw new RuntimeException("Not a valid reference: " + ref);
+                throw new RuntimeException("Unable to set reference: " + ref);
             }
         } else {
+            Writable writable = node.getWritable();
+            if (writable == null || writable == Writable.NEVER) {
+                throw new RuntimeException("Not writable");
+            }
+
+            Value current = node.getValue();
             if (!node.getValueType().compare(ValueType.DYNAMIC)) {
                 checkValue(current, value);
             }

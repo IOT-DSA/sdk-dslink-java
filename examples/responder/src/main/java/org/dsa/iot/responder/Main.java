@@ -7,6 +7,7 @@ import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.util.json.JsonObject;
 import org.dsa.iot.responder.rng.RNG;
+import org.dsa.iot.responder.rng.TableActions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +39,7 @@ public class Main extends DSLinkHandler {
         RNG.init(superRoot);
         Values.init(superRoot);
         Echo.init(superRoot);
+        TableActions.init(superRoot);
         LOGGER.info("Responder initialized");
     }
 

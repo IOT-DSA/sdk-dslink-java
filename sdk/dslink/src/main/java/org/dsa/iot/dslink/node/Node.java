@@ -20,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class Node {
 
-    static final char[] BANNED_CHARS = new char[] {
+    private static final char[] BANNED_CHARS = new char[] {
         '%', '.', '/', '\\', '?', '*', ':', '|', '<', '>', '$', '@', ','
     };
 
@@ -257,7 +257,12 @@ public class Node {
         if (listener.postValueUpdate(pair)) {
             return false;
         }
+        value = pair.getCurrent();
         if (value != null) {
+            if (type == null) {
+                String err = "Value type not set on node (" + getPath() + ")";
+                throw new RuntimeException(err);
+            }
             value.setImmutable();
             if (type.compare(ValueType.ENUM)) {
                 if (!value.getType().compare(ValueType.STRING)) {

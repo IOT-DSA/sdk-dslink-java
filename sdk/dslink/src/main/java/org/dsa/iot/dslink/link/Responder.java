@@ -7,6 +7,7 @@ import org.dsa.iot.dslink.methods.StreamState;
 import org.dsa.iot.dslink.methods.responses.*;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
+import org.dsa.iot.dslink.node.NodePair;
 import org.dsa.iot.dslink.node.SubscriptionManager;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.util.json.JsonObject;
@@ -67,7 +68,7 @@ public class Responder extends Linkable {
         NodeManager nodeManager = link.getNodeManager();
         Response response;
         switch (method) {
-            case "list":
+            case "list": {
                 String path = in.get("path");
                 if (path == null) {
                     throw new NullPointerException("path");
@@ -79,30 +80,45 @@ public class Responder extends Linkable {
                 SubscriptionManager subs = link.getSubscriptionManager();
                 response = new ListResponse(link, subs, rid, node, path);
                 break;
-            case "set":
-                path = in.get("path");
+            }
+            case "set": {
+                String path = in.get("path");
                 if (path == null) {
                     throw new NullPointerException("path");
                 }
                 response = new SetResponse(rid, link, path);
                 break;
-            case "subscribe":
+            }
+            case "subscribe": {
                 response = new SubscribeResponse(rid, link);
                 break;
-            case "unsubscribe":
+            }
+            case "unsubscribe": {
                 response = new UnsubscribeResponse(rid, link);
                 break;
-            case "invoke":
-                path = in.get("path");
+            }
+            case "invoke": {
+                String path = in.get("path");
                 if (path == null) {
                     throw new NullPointerException("path");
                 }
                 response = new InvokeResponse(link, rid, path);
                 break;
-            case "close":
+            }
+            case "close": {
                 Response resp = resps.remove(rid);
                 response = new CloseResponse(rid, resp);
                 break;
+            }
+            case "remove": {
+                String path = in.get("path");
+                if (path == null) {
+                    throw new NullPointerException("path");
+                }
+                NodePair pair = nodeManager.getNode(path);
+                response = new RemoveResponse(rid, pair);
+                break;
+            }
             default:
                 throw new RuntimeException("Unknown method: " + method);
         }
