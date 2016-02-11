@@ -13,6 +13,7 @@ else
         echo "Passowrd is empty"
     fi
     echo 'Deploying to maven'
+    openssl aes-256-cbc -k "$SECRING_PASS" -in 'ci/secring.gpg.enc' -out secring.gpg -d
     ./gradlew "-Psigning.secretKeyRingFile=$PWD/$LOC" \
                 "-Psigning.keyId=$ID" \
                 "-Psigning.password=$KEY_PASS" \
