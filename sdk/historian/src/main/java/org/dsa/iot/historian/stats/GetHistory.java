@@ -11,7 +11,6 @@ import org.dsa.iot.dslink.node.actions.table.Table;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.util.Objects;
-import org.dsa.iot.dslink.util.StringUtils;
 import org.dsa.iot.dslink.util.handler.CompleteHandler;
 import org.dsa.iot.dslink.util.handler.Handler;
 import org.dsa.iot.historian.database.Database;
@@ -34,7 +33,7 @@ public class GetHistory implements Handler<ActionResult> {
     private final String path;
 
     public GetHistory(Node node, Database db) {
-        this.path = StringUtils.decodeName(node.getName());
+        this.path = node.getName().replaceAll("%2F", "/");
         this.db = db;
     }
 
