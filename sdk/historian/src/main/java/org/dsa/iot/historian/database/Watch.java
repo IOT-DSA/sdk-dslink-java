@@ -19,7 +19,6 @@ import org.dsa.iot.dslink.util.handler.Handler;
 import org.dsa.iot.dslink.util.json.JsonObject;
 import org.dsa.iot.historian.stats.GetHistory;
 import org.dsa.iot.historian.utils.QueryData;
-import org.dsa.iot.historian.utils.TimeParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -178,38 +177,19 @@ public class Watch {
             NodeBuilder b = node.createChild("startDate");
             b.setDisplayName("Start Date");
             b.setValueType(ValueType.TIME);
-            boolean needsDate = false;
             Node n = b.build();
-            {
-                QueryData data = group.getDb().queryFirst(path);
-                if (data != null && data.isDefined()) {
-                    Value v = new Value(TimeParser.parse(data.getTimestamp()));
-                    n.setValue(v);
-                } else {
-                    needsDate = true;
-                }
-            }
-            if (needsDate) {
+            if (n.getValue() == null) {
                 startDate = n;
             }
         } catch (Exception e) {
             LOGGER.error("Failed to set start date", e);
         }
 
-        try {
+        {
             NodeBuilder b = node.createChild("endDate");
             b.setDisplayName("End Date");
             b.setValueType(ValueType.TIME);
             endDate = b.build();
-            {
-                QueryData data = group.getDb().queryLast(path);
-                if (data != null && data.isDefined()) {
-                    Value v = new Value(TimeParser.parse(data.getTimestamp()));
-                    endDate.setValue(v);
-                }
-            }
-        } catch (Exception e) {
-            LOGGER.error("Failed to set end date", e);
         }
 
         {
