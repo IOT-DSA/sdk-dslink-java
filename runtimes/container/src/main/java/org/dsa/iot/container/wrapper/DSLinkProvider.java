@@ -42,10 +42,24 @@ public class DSLinkProvider {
             config.setSerializationPath(file);
         }
 
+        Class<?> clazz;
+        Object handler;
         try {
-            Class<?> clazz = loader.loadClass(info.getHandlerClass());
-            Object handler = clazz.newInstance();
+            clazz = loader.loadClass(info.getHandlerClass());
+            handler = clazz.newInstance();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
 
+        try {
+            Method m = clazz.getMethod("setWorkingDir", File.class);
+            m.invoke(info.getRoot().toFile());
+        } catch (Exception e) {
+            System.err.println("Failed to set working directory on "
+                    + info.getName() + ": " + e.getMessage());
+        }
+
+        try {
             Method m = clazz.getMethod("isResponder");
             config.setResponder((Boolean) m.invoke(handler));
 

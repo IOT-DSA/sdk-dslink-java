@@ -31,6 +31,12 @@ public class Main extends DSLinkHandler {
     }
 
     @Override
+    public void preInit() {
+        String path = getWorkingDir().getAbsolutePath();
+        LOGGER.info("Current working directory: {}", path);
+    }
+
+    @Override
     public void onResponderInitialized(DSLink link) {
         NodeManager manager = link.getNodeManager();
         Node superRoot = manager.getSuperRoot();

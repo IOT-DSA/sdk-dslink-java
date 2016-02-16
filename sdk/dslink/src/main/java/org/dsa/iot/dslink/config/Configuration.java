@@ -288,12 +288,12 @@ public class Configuration {
         }
 
         JsonObject json = getAndValidateJson(pArgs.getDslinkJson());
-        String name = getFieldValue(pArgs.getName(), json, "name");
-        String logLevel = getFieldValue(pArgs.getLogLevel(), json, "log");
+        String name = getFieldValue(json, "name", pArgs.getName());
+        String logLevel = getFieldValue(json, "log", pArgs.getLogLevel());
         String brokerHost = pArgs.getBrokerHost();
-        String keyPath = getFieldValue(pArgs.getKeyPath(), json, "key");
-        String nodePath = getFieldValue(pArgs.getNodesPath(), json, "nodes");
-        String handlerClass = getFieldValue(null, json, "handler_class");
+        String keyPath = getFieldValue(json, "key", pArgs.getKeyPath());
+        String nodePath = getFieldValue(json, "nodes", pArgs.getNodesPath());
+        String handlerClass = getFieldValue(json, "handler_class", null);
 
         {
             String logPath = pArgs.getLogPath();
@@ -340,8 +340,7 @@ public class Configuration {
         return defaults;
     }
 
-    @SuppressWarnings("unchecked")
-    private static JsonObject getAndValidateJson(String jsonPath) {
+    public static JsonObject getConfigs(String jsonPath) {
         File file = new File(jsonPath);
         try {
             byte[] bytes = FileUtils.readAllBytes(file);
@@ -350,40 +349,45 @@ public class Configuration {
 
             if (json == null) {
                 throw new RuntimeException("Missing `configs` field");
-            } else {
-                String prop = System.getProperty(PropertyReference.VALIDATE, "true");
-                if (!Boolean.parseBoolean(prop)) {
-                    return json;
-                }
-                prop = System.getProperty(PropertyReference.VALIDATE_JSON, "true");
-                if (!Boolean.parseBoolean(prop)) {
-                    return json;
-                }
-
-                checkField(json, "broker");
-                checkParam(json, "name");
-                checkParam(json, "log");
-                checkParam(json, "key");
-                checkParam(json, "nodes");
-                checkParam(json, "handler_class");
-                return json;
             }
+            return json;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private static String getFieldValue(String argsVal,
-                                        JsonObject json,
-                                        String field) {
-        if (argsVal == null) {
-            JsonObject param = json.get(field);
-            if (param == null) {
-                return null;
-            }
-            return param.get("default");
+    private static JsonObject getAndValidateJson(String jsonPath) {
+        JsonObject json = getConfigs(jsonPath);
+
+        String prop = System.getProperty(PropertyReference.VALIDATE, "true");
+        if (!Boolean.parseBoolean(prop)) {
+            return json;
         }
-        return argsVal;
+        prop = System.getProperty(PropertyReference.VALIDATE_JSON, "true");
+        if (!Boolean.parseBoolean(prop)) {
+            return json;
+        }
+
+        checkField(json, "broker");
+        checkParam(json, "name");
+        checkParam(json, "log");
+        checkParam(json, "key");
+        checkParam(json, "nodes");
+        checkParam(json, "handler_class");
+        return json;
+    }
+
+    private static <T> T getFieldValue(JsonObject json,
+                                       String field,
+                                       T defaultVal) {
+        if (defaultVal != null) {
+            return defaultVal;
+        }
+        JsonObject param = json.get(field);
+        if (param == null) {
+            return null;
+        }
+        return param.get("default");
     }
 
     private static void checkField(JsonObject configs, String name) {

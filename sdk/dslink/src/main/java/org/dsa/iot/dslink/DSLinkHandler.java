@@ -7,6 +7,8 @@ import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.util.Objects;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
+import java.io.File;
+
 /**
  * Top level API for handling the configuration of nodes and responses to
  * requests. Note that {@link #onRequesterInitialized} and
@@ -21,6 +23,7 @@ public abstract class DSLinkHandler {
 
     private Configuration configuration;
     private DSLinkProvider provider;
+    private File workingDir = new File("").getAbsoluteFile();
 
     /**
      * The default setting from here is what is used in the
@@ -98,6 +101,24 @@ public abstract class DSLinkHandler {
      */
     public DSLinkProvider getProvider() {
         return provider;
+    }
+
+    /**
+     * Sets the new working directory the DSLink should work in.
+     * This will typical be used by the runtime container.
+     *
+     * @param workingDir The new working directory of the DSLink.
+     */
+    @SuppressWarnings("unused")
+    public void setWorkingDir(File workingDir) {
+        this.workingDir = workingDir;
+    }
+
+    /**
+     * @return The working directory of the DSLink.
+     */
+    public File getWorkingDir() {
+        return workingDir;
     }
 
     /**
