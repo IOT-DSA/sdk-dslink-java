@@ -2,6 +2,7 @@ package org.dsa.iot.historian.database;
 
 import org.dsa.iot.dslink.link.Requester;
 import org.dsa.iot.dslink.node.value.SubscriptionValue;
+import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.util.SubData;
 import org.dsa.iot.dslink.util.handler.Handler;
 
@@ -86,9 +87,11 @@ public class SubscriptionPool {
         public void handle(SubscriptionValue event) {
             lock.readLock().lock();
             try {
-                if (event.getValue() != null) {
-                    event.getValue().setTime(System.currentTimeMillis());
+                Value val = event.getValue();
+                if (val == null) {
+                    return;
                 }
+                val.setTime(System.currentTimeMillis());
                 for (Watch w : watches) {
                     w.onData(event);
                 }

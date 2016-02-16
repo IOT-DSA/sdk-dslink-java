@@ -353,7 +353,7 @@ public class WatchGroup {
     private void dbWrite(WatchUpdate update) {
         Value value = update.getUpdate().getValue();
         if (value != null) {
-            long time = TimeParser.parse(value.getTimeStamp());
+            long time = value.getTime();
             Watch watch = update.getWatch();
             db.write(watch.getPath(), value, time);
             watch.notifyHandlers(new QueryData(value, time));
