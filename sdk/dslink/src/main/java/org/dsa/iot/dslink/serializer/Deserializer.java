@@ -3,6 +3,7 @@ package org.dsa.iot.dslink.serializer;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.Writable;
+import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.dsa.iot.dslink.util.json.JsonObject;
@@ -64,7 +65,16 @@ public class Deserializer {
             } else if ("$$password".equals(name)) {
                 node.setPassword(((String) value).toCharArray());
             } else if ("?value".equals(name)) {
-                node.setValue(ValueUtils.toValue(value));
+                ValueType t = node.getValueType();
+                Value val = ValueUtils.toValue(value);
+                if (t != null && val != null
+                        && val.getType().compare(ValueType.STRING)
+                        && t.compare(ValueType.NUMBER)
+                        && "NaN".equals(val.getString())) {
+                    node.setValue(new Value(Float.NaN));
+                } else {
+                    node.setValue(val);
+                }
             } else if (name.startsWith("$$")) {
                 node.setRoConfig(name.substring(2), ValueUtils.toValue(value));
             } else if (name.startsWith("$")) {
