@@ -53,7 +53,8 @@ public class DSLinkProvider {
 
         try {
             Method m = clazz.getMethod("setWorkingDir", File.class);
-            m.invoke(info.getRoot().toFile());
+            m.invoke(handler, info.getRoot().toFile());
+        } catch (NoSuchMethodException ignored) {
         } catch (Exception e) {
             System.err.println("Failed to set working directory on "
                     + info.getName() + ": " + e.getMessage());
