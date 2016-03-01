@@ -5,6 +5,8 @@ import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Map;
 
 /**
@@ -35,6 +37,11 @@ public class MapEncoder {
                 gen.writeNumberField(name, ((Number) instance).floatValue());
             } else if (instance instanceof Double) {
                 gen.writeNumberField(name, ((Number) instance).doubleValue());
+            } else if (instance instanceof BigDecimal) {
+                gen.writeNumberField(name, (BigDecimal) instance);
+            } else if (instance instanceof BigInteger) {
+                gen.writeFieldName(name);
+                gen.writeNumber((BigInteger) instance);
             } else if (instance instanceof Boolean) {
                 gen.writeBooleanField(name, (Boolean) instance);
             } else if (instance instanceof String) {

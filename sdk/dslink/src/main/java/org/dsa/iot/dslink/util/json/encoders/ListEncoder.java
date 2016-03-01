@@ -5,6 +5,8 @@ import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 
 /**
  * @author Samuel Grenier
@@ -32,6 +34,10 @@ public class ListEncoder {
                 gen.writeNumber(((Number) instance).floatValue());
             } else if (instance instanceof Double) {
                 gen.writeNumber(((Number) instance).doubleValue());
+            } else if (instance instanceof BigDecimal) {
+                gen.writeNumber((BigDecimal) instance);
+            } else if (instance instanceof BigInteger) {
+                gen.writeNumber((BigInteger) instance);
             } else if (instance instanceof Boolean) {
                 gen.writeBoolean((Boolean) instance);
             } else if (instance instanceof String) {

@@ -17,6 +17,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 
@@ -104,6 +106,8 @@ public class Json {
                 || (value instanceof Long)
                 || (value instanceof Float)
                 || (value instanceof Double)
+                || (value instanceof BigDecimal)
+                || (value instanceof BigInteger)
                 || (value instanceof Boolean)
                 || (value instanceof String)
                 || (value instanceof Map)
@@ -162,6 +166,7 @@ public class Json {
                 if (_characterEscapes != null) {
                     gen.setCharacterEscapes(_characterEscapes);
                 }
+                gen.enable(JsonGenerator.Feature.WRITE_BIGDECIMAL_AS_PLAIN);
                 SerializableString rootSep = _rootValueSeparator;
                 if (rootSep != DefaultPrettyPrinter.DEFAULT_ROOT_VALUE_SEPARATOR) {
                     gen.setRootValueSeparator(rootSep);
