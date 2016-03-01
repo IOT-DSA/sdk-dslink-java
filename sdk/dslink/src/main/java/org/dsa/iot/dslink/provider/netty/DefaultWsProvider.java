@@ -79,10 +79,7 @@ public class DefaultWsProvider extends WsProvider {
                 p.addLast(handler);
             }
         });
-
-        ChannelFuture fut = b.connect(url.host, url.port);
-        fut.syncUninterruptibly();
-        handler.handshakeFuture().syncUninterruptibly();
+        b.connect(url.host, url.port);
     }
 
     private static class WebSocketHandler extends SimpleChannelInboundHandler<Object> {
@@ -90,22 +87,11 @@ public class DefaultWsProvider extends WsProvider {
         private final WsClient client;
 
         private WebSocketClientHandshaker handshake;
-        private ChannelPromise handshakeFuture;
 
         public WebSocketHandler(WebSocketClientHandshaker handshake,
                                 WsClient client) {
             this.handshake = handshake;
             this.client = client;
-        }
-
-        public ChannelFuture handshakeFuture() {
-            return handshakeFuture;
-        }
-
-        @Override
-        public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
-            super.handlerAdded(ctx);
-            handshakeFuture = ctx.newPromise();
         }
 
         @Override
@@ -127,10 +113,6 @@ public class DefaultWsProvider extends WsProvider {
             if (handshake != null && !handshake.isHandshakeComplete()) {
                 handshake.finishHandshake(ch, (FullHttpResponse) msg);
                 handshake = null;
-                if (handshakeFuture != null) {
-                    handshakeFuture.setSuccess();
-                    handshakeFuture = null;
-                }
                 client.onConnected(new NetworkClient() {
 
                     @Override
@@ -207,9 +189,6 @@ public class DefaultWsProvider extends WsProvider {
         @Override
         public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
             client.onThrowable(cause);
-            if (handshakeFuture != null) {
-                handshakeFuture.setFailure(cause);
-            }
             ctx.close();
         }
     }
