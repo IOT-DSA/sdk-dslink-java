@@ -3,7 +3,6 @@ package org.dsa.iot.requester;
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.DSLinkFactory;
 import org.dsa.iot.dslink.DSLinkHandler;
-import org.dsa.iot.dslink.DSLinkProvider;
 import org.dsa.iot.dslink.methods.requests.ListRequest;
 import org.dsa.iot.dslink.methods.responses.ListResponse;
 import org.dsa.iot.dslink.node.Node;
@@ -25,7 +24,6 @@ public class Main extends DSLinkHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
 
-    private DSLinkProvider provider;
     private DSLink link;
 
     @Override
@@ -49,13 +47,7 @@ public class Main extends DSLinkHandler {
     }
 
     public static void main(String[] args) {
-        Main main = new Main();
-        main.provider = DSLinkFactory.generate(args, main);
-        if (main.provider == null) {
-            return;
-        }
-        main.provider.start();
-        main.provider.sleep();
+        DSLinkFactory.start(args, new Main());
     }
 
     private class Lister implements Handler<ListResponse> {
