@@ -6,7 +6,6 @@ if [ "$TRAVIS_BRANCH" != 'master' ]; then
 elif [ "$TRAVIS_PULL_REQUEST" == 'true' ]; then
     echo 'Ignoring artifact upload (pull request)'
 else
-    echo "${PASS}" | rev
     if [ -z "$USER" ]; then
         echo "User is empty"
     fi
