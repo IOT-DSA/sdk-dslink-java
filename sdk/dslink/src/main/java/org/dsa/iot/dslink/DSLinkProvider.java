@@ -4,6 +4,7 @@ import org.dsa.iot.dslink.connection.ConnectionManager;
 import org.dsa.iot.dslink.connection.DataHandler;
 import org.dsa.iot.dslink.link.Responder;
 import org.dsa.iot.dslink.node.NodeManager;
+import org.dsa.iot.dslink.provider.LoopProvider;
 import org.dsa.iot.dslink.serializer.SerializationManager;
 import org.dsa.iot.dslink.util.Objects;
 import org.dsa.iot.dslink.util.handler.Handler;
@@ -57,7 +58,7 @@ public class DSLinkProvider {
                 final CountDownLatch latch = new CountDownLatch(2);
                 final DataHandler writer = event.getHandler();
                 final String path = event.getPath();
-                Objects.getDaemonThreadPool().execute(new Runnable() {
+                LoopProvider.getProvider().schedule(new Runnable() {
                     @Override
                     public void run() {
                         if (event.isRequester()) {
@@ -92,7 +93,7 @@ public class DSLinkProvider {
                     }
                 });
 
-                Objects.getDaemonThreadPool().execute(new Runnable() {
+                LoopProvider.getProvider().schedule(new Runnable() {
                     @Override
                     public void run() {
                         if (event.isResponder()) {

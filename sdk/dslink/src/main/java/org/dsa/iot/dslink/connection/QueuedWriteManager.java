@@ -1,7 +1,7 @@
 package org.dsa.iot.dslink.connection;
 
 import io.netty.util.internal.SystemPropertyUtil;
-import org.dsa.iot.dslink.util.Objects;
+import org.dsa.iot.dslink.provider.LoopProvider;
 import org.dsa.iot.dslink.util.PropertyReference;
 import org.dsa.iot.dslink.util.json.EncodingFormat;
 import org.dsa.iot.dslink.util.json.JsonArray;
@@ -107,7 +107,7 @@ public class QueuedWriteManager {
         if (fut != null) {
             return;
         }
-        fut = Objects.getDaemonThreadPool().schedule(new Runnable() {
+        fut = LoopProvider.getProvider().schedule(new Runnable() {
             @Override
             public void run() {
                 boolean schedule = false;

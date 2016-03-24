@@ -1,6 +1,6 @@
 package org.dsa.iot.dslink.connection;
 
-import org.dsa.iot.dslink.util.Objects;
+import org.dsa.iot.dslink.provider.LoopProvider;
 import org.dsa.iot.dslink.util.handler.Handler;
 import org.dsa.iot.dslink.util.json.EncodingFormat;
 import org.dsa.iot.dslink.util.json.JsonArray;
@@ -67,7 +67,7 @@ public class DataHandler implements MessageTracker {
         final Integer msgId = obj.get("msg");
         final JsonArray requests = obj.get("requests");
         if (!(reqHandler == null || requests == null)) {
-            Objects.getDaemonThreadPool().execute(new Runnable() {
+            LoopProvider.getProvider().schedule(new Runnable() {
                 @Override
                 public void run() {
                     reqHandler.handle(new DataReceived(msgId, requests));
@@ -77,7 +77,7 @@ public class DataHandler implements MessageTracker {
 
         final JsonArray responses = obj.get("responses");
         if (!(respHandler == null || responses == null)) {
-            Objects.getDaemonThreadPool().execute(new Runnable() {
+            LoopProvider.getProvider().schedule(new Runnable() {
                 @Override
                 public void run() {
                     respHandler.handle(new DataReceived(msgId, responses));

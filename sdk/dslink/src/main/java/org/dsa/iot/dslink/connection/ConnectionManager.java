@@ -4,6 +4,7 @@ import org.dsa.iot.dslink.config.Configuration;
 import org.dsa.iot.dslink.connection.connector.WebSocketConnector;
 import org.dsa.iot.dslink.handshake.LocalHandshake;
 import org.dsa.iot.dslink.handshake.RemoteHandshake;
+import org.dsa.iot.dslink.provider.LoopProvider;
 import org.dsa.iot.dslink.util.Objects;
 import org.dsa.iot.dslink.util.URLInfo;
 import org.dsa.iot.dslink.util.handler.Handler;
@@ -12,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -53,8 +53,7 @@ public class ConnectionManager {
         stop();
         running = true;
 
-        final ScheduledThreadPoolExecutor stpe = Objects.getDaemonThreadPool();
-        stpe.execute(new Runnable() {
+        LoopProvider.getProvider().schedule(new Runnable() {
             @Override
             public void run() {
                 synchronized (ConnectionManager.this) {

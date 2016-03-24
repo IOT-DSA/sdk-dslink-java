@@ -10,6 +10,7 @@ import org.dsa.iot.dslink.node.actions.table.Row;
 import org.dsa.iot.dslink.node.actions.table.Table;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
+import org.dsa.iot.dslink.provider.LoopProvider;
 import org.dsa.iot.dslink.util.Objects;
 import org.dsa.iot.dslink.util.handler.CompleteHandler;
 import org.dsa.iot.dslink.util.handler.Handler;
@@ -91,8 +92,7 @@ public class GetHistory implements Handler<ActionResult> {
                            final Rollup.Type rollup,
                            final IntervalParser parser) {
         final IntervalProcessor interval = IntervalProcessor.parse(parser, rollup);
-        final ScheduledThreadPoolExecutor stpe = Objects.getDaemonThreadPool();
-        stpe.execute(new Runnable() {
+        LoopProvider.getProvider().schedule(new Runnable() {
 
             private boolean open = true;
             Handler<QueryData> handler;

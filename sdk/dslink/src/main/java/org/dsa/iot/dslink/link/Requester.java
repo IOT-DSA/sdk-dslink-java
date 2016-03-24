@@ -12,7 +12,7 @@ import org.dsa.iot.dslink.node.NodePair;
 import org.dsa.iot.dslink.node.SubscriptionManager;
 import org.dsa.iot.dslink.node.value.SubscriptionValue;
 import org.dsa.iot.dslink.node.value.Value;
-import org.dsa.iot.dslink.util.Objects;
+import org.dsa.iot.dslink.provider.LoopProvider;
 import org.dsa.iot.dslink.util.SubData;
 import org.dsa.iot.dslink.util.handler.Handler;
 import org.dsa.iot.dslink.util.json.JsonObject;
@@ -335,7 +335,7 @@ public class Requester extends Linkable {
         int rid = in.get("rid");
         if (rid == 0) {
             final SubscriptionUpdate update = new SubscriptionUpdate(this);
-            Objects.getThreadPool().execute(new Runnable() {
+            LoopProvider.getProvider().schedule(new Runnable() {
                 @Override
                 public void run() {
                     update.populate(in);

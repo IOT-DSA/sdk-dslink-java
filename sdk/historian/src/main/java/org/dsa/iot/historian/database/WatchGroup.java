@@ -14,6 +14,7 @@ import org.dsa.iot.dslink.node.actions.Parameter;
 import org.dsa.iot.dslink.node.value.SubscriptionValue;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
+import org.dsa.iot.dslink.provider.LoopProvider;
 import org.dsa.iot.dslink.util.NodeUtils;
 import org.dsa.iot.dslink.util.Objects;
 import org.dsa.iot.dslink.util.StringUtils;
@@ -325,8 +326,7 @@ public class WatchGroup {
                 return;
             }
 
-            ScheduledThreadPoolExecutor stpe = Objects.getDaemonThreadPool();
-            bufferFut = stpe.scheduleWithFixedDelay(new Runnable() {
+            bufferFut = LoopProvider.getProvider().schedule(new Runnable() {
                 @Override
                 public void run() {
                     handleQueue();

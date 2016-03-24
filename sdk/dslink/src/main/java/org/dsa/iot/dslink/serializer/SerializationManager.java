@@ -1,6 +1,7 @@
 package org.dsa.iot.dslink.serializer;
 
 import org.dsa.iot.dslink.node.NodeManager;
+import org.dsa.iot.dslink.provider.LoopProvider;
 import org.dsa.iot.dslink.util.FileUtils;
 import org.dsa.iot.dslink.util.Objects;
 import org.dsa.iot.dslink.util.json.JsonObject;
@@ -55,8 +56,7 @@ public class SerializationManager {
 
     public synchronized void start() {
         stop();
-        ScheduledThreadPoolExecutor daemon = Objects.getDaemonThreadPool();
-        future = daemon.scheduleWithFixedDelay(new Runnable() {
+        future = LoopProvider.getProvider().schedule(new Runnable() {
             @Override
             public void run() {
                 boolean c = changed.getAndSet(false);
