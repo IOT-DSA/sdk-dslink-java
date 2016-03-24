@@ -3,7 +3,6 @@ package org.dsa.iot.dslink.serializer;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.provider.LoopProvider;
 import org.dsa.iot.dslink.util.FileUtils;
-import org.dsa.iot.dslink.util.Objects;
 import org.dsa.iot.dslink.util.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -56,7 +54,7 @@ public class SerializationManager {
 
     public synchronized void start() {
         stop();
-        future = LoopProvider.getProvider().schedule(new Runnable() {
+        future = LoopProvider.getProvider().schedulePeriodic(new Runnable() {
             @Override
             public void run() {
                 boolean c = changed.getAndSet(false);

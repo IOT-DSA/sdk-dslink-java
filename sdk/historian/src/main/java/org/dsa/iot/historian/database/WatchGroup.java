@@ -16,19 +16,16 @@ import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.provider.LoopProvider;
 import org.dsa.iot.dslink.util.NodeUtils;
-import org.dsa.iot.dslink.util.Objects;
 import org.dsa.iot.dslink.util.StringUtils;
 import org.dsa.iot.dslink.util.handler.Handler;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 import org.dsa.iot.historian.utils.QueryData;
-import org.dsa.iot.historian.utils.TimeParser;
 import org.dsa.iot.historian.utils.WatchUpdate;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -326,7 +323,7 @@ public class WatchGroup {
                 return;
             }
 
-            bufferFut = LoopProvider.getProvider().schedule(new Runnable() {
+            bufferFut = LoopProvider.getProvider().schedulePeriodic(new Runnable() {
                 @Override
                 public void run() {
                     handleQueue();

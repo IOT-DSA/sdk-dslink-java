@@ -13,12 +13,12 @@ public class DefaultLoopProvider extends LoopProvider {
     }
 
     @Override
-    public ScheduledFuture schedule(Runnable task, long time, TimeUnit timeUnit) {
-        return Objects.getDaemonThreadPool().schedule(task, time, timeUnit);
+    public ScheduledFuture schedule(Runnable task, long delay, TimeUnit timeUnit) {
+        return Objects.getDaemonThreadPool().schedule(task, delay, timeUnit);
     }
 
     @Override
-    public ScheduledFuture schedule(Runnable task, long initialDelay, long delay, TimeUnit timeUnit) {
+    public ScheduledFuture schedulePeriodic(Runnable task, long initialDelay, long delay, TimeUnit timeUnit) {
         return Objects.getDaemonThreadPool().scheduleWithFixedDelay(task, initialDelay, delay, timeUnit);
     }
 }
