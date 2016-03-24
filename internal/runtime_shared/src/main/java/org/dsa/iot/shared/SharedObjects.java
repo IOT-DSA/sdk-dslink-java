@@ -23,6 +23,10 @@ public class SharedObjects {
         return LOOP;
     }
 
+    public static void setLoop(EventLoopGroup group) {
+        LOOP = group;
+    }
+
     public static ScheduledThreadPoolExecutor createThreadPool(int size) {
         return new ScheduledThreadPool(size);
     }
