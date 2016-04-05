@@ -302,7 +302,7 @@ public class TimeUtils {
      */
     public static Calendar alignWeek(Calendar timestamp) {
         timestamp = alignDay(timestamp);
-        int dayOfWeek = getDayOfWeek(timestamp);
+        int dayOfWeek = timestamp.get(Calendar.DAY_OF_WEEK);
         int offset = 1 - dayOfWeek;
         if (offset == 0) {
             return timestamp;
@@ -320,10 +320,4 @@ public class TimeUtils {
         return alignMonth(timestamp);
     }
 
-    /**
-     * Ordinal day of the week 1=Sunday...7=Saturday.
-     */
-    public static int getDayOfWeek(Calendar timestamp) {
-        return timestamp.get(Calendar.DAY_OF_WEEK);
-    }
 }
