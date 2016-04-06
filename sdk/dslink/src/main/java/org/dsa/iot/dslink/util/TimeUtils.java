@@ -260,19 +260,6 @@ public class TimeUtils {
     }
 
     /**
-     * Aligns the time fields to the start of given interval.
-     * @param interval The number of months in the interval to align to.
-     * @param timestamp The calendar to align.
-     * @return The calendar parameter, aligned.
-     */
-    public static Calendar alignMonths(int interval, Calendar timestamp) {
-        int value = timestamp.get(Calendar.MONTH);
-        value = value - (value % interval);
-        timestamp.set(Calendar.MONTH, value);
-        return alignMonth(timestamp);
-    }
-
-    /**
      * Aligns the time fields to the start of the second.
      * @param timestamp The calendar to align.
      * @return The parameter.
