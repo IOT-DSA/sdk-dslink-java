@@ -10,7 +10,7 @@ import java.util.concurrent.*;
  */
 public class SharedObjects {
 
-    public static final int POOL_SIZE = 32;
+    public static final int POOL_SIZE = 64;
 
     private static volatile ScheduledThreadPoolExecutor THREAD_POOL;
     private static volatile ScheduledThreadPoolExecutor DAEMON_THREAD_POOL;
