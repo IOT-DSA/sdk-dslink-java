@@ -24,15 +24,16 @@ import org.dsa.iot.historian.utils.QueryData;
 import org.dsa.iot.historian.utils.WatchUpdate;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 /**
  * @author Samuel Grenier
  */
 public class WatchGroup {
-
     private final Permission permission;
     private final Database db;
     private final Node node;
@@ -42,12 +43,17 @@ public class WatchGroup {
     private ScheduledFuture<?> bufferFut;
 
     private LoggingType loggingType;
+
+    public long getInterval() {
+        return interval;
+    }
+
     private long interval;
 
     /**
      * @param perm Permission all actions should be set to.
      * @param node Watch group node.
-     * @param db Database the group writes to.
+     * @param db   Database the group writes to.
      */
     public WatchGroup(Permission perm, Node node, Database db) {
         this.permission = perm;
@@ -75,7 +81,7 @@ public class WatchGroup {
      * Writes to the database based on the watch group settings.
      *
      * @param watch Watch to write from.
-     * @param sv Subscription update received from the server.
+     * @param sv    Subscription update received from the server.
      */
     public void write(Watch watch, SubscriptionValue sv) {
         boolean doWrite = false;
@@ -85,20 +91,12 @@ public class WatchGroup {
                 break;
             }
             case INTERVAL: {
-                long currTime = sv.getValue().getTime();
-                long lastTime = watch.getLastWrittenTime();
-                if (currTime - lastTime > interval) {
-                    doWrite = true;
-                    watch.setLastWrittenTime(currTime);
-                }
                 break;
             }
             case POINT_CHANGE: {
                 Value curr = watch.getLastValue();
                 Value update = sv.getValue();
-                if ((curr != null && update == null)
-                        || (curr == null && update != null)
-                        || (curr != null && !curr.equals(update))) {
+                if ((curr != null && update == null) || (curr == null && update != null) || (curr != null && !curr.equals(update))) {
                     doWrite = true;
                     watch.setLastValue(update);
                 }
@@ -350,7 +348,12 @@ public class WatchGroup {
     private void dbWrite(WatchUpdate update) {
         Value value = update.getUpdate().getValue();
         if (value != null) {
-            long time = value.getTime();
+            long time;
+            if (LoggingType.INTERVAL == loggingType) {
+                time = update.getIntervalTimestamp();
+            } else {
+                time = value.getTime();
+            }
             Watch watch = update.getWatch();
             db.write(watch.getPath(), value, time);
             watch.notifyHandlers(new QueryData(value, time));
@@ -361,8 +364,20 @@ public class WatchGroup {
         this.interval = TimeUnit.SECONDS.toMillis(interval);
     }
 
-    private class EditSettingsHandler implements Handler<ActionResult> {
+    public boolean canWriteOnNewData() {
+        return !LoggingType.INTERVAL.equals(loggingType);
+    }
 
+    public synchronized void addWatchUpdateToBuffer(WatchUpdate watchUpdate) {
+        Logger.getAnonymousLogger().info("Update watch");
+
+        queue.add(watchUpdate);
+
+        long nowTimestamp = new Date().getTime();
+        watchUpdate.updateTimestamp(nowTimestamp);
+    }
+
+    private class EditSettingsHandler implements Handler<ActionResult> {
         private Action action;
 
         private Parameter bft;
