@@ -214,10 +214,12 @@ public class Table {
         synchronized (mutex) {
             if (writer == null) {
                 try {
-                    if (millis <= 0)
+                    if (millis <= 0) {
                         mutex.wait();
-                    else
+                    }
+                    else {
                         mutex.wait(millis);
+                    }
                 } catch (Exception ignorable) {}
             }
             if (writer == null) {
@@ -293,15 +295,15 @@ public class Table {
         return columns != null ? Collections.unmodifiableList(columns) : null;
     }
 
-    private void setColumns(List<Parameter> cols) {
-        if (cols == null) {
+    private void setColumns(List<Parameter> columns) {
+        if (columns == null) {
             return;
         }
         synchronized (this) {
-            if (columns == null) {
-                columns = new LinkedList<>(cols);
+            if (this.columns == null) {
+                this.columns = new LinkedList<>(columns);
             } else {
-                columns.addAll(cols);
+                this.columns.addAll(columns);
             }
         }
     }
