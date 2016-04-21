@@ -1,10 +1,5 @@
 package org.dsa.iot.historian.database;
 
-import org.dsa.iot.dslink.DSLink;
-import org.dsa.iot.dslink.DSLinkHandler;
-import org.dsa.iot.dslink.DSLinkProvider;
-import org.dsa.iot.dslink.link.Requester;
-import org.dsa.iot.dslink.methods.requests.SetRequest;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeBuilder;
 import org.dsa.iot.dslink.node.Permission;
@@ -16,7 +11,6 @@ import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValuePair;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.util.handler.Handler;
-import org.dsa.iot.dslink.util.json.JsonObject;
 import org.dsa.iot.historian.stats.GetHistory;
 import org.dsa.iot.historian.utils.QueryData;
 import org.dsa.iot.historian.utils.WatchUpdate;
@@ -119,29 +113,15 @@ public class Watch {
     }
 
     public void unsubscribe() {
+        removeFromSubscriptionPool();
+
         node.delete();
+    }
+
+    private void removeFromSubscriptionPool() {
         DatabaseProvider provider = group.getDb().getProvider();
         SubscriptionPool pool = provider.getPool();
         pool.unsubscribe(path, Watch.this);
-        {
-            JsonObject obj = new JsonObject();
-            obj.put("@", "remove");
-            obj.put("type", "path");
-
-            String p = node.getLink().getDSLink().getPath();
-            obj.put("val", p + node.getPath() + "/getHistory");
-            Value v = new Value(obj);
-
-            Requester req;
-            {
-                DSLinkHandler h = node.getLink().getHandler();
-                DSLinkProvider pr = h.getProvider();
-                String dsId = h.getConfig().getDsIdWithHash();
-                DSLink link = pr.getRequesters().get(dsId);
-                req = link.getRequester();
-            }
-            req.set(new SetRequest(path + "/@@getHistory", v), null);
-        }
     }
 
     public void init(Permission perm) {
