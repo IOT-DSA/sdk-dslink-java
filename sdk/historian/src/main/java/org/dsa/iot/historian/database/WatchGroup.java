@@ -166,6 +166,7 @@ public class WatchGroup {
      */
     public void unsubscribe() {
         Map<String, Node> children = node.getChildren();
+
         for (Node n : children.values()) {
             if (n.getAction() == null) {
                 Watch w = n.getMetaData();
@@ -369,6 +370,15 @@ public class WatchGroup {
 
         long nowTimestamp = new Date().getTime();
         watchUpdate.updateTimestamp(nowTimestamp);
+    }
+
+    public LoggingType getLoggingType() {
+        return loggingType;
+    }
+
+    public void cancelBufferWrite() {
+        bufferFut.cancel(true);
+        queue.clear();
     }
 
     private class EditSettingsHandler implements Handler<ActionResult> {
