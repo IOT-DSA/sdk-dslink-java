@@ -49,7 +49,6 @@ public class Watch {
     private long lastWrittenTime;
     private Value lastValue;
     private WatchUpdate lastWatchUpdate;
-    private ScheduledFuture<?> intervalLoggingScheduler;
 
     public Watch(final WatchGroup group, Node node) {
         this.group = group;
@@ -114,11 +113,7 @@ public class Watch {
     }
 
     public void unsubscribe() {
-        if (LoggingType.INTERVAL.equals(group.getLoggingType())) {
-            intervalLoggingScheduler.cancel(true);
-            group.cancelBufferWrite();
-        }
-
+        group.cancelIntervalScheduler();
         removeFromSubscriptionPool();
 
         node.delete();
@@ -127,7 +122,7 @@ public class Watch {
     private void removeFromSubscriptionPool() {
         DatabaseProvider provider = group.getDb().getProvider();
         SubscriptionPool pool = provider.getPool();
-        pool.unsubscribe(path, Watch.this);
+        pool.unsubscribe(path, this);
     }
 
     public void init(Permission perm) {
@@ -147,15 +142,10 @@ public class Watch {
             b.build();
         }
 
-        if (!group.canWriteOnNewData()) {
-            ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-            long interval = group.getInterval();
-            intervalLoggingScheduler = scheduler.scheduleAtFixedRate(writeValues, 0, interval, TimeUnit.MILLISECONDS);
-        }
+        group.scheduleInterval(writeValues);
     }
 
     protected void initData(final Node node) {
-
         realTimeValue = node;
 
         {

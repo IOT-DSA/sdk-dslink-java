@@ -24,23 +24,24 @@ import org.dsa.iot.historian.utils.QueryData;
 import org.dsa.iot.historian.utils.WatchUpdate;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * @author Samuel Grenier
  */
 public class WatchGroup {
+    public static final int MINIMUM_AMOUNT_OF_THREADS = 3;
     private final Permission permission;
     private final Database db;
     private final Node node;
 
     private final Queue<WatchUpdate> queue = new ConcurrentLinkedDeque<>();
     private final Object writeLoopLock = new Object();
+    private final ScheduledExecutorService intervalScheduler;
     private ScheduledFuture<?> bufferFut;
 
     private LoggingType loggingType;
+    private ScheduledFuture<?> scheduledIntervalWrite;
 
     public long getInterval() {
         return interval;
@@ -57,6 +58,9 @@ public class WatchGroup {
         this.permission = perm;
         this.node = node;
         this.db = db;
+
+        int availableProcessors = Runtime.getRuntime().availableProcessors();
+        intervalScheduler = Executors.newScheduledThreadPool(Math.min(MINIMUM_AMOUNT_OF_THREADS, availableProcessors));
     }
 
     public void close() {
@@ -372,13 +376,24 @@ public class WatchGroup {
         watchUpdate.updateTimestamp(nowTimestamp);
     }
 
-    public LoggingType getLoggingType() {
-        return loggingType;
-    }
-
-    public void cancelBufferWrite() {
+    private void cancelBufferWrite() {
         bufferFut.cancel(true);
         queue.clear();
+    }
+
+    public void scheduleInterval(Runnable writeValues) {
+        if (!canWriteOnNewData()) {
+            if (scheduledIntervalWrite == null || scheduledIntervalWrite.isDone()) {
+                scheduledIntervalWrite = intervalScheduler.scheduleAtFixedRate(writeValues, 0, interval, TimeUnit.MILLISECONDS);
+            }
+        }
+    }
+
+    public void cancelIntervalScheduler() {
+        if (LoggingType.INTERVAL.equals(loggingType)) {
+            scheduledIntervalWrite.cancel(true);
+            cancelBufferWrite();
+        }
     }
 
     private class EditSettingsHandler implements Handler<ActionResult> {
