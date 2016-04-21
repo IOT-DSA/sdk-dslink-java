@@ -1,6 +1,7 @@
 package org.dsa.iot.historian.database;
 
 import org.dsa.iot.dslink.link.Requester;
+import org.dsa.iot.dslink.methods.requests.RemoveRequest;
 import org.dsa.iot.dslink.node.value.SubscriptionValue;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.util.SubData;
@@ -43,14 +44,20 @@ public class SubscriptionPool {
         if (handler != null) {
             handler.removeWatch(watch);
             if (handler.isEmpty()) {
-                requester.unsubscribe(path, null);
+                String getHistoryActionAliasPath = path + "/@@getHistory";
+
+                // Need to ensure to be subscribed so the graph icon disappears in DGLux
+                requester.subscribe(getHistoryActionAliasPath, null);
+
+                requester.remove(new RemoveRequest(getHistoryActionAliasPath), null);
                 subscriptions.remove(path);
+
+                requester.unsubscribe(path, null);
             }
         }
     }
 
     private static class SubHandler implements Handler<SubscriptionValue> {
-
         private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         private final List<Watch> watches = new ArrayList<>();
 

@@ -24,11 +24,9 @@ import org.dsa.iot.historian.utils.QueryData;
 import org.dsa.iot.historian.utils.WatchUpdate;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 
 /**
  * @author Samuel Grenier
@@ -167,13 +165,11 @@ public class WatchGroup {
      * Unsubscribes from the entire watch group.
      */
     public void unsubscribe() {
-        SubscriptionPool pool = db.getProvider().getPool();
         Map<String, Node> children = node.getChildren();
         for (Node n : children.values()) {
             if (n.getAction() == null) {
-                String path = n.getName().replaceAll("%2F", "/");
                 Watch w = n.getMetaData();
-                pool.unsubscribe(path, w);
+                w.unsubscribe();
             }
         }
     }
@@ -369,8 +365,6 @@ public class WatchGroup {
     }
 
     public synchronized void addWatchUpdateToBuffer(WatchUpdate watchUpdate) {
-        Logger.getAnonymousLogger().info("Update watch");
-
         queue.add(watchUpdate);
 
         long nowTimestamp = new Date().getTime();
