@@ -1,10 +1,5 @@
 package org.dsa.iot.historian.database;
 
-import org.dsa.iot.dslink.DSLink;
-import org.dsa.iot.dslink.DSLinkHandler;
-import org.dsa.iot.dslink.DSLinkProvider;
-import org.dsa.iot.dslink.link.Requester;
-import org.dsa.iot.dslink.methods.requests.SetRequest;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeBuilder;
 import org.dsa.iot.dslink.node.Permission;
@@ -16,7 +11,6 @@ import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValuePair;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.util.handler.Handler;
-import org.dsa.iot.dslink.util.json.JsonObject;
 import org.dsa.iot.historian.stats.GetHistory;
 import org.dsa.iot.historian.utils.QueryData;
 import org.dsa.iot.historian.utils.WatchUpdate;
@@ -25,10 +19,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
@@ -41,7 +31,6 @@ public class Watch {
     private final List<Handler<QueryData>> rtHandlers = new ArrayList<>();
     private final WatchGroup group;
     private final Node node;
-    private final Runnable writeValues;
 
     private Node realTimeValue;
     private String path;
@@ -54,20 +43,17 @@ public class Watch {
     // Values that must be handled before the buffer queue
     private long lastWrittenTime;
     private Value lastValue;
+
+    public WatchUpdate getLastWatchUpdate() {
+        return lastWatchUpdate;
+    }
+
     private WatchUpdate lastWatchUpdate;
 
     public Watch(final WatchGroup group, Node node) {
         this.group = group;
         this.node = node;
 
-        writeValues = new Runnable() {
-            @Override
-            public void run() {
-                if (lastWatchUpdate != null) {
-                    group.addWatchUpdateToBuffer(lastWatchUpdate);
-                }
-            }
-        };
     }
 
     public Node getNode() {
@@ -119,29 +105,16 @@ public class Watch {
     }
 
     public void unsubscribe() {
+        group.removeFromWatches(this);
+        removeFromSubscriptionPool();
+
         node.delete();
+    }
+
+    private void removeFromSubscriptionPool() {
         DatabaseProvider provider = group.getDb().getProvider();
         SubscriptionPool pool = provider.getPool();
-        pool.unsubscribe(path, Watch.this);
-        {
-            JsonObject obj = new JsonObject();
-            obj.put("@", "remove");
-            obj.put("type", "path");
-
-            String p = node.getLink().getDSLink().getPath();
-            obj.put("val", p + node.getPath() + "/getHistory");
-            Value v = new Value(obj);
-
-            Requester req;
-            {
-                DSLinkHandler h = node.getLink().getHandler();
-                DSLinkProvider pr = h.getProvider();
-                String dsId = h.getConfig().getDsIdWithHash();
-                DSLink link = pr.getRequesters().get(dsId);
-                req = link.getRequester();
-            }
-            req.set(new SetRequest(path + "/@@getHistory", v), null);
-        }
+        pool.unsubscribe(path, this);
     }
 
     public void init(Permission perm) {
@@ -161,15 +134,10 @@ public class Watch {
             b.build();
         }
 
-        if (!group.canWriteOnNewData()) {
-            ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-            long interval = group.getInterval();
-            ScheduledFuture<?> scheduledFuture = scheduler.scheduleAtFixedRate(writeValues, 0, interval, TimeUnit.MILLISECONDS);
-        }
+        group.addWatch(this);
     }
 
     protected void initData(final Node node) {
-
         realTimeValue = node;
 
         {

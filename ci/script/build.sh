@@ -2,3 +2,4 @@
 
 # Perform a raw build
 ./gradlew build distZip
+
