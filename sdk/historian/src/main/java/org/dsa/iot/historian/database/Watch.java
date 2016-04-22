@@ -19,10 +19,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
@@ -35,7 +31,6 @@ public class Watch {
     private final List<Handler<QueryData>> rtHandlers = new ArrayList<>();
     private final WatchGroup group;
     private final Node node;
-    private final Runnable writeValues;
 
     private Node realTimeValue;
     private String path;
@@ -48,20 +43,17 @@ public class Watch {
     // Values that must be handled before the buffer queue
     private long lastWrittenTime;
     private Value lastValue;
+
+    public WatchUpdate getLastWatchUpdate() {
+        return lastWatchUpdate;
+    }
+
     private WatchUpdate lastWatchUpdate;
 
     public Watch(final WatchGroup group, Node node) {
         this.group = group;
         this.node = node;
 
-        writeValues = new Runnable() {
-            @Override
-            public void run() {
-                if (lastWatchUpdate != null) {
-                    group.addWatchUpdateToBuffer(lastWatchUpdate);
-                }
-            }
-        };
     }
 
     public Node getNode() {
@@ -113,7 +105,7 @@ public class Watch {
     }
 
     public void unsubscribe() {
-        group.cancelIntervalScheduler();
+        group.removeFromWatches(this);
         removeFromSubscriptionPool();
 
         node.delete();
@@ -142,7 +134,7 @@ public class Watch {
             b.build();
         }
 
-        group.scheduleInterval(writeValues);
+        group.addWatch(this);
     }
 
     protected void initData(final Node node) {
