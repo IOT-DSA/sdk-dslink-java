@@ -19,10 +19,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
@@ -35,7 +31,6 @@ public class Watch {
     private final List<Handler<QueryData>> rtHandlers = new ArrayList<>();
     private final WatchGroup group;
     private final Node node;
-    private final Runnable writeValues;
 
     private Node realTimeValue;
     private String path;
@@ -48,21 +43,17 @@ public class Watch {
     // Values that must be handled before the buffer queue
     private long lastWrittenTime;
     private Value lastValue;
+
+    public WatchUpdate getLastWatchUpdate() {
+        return lastWatchUpdate;
+    }
+
     private WatchUpdate lastWatchUpdate;
-    private ScheduledFuture<?> intervalLoggingScheduler;
 
     public Watch(final WatchGroup group, Node node) {
         this.group = group;
         this.node = node;
 
-        writeValues = new Runnable() {
-            @Override
-            public void run() {
-                if (lastWatchUpdate != null) {
-                    group.addWatchUpdateToBuffer(lastWatchUpdate);
-                }
-            }
-        };
     }
 
     public Node getNode() {
@@ -114,11 +105,7 @@ public class Watch {
     }
 
     public void unsubscribe() {
-        if (LoggingType.INTERVAL.equals(group.getLoggingType())) {
-            intervalLoggingScheduler.cancel(true);
-            group.cancelBufferWrite();
-        }
-
+        group.removeFromWatches(this);
         removeFromSubscriptionPool();
 
         node.delete();
@@ -127,7 +114,7 @@ public class Watch {
     private void removeFromSubscriptionPool() {
         DatabaseProvider provider = group.getDb().getProvider();
         SubscriptionPool pool = provider.getPool();
-        pool.unsubscribe(path, Watch.this);
+        pool.unsubscribe(path, this);
     }
 
     public void init(Permission perm) {
@@ -147,15 +134,10 @@ public class Watch {
             b.build();
         }
 
-        if (!group.canWriteOnNewData()) {
-            ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-            long interval = group.getInterval();
-            intervalLoggingScheduler = scheduler.scheduleAtFixedRate(writeValues, 0, interval, TimeUnit.MILLISECONDS);
-        }
+        group.addWatch(this);
     }
 
     protected void initData(final Node node) {
-
         realTimeValue = node;
 
         {

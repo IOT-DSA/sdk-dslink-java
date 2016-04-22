@@ -24,29 +24,27 @@ import org.dsa.iot.historian.utils.QueryData;
 import org.dsa.iot.historian.utils.WatchUpdate;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * @author Samuel Grenier
  */
 public class WatchGroup {
+    private static final int MINIMUM_AMOUNT_OF_THREADS = 3;
+
     private final Permission permission;
     private final Database db;
     private final Node node;
 
     private final Queue<WatchUpdate> queue = new ConcurrentLinkedDeque<>();
     private final Object writeLoopLock = new Object();
+    private final ScheduledExecutorService intervalScheduler;
+
     private ScheduledFuture<?> bufferFut;
-
     private LoggingType loggingType;
-
-    public long getInterval() {
-        return interval;
-    }
-
     private long interval;
+    private List<Watch> watches = new ArrayList<>();
+    private ScheduledFuture<?> scheduledIntervalWriter;
 
     /**
      * @param perm Permission all actions should be set to.
@@ -57,6 +55,9 @@ public class WatchGroup {
         this.permission = perm;
         this.node = node;
         this.db = db;
+
+        int availableProcessors = Runtime.getRuntime().availableProcessors();
+        intervalScheduler = Executors.newScheduledThreadPool(Math.min(MINIMUM_AMOUNT_OF_THREADS, availableProcessors));
     }
 
     public void close() {
@@ -127,6 +128,20 @@ public class WatchGroup {
         }
     }
 
+    private void writeWatchesToBuffer() {
+        for (Watch watch : watches) {
+            if (!watch.isEnabled()) {
+               continue;
+            }
+
+            WatchUpdate update = watch.getLastWatchUpdate();
+
+            if (update != null) {
+                addWatchUpdateToBuffer(update);
+            }
+        }
+    }
+
     /**
      * Initializes the watch for the group.
      *
@@ -144,8 +159,22 @@ public class WatchGroup {
             n.setMetaData(watch);
             db.getProvider().onWatchAdded(watch);
         }
-        if (watch.isEnabled()) {
-            db.getProvider().getPool().subscribe(path, watch);
+
+        scheduleWriteToBuffer();
+    }
+
+    private void scheduleWriteToBuffer() {
+        if (!LoggingType.INTERVAL.equals(loggingType)) {
+            return;
+        }
+
+        if (scheduledIntervalWriter == null || scheduledIntervalWriter.isDone()) {
+            scheduledIntervalWriter = intervalScheduler.scheduleAtFixedRate(new Runnable() {
+                @Override
+                public void run() {
+                    writeWatchesToBuffer();
+                }
+            }, 0, interval, TimeUnit.MILLISECONDS);
         }
     }
 
@@ -166,6 +195,8 @@ public class WatchGroup {
      */
     public void unsubscribe() {
         Map<String, Node> children = node.getChildren();
+
+        cancelIntervalScheduler();
 
         for (Node n : children.values()) {
             if (n.getAction() == null) {
@@ -372,72 +403,89 @@ public class WatchGroup {
         watchUpdate.updateTimestamp(nowTimestamp);
     }
 
-    public LoggingType getLoggingType() {
-        return loggingType;
-    }
-
-    public void cancelBufferWrite() {
+    private void cancelBufferWrite() {
         bufferFut.cancel(true);
         queue.clear();
+    }
+
+    public void cancelIntervalScheduler() {
+        if (scheduledIntervalWriter != null) {
+            scheduledIntervalWriter.cancel(true);
+        }
+        cancelBufferWrite();
+    }
+
+    public void addWatch(Watch watch) {
+        watches.add(watch);
+
+        db.getProvider().getPool().subscribe(watch.getPath(), watch);
+    }
+
+    public void removeFromWatches(Watch watch) {
+        watches.remove(watch);
     }
 
     private class EditSettingsHandler implements Handler<ActionResult> {
         private Action action;
 
-        private Parameter bft;
-        private Parameter lt;
-        private Parameter i;
+        private Parameter bufferFlushTimeParameter;
+        private Parameter loggingType;
+        private Parameter intervalInSeconds;
 
         public void setAction(Action a) {
             this.action = a;
         }
 
-        public void setBufferFlushTimeParam(Parameter bft) {
-            this.bft = bft;
+        public void setBufferFlushTimeParam(Parameter bufferFlushTime) {
+            this.bufferFlushTimeParameter = bufferFlushTime;
         }
 
-        public void setLoggingTypeParam(Parameter lt) {
-            this.lt = lt;
+        public void setLoggingTypeParam(Parameter loggingType) {
+            this.loggingType = loggingType;
         }
 
-        public void setIntervalParam(Parameter i) {
-            this.i = i;
+        public void setIntervalParam(Parameter intervalInSeconds) {
+            this.intervalInSeconds = intervalInSeconds;
         }
 
         @Override
         public void handle(ActionResult event) {
             Node node = event.getNode();
 
-            Value vLt = event.getParameter(lt.getName(), ValueType.STRING);
-            Value vBft = event.getParameter(bft.getName(), bft.getType());
-            if (vBft.getNumber().intValue() < 0) {
-                vBft.set(0);
+            cancelIntervalScheduler();
+
+            Value loggingTypeValue = event.getParameter(loggingType.getName(), ValueType.STRING);
+            Value bufferFlushTimeValue = event.getParameter(bufferFlushTimeParameter.getName(), bufferFlushTimeParameter.getType());
+            if (bufferFlushTimeValue.getNumber().intValue() < 0) {
+                bufferFlushTimeValue.set(0);
             }
 
-            Value vI = event.getParameter(i.getName(), i.getType());
-            if (vI.getNumber().intValue() < 0) {
-                vI.set(0);
+            Value intervalInSecondsAsValue = event.getParameter(intervalInSeconds.getName(), intervalInSeconds.getType());
+            if (intervalInSecondsAsValue.getNumber().intValue() < 0) {
+                intervalInSecondsAsValue.set(0);
             }
 
-            node.setRoConfig("bft", vBft);
-            bft.setDefaultValue(vBft);
-            setupTimer(vBft.getNumber().intValue());
+            node.setRoConfig("bft", bufferFlushTimeValue);
+            bufferFlushTimeParameter.setDefaultValue(bufferFlushTimeValue);
+            setupTimer(bufferFlushTimeValue.getNumber().intValue());
 
-            node.setRoConfig("lt", vLt);
-            loggingType = LoggingType.toEnum(vLt.getString());
-            lt.setDefaultValue(vLt);
+            node.setRoConfig("lt", loggingTypeValue);
+            WatchGroup.this.loggingType = LoggingType.toEnum(loggingTypeValue.getString());
+            loggingType.setDefaultValue(loggingTypeValue);
 
-            node.setRoConfig("i", vI);
-            i.setDefaultValue(vI);
-            setInterval(vI.getNumber().longValue());
+            node.setRoConfig("i", intervalInSecondsAsValue);
+            intervalInSeconds.setDefaultValue(intervalInSecondsAsValue);
+            setInterval(intervalInSecondsAsValue.getNumber().longValue());
 
-            lt.setDefaultValue(vLt);
+            loggingType.setDefaultValue(loggingTypeValue);
 
             List<Parameter> params = new LinkedList<>();
-            params.add(bft);
-            params.add(lt);
-            params.add(i);
+            params.add(bufferFlushTimeParameter);
+            params.add(loggingType);
+            params.add(intervalInSeconds);
             action.setParams(params);
+
+           scheduleWriteToBuffer();
         }
     }
 }
