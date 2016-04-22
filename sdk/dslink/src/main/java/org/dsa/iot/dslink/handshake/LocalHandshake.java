@@ -114,6 +114,8 @@ public class LocalHandshake {
         obj.put("isResponder", isResponder);
         obj.put("linkData", linkData);
         obj.put("version", "1.0.4");
+        obj.put("enableWebSocketCompression", true);
+
         /*String formats = System.getProperty(PropertyReference.FORMATS);
         String[] split = formats != null ? formats.split(",") : null;
         if (split != null && split.length > 0) {
