@@ -15,7 +15,6 @@ import org.dsa.iot.dslink.node.value.SubscriptionValue;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.provider.LoopProvider;
-import org.dsa.iot.dslink.util.NodeUtils;
 import org.dsa.iot.dslink.util.StringUtils;
 import org.dsa.iot.dslink.util.handler.Handler;
 import org.dsa.iot.dslink.util.json.JsonArray;
@@ -31,6 +30,9 @@ import java.util.concurrent.*;
  */
 public class WatchGroup {
     private static final int MINIMUM_AMOUNT_OF_THREADS = 3;
+    private static final long DEFAULT_INTERVAL_IN_SECONDS = 5;
+    private static final int DEFAULT_BUFFER_FLUSH_TIME_IN_SECONDS = 5;
+    private static final LoggingType DEFAULT_LOGGING_TYPE = LoggingType.ALL_DATA;
 
     private final Permission permission;
     private final Database db;
@@ -41,10 +43,11 @@ public class WatchGroup {
     private final ScheduledExecutorService intervalScheduler;
 
     private ScheduledFuture<?> bufferFut;
-    private LoggingType loggingType;
-    private long interval;
     private List<Watch> watches = new ArrayList<>();
     private ScheduledFuture<?> scheduledIntervalWriter;
+    private LoggingType loggingType = DEFAULT_LOGGING_TYPE;
+    private long interval = DEFAULT_INTERVAL_IN_SECONDS;
+    private int bufferFlushTime = DEFAULT_BUFFER_FLUSH_TIME_IN_SECONDS;
 
     /**
      * @param perm Permission all actions should be set to.
@@ -174,7 +177,7 @@ public class WatchGroup {
                 public void run() {
                     writeWatchesToBuffer();
                 }
-            }, 0, interval, TimeUnit.MILLISECONDS);
+            }, 0, interval, TimeUnit.SECONDS);
         }
     }
 
@@ -188,6 +191,9 @@ public class WatchGroup {
                 initWatch(n.getName().replaceAll("%2F", "/"));
             }
         }
+
+        scheduleWriteToBuffer();
+        scheduleBufferFlush();
     }
 
     /**
@@ -206,11 +212,9 @@ public class WatchGroup {
         }
     }
 
-    /**
-     * All settings must be as actions and their default parameters should be
-     * updated when changed. Be sure to call {@code super} on this method.
-     */
     protected void initSettings() {
+        useExistingValuesForEditAction();
+
         {
             NodeBuilder b = node.createChild("addWatchPath");
             b.setDisplayName("Add Watch Path");
@@ -257,11 +261,11 @@ public class WatchGroup {
             NodeBuilder b = node.createChild("edit");
             b.setDisplayName("Edit");
             // Buffer flush time
-            b.setRoConfig("bft", new Value(5));
+            b.setRoConfig("bft", new Value(bufferFlushTime));
             // Logging type
-            b.setRoConfig("lt", new Value(LoggingType.ALL_DATA.getName()));
+            b.setRoConfig("lt", new Value(loggingType.getName()));
             // Interval
-            b.setRoConfig("i", new Value(5));
+            b.setRoConfig("i", new Value(interval));
 
             final Parameter bft;
             {
@@ -273,14 +277,14 @@ public class WatchGroup {
                     desc += "immediately";
                     bft.setDescription(desc);
                 }
-                bft.setDefaultValue(NodeUtils.getRoConfig(b, "bft"));
+                bft.setDefaultValue(new Value(bufferFlushTime));
             }
 
             final Parameter lt;
             {
                 Set<String> enums = LoggingType.buildEnums();
                 lt = new Parameter("Logging Type", ValueType.makeEnum(enums));
-                lt.setDefaultValue(NodeUtils.getRoConfig(b, "lt"));
+                lt.setDefaultValue(new Value(loggingType.getName()));
                 {
                     String desc = "Logging type controls what kind of data ";
                     desc += "gets stored into the database";
@@ -298,19 +302,14 @@ public class WatchGroup {
                     desc += "not interval.";
                     i.setDescription(desc);
                 }
-                i.setDefaultValue(NodeUtils.getRoConfig(b, "i"));
+                i.setDefaultValue(new Value(interval));
             }
 
             EditSettingsHandler handler = new EditSettingsHandler();
             {
                 handler.setBufferFlushTimeParam(bft);
-                setupTimer(bft.getDefault().getNumber().intValue());
-
                 handler.setLoggingTypeParam(lt);
-                loggingType = LoggingType.toEnum(lt.getDefault().getString());
-
                 handler.setIntervalParam(i);
-                setInterval(i.getDefault().getNumber().longValue());
 
                 Action a = new Action(permission, handler);
                 a.addParameter(bft);
@@ -336,16 +335,44 @@ public class WatchGroup {
             }));
             b.build();
         }
+
+        if (LoggingType.INTERVAL.equals(loggingType)) {
+            scheduleWriteToBuffer();
+            scheduleBufferFlush();
+        }
     }
 
-    private void setupTimer(int time) {
+    private void useExistingValuesForEditAction() {
+        Node existingEditNode = node.getChild("edit");
+
+        if (existingEditNode == null) {
+            return;
+        }
+
+        Value bufferFlushTime = existingEditNode.getRoConfig("bft");
+        if (bufferFlushTime != null) {
+            this.bufferFlushTime = bufferFlushTime.getNumber().intValue();
+        }
+
+        Value loggingType = existingEditNode.getRoConfig("lt");
+        if (loggingType != null) {
+            this.loggingType = LoggingType.toEnum(loggingType.getString());
+        }
+
+        Value interval = existingEditNode.getRoConfig("i");
+        if (interval != null) {
+            this.interval = interval.getNumber().longValue();
+        }
+    }
+
+    private void scheduleBufferFlush() {
         synchronized (writeLoopLock) {
             if (bufferFut != null) {
                 bufferFut.cancel(false);
                 bufferFut = null;
             }
 
-            if (time <= 0) {
+            if (this.bufferFlushTime <= 0) {
                 return;
             }
 
@@ -354,7 +381,7 @@ public class WatchGroup {
                 public void run() {
                     handleQueue();
                 }
-            }, time, time, TimeUnit.SECONDS);
+            }, this.bufferFlushTime, this.bufferFlushTime, TimeUnit.SECONDS);
         }
     }
 
@@ -388,10 +415,6 @@ public class WatchGroup {
         }
     }
 
-    private void setInterval(long interval) {
-        this.interval = TimeUnit.SECONDS.toMillis(interval);
-    }
-
     public boolean canWriteOnNewData() {
         return !LoggingType.INTERVAL.equals(loggingType);
     }
@@ -404,7 +427,9 @@ public class WatchGroup {
     }
 
     private void cancelBufferWrite() {
-        bufferFut.cancel(true);
+        if (bufferFut != null) {
+            bufferFut.cancel(true);
+        }
         queue.clear();
     }
 
@@ -429,8 +454,8 @@ public class WatchGroup {
         private Action action;
 
         private Parameter bufferFlushTimeParameter;
-        private Parameter loggingType;
-        private Parameter intervalInSeconds;
+        private Parameter loggingTypeParameter;
+        private Parameter intervalInSecondsParameter;
 
         public void setAction(Action a) {
             this.action = a;
@@ -441,11 +466,11 @@ public class WatchGroup {
         }
 
         public void setLoggingTypeParam(Parameter loggingType) {
-            this.loggingType = loggingType;
+            this.loggingTypeParameter = loggingType;
         }
 
         public void setIntervalParam(Parameter intervalInSeconds) {
-            this.intervalInSeconds = intervalInSeconds;
+            this.intervalInSecondsParameter = intervalInSeconds;
         }
 
         @Override
@@ -454,38 +479,38 @@ public class WatchGroup {
 
             cancelIntervalScheduler();
 
-            Value loggingTypeValue = event.getParameter(loggingType.getName(), ValueType.STRING);
+            Value loggingTypeValue = event.getParameter(loggingTypeParameter.getName(), ValueType.STRING);
+
             Value bufferFlushTimeValue = event.getParameter(bufferFlushTimeParameter.getName(), bufferFlushTimeParameter.getType());
-            if (bufferFlushTimeValue.getNumber().intValue() < 0) {
+            if (bufferFlushTime < 0) {
                 bufferFlushTimeValue.set(0);
             }
 
-            Value intervalInSecondsAsValue = event.getParameter(intervalInSeconds.getName(), intervalInSeconds.getType());
+            Value intervalInSecondsAsValue = event.getParameter(intervalInSecondsParameter.getName(), intervalInSecondsParameter.getType());
             if (intervalInSecondsAsValue.getNumber().intValue() < 0) {
                 intervalInSecondsAsValue.set(0);
             }
 
             node.setRoConfig("bft", bufferFlushTimeValue);
             bufferFlushTimeParameter.setDefaultValue(bufferFlushTimeValue);
-            setupTimer(bufferFlushTimeValue.getNumber().intValue());
+            bufferFlushTime = bufferFlushTimeValue.getNumber().intValue();
 
             node.setRoConfig("lt", loggingTypeValue);
-            WatchGroup.this.loggingType = LoggingType.toEnum(loggingTypeValue.getString());
-            loggingType.setDefaultValue(loggingTypeValue);
+            loggingTypeParameter.setDefaultValue(loggingTypeValue);
+            loggingType = LoggingType.toEnum(loggingTypeValue.getString());
 
             node.setRoConfig("i", intervalInSecondsAsValue);
-            intervalInSeconds.setDefaultValue(intervalInSecondsAsValue);
-            setInterval(intervalInSecondsAsValue.getNumber().longValue());
-
-            loggingType.setDefaultValue(loggingTypeValue);
+            intervalInSecondsParameter.setDefaultValue(intervalInSecondsAsValue);
+            interval = intervalInSecondsAsValue.getNumber().longValue();
 
             List<Parameter> params = new LinkedList<>();
             params.add(bufferFlushTimeParameter);
-            params.add(loggingType);
-            params.add(intervalInSeconds);
+            params.add(loggingTypeParameter);
+            params.add(intervalInSecondsParameter);
             action.setParams(params);
 
-           scheduleWriteToBuffer();
+            scheduleBufferFlush();
+            scheduleWriteToBuffer();
         }
     }
 }
