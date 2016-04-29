@@ -45,6 +45,13 @@ public class Watch {
     private Value lastValue;
 
     public WatchUpdate getLastWatchUpdate() {
+        if (lastWatchUpdate == null) {
+            Value value = node.getValue();
+            if (value != null) {
+                SubscriptionValue subscriptionValue = new SubscriptionValue(path, value, null, null, null, null);
+                lastWatchUpdate = new WatchUpdate(this, subscriptionValue);
+            }
+        }
         return lastWatchUpdate;
     }
 
@@ -118,7 +125,7 @@ public class Watch {
     }
 
     public void init(Permission perm) {
-        path = node.getName().replaceAll("%2F", "/");
+        path = node.getName().replaceAll("%2F", "/").replaceAll("%2E", ".");
         initData(node);
         GetHistory.initAction(node, getGroup().getDb());
         {
@@ -150,7 +157,7 @@ public class Watch {
                 @Override
                 public synchronized void handle(ValuePair event) {
                     enabled = event.getCurrent().getBool();
-                    String path = node.getName().replaceAll("%2F", "/");
+                    String path = node.getName().replaceAll("%2F", "/").replaceAll("%2E", ".");
                     SubscriptionPool pool = group.getDb().getProvider().getPool();
                     if (enabled) {
                         pool.subscribe(path, Watch.this);

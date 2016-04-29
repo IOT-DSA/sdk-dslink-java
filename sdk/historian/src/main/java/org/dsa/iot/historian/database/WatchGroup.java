@@ -188,7 +188,7 @@ public class WatchGroup {
         Map<String, Node> children = node.getChildren();
         for (Node n : children.values()) {
             if (n.getAction() == null) {
-                initWatch(n.getName().replaceAll("%2F", "/"));
+                initWatch(n.getName().replaceAll("%2F", "/").replaceAll("%2E", "."));
             }
         }
 
