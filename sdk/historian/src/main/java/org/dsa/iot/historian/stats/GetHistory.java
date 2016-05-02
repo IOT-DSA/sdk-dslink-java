@@ -34,7 +34,7 @@ public class GetHistory implements Handler<ActionResult> {
     private final String path;
 
     public GetHistory(Node node, Database db) {
-        this.path = node.getName().replaceAll("%2F", "/");
+        this.path = node.getName().replaceAll("%2F", "/").replaceAll("%2E", ".");
         this.db = db;
     }
 
