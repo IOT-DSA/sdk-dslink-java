@@ -3,14 +3,15 @@ package org.dsa.iot.dslink.util;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.TimeZone;
+import java.util.*;
 
 /**
  * @author Samuel Grenier
  */
 public class TimeUtils {
+
+    public static final int MILLIS_MINUTE = 60 * 1000;
+    public static final int MILLIS_HOUR = 60 * MILLIS_MINUTE;
 
     private static final ThreadLocal<DateFormat> FORMAT_TIME_ZONE;
     private static final ThreadLocal<DateFormat> FORMAT;
@@ -18,6 +19,8 @@ public class TimeUtils {
     private static final String TIME_PATTERN;
     private static final String TIME_ZONE_COLON;
     private static final String TIME_ZONE;
+
+    private static final Map<String,TimeZone> timezones = new HashMap<String,TimeZone>();
 
     static {
         long currentTime = new Date().getTime();
@@ -306,5 +309,164 @@ public class TimeUtils {
         timestamp.set(Calendar.MONTH, 0);
         return alignMonth(timestamp);
     }
+
+    /**
+     * Converts the characters into an int.
+     */
+    private static int convertDigits(char tens, char ones) {
+        return ((tens - '0') * 10) + (ones - '0');
+    }
+
+    /**
+     * Converts the characters into an int.
+     */
+    private static int convertDigits(char thousands, char hundreds, char tens, char ones) {
+        return (thousands - '0') * 1000 +
+                (hundreds - '0') * 100 +
+                (tens - '0') * 10 +
+                (ones - '0');
+    }
+
+    /**
+     * Converts a DSA encoded timestamp into a Java Calendar.  DSA encoding is based
+     * on ISO 8601 but allows for an unspecified timezone.
+     * @param timestamp The encoded timestamp.
+     * @param timezone The default timezone to use if timestamp does not specify an offset.  Can
+     *                 be null which implies TimeZone.getDefault().
+     */
+    public static Calendar decode(String timestamp, TimeZone timezone) {
+        char[] chars = timestamp.toCharArray();
+        int idx = 0;
+        int year = convertDigits(chars[idx++],chars[idx++],chars[idx++],chars[idx++]);
+        validateChar(chars[idx++],'-',timestamp);
+        int month = convertDigits(chars[idx++],chars[idx++]);
+        validateChar(chars[idx++],'-',timestamp);
+        int day = convertDigits(chars[idx++],chars[idx++]);
+        validateChar(chars[idx++],'T',timestamp);
+        int hour = convertDigits(chars[idx++],chars[idx++]);
+        validateChar(chars[idx++],':',timestamp);
+        int minute = convertDigits(chars[idx++],chars[idx++]);
+        validateChar(chars[idx++],':',timestamp);
+        int second = convertDigits(chars[idx++],chars[idx++]);
+        int millis = 0;
+        if ((chars.length > idx) && (chars[idx] == '.')) {
+            idx++;
+            millis = (chars[idx++] - '0') * 100;
+            //I don't know why the following tests take place, I copied this routine over a decade
+            //ago and have been using it forever.
+            if ('0' <= chars[idx] && chars[idx] <= '9') millis += (chars[idx++] - '0') * 10;
+            if ('0' <= chars[idx] && chars[idx] <= '9') millis += (chars[idx++] - '0');
+            //skip any additional fractional digits
+            while (idx < chars.length && '0' <= chars[idx] && chars[idx] <= '9') idx++;
+        }
+        // timezone offset sign
+        if (idx < chars.length) {
+            char sign = chars[idx++];
+            if (sign == 'Z') {
+                timezone = TimeZone.getTimeZone("GMT");
+            } else {
+                int tzOff;
+                if (sign != '+' && sign != '-')
+                    throw new IllegalArgumentException("Invalid timestamp: " + timestamp);
+                // timezone hours, I guess it can be a single digit
+                int hrOff = chars[idx++] - '0';
+                if (idx < chars.length && chars[idx] != ':')
+                    hrOff = hrOff * 10 + (chars[idx++] - '0');
+                // timezone minutes
+                int minOff = 0;
+                if (idx < chars.length) {
+                    validateChar(chars[idx++],':',timestamp);
+                    minOff = convertDigits(chars[idx++],chars[idx++]);
+                }
+                tzOff = (hrOff * MILLIS_HOUR) + (minOff * MILLIS_MINUTE);
+                if (sign == '-') tzOff *= -1;
+                String timeZoneName = "Offset_" + tzOff;
+                synchronized (timezones) {
+                    timezone = timezones.get(timeZoneName);
+                    if (timezone == null) {
+                        timezone = new SimpleTimeZone(tzOff, timeZoneName);
+                        timezones.put(timeZoneName, timezone);
+                    }
+                }
+            }
+        }
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(year, month - 1, day, hour, minute, second);
+        calendar.set(Calendar.MILLISECOND, millis);
+        if (timezone != null)
+            calendar.setTimeZone(timezone);
+        return calendar;
+    }
+
+    /**
+     * Converts a Java Calendar into a DSA encoded timestamp.  DSA encoding is based
+     * on ISO 8601 but allows the timezone offset to not be specified.
+     * @param calendar The calendar representing the timestamp to encode.
+     * @param encodeTzOffset Whether or not to encode the timezone offset.
+     * @param buf The buffer to append the encoded timestamp and return, can be null.
+     * @return The buf argument, or if that was null, a new StringBuilder.
+     */
+    public static StringBuilder encode( Calendar calendar, boolean encodeTzOffset,
+            StringBuilder buf) {
+        if (buf == null) {
+            buf = new StringBuilder();
+        }
+        long millis = calendar.getTimeInMillis();
+        int tmp = calendar.get(Calendar.YEAR);
+        buf.append( tmp ).append('-');
+        //month
+        tmp = calendar.get(Calendar.MONTH) + 1;
+        if (tmp < 10) buf.append('0');
+        buf.append( tmp ).append( '-' );
+        //date
+        tmp = calendar.get(Calendar.DAY_OF_MONTH);
+        if (tmp < 10) buf.append('0');
+        buf.append( tmp ).append( 'T' );
+        //hour
+        tmp = calendar.get(Calendar.HOUR_OF_DAY);
+        if (tmp < 10) buf.append('0');
+        buf.append( tmp ).append( ':' );
+        //minute
+        tmp = calendar.get(Calendar.MINUTE);
+        if (tmp < 10) buf.append('0');
+        buf.append( tmp ).append( ':' );
+        //second
+        tmp = calendar.get(Calendar.SECOND);
+        if (tmp < 10) buf.append('0');
+        buf.append( tmp ).append( '.' );
+        //millis
+        tmp = calendar.get(Calendar.MILLISECOND);
+        if (tmp < 10) buf.append('0');
+        if (tmp < 100) buf.append('0');
+        buf.append( tmp );
+        if (encodeTzOffset) {
+            int offset = calendar.getTimeZone().getOffset(millis);
+            if (offset == 0) {
+                buf.append('Z');
+            }
+            else {
+                int hrOff = Math.abs(offset / MILLIS_HOUR);
+                int minOff = Math.abs((offset % MILLIS_HOUR) / MILLIS_MINUTE);
+                if (offset < 0) buf.append('-');
+                else buf.append('+');
+                if (hrOff < 10) buf.append('0');
+                buf.append(hrOff);
+                buf.append(':');
+                if (minOff < 10) buf.append('0');
+                buf.append(minOff);
+            }
+        }
+        return buf;
+    }
+
+    /**
+     * Used for decoding timestamp, throws an IllegalStateException if the two characters are
+     * not equal.
+     */
+    private static void validateChar(char c1, char c2, String timestamp) {
+        if (c1 != c2)
+            throw new IllegalArgumentException("Invalid timestamp: " + timestamp);
+    }
+
 
 }

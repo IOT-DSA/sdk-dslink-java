@@ -2,7 +2,8 @@ package org.dsa.iot.dslink.util;
 
 import org.junit.Test;
 
-import java.util.Calendar;
+import java.sql.*;
+import java.util.*;
 
 /**
  * Tests for org.dsa.iot.dslink.util.TimeUtils
@@ -216,6 +217,43 @@ public class TimeUtilsTest {
         validateEqual(cal,make(2016,0,1,0,0,0));
     }
 
+    @Test
+    public void testDecoding() {
+        TimeZone timeZone = TimeZone.getTimeZone("America/Los_Angeles");
+        Calendar correctTime = make(2016,0,1,0,0,0);
+        correctTime.setTimeZone(timeZone);
+        String encoded = "2016-01-01T00:00:00.000";
+        Calendar cal = TimeUtils.decode(encoded,timeZone);
+        validateEqual(cal,correctTime);
+        encoded = "2016-01-01T00:00:00.000-08:00";
+        cal = TimeUtils.decode(encoded,null);
+        cal.setTimeZone(timeZone);
+        validateEqual(cal,correctTime);
+        try {
+            TimeUtils.decode("2016_01-01T00:00:00.000-08:00",null);
+            throw new IllegalStateException();
+        } catch (Exception x) {}
+        try {
+            TimeUtils.decode("2016-1-01T00:00:00.000-08:00",null);
+            throw new IllegalStateException();
+        } catch (Exception x) {}
+        try {
+            TimeUtils.decode("2016_01-01T0:00:00.000-08:00",null);
+            throw new IllegalStateException();
+        } catch (Exception x) {}
+    }
+
+    @Test
+    public void testEncoding() {
+        TimeZone timeZone = TimeZone.getTimeZone("America/Los_Angeles");
+        Calendar cal = make(2016,0,1,0,0,0);
+        cal.setTimeZone(timeZone);
+        String encoded = TimeUtils.encode(cal,false,null).toString();
+        validateEqual(encoded,"2016-01-01T00:00:00.000");
+        encoded = TimeUtils.encode(cal,true,null).toString();
+        validateEqual(encoded,"2016-01-01T00:00:00.000-08:00");
+    }
+
     /**
      * Throws an IllegalStateException if the two calendars are not equal.
      */
@@ -224,6 +262,18 @@ public class TimeUtilsTest {
             System.out.print(TimeUtils.format(c1.getTimeInMillis()));
             System.out.print(" != ");
             System.out.println(TimeUtils.format(c2.getTimeInMillis()));
+            throw new IllegalStateException();
+        }
+    }
+
+    /**
+     * Throws an IllegalStateException if the two Strings are not equal.
+     */
+    private void validateEqual(String s1, String s2) {
+        if (!s1.equals(s2)) {
+            System.out.print(s1);
+            System.out.print(" != ");
+            System.out.println(s1);
             throw new IllegalStateException();
         }
     }
