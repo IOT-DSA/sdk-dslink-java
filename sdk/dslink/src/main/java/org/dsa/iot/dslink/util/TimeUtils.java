@@ -460,10 +460,7 @@ public class TimeUtils {
      * valid digit.
      */
     private static int toDigit(char ch) {
-        if (ch == 'O') { //what the hell, convert uppercase oh
-            ch = '0';
-        }
-        if (('0' <= ch) && (ch <= '9')) {
+       if (('0' <= ch) && (ch <= '9')) {
             return ch - '0';
         }
         throw new IllegalStateException();
