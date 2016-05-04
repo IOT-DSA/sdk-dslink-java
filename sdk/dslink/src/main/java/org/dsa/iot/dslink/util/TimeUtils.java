@@ -314,17 +314,17 @@ public class TimeUtils {
      * Converts the characters into an int.
      */
     private static int convertDigits(char tens, char ones) {
-        return ((tens - '0') * 10) + (ones - '0');
+        return (toDigit(tens) * 10) + toDigit(ones);
     }
 
     /**
      * Converts the characters into an int.
      */
     private static int convertDigits(char thousands, char hundreds, char tens, char ones) {
-        return (thousands - '0') * 1000 +
-                (hundreds - '0') * 100 +
-                (tens - '0') * 10 +
-                (ones - '0');
+        return toDigit(thousands) * 1000 +
+               toDigit(hundreds) * 100 +
+               toDigit(tens) * 10 +
+               toDigit(ones);
     }
 
     /**
@@ -335,66 +335,62 @@ public class TimeUtils {
      *                 be null which implies TimeZone.getDefault().
      */
     public static Calendar decode(String timestamp, TimeZone timezone) {
-        char[] chars = timestamp.toCharArray();
-        int idx = 0;
-        int year = convertDigits(chars[idx++],chars[idx++],chars[idx++],chars[idx++]);
-        validateChar(chars[idx++],'-',timestamp);
-        int month = convertDigits(chars[idx++],chars[idx++]);
-        validateChar(chars[idx++],'-',timestamp);
-        int day = convertDigits(chars[idx++],chars[idx++]);
-        validateChar(chars[idx++],'T',timestamp);
-        int hour = convertDigits(chars[idx++],chars[idx++]);
-        validateChar(chars[idx++],':',timestamp);
-        int minute = convertDigits(chars[idx++],chars[idx++]);
-        validateChar(chars[idx++],':',timestamp);
-        int second = convertDigits(chars[idx++],chars[idx++]);
-        int millis = 0;
-        if ((chars.length > idx) && (chars[idx] == '.')) {
-            idx++;
-            millis = (chars[idx++] - '0') * 100;
-            //I don't know why the following tests take place, I copied this routine over a decade
-            //ago and have been using it forever.
-            if ('0' <= chars[idx] && chars[idx] <= '9') millis += (chars[idx++] - '0') * 10;
-            if ('0' <= chars[idx] && chars[idx] <= '9') millis += (chars[idx++] - '0');
-            //skip any additional fractional digits
-            while (idx < chars.length && '0' <= chars[idx] && chars[idx] <= '9') idx++;
-        }
-        // timezone offset sign
-        if (idx < chars.length) {
-            char sign = chars[idx++];
-            if (sign == 'Z') {
-                timezone = TimeZone.getTimeZone("GMT");
-            } else {
-                int tzOff;
-                if (sign != '+' && sign != '-')
-                    throw new IllegalArgumentException("Invalid timestamp: " + timestamp);
-                // timezone hours, I guess it can be a single digit
-                int hrOff = chars[idx++] - '0';
-                if (idx < chars.length && chars[idx] != ':')
-                    hrOff = hrOff * 10 + (chars[idx++] - '0');
-                // timezone minutes
-                int minOff = 0;
-                if (idx < chars.length) {
-                    validateChar(chars[idx++],':',timestamp);
-                    minOff = convertDigits(chars[idx++],chars[idx++]);
-                }
-                tzOff = (hrOff * MILLIS_HOUR) + (minOff * MILLIS_MINUTE);
-                if (sign == '-') tzOff *= -1;
-                String timeZoneName = "Offset_" + tzOff;
-                synchronized (timezones) {
-                    timezone = timezones.get(timeZoneName);
-                    if (timezone == null) {
-                        timezone = new SimpleTimeZone(tzOff, timeZoneName);
-                        timezones.put(timeZoneName, timezone);
+        Calendar calendar = Calendar.getInstance();
+        try {
+            char[] chars = timestamp.toCharArray();
+            int idx = 0;
+            int year = convertDigits(chars[idx++], chars[idx++], chars[idx++], chars[idx++]);
+            validateChar(chars[idx++], '-', timestamp);
+            int month = convertDigits(chars[idx++], chars[idx++]) - 1;
+            validateChar(chars[idx++], '-', timestamp);
+            int day = convertDigits(chars[idx++], chars[idx++]);
+            validateChar(chars[idx++], 'T', timestamp);
+            int hour = convertDigits(chars[idx++], chars[idx++]);
+            validateChar(chars[idx++], ':', timestamp);
+            int minute = convertDigits(chars[idx++], chars[idx++]);
+            validateChar(chars[idx++], ':', timestamp);
+            int second = convertDigits(chars[idx++], chars[idx++]);
+            int millis = 0;
+            if ((chars.length > idx) && (chars[idx] == '.')) {
+                idx++;
+                millis = convertDigits('0',chars[idx++],chars[idx++],chars[idx++]);
+            }
+            // timezone offset sign
+            if (idx < chars.length) {
+                char sign = chars[idx++];
+                if (sign == 'Z') {
+                    timezone = TimeZone.getTimeZone("GMT");
+                } else {
+                    int tzOff;
+                    if (sign != '+' && sign != '-')
+                        throw new Exception();
+                    int hrOff = convertDigits(chars[idx++],chars[idx++]);
+                    int minOff = 0;
+                    //minutes are optional in 8601
+                    if (idx < chars.length) { //minutes optional
+                        validateChar(chars[idx++], ':', timestamp);
+                        minOff = convertDigits(chars[idx++], chars[idx++]);
+                    }
+                    tzOff = (hrOff * MILLIS_HOUR) + (minOff * MILLIS_MINUTE);
+                    if (sign == '-')
+                        tzOff *= -1;
+                    String timeZoneName = "Offset" + tzOff;
+                    synchronized (timezones) {
+                        timezone = timezones.get(timeZoneName);
+                        if (timezone == null) {
+                            timezone = new SimpleTimeZone(tzOff, timeZoneName);
+                            timezones.put(timeZoneName, timezone);
+                        }
                     }
                 }
             }
+            calendar.set(year, month, day, hour, minute, second);
+            calendar.set(Calendar.MILLISECOND, millis);
+            if (timezone != null)
+                calendar.setTimeZone(timezone);
+        } catch (Exception x) {
+            throw new IllegalArgumentException("Invalid timestamp: " + timestamp);
         }
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(year, month - 1, day, hour, minute, second);
-        calendar.set(Calendar.MILLISECOND, millis);
-        if (timezone != null)
-            calendar.setTimeZone(timezone);
         return calendar;
     }
 
@@ -460,12 +456,26 @@ public class TimeUtils {
     }
 
     /**
+     * Converts the character to a digit, throws an IllegalStateException if it isn't a
+     * valid digit.
+     */
+    private static int toDigit(char ch) {
+        if (ch == 'O') { //what the hell, convert uppercase oh
+            ch = '0';
+        }
+        if (('0' <= ch) && (ch <= '9')) {
+            return ch - '0';
+        }
+        throw new IllegalStateException();
+    }
+
+    /**
      * Used for decoding timestamp, throws an IllegalStateException if the two characters are
      * not equal.
      */
     private static void validateChar(char c1, char c2, String timestamp) {
         if (c1 != c2)
-            throw new IllegalArgumentException("Invalid timestamp: " + timestamp);
+            throw new IllegalStateException();
     }
 
 
