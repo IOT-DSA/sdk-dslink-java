@@ -340,15 +340,15 @@ public class TimeUtils {
             char[] chars = timestamp.toCharArray();
             int idx = 0;
             int year = convertDigits(chars[idx++], chars[idx++], chars[idx++], chars[idx++]);
-            validateChar(chars[idx++], '-', timestamp);
+            validateChar(chars[idx++], '-');
             int month = convertDigits(chars[idx++], chars[idx++]) - 1;
-            validateChar(chars[idx++], '-', timestamp);
+            validateChar(chars[idx++], '-');
             int day = convertDigits(chars[idx++], chars[idx++]);
-            validateChar(chars[idx++], 'T', timestamp);
+            validateChar(chars[idx++], 'T');
             int hour = convertDigits(chars[idx++], chars[idx++]);
-            validateChar(chars[idx++], ':', timestamp);
+            validateChar(chars[idx++], ':');
             int minute = convertDigits(chars[idx++], chars[idx++]);
-            validateChar(chars[idx++], ':', timestamp);
+            validateChar(chars[idx++], ':');
             int second = convertDigits(chars[idx++], chars[idx++]);
             int millis = 0;
             if ((chars.length > idx) && (chars[idx] == '.')) {
@@ -368,7 +368,7 @@ public class TimeUtils {
                     int minOff = 0;
                     //minutes are optional in 8601
                     if (idx < chars.length) { //minutes optional
-                        validateChar(chars[idx++], ':', timestamp);
+                        validateChar(chars[idx++], ':');
                         minOff = convertDigits(chars[idx++], chars[idx++]);
                     }
                     tzOff = (hrOff * MILLIS_HOUR) + (minOff * MILLIS_MINUTE);
@@ -470,7 +470,7 @@ public class TimeUtils {
      * Used for decoding timestamp, throws an IllegalStateException if the two characters are
      * not equal.
      */
-    private static void validateChar(char c1, char c2, String timestamp) {
+    private static void validateChar(char c1, char c2) {
         if (c1 != c2)
             throw new IllegalStateException();
     }
