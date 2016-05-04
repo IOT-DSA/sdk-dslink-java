@@ -232,15 +232,15 @@ public class TimeUtilsTest {
         try {
             TimeUtils.decode("2016_01-01T00:00:00.000-08:00",null);
             throw new IllegalStateException();
-        } catch (Exception x) {}
+        } catch (IllegalArgumentException ignored) {}
         try {
             TimeUtils.decode("2016-1-01T00:00:00.000-08:00",null);
             throw new IllegalStateException();
-        } catch (Exception x) {}
+        } catch (IllegalArgumentException ignored) {}
         try {
             TimeUtils.decode("2016_01-01T0:00:00.000-08:00",null);
             throw new IllegalStateException();
-        } catch (Exception x) {}
+        } catch (IllegalArgumentException ignored) {}
     }
 
     @Test
