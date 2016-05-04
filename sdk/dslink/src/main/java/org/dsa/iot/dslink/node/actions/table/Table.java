@@ -1,5 +1,6 @@
 package org.dsa.iot.dslink.node.actions.table;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.dsa.iot.dslink.connection.DataHandler;
 import org.dsa.iot.dslink.link.Responder;
 import org.dsa.iot.dslink.methods.StreamState;
@@ -18,6 +19,7 @@ import java.util.List;
  *
  * @author Samuel Grenier
  */
+@SuppressFBWarnings("IS2_INCONSISTENT_SYNC")    
 public class Table {
 
     private List<Parameter> columns;
@@ -30,6 +32,7 @@ public class Table {
     private DataHandler writer;
     private Responder responder;
     private Handler<Void> closeHandler;
+    private Object streamMutex;
 
     /**
      * Adds a column to the table.
@@ -43,15 +46,6 @@ public class Table {
             columns = new LinkedList<>();
         }
         columns.add(parameter);
-    }
-
-    /**
-     * Sets the metadata of the table.
-     *
-     * @param meta Metadata to set.
-     */
-    public synchronized void setTableMeta(JsonObject meta) {
-        this.meta = meta;
     }
 
     /**
@@ -131,6 +125,10 @@ public class Table {
         }
     }
 
+    public synchronized Mode getMode() {
+        return mode;
+    }
+
     /**
      * Sets the mode of the table.
      *
@@ -147,10 +145,6 @@ public class Table {
             meta.put("mode", mode.getName());
             write(writer, null, null, meta);
         }
-    }
-
-    public synchronized Mode getMode() {
-        return mode;
     }
 
     /**
@@ -173,10 +167,69 @@ public class Table {
         if (ready) {
             sendReady();
         }
-
         rows = null;
         columns = null;
         mode = null;
+        //Wake up anyone waiting for a stream
+        if (streamMutex != null) {
+            synchronized (streamMutex) {
+                streamMutex.notifyAll();
+            }
+            //The waiters store the mutex in a local var,
+            //so we can clear the field and save a little mem.
+            streamMutex = null;
+        }
+    }
+
+    /**
+     * Returns as soon as stream is established or the wait has expired.
+     * @param millis How long to wait for a stream, &lt;= 0 means wait forever
+     * and is discouraged.
+     * @return True if the stream is established.
+     */
+    public boolean waitForStream(long millis) {
+        return waitForStream(millis,false);
+    }
+
+        /**
+        * Returns as soon as stream is established or the wait has expired.
+        * @param millis How long to wait for a stream, &lt;= 0 means wait forever
+        * and is discouraged.
+        * @param throwException If true, and a stream is not acquired, this will
+        * throw an IllegalStateException.
+        * @return True if the stream is established.
+        */
+    @SuppressFBWarnings("WA_NOT_IN_LOOP")    
+    public boolean waitForStream(long millis, boolean throwException) {
+        Object mutex = null;
+        synchronized (this) {
+            if (writer != null) {
+                return true;
+            }
+            if (streamMutex == null) {
+                streamMutex = new Object();
+            }
+            mutex = streamMutex;
+        }
+        synchronized (mutex) {
+            if (writer == null) {
+                try {
+                    if (millis <= 0) {
+                        mutex.wait();
+                    }
+                    else {
+                        mutex.wait(millis);
+                    }
+                } catch (Exception ignorable) {}
+            }
+            if (writer == null) {
+                if (throwException) {
+                    throw new IllegalStateException("Stream not acquired");
+                }
+                return false;
+            }
+            return true;
+        }
     }
 
     /**
@@ -226,11 +279,33 @@ public class Table {
     }
 
     /**
+     * Sets the metadata of the table.
+     *
+     * @param meta Metadata to set.
+     */
+    public synchronized void setTableMeta(JsonObject meta) {
+        this.meta = meta;
+    }
+
+    /**
      *
      * @return Columns of the table.
      */
     public synchronized List<Parameter> getColumns() {
         return columns != null ? Collections.unmodifiableList(columns) : null;
+    }
+
+    private void setColumns(List<Parameter> columns) {
+        if (columns == null) {
+            return;
+        }
+        synchronized (this) {
+            if (this.columns == null) {
+                this.columns = new LinkedList<>(columns);
+            } else {
+                this.columns.addAll(columns);
+            }
+        }
     }
 
     /**
@@ -264,19 +339,6 @@ public class Table {
         writer.writeResponse(obj);
     }
 
-    private void setColumns(List<Parameter> cols) {
-        if (cols == null) {
-            return;
-        }
-        synchronized (this) {
-            if (columns == null) {
-                columns = new LinkedList<>(cols);
-            } else {
-                columns.addAll(cols);
-            }
-        }
-    }
-
     private void write(DataHandler writer,
                        List<Parameter> cols,
                        JsonArray updates,
@@ -299,7 +361,7 @@ public class Table {
         if (updates != null) {
             obj.put("updates", updates);
         }
-        writer.writeResponse(obj);
+        writer.writeResponse(obj,false);
     }
 
     private JsonArray processRow(Row row) {
