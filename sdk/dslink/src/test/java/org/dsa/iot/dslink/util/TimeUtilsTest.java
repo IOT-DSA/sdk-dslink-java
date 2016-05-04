@@ -25,6 +25,63 @@ public class TimeUtilsTest {
         return TimeUtils.alignSecond(ret);
     }
 
+    /**
+     * Not really a test, just an example for library comparisons.
+     */
+    @Test
+    public void performanceTest() {
+        ArrayList<String> list = makeTestData();
+        System.out.println("Test size: " + list.size());
+        //warm up hotspot
+        for (int i = 5; --i >= 0; ) {
+            iterate(list);
+        }
+        long start = System.currentTimeMillis();
+        long time;
+        for (int i = 10; --i >= 0; ) {
+            time = System.currentTimeMillis();
+            iterate(list);
+            time = System.currentTimeMillis() - time;
+            System.out.println("Loop = " + time + "ms");
+        }
+        time = System.currentTimeMillis() - start;
+        System.out.println("Total = " + time + "ms");
+    }
+
+    /**
+     * Builds a list of encoded timestamps.
+     */
+    private ArrayList<String> makeTestData() {
+        ArrayList<String> ret = new ArrayList<>();
+        Calendar calendar = Calendar.getInstance();
+        long now = calendar.getTimeInMillis();
+        TimeUtils.addYears(-1,calendar);
+        long time = calendar.getTimeInMillis();
+        StringBuilder buffer = new StringBuilder();
+        while (time < now) {
+            buffer.setLength(0);
+            ret.add(TimeUtils.encode(calendar,true,buffer).toString());
+            TimeUtils.addMinutes(1,calendar);
+            time = calendar.getTimeInMillis();
+        }
+        return ret;
+    }
+
+    /**
+     * Decodes, aligns, then re-encodes the timestamp.
+     */
+    private void iterate(ArrayList<String> rows) {
+        ArrayList<String> junk = new ArrayList<>();
+        StringBuilder buffer = new StringBuilder();
+        Calendar calendar = Calendar.getInstance();
+        for (String timestamp : rows) {
+            TimeUtils.decode(timestamp,calendar);
+            TimeUtils.alignMinutes(15,calendar);
+            buffer.setLength(0);
+            junk.add(TimeUtils.encode(calendar,true,buffer).toString());
+        }
+    }
+
     @Test
     public void testAdding() {
         Calendar cal = make(2016,3,6,8,55,30);
@@ -222,12 +279,13 @@ public class TimeUtilsTest {
         TimeZone timeZone = TimeZone.getTimeZone("America/Los_Angeles");
         Calendar correctTime = make(2016,0,1,0,0,0);
         correctTime.setTimeZone(timeZone);
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeZone(timeZone);
         String encoded = "2016-01-01T00:00:00.000";
-        Calendar cal = TimeUtils.decode(encoded,timeZone);
+        cal = TimeUtils.decode(encoded,cal);
         validateEqual(cal,correctTime);
         encoded = "2016-01-01T00:00:00.000-08:00";
-        cal = TimeUtils.decode(encoded,null);
-        cal.setTimeZone(timeZone);
+        cal = TimeUtils.decode(encoded,cal);
         validateEqual(cal,correctTime);
         try {
             TimeUtils.decode("2016_01-01T00:00:00.000-08:00",null);

@@ -331,11 +331,13 @@ public class TimeUtils {
      * Converts a DSA encoded timestamp into a Java Calendar.  DSA encoding is based
      * on ISO 8601 but allows for an unspecified timezone.
      * @param timestamp The encoded timestamp.
-     * @param timezone The default timezone to use if timestamp does not specify an offset.  Can
-     *                 be null which implies TimeZone.getDefault().
+     * @param calendar The instance to decode into and returnt, may be null.  If the timestamp does
+     *                 not specify a timezone, the zone in this instance will be used.
      */
-    public static Calendar decode(String timestamp, TimeZone timezone) {
-        Calendar calendar = Calendar.getInstance();
+    public static Calendar decode(String timestamp, Calendar calendar) {
+        if (calendar == null) {
+            calendar = Calendar.getInstance();
+        }
         try {
             char[] chars = timestamp.toCharArray();
             int idx = 0;
@@ -359,7 +361,7 @@ public class TimeUtils {
             if (idx < chars.length) {
                 char sign = chars[idx++];
                 if (sign == 'Z') {
-                    timezone = TimeZone.getTimeZone("GMT");
+                    calendar.setTimeZone(TimeZone.getTimeZone("GMT"));
                 } else {
                     int tzOff;
                     if (sign != '+' && sign != '-')
@@ -376,18 +378,17 @@ public class TimeUtils {
                         tzOff *= -1;
                     String timeZoneName = "Offset" + tzOff;
                     synchronized (timezones) {
-                        timezone = timezones.get(timeZoneName);
+                        TimeZone timezone = timezones.get(timeZoneName);
                         if (timezone == null) {
                             timezone = new SimpleTimeZone(tzOff, timeZoneName);
                             timezones.put(timeZoneName, timezone);
+                            calendar.setTimeZone(timezone);
                         }
                     }
                 }
             }
             calendar.set(year, month, day, hour, minute, second);
             calendar.set(Calendar.MILLISECOND, millis);
-            if (timezone != null)
-                calendar.setTimeZone(timezone);
         } catch (Exception x) {
             throw new IllegalArgumentException("Invalid timestamp: " + timestamp);
         }
@@ -402,8 +403,8 @@ public class TimeUtils {
      * @param buf The buffer to append the encoded timestamp and return, can be null.
      * @return The buf argument, or if that was null, a new StringBuilder.
      */
-    public static StringBuilder encode( Calendar calendar, boolean encodeTzOffset,
-            StringBuilder buf) {
+    public static StringBuilder encode(
+            Calendar calendar, boolean encodeTzOffset, StringBuilder buf) {
         if (buf == null) {
             buf = new StringBuilder();
         }

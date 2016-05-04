@@ -11,6 +11,7 @@ import org.dsa.iot.dslink.node.actions.table.Table;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.provider.LoopProvider;
+import org.dsa.iot.dslink.util.*;
 import org.dsa.iot.dslink.util.Objects;
 import org.dsa.iot.dslink.util.handler.CompleteHandler;
 import org.dsa.iot.dslink.util.handler.Handler;
@@ -40,30 +41,18 @@ public class GetHistory implements Handler<ActionResult> {
 
     @Override
     public void handle(final ActionResult event) {
-        final long from;
-        final long to;
+        final Calendar from;
+        final Calendar to;
         {
             Value v = event.getParameter("Timerange");
             if (v != null) {
                 String range = event.getParameter("Timerange").getString();
                 String[] split = range.split("/");
-
-                final String sFrom = split[0];
-                final String sTo = split[1];
-
-                from = TimeParser.parse(sFrom);
-                to = TimeParser.parse(sTo);
-            } else {
-                // Assume date is today
-                Calendar c = Calendar.getInstance();
-                Date date = new Date();
-                c.setTime(date);
-                c.set(Calendar.HOUR_OF_DAY, 0);
-                c.set(Calendar.MINUTE, 0);
-                c.set(Calendar.SECOND, 0);
-                c.set(Calendar.MILLISECOND, 0);
-                from = c.getTime().getTime();
-                to = date.getTime();
+                from = TimeUtils.decode(split[0],null);
+                to = TimeUtils.decode(split[1],null);
+            } else { // Assume date is today
+                from = TimeUtils.alignDay(Calendar.getInstance());
+                to = Calendar.getInstance(); //now
             }
         }
 
@@ -86,8 +75,8 @@ public class GetHistory implements Handler<ActionResult> {
     }
 
     protected void process(final ActionResult event,
-                           final long from,
-                           final long to,
+                           final Calendar from,
+                           final Calendar to,
                            final boolean realTime,
                            final Rollup.Type rollup,
                            final IntervalParser parser) {
@@ -100,6 +89,9 @@ public class GetHistory implements Handler<ActionResult> {
             @Override
             public void run() {
                 final Table table = event.getTable();
+                final StringBuilder buffer = new StringBuilder();
+                final Calendar calendar = Calendar.getInstance();
+                calendar.setTimeZone(from.getTimeZone());
                 event.setCloseHandler(new Handler<Void>() {
                     @Override
                     public void handle(Void ignored) {
@@ -111,7 +103,8 @@ public class GetHistory implements Handler<ActionResult> {
                     }
                 });
 
-                query(from, to, rollup, parser, new CompleteHandler<QueryData>() {
+                query(from.getTimeInMillis(), to.getTimeInMillis(), rollup, parser,
+                        new CompleteHandler<QueryData>() {
 
                     private List<QueryData> updates = new LinkedList<>();
 
@@ -121,7 +114,7 @@ public class GetHistory implements Handler<ActionResult> {
                         if (updates != null) {
                             updates.add(data);
                             if (updates.size() >= 500) {
-                                processQueryData(table, interval, updates);
+                                processQueryData(table, interval, updates, calendar, buffer);
                             }
                         }
                     }
@@ -129,7 +122,7 @@ public class GetHistory implements Handler<ActionResult> {
                     @Override
                     public void complete() {
                         if (!updates.isEmpty()) {
-                            processQueryData(table, interval, updates);
+                            processQueryData(table, interval, updates, calendar, buffer);
                         }
                         updates = null;
 
@@ -145,7 +138,7 @@ public class GetHistory implements Handler<ActionResult> {
                             handler = new Handler<QueryData>() {
                                 @Override
                                 public void handle(QueryData event) {
-                                    processQueryData(table, interval, event);
+                                    processQueryData(table, interval, event, calendar, buffer);
                                 }
                             };
                             table.sendReady();
@@ -169,7 +162,9 @@ public class GetHistory implements Handler<ActionResult> {
 
     protected void processQueryData(Table table,
                                     IntervalProcessor interval,
-                                    Collection<QueryData> data) {
+                                    Collection<QueryData> data,
+                                    Calendar calendar,
+                                    StringBuilder buffer) {
         if (data.isEmpty()) {
             return;
         }
@@ -182,7 +177,9 @@ public class GetHistory implements Handler<ActionResult> {
             long time = update.getTimestamp();
             if (interval == null) {
                 row = new Row();
-                String t = TimeParser.parse(time);
+                calendar.setTimeInMillis(time);
+                buffer.setLength(0);
+                String t = TimeUtils.encode(calendar,true,buffer).toString();
                 row.addValue(new Value(t));
                 row.addValue(update.getValue());
             } else {
@@ -203,7 +200,9 @@ public class GetHistory implements Handler<ActionResult> {
 
     protected void processQueryData(Table table,
                                     IntervalProcessor interval,
-                                    QueryData data) {
+                                    QueryData data,
+                                    Calendar calendar,
+                                    StringBuilder buffer) {
         if (data == null) {
             return;
         }
@@ -211,7 +210,9 @@ public class GetHistory implements Handler<ActionResult> {
         long time = data.getTimestamp();
         if (interval == null) {
             row = new Row();
-            String t = TimeParser.parse(time);
+            calendar.setTimeInMillis(time);
+            buffer.setLength(0);
+            String t = TimeUtils.encode(calendar,true,buffer).toString();
             row.addValue(new Value(t));
             row.addValue(data.getValue());
         } else {
