@@ -10,6 +10,7 @@ public class WatchUpdate {
 
     private final Watch watch;
     private final SubscriptionValue update;
+    private long intervalTimestamp;
 
     public WatchUpdate(Watch watch, SubscriptionValue update) {
         this.watch = watch;
@@ -22,5 +23,13 @@ public class WatchUpdate {
 
     public SubscriptionValue getUpdate() {
         return update;
+    }
+
+    public long getIntervalTimestamp() {
+        return intervalTimestamp;
+    }
+
+    public void updateTimestamp(long nowTimestamp) {
+        intervalTimestamp = nowTimestamp;
     }
 }

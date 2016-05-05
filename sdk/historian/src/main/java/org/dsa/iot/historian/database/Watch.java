@@ -1,10 +1,5 @@
 package org.dsa.iot.historian.database;
 
-import org.dsa.iot.dslink.DSLink;
-import org.dsa.iot.dslink.DSLinkHandler;
-import org.dsa.iot.dslink.DSLinkProvider;
-import org.dsa.iot.dslink.link.Requester;
-import org.dsa.iot.dslink.methods.requests.SetRequest;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeBuilder;
 import org.dsa.iot.dslink.node.Permission;
@@ -16,9 +11,9 @@ import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValuePair;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.util.handler.Handler;
-import org.dsa.iot.dslink.util.json.JsonObject;
 import org.dsa.iot.historian.stats.GetHistory;
 import org.dsa.iot.historian.utils.QueryData;
+import org.dsa.iot.historian.utils.WatchUpdate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +25,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @author Samuel Grenier
  */
 public class Watch {
-
     private static final Logger LOGGER = LoggerFactory.getLogger(Watch.class);
 
     private final ReentrantReadWriteLock rtLock = new ReentrantReadWriteLock();
@@ -50,9 +44,23 @@ public class Watch {
     private long lastWrittenTime;
     private Value lastValue;
 
-    public Watch(WatchGroup group, Node node) {
+    public WatchUpdate getLastWatchUpdate() {
+        if (lastWatchUpdate == null) {
+            Value value = node.getValue();
+            if (value != null) {
+                SubscriptionValue subscriptionValue = new SubscriptionValue(path, value, null, null, null, null);
+                lastWatchUpdate = new WatchUpdate(this, subscriptionValue);
+            }
+        }
+        return lastWatchUpdate;
+    }
+
+    private WatchUpdate lastWatchUpdate;
+
+    public Watch(final WatchGroup group, Node node) {
         this.group = group;
         this.node = node;
+
     }
 
     public Node getNode() {
@@ -104,33 +112,20 @@ public class Watch {
     }
 
     public void unsubscribe() {
+        group.removeFromWatches(this);
+        removeFromSubscriptionPool();
+
         node.delete();
+    }
+
+    private void removeFromSubscriptionPool() {
         DatabaseProvider provider = group.getDb().getProvider();
         SubscriptionPool pool = provider.getPool();
-        pool.unsubscribe(path, Watch.this);
-        {
-            JsonObject obj = new JsonObject();
-            obj.put("@", "remove");
-            obj.put("type", "path");
-
-            String p = node.getLink().getDSLink().getPath();
-            obj.put("val", p + node.getPath() + "/getHistory");
-            Value v = new Value(obj);
-
-            Requester req;
-            {
-                DSLinkHandler h = node.getLink().getHandler();
-                DSLinkProvider pr = h.getProvider();
-                String dsId = h.getConfig().getDsIdWithHash();
-                DSLink link = pr.getRequesters().get(dsId);
-                req = link.getRequester();
-            }
-            req.set(new SetRequest(path + "/@@getHistory", v), null);
-        }
+        pool.unsubscribe(path, this);
     }
 
     public void init(Permission perm) {
-        path = node.getName().replaceAll("%2F", "/");
+        path = node.getName().replaceAll("%2F", "/").replaceAll("%2E", ".");
         initData(node);
         GetHistory.initAction(node, getGroup().getDb());
         {
@@ -145,6 +140,8 @@ public class Watch {
             }));
             b.build();
         }
+
+        group.addWatch(this);
     }
 
     protected void initData(final Node node) {
@@ -160,7 +157,7 @@ public class Watch {
                 @Override
                 public synchronized void handle(ValuePair event) {
                     enabled = event.getCurrent().getBool();
-                    String path = node.getName().replaceAll("%2F", "/");
+                    String path = node.getName().replaceAll("%2F", "/").replaceAll("%2E", ".");
                     SubscriptionPool pool = group.getDb().getProvider().getPool();
                     if (enabled) {
                         pool.subscribe(path, Watch.this);
@@ -208,7 +205,11 @@ public class Watch {
     public void onData(SubscriptionValue sv) {
         Value v = sv.getValue();
         realTimeValue.setValue(v);
-        group.write(this, sv);
+        if (group.canWriteOnNewData()) {
+            group.write(this, sv);
+        } else {
+            lastWatchUpdate = new WatchUpdate(this, sv);
+        }
     }
 
     public void addHandler(Handler<QueryData> handler) {
