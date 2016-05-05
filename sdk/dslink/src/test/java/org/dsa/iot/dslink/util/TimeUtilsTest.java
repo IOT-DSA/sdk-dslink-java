@@ -2,7 +2,6 @@ package org.dsa.iot.dslink.util;
 
 import org.junit.Test;
 
-import java.sql.*;
 import java.util.*;
 
 /**
@@ -30,20 +29,27 @@ public class TimeUtilsTest {
      */
     @Test
     public void performanceTest() {
-        ArrayList<String> list = makeTestData();
-        System.out.println("Test size: " + list.size());
+        int loops = 5;
+        ArrayList<String> list = new ArrayList<>();
         //warm up hotspot
-        for (int i = 5; --i >= 0; ) {
-            iterate(list);
+        for (int i = loops; --i >= 0; ) {
+            list = timeUtilsData();
+            timeUtilsTest(list);
         }
+        System.out.println("Test size: " + list.size());
         long start = System.currentTimeMillis();
         long time;
-        for (int i = 10; --i >= 0; ) {
-            time = System.currentTimeMillis();
-            iterate(list);
-            time = System.currentTimeMillis() - time;
-            System.out.println("Loop = " + time + "ms");
+        for (int i = loops; --i >= 0; ) {
+            list = timeUtilsData();
         }
+        time = System.currentTimeMillis() - start;
+        System.out.println("Data = " + time + "ms");
+        long mid = System.currentTimeMillis();
+        for (int i = loops; --i >= 0; ) {
+            timeUtilsTest(list);
+        }
+        time = System.currentTimeMillis() - mid;
+        System.out.println("Test = " + time + "ms");
         time = System.currentTimeMillis() - start;
         System.out.println("Total = " + time + "ms");
     }
@@ -51,7 +57,7 @@ public class TimeUtilsTest {
     /**
      * Builds a list of encoded timestamps.
      */
-    private ArrayList<String> makeTestData() {
+    private ArrayList<String> timeUtilsData() {
         ArrayList<String> ret = new ArrayList<>();
         Calendar calendar = Calendar.getInstance();
         long now = calendar.getTimeInMillis();
@@ -70,15 +76,14 @@ public class TimeUtilsTest {
     /**
      * Decodes, aligns, then re-encodes the timestamp.
      */
-    private void iterate(ArrayList<String> rows) {
-        ArrayList<String> junk = new ArrayList<>();
+    private void timeUtilsTest(ArrayList<String> rows) {
         StringBuilder buffer = new StringBuilder();
         Calendar calendar = Calendar.getInstance();
         for (String timestamp : rows) {
             TimeUtils.decode(timestamp,calendar);
             TimeUtils.alignMinutes(15,calendar);
             buffer.setLength(0);
-            junk.add(TimeUtils.encode(calendar,true,buffer).toString());
+            TimeUtils.encode(calendar,true,buffer);
         }
     }
 
