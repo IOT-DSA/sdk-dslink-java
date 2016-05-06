@@ -2,7 +2,6 @@ package org.dsa.iot.dslink.util;
 
 import org.junit.Test;
 
-import java.sql.*;
 import java.util.*;
 
 /**
@@ -23,6 +22,69 @@ public class TimeUtilsTest {
         Calendar ret = Calendar.getInstance();
         ret.set(year,month,day,hour,minute,second);
         return TimeUtils.alignSecond(ret);
+    }
+
+    /**
+     * Not really a test, just an example for library comparisons.
+     */
+    @Test
+    public void performanceTest() {
+        int loops = 5;
+        ArrayList<String> list = new ArrayList<>();
+        //warm up hotspot
+        for (int i = loops; --i >= 0; ) {
+            list = timeUtilsData();
+            timeUtilsTest(list);
+        }
+        System.out.println("Test size: " + list.size());
+        long start = System.currentTimeMillis();
+        long time;
+        for (int i = loops; --i >= 0; ) {
+            list = timeUtilsData();
+        }
+        time = System.currentTimeMillis() - start;
+        System.out.println("Data = " + time + "ms");
+        long mid = System.currentTimeMillis();
+        for (int i = loops; --i >= 0; ) {
+            timeUtilsTest(list);
+        }
+        time = System.currentTimeMillis() - mid;
+        System.out.println("Test = " + time + "ms");
+        time = System.currentTimeMillis() - start;
+        System.out.println("Total = " + time + "ms");
+    }
+
+    /**
+     * Builds a list of encoded timestamps.
+     */
+    private ArrayList<String> timeUtilsData() {
+        ArrayList<String> ret = new ArrayList<>();
+        Calendar calendar = Calendar.getInstance();
+        long now = calendar.getTimeInMillis();
+        TimeUtils.addYears(-1,calendar);
+        long time = calendar.getTimeInMillis();
+        StringBuilder buffer = new StringBuilder();
+        while (time < now) {
+            buffer.setLength(0);
+            ret.add(TimeUtils.encode(calendar,true,buffer).toString());
+            TimeUtils.addMinutes(1,calendar);
+            time = calendar.getTimeInMillis();
+        }
+        return ret;
+    }
+
+    /**
+     * Decodes, aligns, then re-encodes the timestamp.
+     */
+    private void timeUtilsTest(ArrayList<String> rows) {
+        StringBuilder buffer = new StringBuilder();
+        Calendar calendar = Calendar.getInstance();
+        for (String timestamp : rows) {
+            TimeUtils.decode(timestamp,calendar);
+            TimeUtils.alignMinutes(15,calendar);
+            buffer.setLength(0);
+            TimeUtils.encode(calendar,true,buffer);
+        }
     }
 
     @Test
@@ -222,12 +284,13 @@ public class TimeUtilsTest {
         TimeZone timeZone = TimeZone.getTimeZone("America/Los_Angeles");
         Calendar correctTime = make(2016,0,1,0,0,0);
         correctTime.setTimeZone(timeZone);
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeZone(timeZone);
         String encoded = "2016-01-01T00:00:00.000";
-        Calendar cal = TimeUtils.decode(encoded,timeZone);
+        cal = TimeUtils.decode(encoded,cal);
         validateEqual(cal,correctTime);
         encoded = "2016-01-01T00:00:00.000-08:00";
-        cal = TimeUtils.decode(encoded,null);
-        cal.setTimeZone(timeZone);
+        cal = TimeUtils.decode(encoded,cal);
         validateEqual(cal,correctTime);
         try {
             TimeUtils.decode("2016_01-01T00:00:00.000-08:00",null);
