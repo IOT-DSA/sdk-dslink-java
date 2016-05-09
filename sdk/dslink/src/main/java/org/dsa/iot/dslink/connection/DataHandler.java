@@ -114,11 +114,21 @@ public class DataHandler implements MessageTracker {
      * @param object Data to write.
      */
     public void writeResponse(JsonObject object) {
+        writeResponse(object,true);
+    }
+
+    /**
+     * Writes a response that is not tied to any message. These responses can
+     * be throttled to prevent flooding.
+     *
+     * @param object Data to write.
+     * @param merge Whether or not the response can be merged with other messages for the same request.
+     */
+    public void writeResponse(JsonObject object, boolean merge) {
         if (object == null) {
             throw new NullPointerException("object");
         }
-
-        writeRequestResponses(null, Collections.singleton(object));
+        respsManager.post(object, merge);
     }
 
     /**

@@ -271,9 +271,11 @@ public class Node {
                     throw new RuntimeException(err);
                 } else if (type.getEnums() == null
                         || !type.getEnums().contains(value.getString())) {
-                    String err = "[" + getPath() + "] ";
-                    err += "New value does not contain a valid enum value";
-                    throw new RuntimeException(err);
+                    if (value.getString() != null) {
+                        String err = "[" + getPath() + "] ";
+                        err += "New value does not contain a valid enum value";
+                        throw new RuntimeException(err);
+                    }
                 }
             } else if (type.compare(ValueType.TIME)) {
                 if (!value.getType().compare(ValueType.STRING)) {
