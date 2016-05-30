@@ -111,7 +111,13 @@ public class DefaultWsProvider extends WsProvider {
                                  Object msg) {
             final Channel ch = ctx.channel();
             if (handshake != null && !handshake.isHandshakeComplete()) {
-                handshake.finishHandshake(ch, (FullHttpResponse) msg);
+                try {
+                    handshake.finishHandshake(ch, (FullHttpResponse) msg);
+                } catch (Throwable throwable) {
+                    client.onThrowable(throwable);
+                    throw throwable;
+                }
+
                 handshake = null;
                 client.onConnected(new NetworkClient() {
 
