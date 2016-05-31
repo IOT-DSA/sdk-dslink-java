@@ -22,7 +22,7 @@ subprojects {
     }
 
     dependencies {
-        provided 'com.google.code.findbugs:annotations:3.0.0'
+        provided 'com.google.code.findbugs:annotations:3.0.1'
         testCompile 'junit:junit:4.12'
     }
 

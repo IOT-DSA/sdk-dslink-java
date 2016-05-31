@@ -7,12 +7,10 @@ import java.util.Set;
  * @author Samuel Grenier
  */
 public enum LoggingType {
-
     ALL_DATA("All data"),
     NONE("None"),
     INTERVAL("Interval"),
-    POINT_CHANGE("Point Change"),
-    POINT_TIME("Point Time");
+    POINT_CHANGE("Point Change");
 
     private final String name;
 
@@ -33,8 +31,6 @@ public enum LoggingType {
             return INTERVAL;
         } else if (POINT_CHANGE.getName().equals(s)) {
             return POINT_CHANGE;
-        } else if (POINT_TIME.getName().equals(s)) {
-            return POINT_TIME;
         } else {
             throw new IllegalArgumentException("Invalid logging type: " + s);
         }
