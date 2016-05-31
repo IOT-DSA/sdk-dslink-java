@@ -104,18 +104,6 @@ public class WatchGroup {
                 }
                 break;
             }
-            case POINT_TIME: {
-                Value vCurr = watch.getLastValue();
-                Value vUpdate = sv.getValue();
-                long curr = (vCurr == null) ? 0 : vCurr.getTime();
-                long update = (vUpdate == null) ? 0 : vUpdate.getTime();
-
-                if ((vCurr != null) && (curr < update)) {
-                    doWrite = true;
-                    watch.setLastValue(vUpdate);
-                }
-                break;
-            }
         }
 
         if (doWrite) {
