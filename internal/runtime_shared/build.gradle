@@ -4,7 +4,7 @@ dependencies {
     compile 'com.fasterxml.jackson.core:jackson-core:2.6.2'
     compile 'org.msgpack:jackson-dataformat-msgpack:0.7.1'
     compile 'org.bouncycastle:bcprov-jdk15on:1.51'
-    compile 'io.netty:netty-all:4.1.0.CR2'
+    compile 'io.netty:netty-all:4.1.0.Final'
     compile 'com.beust:jcommander:1.48'
     compile 'com.jcraft:jzlib:1.1.3'
 }
