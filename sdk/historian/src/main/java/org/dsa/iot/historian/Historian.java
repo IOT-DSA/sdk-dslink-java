@@ -50,7 +50,8 @@ public abstract class Historian extends DSLinkHandler {
 
                     try {
                         db.close();
-                    } catch (Exception ignored) {
+                    } catch (Exception e) {
+                        LOGGER.debug(e.getMessage());
                     }
 
                     Map<String, Node> wgs = n.getChildren();
