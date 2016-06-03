@@ -143,7 +143,6 @@ public abstract class DatabaseProvider {
             db.close();
         } catch (Exception ignored) {
         }
-        node.delete();
 
         Map<String, Node> children = node.getChildren();
         if (children != null) {
@@ -155,6 +154,8 @@ public abstract class DatabaseProvider {
                 }
             }
         }
+
+        node.delete();
     }
 
     private void createAndInitWatchGroup(Node node, Database db) {
