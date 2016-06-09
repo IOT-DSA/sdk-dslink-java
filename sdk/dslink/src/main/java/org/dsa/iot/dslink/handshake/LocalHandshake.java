@@ -29,24 +29,23 @@ public class LocalHandshake {
      * @param config Configuration of the DSLink.
      */
     public LocalHandshake(Configuration config) {
-        if (config == null)
+        if (config == null) {
             throw new NullPointerException("config");
+        }
+
         config.validate();
+
         this.keys = config.getKeys();
         this.publicKey = keys.encodedPublicKey();
-        {
-            String tmp = config.getDsIdWithHash();
-            tmp = StringUtils.encodeName(tmp);
-            tmp = tmp.replaceAll("%", "%25");
-            this.dsId = tmp;
-        }
+        String singleEncodedDsId = StringUtils.encodeName(config.getDsIdWithHash());
+        this.dsId = singleEncodedDsId.replaceAll("%", "%25");
         this.isRequester = config.isRequester();
         this.isResponder = config.isResponder();
         this.linkData = config.getLinkData();
         this.zone = config.getZone();
         String token = config.getToken();
         if (token != null) {
-            byte[] dsId = this.dsId.getBytes(CharsetUtil.UTF_8);
+            byte[] dsId = singleEncodedDsId.getBytes(CharsetUtil.UTF_8);
             byte[] fullToken = token.getBytes(CharsetUtil.UTF_8);
             byte[] bytes = new byte[dsId.length + fullToken.length];
             System.arraycopy(dsId, 0, bytes, 0, dsId.length);
