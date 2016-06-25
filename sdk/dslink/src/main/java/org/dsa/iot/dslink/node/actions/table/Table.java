@@ -242,7 +242,7 @@ public class Table {
             JsonObject obj = new JsonObject();
             obj.put("rid", rid);
             obj.put("stream", StreamState.CLOSED.getJsonName());
-            writer.writeResponse(obj,false);
+            writer.writeResponse(obj, false);
             this.writer = null;
             Handler<Void> closeHandler = this.closeHandler;
             if (closeHandler != null) {
@@ -336,7 +336,7 @@ public class Table {
         JsonObject obj = new JsonObject();
         obj.put("rid", rid);
         obj.put("stream", StreamState.OPEN.getJsonName());
-        writer.writeResponse(obj,false);
+        writer.writeResponse(obj, false);
     }
 
     private void write(DataHandler writer,
@@ -361,7 +361,7 @@ public class Table {
         if (updates != null) {
             obj.put("updates", updates);
         }
-        writer.writeResponse(obj,false);
+        writer.writeResponse(obj, false);
     }
 
     private JsonArray processRow(Row row) {
