@@ -194,6 +194,7 @@ public class GetHistory implements Handler<ActionResult> {
             }
         }
         if (batch != null) {
+            table.waitForStream(5000, true);
             table.addBatchRows(batch);
         }
     }
