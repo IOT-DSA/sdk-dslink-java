@@ -163,11 +163,11 @@ public class Watch {
         JsonArray array = new JsonArray();
         array.add(getHistoryPath);
         mergePathsObject.put("val", array);
-        Value value = new Value(mergePathsObject);
+        Value mergeValue = new Value(mergePathsObject);
 
         Requester requester = getRequester();
         String actionAliasPath = watchedPath + "/@@getHistory";
-        requester.set(new SetRequest(actionAliasPath, value), null);
+        requester.set(new SetRequest(actionAliasPath, mergeValue), null);
     }
 
     private Requester getRequester() {
