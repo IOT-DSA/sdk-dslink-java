@@ -154,16 +154,16 @@ public class Watch {
     }
 
     public void addGetHistoryActionAlias() {
-        JsonObject obj = new JsonObject();
-        obj.put("@", "merge");
-        obj.put("type", "paths");
+        JsonObject mergePathsObject = new JsonObject();
+        mergePathsObject.put("@", "merge");
+        mergePathsObject.put("type", "paths");
 
         String linkPath = node.getLink().getDSLink().getPath();
         String getHistoryPath = String.format("%s%s/getHistory", linkPath, node.getPath());
         JsonArray array = new JsonArray();
         array.add(getHistoryPath);
-        obj.put("val", array);
-        Value value = new Value(obj);
+        mergePathsObject.put("val", array);
+        Value value = new Value(mergePathsObject);
 
         Requester requester = getRequester();
         String actionAliasPath = watchedPath + "/@@getHistory";
