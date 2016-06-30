@@ -298,10 +298,27 @@ public class WatchGroup {
             b.build();
         }
 
+        createRestoreGetHistoryAction();
+
         if (LoggingType.INTERVAL.equals(loggingType)) {
             scheduleWriteToBuffer();
             scheduleBufferFlush();
         }
+    }
+
+    private void createRestoreGetHistoryAction() {
+        NodeBuilder nodeBuilder = node.createChild("restoreGetHistoryAction");
+        nodeBuilder.setDisplayName("Restore GetHistory aliases");
+        nodeBuilder.setAction(new Action(permission, new Handler<ActionResult>() {
+            @Override
+            public void handle(ActionResult event) {
+                for (Watch watch : watches) {
+                    watch.addGetHistoryActionAlias();
+                }
+            }
+        }));
+
+        nodeBuilder.build();
     }
 
     private void useExistingValuesForEditAction() {
