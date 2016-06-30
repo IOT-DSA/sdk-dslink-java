@@ -153,7 +153,7 @@ public class Watch {
         group.addWatch(this);
     }
 
-    private void addGetHistoryActionAlias() {
+    public void addGetHistoryActionAlias() {
         JsonObject obj = new JsonObject();
         obj.put("@", "merge");
         obj.put("type", "paths");
