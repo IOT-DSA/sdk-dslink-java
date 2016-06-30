@@ -1,10 +1,5 @@
 package org.dsa.iot.historian.database;
 
-import org.dsa.iot.dslink.DSLink;
-import org.dsa.iot.dslink.DSLinkHandler;
-import org.dsa.iot.dslink.DSLinkProvider;
-import org.dsa.iot.dslink.link.Requester;
-import org.dsa.iot.dslink.methods.requests.SetRequest;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeBuilder;
 import org.dsa.iot.dslink.node.Permission;
@@ -15,10 +10,7 @@ import org.dsa.iot.dslink.node.value.SubscriptionValue;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.provider.LoopProvider;
-import org.dsa.iot.dslink.util.StringUtils;
 import org.dsa.iot.dslink.util.handler.Handler;
-import org.dsa.iot.dslink.util.json.JsonArray;
-import org.dsa.iot.dslink.util.json.JsonObject;
 import org.dsa.iot.historian.utils.QueryData;
 import org.dsa.iot.historian.utils.WatchUpdate;
 
@@ -154,6 +146,7 @@ public class WatchGroup {
         scheduleWriteToBuffer();
     }
 
+
     private void scheduleWriteToBuffer() {
         if (!LoggingType.INTERVAL.equals(loggingType)) {
             return;
@@ -215,25 +208,6 @@ public class WatchGroup {
                         String path = v.getString();
                         initWatch(path);
 
-                        JsonObject obj = new JsonObject();
-                        obj.put("@", "merge");
-                        obj.put("type", "paths");
-
-                        String p = node.getLink().getDSLink().getPath();
-                        p += node.getPath() + "/";
-                        p += StringUtils.encodeName(path) + "/getHistory";
-                        JsonArray array = new JsonArray();
-                        array.add(p);
-                        obj.put("val", array);
-                        v = new Value(obj);
-
-                        DSLinkHandler h = node.getLink().getHandler();
-                        DSLinkProvider pr = h.getProvider();
-                        String dsId = h.getConfig().getDsIdWithHash();
-                        DSLink link = pr.getRequesters().get(dsId);
-                        Requester req = link.getRequester();
-                        path += "/@@getHistory";
-                        req.set(new SetRequest(path, v), null);
                     }
                 });
                 {
@@ -317,8 +291,8 @@ public class WatchGroup {
                 @Override
                 public void handle(ActionResult event) {
                     Node node = event.getNode().getParent();
-                    node.delete();
                     unsubscribe();
+                    node.delete();
                 }
             }));
             b.build();

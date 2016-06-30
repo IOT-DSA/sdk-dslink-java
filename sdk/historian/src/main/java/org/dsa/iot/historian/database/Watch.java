@@ -1,5 +1,10 @@
 package org.dsa.iot.historian.database;
 
+import org.dsa.iot.dslink.DSLink;
+import org.dsa.iot.dslink.DSLinkHandler;
+import org.dsa.iot.dslink.DSLinkProvider;
+import org.dsa.iot.dslink.link.Requester;
+import org.dsa.iot.dslink.methods.requests.SetRequest;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeBuilder;
 import org.dsa.iot.dslink.node.Permission;
@@ -10,7 +15,10 @@ import org.dsa.iot.dslink.node.value.SubscriptionValue;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValuePair;
 import org.dsa.iot.dslink.node.value.ValueType;
+import org.dsa.iot.dslink.util.StringUtils;
 import org.dsa.iot.dslink.util.handler.Handler;
+import org.dsa.iot.dslink.util.json.JsonArray;
+import org.dsa.iot.dslink.util.json.JsonObject;
 import org.dsa.iot.historian.stats.GetHistory;
 import org.dsa.iot.historian.utils.QueryData;
 import org.dsa.iot.historian.utils.WatchUpdate;
@@ -33,7 +41,7 @@ public class Watch {
     private final Node node;
 
     private Node realTimeValue;
-    private String path;
+    private String watchedPath;
 
     private Node lastWrittenValue;
     private Node startDate;
@@ -48,7 +56,7 @@ public class Watch {
         if (lastWatchUpdate == null) {
             Value value = node.getValue();
             if (value != null) {
-                SubscriptionValue subscriptionValue = new SubscriptionValue(path, value, null, null, null, null);
+                SubscriptionValue subscriptionValue = new SubscriptionValue(watchedPath, value, null, null, null, null);
                 lastWatchUpdate = new WatchUpdate(this, subscriptionValue);
             }
         }
@@ -60,7 +68,6 @@ public class Watch {
     public Watch(final WatchGroup group, Node node) {
         this.group = group;
         this.node = node;
-
     }
 
     public Node getNode() {
@@ -76,7 +83,7 @@ public class Watch {
     }
 
     public String getPath() {
-        return path;
+        return watchedPath;
     }
 
     public void handleLastWritten(Value value) {
@@ -121,11 +128,11 @@ public class Watch {
     private void removeFromSubscriptionPool() {
         DatabaseProvider provider = group.getDb().getProvider();
         SubscriptionPool pool = provider.getPool();
-        pool.unsubscribe(path, this);
+        pool.unsubscribe(watchedPath, this);
     }
 
     public void init(Permission perm) {
-        path = node.getName().replaceAll("%2F", "/").replaceAll("%2E", ".");
+        watchedPath = node.getName().replaceAll("%2F", "/").replaceAll("%2E", ".");
         initData(node);
         GetHistory.initAction(node, getGroup().getDb());
         {
@@ -141,7 +148,34 @@ public class Watch {
             b.build();
         }
 
+        addGetHistoryActionAlias();
+
         group.addWatch(this);
+    }
+
+    private void addGetHistoryActionAlias() {
+        JsonObject obj = new JsonObject();
+        obj.put("@", "merge");
+        obj.put("type", "paths");
+
+        String linkPath = node.getLink().getDSLink().getPath();
+        String getHistoryPath = String.format("%s%s/getHistory", linkPath, node.getPath());
+        JsonArray array = new JsonArray();
+        array.add(getHistoryPath);
+        obj.put("val", array);
+        Value value = new Value(obj);
+
+        Requester requester = getRequester();
+        String actionAliasPath = watchedPath + "/@@getHistory";
+        requester.set(new SetRequest(actionAliasPath, value), null);
+    }
+
+    private Requester getRequester() {
+        DSLinkHandler handler = node.getLink().getHandler();
+        DSLinkProvider linkProvider = handler.getProvider();
+        String dsId = handler.getConfig().getDsIdWithHash();
+        DSLink link = linkProvider.getRequesters().get(dsId);
+        return link.getRequester();
     }
 
     protected void initData(final Node node) {
