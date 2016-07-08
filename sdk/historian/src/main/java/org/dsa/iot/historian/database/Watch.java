@@ -15,7 +15,6 @@ import org.dsa.iot.dslink.node.value.SubscriptionValue;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValuePair;
 import org.dsa.iot.dslink.node.value.ValueType;
-import org.dsa.iot.dslink.util.StringUtils;
 import org.dsa.iot.dslink.util.handler.Handler;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
@@ -131,26 +130,31 @@ public class Watch {
         pool.unsubscribe(watchedPath, this);
     }
 
-    public void init(Permission perm) {
+    public void init(Permission perm, Database db) {
         watchedPath = node.getName().replaceAll("%2F", "/").replaceAll("%2E", ".");
         initData(node);
+
+        createUnsubscribeAction(perm);
+
+        new OverwriteHistoryAction(this, node, perm, db);
         GetHistory.initAction(node, getGroup().getDb());
-        {
-            NodeBuilder b = node.createChild("unsubscribe");
-            b.setSerializable(false);
-            b.setDisplayName("Unsubscribe");
-            b.setAction(new Action(perm, new Handler<ActionResult>() {
-                @Override
-                public void handle(ActionResult event) {
-                    unsubscribe();
-                }
-            }));
-            b.build();
-        }
 
         addGetHistoryActionAlias();
 
         group.addWatch(this);
+    }
+
+    private void createUnsubscribeAction(Permission perm) {
+        NodeBuilder b = node.createChild("unsubscribe");
+        b.setSerializable(false);
+        b.setDisplayName("Unsubscribe");
+        b.setAction(new Action(perm, new Handler<ActionResult>() {
+            @Override
+            public void handle(ActionResult event) {
+                unsubscribe();
+            }
+        }));
+        b.build();
     }
 
     public void addGetHistoryActionAlias() {
