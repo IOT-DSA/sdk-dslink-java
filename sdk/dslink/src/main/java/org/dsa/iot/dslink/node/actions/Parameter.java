@@ -74,8 +74,6 @@ public class Parameter {
         if (type == null) {
             this.editorType = null;
             return this;
-        } else if (!this.type.compare(ValueType.STRING)) {
-            throw new RuntimeException("Parameter must be of type string");
         }
         this.editorType = type;
         return this;
