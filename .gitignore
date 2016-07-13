@@ -13,3 +13,8 @@ build
 
 # Misc
 .DS_Store
+
+# DSA
+.key
+nodes.json
+nodes.json.bak

@@ -2,6 +2,7 @@ package org.dsa.iot.dslink.node.value;
 
 import org.dsa.iot.dslink.util.StringUtils;
 
+import javax.swing.plaf.PanelUI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -16,6 +17,7 @@ import java.util.Collections;
 public final class ValueType {
 
     public static final String JSON_NUMBER = "number";
+    public static final String JSON_INT = "int";
     public static final String JSON_STRING = "string";
     public static final String JSON_BOOL = "bool";
     public static final String JSON_MAP = "map";
@@ -111,6 +113,7 @@ public final class ValueType {
     public static ValueType toValueType(String type) {
         switch (type) {
             case JSON_NUMBER:
+            case JSON_INT:
                 return NUMBER;
             case JSON_STRING:
                 return STRING;
@@ -137,7 +140,7 @@ public final class ValueType {
                     String[] split = type.split(",");
                     return new ValueType(Arrays.asList(split));
                 }
-                throw new RuntimeException("Unknown type: " + type);
+                return DYNAMIC;
         }
     }
 }

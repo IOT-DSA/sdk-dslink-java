@@ -223,6 +223,9 @@ public class Action {
         EditorType type = param.getEditorType();
         if (type != null) {
             obj.put("editor", type.toJsonString());
+            if (type.getMeta() != null) {
+                obj.put("editorMeta", type.getMeta());
+            }
         }
 
         String description = param.getDescription();
