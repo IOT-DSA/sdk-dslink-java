@@ -114,7 +114,7 @@ public class WatchGroup {
     private void writeWatchesToBuffer() {
         for (Watch watch : watches) {
             if (!watch.isEnabled()) {
-               continue;
+                continue;
             }
 
             WatchUpdate update = watch.getLastWatchUpdate();
@@ -132,20 +132,18 @@ public class WatchGroup {
      */
     protected void initWatch(String path) {
         Watch watch;
-        {
-            NodeBuilder b = node.createChild(path);
-            b.setValueType(ValueType.DYNAMIC);
-            b.setValue(null);
-            Node n = b.build();
-            watch = new Watch(this, n);
-            watch.init(permission);
-            n.setMetaData(watch);
-            db.getProvider().onWatchAdded(watch);
-        }
+
+        NodeBuilder b = node.createChild(path);
+        b.setValueType(ValueType.DYNAMIC);
+        b.setValue(null);
+        Node n = b.build();
+        watch = new Watch(this, n);
+        watch.init(permission, db);
+        n.setMetaData(watch);
+        db.getProvider().onWatchAdded(watch);
 
         scheduleWriteToBuffer();
     }
-
 
     private void scheduleWriteToBuffer() {
         if (!LoggingType.INTERVAL.equals(loggingType)) {
