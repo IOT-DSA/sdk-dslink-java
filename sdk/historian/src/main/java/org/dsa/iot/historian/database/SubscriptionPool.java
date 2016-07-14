@@ -46,13 +46,9 @@ public class SubscriptionPool {
             if (handler.isEmpty()) {
                 String getHistoryActionAliasPath = path + "/@@getHistory";
 
-                // Need to ensure to be subscribed so the graph icon disappears in DGLux
-                requester.subscribe(getHistoryActionAliasPath, null);
-
+                requester.unsubscribe(path, null);
                 requester.remove(new RemoveRequest(getHistoryActionAliasPath), null);
                 subscriptions.remove(path);
-
-                requester.unsubscribe(path, null);
             }
         }
     }
