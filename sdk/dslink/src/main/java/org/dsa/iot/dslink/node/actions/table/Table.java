@@ -19,7 +19,7 @@ import java.util.List;
  *
  * @author Samuel Grenier
  */
-@SuppressFBWarnings("IS2_INCONSISTENT_SYNC")    
+@SuppressFBWarnings("IS2_INCONSISTENT_SYNC")
 public class Table {
 
     private List<Parameter> columns;
@@ -199,7 +199,7 @@ public class Table {
         * throw an IllegalStateException.
         * @return True if the stream is established.
         */
-    @SuppressFBWarnings("WA_NOT_IN_LOOP")    
+    @SuppressFBWarnings("WA_NOT_IN_LOOP")
     public boolean waitForStream(long millis, boolean throwException) {
         Object mutex = null;
         synchronized (this) {

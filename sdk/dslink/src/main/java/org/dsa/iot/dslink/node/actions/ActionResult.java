@@ -95,6 +95,27 @@ public class ActionResult {
     }
 
     /**
+     * Gets the input JSON.
+     * @return JSON input.
+     */
+    public JsonObject getJsonIn() {
+        return jsonIn;
+    }
+
+    /**
+     * Get the input parameters.
+     * @return input parameters
+     */
+    public JsonObject getParameters() {
+        JsonObject input = getJsonIn();
+        if (input.contains("params")) {
+            return input.get("params");
+        } else {
+            return new JsonObject();
+        }
+    }
+
+    /**
      * Gets a parameter from the incoming parameters from the endpoint. The
      * default value type is checked against the type of the parameter as
      * received from the endpoint. If the default value is {@code null} then
