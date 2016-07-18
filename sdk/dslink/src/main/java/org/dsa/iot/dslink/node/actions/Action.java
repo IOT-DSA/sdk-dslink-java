@@ -109,9 +109,6 @@ public class Action {
         } else if (parameter.getDefault() != null) {
             String err = "Parameter cannot contain a default value in a result";
             throw new IllegalStateException(err);
-        } else if (parameter.getEditorType() != null) {
-            String err = "Parameter cannot contain an editor type";
-            throw new IllegalStateException(err);
         }
         JsonObject result = paramToJson(parameter);
         if (result != null) {
