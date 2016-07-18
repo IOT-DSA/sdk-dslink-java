@@ -133,6 +133,19 @@ public class Action {
         postParamsUpdate();
     }
 
+    /**
+     * Clears the existing columns and adds the new columns.
+     *
+     * @param newColumns Columns to set.
+     */
+    public void setColumns(Collection<Parameter> newColumns) {
+        this.results = new JsonArray();
+        for (Parameter p : newColumns) {
+            addResult(p);
+        }
+        postColumnsUpdate();
+    }
+
     public void setSubscriptionManager(Node node,
                                        SubscriptionManager manager) {
         this.node = node;
@@ -200,6 +213,16 @@ public class Action {
         if (node != null && manager != null) {
             Value v = new Value(getParams());
             manager.postMetaUpdate(node, "$params", v);
+        }
+    }
+
+    /**
+     * Posts a columns update.
+     */
+    protected final void postColumnsUpdate() {
+        if (node != null && manager != null) {
+            Value v = new Value(getColumns());
+            manager.postMetaUpdate(node, "$columns", v);
         }
     }
 
