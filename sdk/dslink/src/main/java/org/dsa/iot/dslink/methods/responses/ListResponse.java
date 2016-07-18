@@ -14,6 +14,7 @@ import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -510,5 +511,19 @@ public class ListResponse extends Response {
                 throw new UnsupportedOperationException();
             }
         });
+    }
+
+    public void multiChildrenUpdate(List<Node> children) {
+        JsonArray updates = new JsonArray();
+
+        for (Node child : children) {
+            updates.add(getChildUpdate(child, false));
+        }
+
+        JsonObject resp = new JsonObject();
+        resp.put("rid", getRid());
+        resp.put("stream", StreamState.OPEN.getJsonName());
+        resp.put("updates", updates);
+        link.getWriter().writeResponse(resp);
     }
 }
