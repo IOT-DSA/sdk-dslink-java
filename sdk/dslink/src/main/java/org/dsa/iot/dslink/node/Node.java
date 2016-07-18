@@ -452,6 +452,46 @@ public class Node {
     }
 
     /**
+     * Add multiple children at once.
+     * @param nodes Nodes to add.
+     */
+    public void addChildren(List<Node> nodes) {
+        SubscriptionManager manager = null;
+        if (link != null) {
+            manager = link.getSubscriptionManager();
+        }
+        boolean reserialize = false;
+
+        synchronized (childrenLock) {
+            for (Node node : nodes) {
+                String name = node.getName();
+                if (children == null) {
+                    children = new ConcurrentHashMap<>();
+                } else if (children.containsKey(name)) {
+                    continue;
+                }
+
+                if (node.getProfile() == null) {
+                    node.setProfile(profile);
+                }
+                children.put(name, node);
+
+                if (node.isSerializable()) {
+                    reserialize = true;
+                }
+            }
+        }
+
+        if (manager != null) {
+            manager.postMultiChildUpdate(this, nodes);
+        }
+
+        if (reserialize) {
+            markChanged();
+        }
+    }
+
+    /**
      * Deletes this node from its parent.
      */
     public void delete() {
