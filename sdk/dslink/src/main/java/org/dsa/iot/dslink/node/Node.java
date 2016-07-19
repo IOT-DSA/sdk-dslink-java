@@ -426,9 +426,8 @@ public class Node {
     public Node addChild(Node node) {
         synchronized (childrenLock) {
             String name = node.getName();
-            if (children == null) {
-                children = new ConcurrentHashMap<>();
-            } else if (children.containsKey(name)) {
+            maybeInitializeChildren();
+            if (children.containsKey(name)) {
                 return children.get(name);
             }
 
@@ -465,15 +464,12 @@ public class Node {
         synchronized (childrenLock) {
             for (Node node : nodes) {
                 String name = node.getName();
-                if (children == null) {
-                    children = new ConcurrentHashMap<>();
-                } else if (children.containsKey(name)) {
+                maybeInitializeChildren();
+                if (children.containsKey(name)) {
                     continue;
                 }
 
-                if (node.getProfile() == null) {
-                    node.setProfile(profile);
-                }
+                node.maybeInitializeProfile(profile);
                 children.put(name, node);
 
                 if (node.isSerializable()) {
@@ -488,6 +484,18 @@ public class Node {
 
         if (reserialize) {
             markChanged();
+        }
+    }
+
+    private void maybeInitializeProfile(String profile) {
+        if (getProfile() == null) {
+            setProfile(profile);
+        }
+    }
+
+    private void maybeInitializeChildren() {
+        if (children == null) {
+            children = new ConcurrentHashMap<>();
         }
     }
 
