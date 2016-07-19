@@ -477,17 +477,33 @@ public class ListResponse extends Response {
             String type = data.get("type");
             ValueType valType = ValueType.toValueType(type);
             Parameter param = new Parameter(name, valType);
+
+            String editor = data.get("editor");
+
+            if (editor != null) {
+                JsonObject editorMeta = data.get("editorMeta");
+                param.setEditorType(EditorType.make(editor, editorMeta));
+            }
+
+            Object def = data.get("default");
+            if (def != null) {
+                param.setDefaultValue(ValueUtils.toValue(def));
+            }
+
+            String description = data.get("description");
+            String placeholder = data.get("placeholder");
+
+            if (description != null) {
+                param.setDescription(description);
+            }
+
+            if (placeholder != null) {
+                param.setPlaceHolder(placeholder);
+            }
+
             if (isCol) {
                 act.addResult(param);
             } else {
-                String editor = data.get("editor");
-                if (editor != null) {
-                    param.setEditorType(EditorType.make(editor));
-                }
-                Object def = data.get("default");
-                if (def != null) {
-                    param.setDefaultValue(ValueUtils.toValue(def));
-                }
                 act.addParameter(param);
             }
         }
