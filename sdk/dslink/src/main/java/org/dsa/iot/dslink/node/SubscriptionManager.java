@@ -10,10 +10,7 @@ import org.dsa.iot.dslink.util.StringUtils;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
@@ -245,6 +242,22 @@ public class SubscriptionManager {
         ListResponse resp = pathSubsMap.get(parent.getPath());
         if (resp != null) {
             resp.childUpdate(child, removed);
+        }
+    }
+
+    /**
+     * Posts multiple children updates to notify all remote endpoints of updates.
+     *
+     * @param parent Common parent.
+     * @param children Children.
+     */
+    public void postMultiChildUpdate(Node parent, List<Node> children) {
+        if (parent == null) {
+            return;
+        }
+        ListResponse resp = pathSubsMap.get(parent.getPath());
+        if (resp != null) {
+            resp.multiChildrenUpdate(children);
         }
     }
 

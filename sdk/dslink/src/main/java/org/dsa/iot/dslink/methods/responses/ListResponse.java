@@ -14,6 +14,7 @@ import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -476,17 +477,33 @@ public class ListResponse extends Response {
             String type = data.get("type");
             ValueType valType = ValueType.toValueType(type);
             Parameter param = new Parameter(name, valType);
+
+            String editor = data.get("editor");
+
+            if (editor != null) {
+                JsonObject editorMeta = data.get("editorMeta");
+                param.setEditorType(EditorType.make(editor, editorMeta));
+            }
+
+            Object def = data.get("default");
+            if (def != null) {
+                param.setDefaultValue(ValueUtils.toValue(def));
+            }
+
+            String description = data.get("description");
+            String placeholder = data.get("placeholder");
+
+            if (description != null) {
+                param.setDescription(description);
+            }
+
+            if (placeholder != null) {
+                param.setPlaceHolder(placeholder);
+            }
+
             if (isCol) {
                 act.addResult(param);
             } else {
-                String editor = data.get("editor");
-                if (editor != null) {
-                    param.setEditorType(EditorType.make(editor));
-                }
-                Object def = data.get("default");
-                if (def != null) {
-                    param.setDefaultValue(ValueUtils.toValue(def));
-                }
                 act.addParameter(param);
             }
         }
@@ -510,5 +527,19 @@ public class ListResponse extends Response {
                 throw new UnsupportedOperationException();
             }
         });
+    }
+
+    public void multiChildrenUpdate(List<Node> children) {
+        JsonArray updates = new JsonArray();
+
+        for (Node child : children) {
+            updates.add(getChildUpdate(child, false));
+        }
+
+        JsonObject resp = new JsonObject();
+        resp.put("rid", getRid());
+        resp.put("stream", StreamState.OPEN.getJsonName());
+        resp.put("updates", updates);
+        link.getWriter().writeResponse(resp);
     }
 }

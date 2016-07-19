@@ -426,9 +426,8 @@ public class Node {
     public Node addChild(Node node) {
         synchronized (childrenLock) {
             String name = node.getName();
-            if (children == null) {
-                children = new ConcurrentHashMap<>();
-            } else if (children.containsKey(name)) {
+            maybeInitializeChildren();
+            if (children.containsKey(name)) {
                 return children.get(name);
             }
 
@@ -448,6 +447,55 @@ public class Node {
                 markChanged();
             }
             return node;
+        }
+    }
+
+    /**
+     * Add multiple children at once.
+     * @param nodes Nodes to add.
+     */
+    public void addChildren(List<Node> nodes) {
+        SubscriptionManager manager = null;
+        if (link != null) {
+            manager = link.getSubscriptionManager();
+        }
+        boolean reserialize = false;
+
+        synchronized (childrenLock) {
+            for (Node node : nodes) {
+                String name = node.getName();
+                maybeInitializeChildren();
+                if (children.containsKey(name)) {
+                    continue;
+                }
+
+                node.maybeInitializeProfile(profile);
+                children.put(name, node);
+
+                if (node.isSerializable()) {
+                    reserialize = true;
+                }
+            }
+        }
+
+        if (manager != null) {
+            manager.postMultiChildUpdate(this, nodes);
+        }
+
+        if (reserialize) {
+            markChanged();
+        }
+    }
+
+    private void maybeInitializeProfile(String profile) {
+        if (getProfile() == null) {
+            setProfile(profile);
+        }
+    }
+
+    private void maybeInitializeChildren() {
+        if (children == null) {
+            children = new ConcurrentHashMap<>();
         }
     }
 
