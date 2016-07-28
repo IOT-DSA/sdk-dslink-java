@@ -535,7 +535,9 @@ public class Node {
             }
 
             if (child != null) {
+                child.getListener().postNodeRemoved();
                 child.getListener().kill();
+
                 if (manager != null) {
                     manager.postChildUpdate(child, true);
                     manager.removeValueSub(child);
