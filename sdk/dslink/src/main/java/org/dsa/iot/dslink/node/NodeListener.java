@@ -21,6 +21,8 @@ public class NodeListener {
 
     private Handler<Node> listHandler;
     private Handler<Node> listClosedHandler;
+    private Handler<Node> nodeRemovedHandler;
+
     private Handler<Node> onSubscribedHandler;
     private Handler<Node> onUnsubscribedHandler;
 
@@ -109,13 +111,24 @@ public class NodeListener {
 
     /**
      * Sets a list stream closed handler listener. The handler will be called
-     * every time
+     * every time the list stream is closed.
      *
      * @param handler Callback.
      */
     @SuppressWarnings("unused")
     public void setOnListClosedHandler(Handler<Node> handler) {
         listClosedHandler = handler;
+    }
+
+    /**
+     * Sets a node removal handler listener. The handler will be called
+     * every time the node is removed.
+     *
+     * @param handler Callback.
+     */
+    @SuppressWarnings("unused")
+    public void setNodeRemovedHandler(Handler<Node> handler) {
+        nodeRemovedHandler = handler;
     }
 
     /**
@@ -137,6 +150,19 @@ public class NodeListener {
      */
     public void postListClosed() {
         Handler<Node> handler = listClosedHandler;
+        if (handler != null) {
+            Node node = this.node.get();
+            if (node != null) {
+                handler.handle(node);
+            }
+        }
+    }
+
+    /**
+     * Posts a node removed update. This happens when the node is removed.
+     */
+    public void postNodeRemoved() {
+        Handler<Node> handler = nodeRemovedHandler;
         if (handler != null) {
             Node node = this.node.get();
             if (node != null) {
@@ -203,6 +229,7 @@ public class NodeListener {
         setOnListHandler(null);
         setAttributeHandler(null);
         setConfigHandler(null);
+        setNodeRemovedHandler(null);
     }
 
     public static class ValueUpdate {
