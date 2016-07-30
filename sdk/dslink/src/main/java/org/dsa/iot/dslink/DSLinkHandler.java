@@ -1,7 +1,10 @@
 package org.dsa.iot.dslink;
 
 import org.dsa.iot.dslink.config.Configuration;
+import org.dsa.iot.dslink.link.Requester;
+import org.dsa.iot.dslink.link.Responder;
 import org.dsa.iot.dslink.node.Node;
+import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.exceptions.NoSuchPathException;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.util.Objects;
@@ -215,5 +218,47 @@ public abstract class DSLinkHandler {
      */
     public void onSetFail(String path, Value value) {
         throw new NoSuchPathException(path);
+    }
+
+    /**
+     * Called to create a DSLink instance for a responder.
+     *
+     * @param path Responder path.
+     * @return DSLink instance.
+     */
+    public DSLink createResponderLink(String path) {
+        return new DSLink(this, false, path);
+    }
+
+    /**
+     * Called to create a DSLink instance for a requester.
+     *
+     * @param path Requester path.
+     * @return DSLink instance.
+     */
+    public DSLink createRequesterLink(String path) {
+        return new DSLink(this, true, path);
+    }
+
+    /**
+     * Called to create a node manager instance for a requester.
+     *
+     * @param requester Requester instance.
+     * @param profile Default profile name.
+     * @return Node manager.
+     */
+    public NodeManager createRequesterNodeManager(Requester requester, String profile) {
+        return new NodeManager(requester, profile);
+    }
+
+    /**
+     * Called to create a node manager instance for a responder.
+     *
+     * @param responder Responder instance.
+     * @param profile Default profile name.
+     * @return Node manager.
+     */
+    public NodeManager createResponderNodeManager(Responder responder, String profile) {
+        return new NodeManager(responder, profile);
     }
 }

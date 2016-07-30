@@ -55,12 +55,12 @@ public class DSLink {
             requester = new Requester(linkHandler);
             requester.setDSLink(this);
             responder = null;
-            nodeManager = new NodeManager(requester, "node");
+            nodeManager = linkHandler.createRequesterNodeManager(requester, "node");
         } else {
             responder = new Responder(linkHandler);
             responder.setDSLink(this);
             requester = null;
-            nodeManager = new NodeManager(responder, "node");
+            nodeManager = linkHandler.createResponderNodeManager(responder, "node");
         }
     }
 
