@@ -6,7 +6,6 @@ import org.dsa.iot.dslink.link.Responder;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.provider.LoopProvider;
 import org.dsa.iot.dslink.serializer.SerializationManager;
-import org.dsa.iot.dslink.util.Objects;
 import org.dsa.iot.dslink.util.handler.Handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,7 +65,7 @@ public class DSLinkProvider {
                             synchronized (lock) {
                                 DSLink tmp = linkRequesterCache.get(dsId);
                                 if (tmp == null) {
-                                    tmp = new DSLink(handler, true, path);
+                                    tmp = handler.createRequesterLink(path);
                                     tmp.setWriter(writer);
                                     tmp.setDefaultDataHandlers(true, false);
                                     handler.onRequesterInitialized(tmp);
@@ -102,7 +101,7 @@ public class DSLinkProvider {
                             synchronized (lock) {
                                 DSLink tmp = linkResponderCache.get(dsId);
                                 if (tmp == null) {
-                                    tmp = new DSLink(handler, false, path);
+                                    tmp = handler.createResponderLink(path);
                                     tmp.setWriter(writer);
                                     File path = handler.getConfig().getSerializationPath();
                                     if (path != null) {
