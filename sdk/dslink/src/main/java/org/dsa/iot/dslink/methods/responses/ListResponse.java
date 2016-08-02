@@ -111,9 +111,9 @@ public class ListResponse extends Response {
         if (name.startsWith("$$")) {
             name = name.substring(2);
             if ("password".equals(name)) {
-                if (v instanceof String) {
+                if (v != null && v instanceof String) {
                     node.setPassword(((String) v).toCharArray());
-                } else if (v == null) {
+                } else {
                     node.setPassword(null);
                 }
             } else {
