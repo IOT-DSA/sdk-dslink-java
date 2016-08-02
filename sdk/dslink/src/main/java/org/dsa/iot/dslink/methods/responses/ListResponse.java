@@ -113,9 +113,15 @@ public class ListResponse extends Response {
             if ("password".equals(name)) {
                 if (v instanceof String) {
                     node.setPassword(((String) v).toCharArray());
+                } else if (v == null) {
+                    node.setPassword(null);
                 }
             } else {
-                node.setRoConfig(name, ValueUtils.toValue(v));
+                if (v != null) {
+                    node.setRoConfig(name, ValueUtils.toValue(v));
+                } else {
+                    node.removeRoConfig(name);
+                }
             }
         } else if (name.startsWith("$")) {
             name = name.substring(1);
@@ -207,6 +213,24 @@ public class ListResponse extends Response {
             if (linkData != null) {
                 Value val = new Value(linkData);
                 child.setConfig("linkData", val);
+            }
+
+            String result = childData.get("$result");
+            if (result != null) {
+                Action action = getOrCreateAction(child, Permission.NONE);
+                action.setResultType(ResultType.toEnum(result));
+            }
+
+            JsonArray params = childData.get("$params");
+            if (params != null) {
+                Action action = getOrCreateAction(child, Permission.NONE);
+                iterateActionMetaData(action, params, false);
+            }
+
+            JsonArray columns = childData.get("$columns");
+            if (columns != null) {
+                Action action = getOrCreateAction(child, Permission.NONE);
+                iterateActionMetaData(action, columns, true);
             }
 
             updates.put(child, false);
