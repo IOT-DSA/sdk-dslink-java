@@ -104,10 +104,22 @@ public class InvokeResponse extends Response {
             JsonArray updates = in.get("updates");
             if (updates != null) {
                 for (Object object : updates) {
+                    if (object == null) {
+                        continue;
+                    }
+
                     Row row = new Row();
-                    JsonArray rowArray = (JsonArray) object;
-                    for (Object rowValue : rowArray) {
-                        row.addValue(ValueUtils.toValue(rowValue));
+                    if (object instanceof JsonArray) {
+                        JsonArray rowArray = (JsonArray) object;
+                        for (Object rowValue : rowArray) {
+                            row.addValue(ValueUtils.toValue(rowValue));
+                        }
+                    } else if (object instanceof JsonObject) {
+                        JsonObject rowObject = (JsonObject) object;
+                        for (Parameter col : results.getColumns()) {
+                            Object cellValue = rowObject.get(col.getName());
+                            row.addValue(ValueUtils.toValue(cellValue));
+                        }
                     }
                     results.addRow(row);
                 }
