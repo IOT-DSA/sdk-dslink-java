@@ -12,7 +12,7 @@ import java.util.concurrent.CountDownLatch;
 public class GuaranteedReceiverTest {
 
     @Test(expected = IllegalStateException.class)
-    public void shutdownReceiverTest() throws InterruptedException {
+    public void receiverShutdownThrowsStateException() throws InterruptedException {
         GuaranteedReceiver<Object> gr = new GuaranteedReceiver<Object>(1) {
             @Override
             protected Object instantiate() throws Exception {
