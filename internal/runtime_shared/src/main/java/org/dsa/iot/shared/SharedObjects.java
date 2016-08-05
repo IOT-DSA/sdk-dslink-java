@@ -10,7 +10,7 @@ import java.util.concurrent.*;
  */
 public class SharedObjects {
 
-    public static final int POOL_SIZE = 64;
+    public static final int POOL_SIZE = Math.max(2, Runtime.getRuntime().availableProcessors() / 2);
 
     private static volatile ScheduledThreadPoolExecutor THREAD_POOL;
     private static volatile ScheduledThreadPoolExecutor DAEMON_THREAD_POOL;
@@ -85,6 +85,7 @@ public class SharedObjects {
             setRemoveOnCancelPolicy(true);
             setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
             setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
+            allowsCoreThreadTimeOut();
         }
 
         @Override
