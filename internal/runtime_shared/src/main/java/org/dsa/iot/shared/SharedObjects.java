@@ -85,7 +85,7 @@ public class SharedObjects {
             setRemoveOnCancelPolicy(true);
             setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
             setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
-            allowsCoreThreadTimeOut();
+            allowCoreThreadTimeOut(true);
         }
 
         @Override
