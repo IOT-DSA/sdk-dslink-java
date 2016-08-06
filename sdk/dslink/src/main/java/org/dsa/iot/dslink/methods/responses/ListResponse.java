@@ -221,16 +221,16 @@ public class ListResponse extends Response {
                 action.setResultType(ResultType.toEnum(result));
             }
 
-            JsonArray params = childData.get("$params");
-            if (params != null) {
+            Object params = childData.get("$params");
+            if (params instanceof JsonArray) {
                 Action action = getOrCreateAction(child, Permission.NONE);
-                iterateActionMetaData(action, params, false);
+                iterateActionMetaData(action, (JsonArray) params, false);
             }
 
-            JsonArray columns = childData.get("$columns");
-            if (columns != null) {
+            Object columns = childData.get("$columns");
+            if (columns instanceof JsonArray) {
                 Action action = getOrCreateAction(child, Permission.NONE);
-                iterateActionMetaData(action, columns, true);
+                iterateActionMetaData(action, (JsonArray) columns, true);
             }
 
             updates.put(child, false);
