@@ -135,13 +135,17 @@ public class ListResponse extends Response {
                 Action act = getOrCreateAction(node, perm);
                 act.setPermission(perm);
             } else if ("params".equals(name)) {
-                JsonArray array = (JsonArray) v;
-                Action act = getOrCreateAction(node, Permission.NONE);
-                iterateActionMetaData(act, array, false);
+                if (v instanceof JsonArray) {
+                    JsonArray array = (JsonArray) v;
+                    Action act = getOrCreateAction(node, Permission.NONE);
+                    iterateActionMetaData(act, array, false);
+                }
             } else if ("columns".equals(name)) {
-                JsonArray array = (JsonArray) v;
-                Action act = getOrCreateAction(node, Permission.NONE);
-                iterateActionMetaData(act, array, true);
+                if (v instanceof JsonArray) {
+                    JsonArray array = (JsonArray) v;
+                    Action act = getOrCreateAction(node, Permission.NONE);
+                    iterateActionMetaData(act, array, true);
+                }
             } else if ("result".equals(name)) {
                 String string = (String) v;
                 Action act = getOrCreateAction(node, Permission.NONE);
