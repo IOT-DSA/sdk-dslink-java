@@ -7,9 +7,9 @@ dependencies {
 install {
     repositories.mavenInstaller {
         pom.project {
-                name = 'DSLink Logging'
-                artifactId = 'logging'
-                description = 'Lightweight SLF4J binding'
+            name = 'DSLink Logging'
+            artifactId = 'logging'
+            description = 'Lightweight SLF4J binding'
         }
     }
 }

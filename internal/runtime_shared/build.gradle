@@ -12,13 +12,12 @@ dependencies {
 install {
     repositories.mavenInstaller {
         pom.project {
-                name = 'DSLink Shared Runtime'
-                artifactId = 'runtime_shared'
-                description = 'Shared Runtime for the SDK'
-            }
+            name = 'DSLink Shared Runtime'
+            artifactId = 'runtime_shared'
+            description = 'Shared Runtime for the SDK'
+        }
     }
 }
-
 
 uploadArchives {
     repositories {
