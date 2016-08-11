@@ -36,7 +36,7 @@ public class ValueUtils {
         } else if (type.compare(ValueType.BINARY)) {
             return new Value((byte[]) null, time);
         }
-        throw new RuntimeException(ERROR_MSG + type.getRawName());
+        return new Value((String) null);
     }
 
     /**
