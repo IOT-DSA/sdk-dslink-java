@@ -147,4 +147,12 @@ public final class ValueType {
                 return DYNAMIC;
         }
     }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other instanceof ValueType) {
+            return ((ValueType) other).toJsonString().equals(toJsonString());
+        }
+        return false;
+    }
 }
