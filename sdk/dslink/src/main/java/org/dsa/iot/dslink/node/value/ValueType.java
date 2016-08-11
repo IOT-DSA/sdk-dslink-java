@@ -155,4 +155,9 @@ public final class ValueType {
         }
         return false;
     }
+
+    @Override
+    public int hashCode() {
+        return 37 * toJsonString().hashCode();
+    }
 }
