@@ -125,7 +125,7 @@ public class ListResponse extends Response {
             }
         } else if (name.startsWith("$")) {
             name = name.substring(1);
-            if ("is".equals(name)) {
+            if ("is".equals(name) && node.getProfile() != v) {
                 node.reset();
                 node.setProfile((String) v);
             } else if ("interface".equals(name)) {
