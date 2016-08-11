@@ -630,14 +630,11 @@ public class Node {
      * @see Action
      */
     public Value setConfig(String name, Value value) {
-        if (value == null) {
-            removeConfig(name);
-            return null;
-        }
-
         synchronized (configLock) {
             name = checkAndEncodeName(name);
-            if (configs == null) {
+            if (value == null) {
+                throw new NullPointerException("value");
+            } else if (configs == null) {
                 configs = new ConcurrentHashMap<>();
             }
             switch (name) {
@@ -741,14 +738,11 @@ public class Node {
      * @return The previous value, if any.
      */
     public Value setRoConfig(String name, Value value) {
-        if (value == null) {
-            removeRoConfig(name);
-            return null;
-        }
-
         synchronized (roConfigLock) {
             name = checkAndEncodeName(name);
-            if (roConfigs == null) {
+            if (value == null) {
+                throw new NullPointerException("value");
+            } else if (roConfigs == null) {
                 roConfigs = new ConcurrentHashMap<>();
             }
 
@@ -795,7 +789,6 @@ public class Node {
      * @return Attribute value or null if it didn't exist
      */
     public Value removeAttribute(String name) {
-
         name = StringUtils.encodeName(name);
         Value ret;
         synchronized (attributeLock) {
@@ -831,14 +824,11 @@ public class Node {
      * @return The previous attribute value, if any
      */
     public Value setAttribute(String name, Value value) {
-        if (value == null) {
-            removeAttribute(name);
-            return null;
-        }
-
         synchronized (attributeLock) {
             name = checkAndEncodeName(name);
-            if (attribs == null) {
+            if (value == null) {
+                throw new NullPointerException("value");
+            } else if (attribs == null) {
                 attribs = new ConcurrentHashMap<>();
             }
             value.setImmutable();
