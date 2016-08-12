@@ -126,8 +126,14 @@ public class ListResponse extends Response {
         } else if (name.startsWith("$")) {
             name = name.substring(1);
             if ("is".equals(name)) {
-                node.reset();
-                node.setProfile((String) v);
+                if (v == null) {
+                    v = "node"; // $is should always have a value. A null value is a bug in the responder that sent it.
+                }
+
+                if (!node.getProfile().equals(v)) {
+                    node.reset();
+                    node.setProfile((String) v);
+                }
             } else if ("interface".equals(name)) {
                 node.setInterfaces((String) v);
             } else if ("invokable".equals(name)) {
@@ -155,7 +161,9 @@ public class ListResponse extends Response {
                 node.setWritable(Writable.toEnum(string));
             } else if ("type".equals(name)) {
                 ValueType type = ValueType.toValueType((String) v);
-                node.setValueType(type);
+                if (!type.equals(node.getValueType())) {
+                    node.setValueType(type);
+                }
             } else if ("name".equals(name)) {
                 node.setDisplayName((String) v);
             } else if ("hidden".equals(name)) {

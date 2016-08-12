@@ -111,6 +111,10 @@ public final class ValueType {
      * @return Converted type
      */
     public static ValueType toValueType(String type) {
+        if (type == null) {
+            return ValueType.DYNAMIC;
+        }
+
         switch (type) {
             case JSON_NUMBER:
             case JSON_INT:
@@ -142,5 +146,18 @@ public final class ValueType {
                 }
                 return DYNAMIC;
         }
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other instanceof ValueType) {
+            return ((ValueType) other).toJsonString().equals(toJsonString());
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return 37 * toJsonString().hashCode();
     }
 }
