@@ -169,7 +169,7 @@ public class SerializationManager {
         File tmp = new File(file.getParent(), file.getName() + ".tmp");
         if (tmp.exists()) {
             try {
-                handle(FileUtils.readAllBytes(file));
+                handle(FileUtils.readAllBytes(tmp));
                 LOGGER.warn("Restored " + tmp.getName());
                 return;
             } catch (Exception x) {
