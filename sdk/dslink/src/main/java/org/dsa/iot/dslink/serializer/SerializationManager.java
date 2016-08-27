@@ -125,7 +125,9 @@ public class SerializationManager {
                         "Failed to move " + tmp.getName() + " to " + file.getName());
             }
             if (tmp.exists()) {
-                tmp.delete();
+                if (!tmp.delete()) {
+                    LOGGER.warn("Unable to delete old tmp file " + tmp.getName());
+                }
             }
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Wrote serialized data: {}", json);
@@ -158,7 +160,9 @@ public class SerializationManager {
                 if (file.exists()) {
                     //Try delete the primary db so it won't overwrite the
                     //good backup during the next serialization
-                    file.delete();
+                    if (!file.delete()) {
+                        LOGGER.warn("Unable to delete corrupt " + file.getName());
+                    }
                 }
                 return;
             } catch (Exception x) {
