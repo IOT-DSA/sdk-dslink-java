@@ -1,17 +1,13 @@
 package org.dsa.iot.dslink.serializer;
 
-import org.dsa.iot.dslink.node.NodeManager;
-import org.dsa.iot.dslink.provider.LoopProvider;
-import org.dsa.iot.dslink.util.FileUtils;
-import org.dsa.iot.dslink.util.json.JsonObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
+import org.dsa.iot.dslink.node.*;
+import org.dsa.iot.dslink.provider.*;
+import org.dsa.iot.dslink.util.*;
+import org.dsa.iot.dslink.util.json.*;
+import org.slf4j.*;
+import java.io.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
 
 /**
  * Handles automatic serialization and deserialization.
@@ -34,7 +30,7 @@ public class SerializationManager {
     /**
      * Handles serialization based on the file path.
      *
-     * @param file Path that holds the data
+     * @param file    Path that holds the data
      * @param manager Manager to deserialize/serialize
      */
     public SerializationManager(File file, NodeManager manager) {
@@ -78,26 +74,66 @@ public class SerializationManager {
      * handle serialization.
      */
     public void serialize() {
-        JsonObject json = serializer.serialize();
         try {
-            if (file.exists()) {
-                if (backup.exists() && !backup.delete()) {
-                    LOGGER.error("Failed to remove backup data");
+            JsonObject json = serializer.serialize();
+            //Save the config db to a temp file.  If we can't do that, then we don't
+            //want to do anything else.
+            File tmp = new File(file.getParent(), file.getName() + ".tmp");
+            if (tmp.exists()) {
+                if (!tmp.delete()) {
+                    throw new IOException("Could not delete " + tmp.getName());
                 }
-
-                if (!file.renameTo(backup)) {
-                    LOGGER.error("Failed to create backup data");
-                }
-                LOGGER.debug("Copying serialized data to a backup");
             }
-            byte[] bytes = json.encodePrettily();
-            FileUtils.write(file, bytes);
-
+            FileUtils.write(tmp, json.encodePrettily());
+            if (!tmp.exists()) {
+                throw new IOException(
+                        tmp.getName() + " weirdly did not exist after writing to it");
+            }
+            if (tmp.length() == 0) {
+                throw new IOException(tmp.getName() + " serialized to a file size of 0");
+            }
+            //Now backup the last version
+            if (file.exists()) {
+                if (backup.exists()) {
+                    if (!backup.delete()) {
+                        throw new IOException(
+                                "Could not delete old " + backup.getName());
+                    }
+                }
+                LOGGER.debug("Making backup");
+                if (!file.renameTo(backup)) {
+                    FileUtils.copy(file, backup); //try really hard
+                }
+                if (!backup.exists()) {
+                    throw new IllegalStateException(
+                            "Unable to make backup " + backup.getName());
+                }
+                if (file.exists()) {
+                    if (!file.delete()) {
+                        throw new IOException("Could not delete old " + file.getName());
+                    }
+                }
+            }
+            //Move the new tmp database into position.
+            if (!tmp.renameTo(file)) {
+                FileUtils.copy(tmp, file); //try really hard
+            }
+            if (!file.exists()) {
+                //This will keep the tmp file in place, although the next serialization
+                //attempt will probably delete it
+                throw new IOException(
+                        "Failed to move " + tmp.getName() + " to " + file.getName());
+            }
+            if (tmp.exists()) {
+                if (!tmp.delete()) {
+                    LOGGER.warn("Unable to delete old tmp file " + tmp.getName());
+                }
+            }
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Wrote serialized data: {}", json);
             }
         } catch (IOException e) {
-            LOGGER.error("Failed to save serialized data", e);
+            LOGGER.error("Failed to save configuration database", e);
         }
     }
 
@@ -107,43 +143,44 @@ public class SerializationManager {
      * @throws Exception An error has occurred deserializing the nodes.
      */
     public void deserialize() throws Exception {
-        deserialize(true);
-    }
-
-    private void deserialize(boolean cont) throws Exception {
-        byte[] bytes = null;
         if (file.exists()) {
             try {
-                bytes = FileUtils.readAllBytes(file);
-            } catch (Exception ignored) {
+                handle(FileUtils.readAllBytes(file));
+                LOGGER.debug("Restored " + file.getName());
+                return;
+            } catch (Exception x) {
+                LOGGER.error("Could not deserialize " + file.getName(), x);
             }
-        } else if (backup.exists()) {
-            bytes = FileUtils.readAllBytes(backup);
-            FileUtils.write(file, bytes);
-            LOGGER.warn("Restored backup data");
         }
-
-        boolean tryAgain = false;
-        if (bytes != null) {
+        //There was a problem with the primary db.
+        if (backup.exists()) {
             try {
-                handle(bytes);
-            } catch (Exception e) {
-                if (!cont) {
-                    throw e;
+                handle(FileUtils.readAllBytes(backup));
+                LOGGER.warn("Restored backup " + backup.getName());
+                if (file.exists()) {
+                    //Try delete the primary db so it won't overwrite the
+                    //good backup during the next serialization
+                    if (!file.delete()) {
+                        LOGGER.warn("Unable to delete corrupt " + file.getName());
+                    }
                 }
-                tryAgain = true;
+                return;
+            } catch (Exception x) {
+                LOGGER.error("Could not delete " + file.getName(), x);
             }
-        } else {
-            tryAgain = true;
         }
-
-        if (tryAgain && cont) {
-            // Force reading from the backup
-            if (!file.delete()) {
-                LOGGER.debug("Failed to delete original file");
+        //We've got nothing to lose, try the tmp serialization file
+        File tmp = new File(file.getParent(), file.getName() + ".tmp");
+        if (tmp.exists()) {
+            try {
+                handle(FileUtils.readAllBytes(tmp));
+                LOGGER.warn("Restored " + tmp.getName());
+                return;
+            } catch (Exception x) {
+                LOGGER.error("Could not deserialize " + tmp.getName(), x);
             }
-            deserialize(false);
         }
+        LOGGER.warn("Unable to deserialize a configuration database");
     }
 
     private void handle(byte[] bytes) throws Exception {
