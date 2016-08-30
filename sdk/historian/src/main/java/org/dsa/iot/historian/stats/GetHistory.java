@@ -80,7 +80,8 @@ public class GetHistory implements Handler<ActionResult> {
                            final boolean realTime,
                            final Rollup.Type rollup,
                            final IntervalParser parser) {
-        final IntervalProcessor interval = IntervalProcessor.parse(parser, rollup);
+        final IntervalProcessor interval = IntervalProcessor.parse(
+                parser, rollup, from.getTimeZone());
         LoopProvider.getProvider().schedule(new Runnable() {
 
             private boolean open = true;

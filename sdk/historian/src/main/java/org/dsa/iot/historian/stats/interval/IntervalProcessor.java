@@ -1,120 +1,113 @@
 package org.dsa.iot.historian.stats.interval;
 
-import org.dsa.iot.dslink.node.actions.table.Row;
-import org.dsa.iot.dslink.node.value.Value;
+import org.dsa.iot.dslink.node.actions.table.*;
+import org.dsa.iot.dslink.node.value.*;
+import org.dsa.iot.dslink.util.*;
 import org.dsa.iot.historian.stats.rollup.*;
-import org.dsa.iot.historian.utils.QueryData;
-import org.dsa.iot.historian.utils.TimeParser;
+import org.dsa.iot.historian.utils.*;
+import java.util.*;
 
 /**
  * @author Samuel Grenier
  */
 public class IntervalProcessor {
 
+    private Calendar calendar; // Calendar with the correct timezone.
+    private long currentInterval = -1;  //Timestamp of the current interval.
+    private QueryData lastValue; // The last value of the current interval.
+    private long nextInterval = -1; //Timestamp of the next interval.
     private final IntervalParser parser;
     private final Rollup rollup;
 
-    /**
-     * Last timestamp of the last value.
-     */
-    private long lastValueTimeTrunc = -1;
-
-    /**
-     * Last updated value used for roll ups.
-     */
-    private QueryData lastValue;
-
-    /**
-     * Last real time value.
-     */
-    private QueryData realTimeValue;
-
-    /**
-     * Last real time timestamp.
-     */
-    private long realTimeTime;
-
     private IntervalProcessor(IntervalParser parser,
-                              Rollup rollup) {
+                              Rollup rollup,
+                              TimeZone timeZone) {
         this.parser = parser;
         this.rollup = rollup;
+        calendar = Calendar.getInstance();
+        calendar.setTimeZone(timeZone);
     }
 
     /**
+     * Update the current interval, but if the if the arguments represent a new
+     * interval, then the prior will be returned.
      *
-     * @param data Value retrieved from the database.
+     * @param data   Value retrieved from the database.
      * @param fullTs Full timestamp of the value.
-     * @return An update or null to skip the update.
+     * @return The last interval, or null.
      */
     public Row getRowUpdate(QueryData data, long fullTs) {
-        setRealTime(data, fullTs);
-        final long alignedTs = parser.alignTime(fullTs);
-
+        calendar.setTimeInMillis(fullTs);
+        parser.alignTime(calendar);
+        long alignedTs = calendar.getTimeInMillis();
+        if (currentInterval < 0) {
+            currentInterval = alignedTs;
+            parser.nextInterval(calendar);
+            nextInterval = calendar.getTimeInMillis();
+        }
         Row row = null;
-        if (alignedTs - lastValueTimeTrunc < parser.incrementTime()) {
-            // Update the last value within the same interval
-            lastValue = data;
+        if (alignedTs < currentInterval) { //Out of order timestamp, ignore it.
+            return null;
+        }
+        if (alignedTs < nextInterval) { // Update the current interval
             if (rollup != null) {
-                rollup.update(data.getValue(), fullTs);
+                rollup.update(data.getValue(), currentInterval);
             }
-        } else if (lastValue != null) {
-            // Finish up the rollup, the interval for this period is completed
+            lastValue = data;
+            return null;
+        }
+        if (lastValue != null) { // Finish the last interval
             if (rollup == null) {
-                row = makeRow(lastValue.getValue(), lastValueTimeTrunc);
+                row = makeRow(data.getValue(), currentInterval);
             } else {
-                row = makeRow(rollup.getValue(), lastValueTimeTrunc);
+                row = makeRow(rollup.getValue(), currentInterval);
             }
             lastValue = null;
-            setRealTime(data, alignedTs);
         }
-
-        // New interval period has been started
-        if (alignedTs - lastValueTimeTrunc >= parser.incrementTime()) {
-            lastValueTimeTrunc = alignedTs;
-            lastValue = data;
-            if (rollup != null) {
-                rollup.reset();
-                rollup.update(lastValue.getValue(), fullTs);
-            }
+        while (alignedTs >= nextInterval) { //Advance to the next interval
+            currentInterval = nextInterval;
+            calendar.setTimeInMillis(currentInterval);
+            parser.nextInterval(calendar);
+            nextInterval = calendar.getTimeInMillis();
         }
+        if (rollup != null) {
+            rollup.reset();
+            rollup.update(data.getValue(), currentInterval);
+        }
+        lastValue = data;
         return row;
     }
 
+    /**
+     * Returns a row representing the current interval, or null if the current
+     * interval has no data.
+     */
     public Row complete() {
-        if (lastValue == null) {
-            // Don't duplicate the value if the interval finished and there
-            // is no more data.
+        if (lastValue == null) { //There is no data in the current interval.
             return null;
         }
-        Value val = null;
-        if (realTimeValue != null) {
-            val = realTimeValue.getValue();
+        // Finish the current interval
+        Row row = null;
+        if (rollup == null) {
+            row = makeRow(lastValue.getValue(), currentInterval);
+        } else {
+            row = makeRow(rollup.getValue(), currentInterval);
         }
-        if (val != null) {
-            if (rollup != null) {
-                val = rollup.getValue();
-            }
-            return makeRow(val, realTimeTime);
-        }
-        return null;
+        lastValue = null;
+        return row;
     }
 
     private Row makeRow(Value value, long ts) {
         Row row = new Row();
-        row.addValue(new Value(TimeParser.parse(ts)));
+        calendar.setTimeInMillis(ts);
+        row.addValue(new Value(TimeUtils.encode(calendar, true, null).toString()));
         row.addValue(value);
         return row;
     }
 
-    private void setRealTime(QueryData data, long time) {
-        // Subtract the increment time since the time must point to the
-        // start time of the row, not the end.
-        realTimeTime = time - parser.incrementTime();
-        realTimeValue = data;
-    }
-
     public static IntervalProcessor parse(IntervalParser parser,
-                                          Rollup.Type rollup) {
+                                          Rollup.Type rollup,
+                                          TimeZone timeZone) {
         if (parser == null) {
             return null;
         }
@@ -142,6 +135,6 @@ public class IntervalProcessor {
         } else if (Rollup.Type.NONE != rollup) {
             throw new RuntimeException("Invalid rollup: " + rollup);
         }
-        return new IntervalProcessor(parser, roll);
+        return new IntervalProcessor(parser, roll, timeZone);
     }
 }
