@@ -37,11 +37,11 @@ public class IntervalParser {
     public boolean alignTime(Calendar calendar) {
         boolean modified = false;
         if (alignSeconds) {
-            TimeUtils.alignSecond(calendar);
+            TimeUtils.alignSeconds(seconds,calendar);
             modified = true;
         }
         if (alignMinutes) {
-            TimeUtils.alignMinute(calendar);
+            TimeUtils.alignMinutes(minutes,calendar);
             modified = true;
         }
         if (alignHours) {
