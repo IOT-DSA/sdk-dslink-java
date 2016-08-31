@@ -17,6 +17,7 @@ public class QueuedWriteManager {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(QueuedWriteManager.class);
     private static final int DISPATCH_DELAY;
+    private static final int MAX_TASKS = 1000;
 
     private final Map<Integer, JsonObject> mergedTasks = new HashMap<>();
     private final List<JsonObject> rawTasks = new LinkedList<>();
@@ -121,12 +122,14 @@ public class QueuedWriteManager {
                         }
                         JsonArray updates = new JsonArray();
                         Iterator<JsonObject> it = mergedTasks.values().iterator();
-                        while (it.hasNext()) {
+                        int count = MAX_TASKS / 2;
+                        while (it.hasNext() && (--count >= 0)) {
                             updates.add(it.next());
                             it.remove();
                         }
+                        count = MAX_TASKS / 2;
                         it = rawTasks.iterator();
-                        while (it.hasNext()) {
+                        while (it.hasNext() && (--count >= 0)) {
                             updates.add(it.next());
                             it.remove();
                         }
