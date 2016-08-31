@@ -1,5 +1,8 @@
 package org.dsa.iot.historian.stats.interval;
 
+import org.dsa.iot.dslink.util.*;
+import java.util.*;
+
 /**
  * @author Samuel Grenier
  */
@@ -26,49 +29,79 @@ public class IntervalParser {
     private int years = -1;
     private boolean alignYears;
 
-    private long incrementTime;
-
     /**
-     * @return The total amount of time combined to increment by.
+     * If configured to align to an interval, this will align the given calendar.
+     *
+     * @return True if the calendar was modified.
      */
-    public long incrementTime() {
-        return incrementTime;
+    public boolean alignTime(Calendar calendar) {
+        boolean modified = false;
+        if (alignSeconds) {
+            TimeUtils.alignSeconds(seconds,calendar);
+            modified = true;
+        }
+        if (alignMinutes) {
+            TimeUtils.alignMinutes(minutes,calendar);
+            modified = true;
+        }
+        if (alignHours) {
+            TimeUtils.alignHour(calendar);
+            modified = true;
+        }
+        if (alignDays) {
+            TimeUtils.alignDay(calendar);
+            modified = true;
+        }
+        if (alignWeeks) {
+            TimeUtils.alignWeek(calendar);
+            modified = true;
+        }
+        if (alignMonths) {
+            TimeUtils.alignMonth(calendar);
+            modified = true;
+        }
+        if (alignYears) {
+            TimeUtils.alignYear(calendar);
+            modified = true;
+        }
+        return modified;
     }
 
     /**
-     * @param ts Timestamp to align
-     * @return Aligned timestamp
+     * Advances the calendar, without performing any alignment.
+     *
+     * @return True if the calendar was modified.
      */
-    public long alignTime(long ts) {
-        if (alignSeconds) {
-            ts -= (ts % 1e+3);
+    public boolean nextInterval(Calendar calendar) {
+        boolean modified = false;
+        if (seconds > 0) {
+            TimeUtils.addSeconds(seconds,calendar);
+            modified = true;
         }
-
-        if (alignMinutes) {
-            ts -= (ts % 6e+4);
+        if (minutes > 0) {
+            TimeUtils.addMinutes(minutes,calendar);
         }
-
-        if (alignHours) {
-            ts -= (ts % 3.6e6);
+        if (hours > 0) {
+            TimeUtils.addHours(hours,calendar);
+            modified = true;
         }
-
-        if (alignDays) {
-            ts -= (ts % 8.64e+7);
+        if (days > 0) {
+            TimeUtils.addDays(days,calendar);
+            modified = true;
         }
-
-        if (alignWeeks) {
-            ts -= (ts % 6.048e+8);
+        if (weeks > 0) {
+            TimeUtils.addWeeks(weeks,calendar);
+            modified = true;
         }
-
-        if (alignMonths) {
-            ts -= (ts % 2.628e+9);
+        if (months > 0) {
+            TimeUtils.addMonths(months,calendar);
+            modified = true;
         }
-
-        if (alignYears) {
-            ts -= (ts % 3.154e+10);
+        if (years > 0) {
+            TimeUtils.addYears(years,calendar);
+            modified = true;
         }
-
-        return ts;
+        return modified;
     }
 
     private void update(char interval, String number) {
@@ -121,40 +154,6 @@ public class IntervalParser {
         }
     }
 
-    private void finishParsing() {
-        long ts = 0;
-
-        if (years > -1) {
-            ts += (3.154e+10 * years);
-        }
-
-        if (months > -1) {
-            ts += (2.628e+9 * months);
-        }
-
-        if (weeks > -1) {
-            ts += (6.048e+8 * weeks);
-        }
-
-        if (days > -1) {
-            ts += (8.64e+7 * days);
-        }
-
-        if (hours > -1) {
-            ts += (3.6e+6 * hours);
-        }
-
-        if (minutes > -1) {
-            ts += (6e+4 * minutes);
-        }
-
-        if (seconds > -1) {
-            ts += (1e+3 * seconds);
-        }
-
-        incrementTime = ts;
-    }
-
     private void check(String type, int num) {
         if (num != -1) {
             throw new RuntimeException(type + " is already set");
@@ -178,12 +177,9 @@ public class IntervalParser {
                 number.delete(0, number.length());
             }
         }
-
         if (number.length() > 0) {
             throw new RuntimeException("Invalid expression");
         }
-
-        parser.finishParsing();
         return parser;
     }
 }
