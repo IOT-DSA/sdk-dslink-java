@@ -133,7 +133,7 @@ public class QueuedWriteManager {
                             updates.add(it.next());
                             it.remove();
                         }
-
+                        schedule = (mergedTasks.size() > 0) || (rawTasks.size() > 0);
                         JsonObject top = new JsonObject();
                         top.put(topName, updates);
                         forceWrite(top);
