@@ -127,8 +127,8 @@ public class QueuedWriteManager {
                             updates.add(it.next());
                             it.remove();
                         }
-                        count = MAX_TASKS / 2;
                         it = rawTasks.iterator();
+                        count += (MAX_TASKS / 2);
                         while (it.hasNext() && (--count >= 0)) {
                             updates.add(it.next());
                             it.remove();
@@ -147,7 +147,7 @@ public class QueuedWriteManager {
     }
 
     private synchronized boolean shouldBlock() {
-        return (mergedTasks.size() + rawTasks.size()) > 100000;
+        return (mergedTasks.size() + rawTasks.size()) > MAX_TASKS;
     }
 
     private synchronized boolean shouldQueue() {
