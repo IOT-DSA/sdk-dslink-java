@@ -142,12 +142,7 @@ public class Watch {
         new OverwriteHistoryAction(this, node, perm, db);
         GetHistory.initAction(node, getGroup().getDb());
 
-        Objects.getDaemonThreadPool().schedule(new Runnable() {
-            @Override public void run() {
-                addGetHistoryActionAlias();
-            }
-        }, 30000, TimeUnit.MILLISECONDS);
-
+        addGetHistoryActionAlias();
         group.addWatch(this);
     }
 

@@ -47,14 +47,6 @@ public class QueuedWriteManager {
     }
 
     public boolean post(JsonObject content, boolean merge) {
-        while (shouldBlock()) {
-            try {
-                Thread.sleep(1);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
         synchronized (this) {
             if (shouldQueue()) {
                 addTask(content, merge);
@@ -144,10 +136,6 @@ public class QueuedWriteManager {
                 }
             }
         }, DISPATCH_DELAY, TimeUnit.MILLISECONDS);
-    }
-
-    private synchronized boolean shouldBlock() {
-        return (mergedTasks.size() + rawTasks.size()) > MAX_TASKS;
     }
 
     private synchronized boolean shouldQueue() {
