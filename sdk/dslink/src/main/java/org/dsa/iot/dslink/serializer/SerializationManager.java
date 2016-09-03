@@ -130,7 +130,7 @@ public class SerializationManager {
                 }
             }
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Wrote serialized data: {}");
+                LOGGER.debug("Backup complete");
             }
         } catch (IOException e) {
             LOGGER.error("Failed to save configuration database", e);
