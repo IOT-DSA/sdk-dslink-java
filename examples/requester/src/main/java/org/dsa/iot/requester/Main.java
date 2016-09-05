@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Responder simply lists everything from the "/" root.
+ * Requester simply lists everything from the "/" root.
  *
  * @author Samuel Grenier
  */
