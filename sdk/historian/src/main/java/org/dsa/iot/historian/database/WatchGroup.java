@@ -130,6 +130,10 @@ public class WatchGroup {
      * @param path Watch path.
      */
     protected void initWatch(String path) {
+        if (node.hasChild(path)) { // Handles the case that a watch path already is initialized.
+            return;
+        }
+
         NodeBuilder b = node.createChild(path);
         b.setValueType(ValueType.DYNAMIC);
         b.setValue(null);
