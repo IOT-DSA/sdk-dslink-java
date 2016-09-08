@@ -374,16 +374,21 @@ public class TimeUtils {
                         minOff = convertDigits(chars[idx++], chars[idx++]);
                     }
                     tzOff = (hrOff * MILLIS_HOUR) + (minOff * MILLIS_MINUTE);
-                    if (sign == '-')
+                    if (sign == '-') {
                         tzOff *= -1;
-                    String timeZoneName = "Offset" + tzOff;
-                    synchronized (timezones) {
-                        TimeZone timezone = timezones.get(timeZoneName);
-                        if (timezone == null) {
-                            timezone = new SimpleTimeZone(tzOff, timeZoneName);
-                            timezones.put(timeZoneName, timezone);
-                            calendar.setTimeZone(timezone);
+                    }
+                    TimeZone timezone = calendar.getTimeZone();
+                    int localOffset = timezone.getOffset(calendar.getTimeInMillis());
+                    if (localOffset != tzOff) {
+                        String timeZoneName = "Offset" + tzOff;
+                        synchronized (timezones) {
+                            timezone = timezones.get(timeZoneName);
+                            if (timezone == null) {
+                                timezone = new SimpleTimeZone(tzOff, timeZoneName);
+                                timezones.put(timeZoneName, timezone);
+                            }
                         }
+                        calendar.setTimeZone(timezone);
                     }
                 }
             }
