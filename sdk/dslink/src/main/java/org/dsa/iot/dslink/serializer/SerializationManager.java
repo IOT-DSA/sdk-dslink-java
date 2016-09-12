@@ -130,7 +130,7 @@ public class SerializationManager {
                 }
             }
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Wrote serialized data: {}", json);
+                LOGGER.debug("Backup complete");
             }
         } catch (IOException e) {
             LOGGER.error("Failed to save configuration database", e);
@@ -186,9 +186,6 @@ public class SerializationManager {
     private void handle(byte[] bytes) throws Exception {
         String in = new String(bytes, "UTF-8");
         JsonObject obj = new JsonObject(in);
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Read serialized data: " + obj);
-        }
         deserializer.deserialize(obj);
     }
 

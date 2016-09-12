@@ -17,6 +17,7 @@ public class QueuedWriteManager {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(QueuedWriteManager.class);
     private static final int DISPATCH_DELAY;
+    private static final int MAX_TASKS = 1000;
 
     private final Map<Integer, JsonObject> mergedTasks = new HashMap<>();
     private final List<JsonObject> rawTasks = new LinkedList<>();
@@ -46,14 +47,6 @@ public class QueuedWriteManager {
     }
 
     public boolean post(JsonObject content, boolean merge) {
-        while (shouldBlock()) {
-            try {
-                Thread.sleep(1);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
         synchronized (this) {
             if (shouldQueue()) {
                 addTask(content, merge);
@@ -121,16 +114,18 @@ public class QueuedWriteManager {
                         }
                         JsonArray updates = new JsonArray();
                         Iterator<JsonObject> it = mergedTasks.values().iterator();
-                        while (it.hasNext()) {
+                        int count = MAX_TASKS / 2;
+                        while (it.hasNext() && (--count >= 0)) {
                             updates.add(it.next());
                             it.remove();
                         }
                         it = rawTasks.iterator();
-                        while (it.hasNext()) {
+                        count += (MAX_TASKS / 2);
+                        while (it.hasNext() && (--count >= 0)) {
                             updates.add(it.next());
                             it.remove();
                         }
-
+                        schedule = (mergedTasks.size() > 0) || (rawTasks.size() > 0);
                         JsonObject top = new JsonObject();
                         top.put(topName, updates);
                         forceWrite(top);
@@ -141,10 +136,6 @@ public class QueuedWriteManager {
                 }
             }
         }, DISPATCH_DELAY, TimeUnit.MILLISECONDS);
-    }
-
-    private synchronized boolean shouldBlock() {
-        return (mergedTasks.size() + rawTasks.size()) > 100000;
     }
 
     private synchronized boolean shouldQueue() {
