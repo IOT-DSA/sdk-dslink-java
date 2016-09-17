@@ -9,8 +9,20 @@ import java.util.concurrent.*;
  * @author Samuel Grenier
  */
 public class SharedObjects {
+    private static int calculateCorePoolSize() {
+        int definedSize = Integer.parseInt(System.getProperty("dsa.shared.threadPoolSize", "0"));
+        if (definedSize == 0) {
+            int processors = Runtime.getRuntime().availableProcessors();
+            if (processors <= 2) {
+                definedSize = 16;
+            } else {
+                definedSize = Math.min(64, processors * 8);
+            }
+        }
+        return definedSize;
+    }
 
-    public static final int POOL_SIZE = 32;
+    public static final int POOL_SIZE = calculateCorePoolSize();
 
     private static volatile ScheduledThreadPoolExecutor THREAD_POOL;
     private static volatile ScheduledThreadPoolExecutor DAEMON_THREAD_POOL;
@@ -85,8 +97,6 @@ public class SharedObjects {
             setRemoveOnCancelPolicy(true);
             setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
             setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
-            setKeepAliveTime(1, TimeUnit.MINUTES);
-            allowCoreThreadTimeOut(true);
         }
 
         @Override
