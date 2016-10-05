@@ -41,7 +41,10 @@ public class Watch {
         if (lastWatchUpdate == null) {
             Value value = node.getValue();
             if (value != null) {
-                SubscriptionValue subscriptionValue = new SubscriptionValue(watchedPath, value, null, null, null, null);
+                SubscriptionValue subscriptionValue = new SubscriptionValue(watchedPath,
+                                                                            value, null,
+                                                                            null, null,
+                                                                            null);
                 lastWatchUpdate = new WatchUpdate(this, subscriptionValue);
             }
         }
@@ -148,7 +151,8 @@ public class Watch {
         mergePathsObject.put("type", "paths");
 
         String linkPath = node.getLink().getDSLink().getPath();
-        String getHistoryPath = String.format("%s%s/getHistory", linkPath, node.getPath());
+        String getHistoryPath = String.format("%s%s/getHistory", linkPath,
+                                              node.getPath());
         JsonArray array = new JsonArray();
         array.add(getHistoryPath);
         mergePathsObject.put("val", array);
@@ -180,7 +184,8 @@ public class Watch {
                 @Override
                 public synchronized void handle(ValuePair event) {
                     enabled = event.getCurrent().getBool();
-                    String path = node.getName().replaceAll("%2F", "/").replaceAll("%2E", ".");
+                    String path = node.getName().replaceAll("%2F", "/").replaceAll("%2E",
+                                                                                   ".");
                     SubscriptionPool pool = group.getDb().getProvider().getPool();
                     if (enabled) {
                         pool.subscribe(path, Watch.this);
@@ -270,6 +275,7 @@ public class Watch {
     /**
      * Attempts to convert the value of the argument to the value type of the
      * realTimeValue node.
+     *
      * @param arg The candidate for conversion.
      * @return A new SubscriptionValue if the value in the argument was immutable.
      */
@@ -303,25 +309,33 @@ public class Watch {
         ValueType type = value.getType();
         if (type == ValueType.STRING) {
             String s = value.getString();
-            if (s.equalsIgnoreCase(Boolean.TRUE.toString())) {
+            if (Boolean.TRUE.toString().equalsIgnoreCase(s)) { //Localized test
                 value.set(Boolean.TRUE);
-            } else if (s.equalsIgnoreCase(Boolean.FALSE.toString())) {
+            } else if (Boolean.FALSE.toString().equalsIgnoreCase(s)) { //Localized test
                 value.set(Boolean.FALSE);
-            } else if (s.equals("0")) {
-                value.set(Boolean.FALSE);
-            } else if (s.equals("1")) {
+            } else if ("true".equalsIgnoreCase(s)) { //In case not an english locale
                 value.set(Boolean.TRUE);
+            } else if ("false".equalsIgnoreCase(s)) { //In case not an english locale
+                value.set(Boolean.TRUE);
+            } else if ("0".equals(s)) {
+                value.set(Boolean.FALSE);
+            } else if ("1".equals(s)) {
+                value.set(Boolean.TRUE);
+            } else {
+                //Test if it's a number other than "0" or "1".
+                try {
+                    double d = Double.parseDouble(s);
+                    value.set(d != 0d);
+                } catch (Exception ignore) {
+                }
             }
-        }
-        else if (type == ValueType.NUMBER) {
+        } else if (type == ValueType.NUMBER) {
             Number num = value.getNumber();
             if (num instanceof Double) {
                 value.set(num.doubleValue() != 0d);
-            }
-            else if (num instanceof Float) {
+            } else if (num instanceof Float) {
                 value.set(num.floatValue() != 0f);
-            }
-            else {
+            } else {
                 value.set(num.longValue() != 0l);
             }
         }
@@ -335,14 +349,16 @@ public class Watch {
     private void toNumber(Value value) {
         ValueType type = value.getType();
         if (type == ValueType.STRING) {
-            String s = value.getString();
-            if (s.indexOf('.') >= 0) {
-                value.set(Double.parseDouble(s));
-            } else {
-                value.set(Long.parseLong(s));
+            try {
+                String s = value.getString();
+                if (s.indexOf('.') >= 0) {
+                    value.set(Double.parseDouble(s));
+                } else {
+                    value.set(Long.parseLong(s));
+                }
+            } catch (Exception ignore) {
             }
-        }
-        else if (type == ValueType.BOOL) {
+        } else if (type == ValueType.BOOL) {
             if (value.getBool()) {
                 value.set(1);
             } else {

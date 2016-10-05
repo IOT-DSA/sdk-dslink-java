@@ -6,7 +6,7 @@ import org.dsa.iot.dslink.util.json.*;
 import java.util.*;
 
 /**
- * Deserializes a JSON file into a node nodeManager
+ * Deserializes a JSON file into a node manager
  *
  * @author Samuel Grenier
  */
@@ -22,7 +22,7 @@ public class Deserializer {
     }
 
     /**
-     * Deserializes the object into the nodeManager.
+     * Deserializes the object into the node manager.
      *
      * @param object Object to deserialize.
      */
