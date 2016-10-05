@@ -16,6 +16,27 @@ public class ValueUtils {
     private static final String ERROR_MSG = "Unhandled value type: ";
 
     /**
+     * Creates a new copy of the the argument and leaves it mutable.
+     */
+    public static Value mutableCopy(Value arg) {
+        ValueType type = arg.getType();
+        if (type.compare(ValueType.NUMBER)) {
+            return new Value(arg.getNumber(), arg.getTimeStamp());
+        } else if (type.compare(ValueType.BOOL)) {
+            return new Value(arg.getBool(), arg.getTimeStamp());
+        } else if (type.compare(ValueType.STRING)) {
+            return new Value(arg.getString(), arg.getTimeStamp());
+        } else if (type.compare(ValueType.MAP)) {
+            return new Value(arg.getMap(), arg.getTimeStamp());
+        } else if (type.compare(ValueType.ARRAY)) {
+            return new Value(arg.getArray(), arg.getTimeStamp());
+        } else if (type.compare(ValueType.BINARY)) {
+            return new Value(arg.getBinary(), arg.getTimeStamp());
+        }
+        return new Value((String) null);
+    }
+
+    /**
      * Creates an empty value with the designated type.
      *
      * @param type Type of the value.

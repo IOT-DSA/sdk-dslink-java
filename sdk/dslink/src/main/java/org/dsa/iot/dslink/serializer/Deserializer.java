@@ -1,30 +1,28 @@
 package org.dsa.iot.dslink.serializer;
 
-import org.dsa.iot.dslink.node.Node;
-import org.dsa.iot.dslink.node.NodeManager;
-import org.dsa.iot.dslink.node.Writable;
-import org.dsa.iot.dslink.node.value.Value;
-import org.dsa.iot.dslink.node.value.ValueType;
-import org.dsa.iot.dslink.node.value.ValueUtils;
-import org.dsa.iot.dslink.util.json.JsonObject;
-
-import java.util.Map;
+import org.dsa.iot.dslink.node.*;
+import org.dsa.iot.dslink.node.value.*;
+import org.dsa.iot.dslink.util.json.*;
+import java.util.*;
 
 /**
- * Deserializes a JSON file into a node manager
+ * Deserializes a JSON file into a node nodeManager
  *
  * @author Samuel Grenier
  */
 public class Deserializer {
 
-    private final NodeManager manager;
+    private final SerializationManager serializationManager;
+    private final NodeManager nodeManager;
 
-    public Deserializer(NodeManager manager) {
-        this.manager = manager;
+    public Deserializer(SerializationManager serializationManager,
+                        NodeManager nodeManager) {
+        this.serializationManager = serializationManager;
+        this.nodeManager = nodeManager;
     }
 
     /**
-     * Deserializes the object into the manager.
+     * Deserializes the object into the nodeManager.
      *
      * @param object Object to deserialize.
      */
@@ -32,7 +30,7 @@ public class Deserializer {
     public void deserialize(JsonObject object) {
         for (Map.Entry<String, Object> entry : object) {
             String name = entry.getKey();
-            Node node = manager.getNode(name, true).getNode();
+            Node node = nodeManager.getNode(name, true).getNode();
             Object value = entry.getValue();
             JsonObject data = (JsonObject) value;
             deserializeNode(node, data);
@@ -63,7 +61,8 @@ public class Deserializer {
             } else if ("$hidden".equals(name)) {
                 node.setHidden((Boolean) value);
             } else if ("$$password".equals(name)) {
-                node.setPassword(((String) value).toCharArray());
+                String pass = decrypt((String)value);
+                node.setPassword(pass.toCharArray());
             } else if ("?value".equals(name)) {
                 ValueType t = node.getValueType();
                 Value val = ValueUtils.toValue(value);
@@ -76,6 +75,9 @@ public class Deserializer {
                     node.setValue(val);
                 }
             } else if (name.startsWith("$$")) {
+                if (name.endsWith(SerializationManager.PASSWORD_TOKEN)) {
+                    value = decrypt((String)value);
+                }
                 node.setRoConfig(name.substring(2), ValueUtils.toValue(value));
             } else if (name.startsWith("$")) {
                 node.setConfig(name.substring(1), ValueUtils.toValue(value));
@@ -88,4 +90,9 @@ public class Deserializer {
             }
         }
     }
+
+    private String decrypt(String pass) {
+        return serializationManager.decrypt(nodeManager.getSuperRoot(), pass);
+    }
+
 }
