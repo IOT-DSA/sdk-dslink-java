@@ -20,17 +20,17 @@ public class ValueUtils {
      */
     public static Value mutableCopy(Value arg) {
         ValueType type = arg.getType();
-        if (type.compare(ValueType.NUMBER)) {
+        if (ValueType.NUMBER.compare(type)) {
             return new Value(arg.getNumber(), arg.getTimeStamp());
-        } else if (type.compare(ValueType.BOOL)) {
+        } else if (ValueType.BOOL.compare(type)) {
             return new Value(arg.getBool(), arg.getTimeStamp());
-        } else if (type.compare(ValueType.STRING)) {
+        } else if (ValueType.STRING.compare(type)) {
             return new Value(arg.getString(), arg.getTimeStamp());
-        } else if (type.compare(ValueType.MAP)) {
+        } else if (ValueType.MAP.compare(type)) {
             return new Value(arg.getMap(), arg.getTimeStamp());
-        } else if (type.compare(ValueType.ARRAY)) {
+        } else if (ValueType.ARRAY.compare(type)) {
             return new Value(arg.getArray(), arg.getTimeStamp());
-        } else if (type.compare(ValueType.BINARY)) {
+        } else if (ValueType.BINARY.compare(type)) {
             return new Value(arg.getBinary(), arg.getTimeStamp());
         }
         return new Value((String) null);

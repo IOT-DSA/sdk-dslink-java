@@ -27,7 +27,6 @@ public class SerializationManager {
     private final Serializer serializer;
     private ScheduledFuture<?> future;
 
-    private Cipher cipher;
     private SecretKeySpec secretKeySpec;
     static final String PASSWORD_TOKEN = "assword";
 
@@ -42,8 +41,8 @@ public class SerializationManager {
     public SerializationManager(File file, NodeManager manager) {
         this.file = file;
         this.backup = new File(file.getPath() + ".bak");
-        this.deserializer = new Deserializer(this,manager);
-        this.serializer = new Serializer(this,manager);
+        this.deserializer = new Deserializer(this, manager);
+        this.serializer = new Serializer(this, manager);
     }
 
     public void markChanged() {
@@ -200,15 +199,15 @@ public class SerializationManager {
      * compatible with older unencrypted passwords.
      *
      * @param pass Base64 encoding of the password to decrypt, can be encrypted or
-     * unencrypted.
+     *             unencrypted.
      * @return An unencrypted password.
      */
     synchronized String decrypt(Node node, String pass) {
         try {
             byte[] encrypted = UrlBase64.decode(pass);
-            Cipher cipher = getCipher(node,Cipher.DECRYPT_MODE);
+            Cipher cipher = getCipher(node, Cipher.DECRYPT_MODE);
             byte[] decrypted = cipher.doFinal(encrypted);
-            pass = new String(decrypted,"UTF-8");
+            pass = new String(decrypted, "UTF-8");
         } catch (Exception happensWithUnencryptedPasswords) {
         }
         return pass;
@@ -217,12 +216,13 @@ public class SerializationManager {
     /**
      * Encrypts passwords using characters from the private key of the link as
      * the secret key.
+     *
      * @param pass Unencrypted password.
      * @return Base64 encoding of the encrypted password.
      */
     synchronized String encrypt(Node node, String pass) {
         try {
-            Cipher cipher = getCipher(node,Cipher.ENCRYPT_MODE);
+            Cipher cipher = getCipher(node, Cipher.ENCRYPT_MODE);
             byte[] encrypted = cipher.doFinal(pass.getBytes("UTF-8"));
             return UrlBase64.encode(encrypted);
         } catch (Exception x) {
@@ -239,15 +239,13 @@ public class SerializationManager {
      * @throws Exception
      */
     private Cipher getCipher(Node node, int mode) throws Exception {
-        if (cipher == null) {
-            byte[] privateKey = node.getLink().getHandler()
-                    .getConfig().getKeys().getPrivateKey().getEncoded();
-            final int KEY_LEN = 16;
-            byte[] key = new byte[KEY_LEN];
-            System.arraycopy(privateKey,privateKey.length-KEY_LEN,key,0,KEY_LEN);
-            secretKeySpec = new SecretKeySpec(key, "AES");
-            cipher = Cipher.getInstance("AES");
-        }
+        byte[] privateKey = node.getLink().getHandler()
+                .getConfig().getKeys().getPrivateKey().getEncoded();
+        final int KEY_LEN = 16;
+        byte[] key = new byte[KEY_LEN];
+        System.arraycopy(privateKey, privateKey.length - KEY_LEN, key, 0, KEY_LEN);
+        secretKeySpec = new SecretKeySpec(key, "AES");
+        Cipher cipher = Cipher.getInstance("AES");
         cipher.init(mode, secretKeySpec);
         return cipher;
     }

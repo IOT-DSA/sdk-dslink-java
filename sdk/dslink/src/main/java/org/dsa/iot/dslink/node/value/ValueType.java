@@ -81,7 +81,12 @@ public final class ValueType {
      * @return Whether the JSON types are equal or not.
      */
     public boolean compare(ValueType other) {
-        return this == other || this.rawName.equals(other.rawName);
+        if (this == other) {
+            return true;
+        } else if (other == null) {
+            return false;
+        }
+        return this.rawName.equals(other.rawName);
     }
 
     /**

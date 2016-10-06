@@ -309,14 +309,10 @@ public class Watch {
         ValueType type = value.getType();
         if (type == ValueType.STRING) {
             String s = value.getString();
-            if (Boolean.TRUE.toString().equalsIgnoreCase(s)) { //Localized test
+            if ("true".equalsIgnoreCase(s)) {
                 value.set(Boolean.TRUE);
-            } else if (Boolean.FALSE.toString().equalsIgnoreCase(s)) { //Localized test
+            } else if ("false".equalsIgnoreCase(s)) {
                 value.set(Boolean.FALSE);
-            } else if ("true".equalsIgnoreCase(s)) { //In case not an english locale
-                value.set(Boolean.TRUE);
-            } else if ("false".equalsIgnoreCase(s)) { //In case not an english locale
-                value.set(Boolean.TRUE);
             } else if ("0".equals(s)) {
                 value.set(Boolean.FALSE);
             } else if ("1".equals(s)) {
