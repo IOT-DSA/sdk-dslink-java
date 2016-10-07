@@ -28,6 +28,7 @@ public class SerializationManager {
     private ScheduledFuture<?> future;
 
     private SecretKeySpec secretKeySpec;
+    private static final String PASSWORD_PREFIX = "\u001Bpw:";
     static final String PASSWORD_TOKEN = "assword";
 
     private final AtomicBoolean changed = new AtomicBoolean(false);
@@ -204,9 +205,8 @@ public class SerializationManager {
      */
     synchronized String decrypt(Node node, String pass) {
         try {
-            if (pass.startsWith("\u001Bpw:")) {
-                int idx = pass.indexOf(':') + 1;
-                byte[] bytes = UrlBase64.decode(pass.substring(idx));
+            if (pass.startsWith(PASSWORD_PREFIX)) {
+                byte[] bytes = UrlBase64.decode(pass.substring(PASSWORD_PREFIX.length()));
                 bytes = applyCipher(bytes, node, Cipher.DECRYPT_MODE);
                 pass = new String(bytes, "UTF-8");
             }
@@ -227,7 +227,7 @@ public class SerializationManager {
         try {
             byte[] bytes = pass.getBytes("UTF-8");
             bytes = applyCipher(bytes, node, Cipher.ENCRYPT_MODE);
-            return "\u001Bpw:" + UrlBase64.encode(bytes);
+            return PASSWORD_PREFIX + UrlBase64.encode(bytes);
         } catch (Exception x) {
             throw new RuntimeException(x);
         }
@@ -240,9 +240,9 @@ public class SerializationManager {
      * @param node       Used to get the private key of the link.
      * @param cipherMode Cipher.ENCRYPT_MODE or Cipher.DECRYPT_MODE
      * @return The transformed password.
-     * @throws Exception
      */
-    private byte[] applyCipher(byte[] password, Node node, int cipherMode) throws Exception {
+    private byte[] applyCipher(byte[] password, Node node, int cipherMode)
+            throws Exception {
         final String ALGO = "AES";
         if (secretKeySpec == null) {
             byte[] privateKey = node.getLink().getHandler()
