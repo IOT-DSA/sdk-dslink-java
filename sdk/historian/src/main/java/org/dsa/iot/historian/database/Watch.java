@@ -184,8 +184,9 @@ public class Watch {
                 @Override
                 public synchronized void handle(ValuePair event) {
                     enabled = event.getCurrent().getBool();
-                    String path = node.getName().replaceAll("%2F", "/").replaceAll("%2E",
-                                                                                   ".");
+                    String path = node.getName()
+                            .replaceAll("%2F", "/")
+                            .replaceAll("%2E", ".");
                     SubscriptionPool pool = group.getDb().getProvider().getPool();
                     if (enabled) {
                         pool.subscribe(path, Watch.this);
@@ -235,6 +236,11 @@ public class Watch {
         realTimeValue.setValue(sv.getValue());
         if (group.canWriteOnNewData()) {
             group.write(this, sv);
+            //The following is for when switching the logging type of the group from
+            //interval, to cov, and back to interval.  You could get an incorrect
+            //row in the database if there is no point change after the final switch
+            //to interval.
+            lastWatchUpdate = null;
         } else {
             lastWatchUpdate = new WatchUpdate(this, sv);
         }

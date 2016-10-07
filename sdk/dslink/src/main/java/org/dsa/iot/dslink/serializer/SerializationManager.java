@@ -204,11 +204,14 @@ public class SerializationManager {
      */
     synchronized String decrypt(Node node, String pass) {
         try {
-            byte[] encrypted = UrlBase64.decode(pass);
-            Cipher cipher = getCipher(node, Cipher.DECRYPT_MODE);
-            byte[] decrypted = cipher.doFinal(encrypted);
-            pass = new String(decrypted, "UTF-8");
-        } catch (Exception happensWithUnencryptedPasswords) {
+            if (pass.startsWith("\u001Bpw:")) {
+                int idx = pass.indexOf(':') + 1;
+                byte[] bytes = UrlBase64.decode(pass.substring(idx));
+                bytes = applyCipher(bytes, node, Cipher.DECRYPT_MODE);
+                pass = new String(bytes, "UTF-8");
+            }
+        } catch (Exception x) {
+            throw new RuntimeException(x);
         }
         return pass;
     }
@@ -222,32 +225,36 @@ public class SerializationManager {
      */
     synchronized String encrypt(Node node, String pass) {
         try {
-            Cipher cipher = getCipher(node, Cipher.ENCRYPT_MODE);
-            byte[] encrypted = cipher.doFinal(pass.getBytes("UTF-8"));
-            return UrlBase64.encode(encrypted);
+            byte[] bytes = pass.getBytes("UTF-8");
+            bytes = applyCipher(bytes, node, Cipher.ENCRYPT_MODE);
+            return "\u001Bpw:" + UrlBase64.encode(bytes);
         } catch (Exception x) {
             throw new RuntimeException(x);
         }
     }
 
     /**
-     * Returns a symmetric cipher initialized for the given mode.
+     * Encrypts or decrypts the given password.
      *
-     * @param node Used to get the keys of the link.
-     * @param mode Cipher.ENCRYPT_MODE or Cipher.DECRYPT_MODE
-     * @return Cipher initialized for encryption or decryption.
+     * @param password   The password to encrypt or decrypt.
+     * @param node       Used to get the private key of the link.
+     * @param cipherMode Cipher.ENCRYPT_MODE or Cipher.DECRYPT_MODE
+     * @return The transformed password.
      * @throws Exception
      */
-    private Cipher getCipher(Node node, int mode) throws Exception {
-        byte[] privateKey = node.getLink().getHandler()
-                .getConfig().getKeys().getPrivateKey().getEncoded();
-        final int KEY_LEN = 16;
-        byte[] key = new byte[KEY_LEN];
-        System.arraycopy(privateKey, privateKey.length - KEY_LEN, key, 0, KEY_LEN);
-        secretKeySpec = new SecretKeySpec(key, "AES");
-        Cipher cipher = Cipher.getInstance("AES");
-        cipher.init(mode, secretKeySpec);
-        return cipher;
+    private byte[] applyCipher(byte[] password, Node node, int cipherMode) throws Exception {
+        final String ALGO = "AES";
+        if (secretKeySpec == null) {
+            byte[] privateKey = node.getLink().getHandler()
+                    .getConfig().getKeys().getPrivateKey().getEncoded();
+            final int KEY_LEN = 16;
+            byte[] key = new byte[KEY_LEN];
+            System.arraycopy(privateKey, privateKey.length - KEY_LEN, key, 0, KEY_LEN);
+            secretKeySpec = new SecretKeySpec(key, ALGO);
+        }
+        Cipher cipher = Cipher.getInstance(ALGO);
+        cipher.init(cipherMode, secretKeySpec);
+        return cipher.doFinal(password);
     }
 
     static {
