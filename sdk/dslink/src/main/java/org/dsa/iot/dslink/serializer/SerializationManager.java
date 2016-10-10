@@ -8,6 +8,8 @@ import org.slf4j.*;
 import java.io.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
+import javax.crypto.*;
+import javax.crypto.spec.*;
 
 /**
  * Handles automatic serialization and deserialization.
@@ -25,6 +27,10 @@ public class SerializationManager {
     private final Serializer serializer;
     private ScheduledFuture<?> future;
 
+    private SecretKeySpec secretKeySpec;
+    private static final String PASSWORD_PREFIX = "\u001Bpw:";
+    static final String PASSWORD_TOKEN = "assword";
+
     private final AtomicBoolean changed = new AtomicBoolean(false);
 
     /**
@@ -36,8 +42,8 @@ public class SerializationManager {
     public SerializationManager(File file, NodeManager manager) {
         this.file = file;
         this.backup = new File(file.getPath() + ".bak");
-        this.deserializer = new Deserializer(manager);
-        this.serializer = new Serializer(manager);
+        this.deserializer = new Deserializer(this, manager);
+        this.serializer = new Serializer(this, manager);
     }
 
     public void markChanged() {
@@ -189,7 +195,70 @@ public class SerializationManager {
         deserializer.deserialize(obj);
     }
 
+    /**
+     * Decrypts passwords that were encrypted by the encrypt method.  This is backwards
+     * compatible with older unencrypted passwords.
+     *
+     * @param pass Base64 encoding of the password to decrypt, can be encrypted or
+     *             unencrypted.
+     * @return An unencrypted password.
+     */
+    synchronized String decrypt(Node node, String pass) {
+        try {
+            if (pass.startsWith(PASSWORD_PREFIX)) {
+                byte[] bytes = UrlBase64.decode(pass.substring(PASSWORD_PREFIX.length()));
+                bytes = applyCipher(bytes, node, Cipher.DECRYPT_MODE);
+                pass = new String(bytes, "UTF-8");
+            }
+        } catch (Exception x) {
+            throw new RuntimeException(x);
+        }
+        return pass;
+    }
+
+    /**
+     * Encrypts passwords using characters from the private key of the link as
+     * the secret key.
+     *
+     * @param pass Unencrypted password.
+     * @return Base64 encoding of the encrypted password.
+     */
+    synchronized String encrypt(Node node, String pass) {
+        try {
+            byte[] bytes = pass.getBytes("UTF-8");
+            bytes = applyCipher(bytes, node, Cipher.ENCRYPT_MODE);
+            return PASSWORD_PREFIX + UrlBase64.encode(bytes);
+        } catch (Exception x) {
+            throw new RuntimeException(x);
+        }
+    }
+
+    /**
+     * Encrypts or decrypts the given password.
+     *
+     * @param password   The password to encrypt or decrypt.
+     * @param node       Used to get the private key of the link.
+     * @param cipherMode Cipher.ENCRYPT_MODE or Cipher.DECRYPT_MODE
+     * @return The transformed password.
+     */
+    private byte[] applyCipher(byte[] password, Node node, int cipherMode)
+            throws Exception {
+        final String ALGO = "AES";
+        if (secretKeySpec == null) {
+            byte[] privateKey = node.getLink().getHandler()
+                    .getConfig().getKeys().getPrivateKey().getEncoded();
+            final int KEY_LEN = 16;
+            byte[] key = new byte[KEY_LEN];
+            System.arraycopy(privateKey, privateKey.length - KEY_LEN, key, 0, KEY_LEN);
+            secretKeySpec = new SecretKeySpec(key, ALGO);
+        }
+        Cipher cipher = Cipher.getInstance(ALGO);
+        cipher.init(cipherMode, secretKeySpec);
+        return cipher.doFinal(password);
+    }
+
     static {
         LOGGER = LoggerFactory.getLogger(SerializationManager.class);
     }
+
 }
