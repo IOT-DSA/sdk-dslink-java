@@ -9,14 +9,19 @@ import java.util.concurrent.*;
  * @author Samuel Grenier
  */
 public class SharedObjects {
+    private static final int MAX_CORE_POOL_SIZE = 64;
+    private static final int MIN_CORE_POOL_SIZE = 16;
+    private static final int CORE_POOL_FEW_PROCESSORS_THRESHOLD = 2;
+    private static final int CORE_POOL_MANY_PROCESSORS_MULTIPLIER = 8;
+    
     private static int calculateCorePoolSize() {
         int definedSize = Integer.parseInt(System.getProperty("dsa.shared.threadPoolSize", "0"));
         if (definedSize == 0) {
             int processors = Runtime.getRuntime().availableProcessors();
-            if (processors <= 2) {
-                definedSize = 16;
+            if (processors <= CORE_POOL_FEW_PROCESSORS_THRESHOLD) {
+                definedSize = MIN_CORE_POOL_SIZE;
             } else {
-                definedSize = Math.min(64, processors * 8);
+                definedSize = Math.min(MAX_CORE_POOL_SIZE, processors * CORE_POOL_MANY_PROCESSOR_MULTIPLIER);
             }
         }
         return definedSize;
