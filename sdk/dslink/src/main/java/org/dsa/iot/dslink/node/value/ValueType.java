@@ -1,12 +1,7 @@
 package org.dsa.iot.dslink.node.value;
 
-import org.dsa.iot.dslink.util.StringUtils;
-
-import javax.swing.plaf.PanelUI;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
+import org.dsa.iot.dslink.util.*;
+import java.util.*;
 
 /**
  * Type of the value
