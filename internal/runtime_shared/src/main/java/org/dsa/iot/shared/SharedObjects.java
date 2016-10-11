@@ -21,7 +21,7 @@ public class SharedObjects {
             if (processors <= CORE_POOL_FEW_PROCESSORS_THRESHOLD) {
                 definedSize = MIN_CORE_POOL_SIZE;
             } else {
-                definedSize = Math.min(MAX_CORE_POOL_SIZE, processors * CORE_POOL_MANY_PROCESSOR_MULTIPLIER);
+                definedSize = Math.min(MAX_CORE_POOL_SIZE, processors * CORE_POOL_MANY_PROCESSORS_MULTIPLIER);
             }
         }
         return definedSize;
