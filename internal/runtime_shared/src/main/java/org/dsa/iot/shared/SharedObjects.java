@@ -9,8 +9,25 @@ import java.util.concurrent.*;
  * @author Samuel Grenier
  */
 public class SharedObjects {
+    private static final int MAX_CORE_POOL_SIZE = 64;
+    private static final int MIN_CORE_POOL_SIZE = 16;
+    private static final int CORE_POOL_FEW_PROCESSORS_THRESHOLD = 2;
+    private static final int CORE_POOL_MANY_PROCESSORS_MULTIPLIER = 8;
+    
+    private static int calculateCorePoolSize() {
+        int definedSize = Integer.parseInt(System.getProperty("dsa.shared.threadPoolSize", "0"));
+        if (definedSize == 0) {
+            int processors = Runtime.getRuntime().availableProcessors();
+            if (processors <= CORE_POOL_FEW_PROCESSORS_THRESHOLD) {
+                definedSize = MIN_CORE_POOL_SIZE;
+            } else {
+                definedSize = Math.min(MAX_CORE_POOL_SIZE, processors * CORE_POOL_MANY_PROCESSORS_MULTIPLIER);
+            }
+        }
+        return definedSize;
+    }
 
-    public static final int POOL_SIZE = 32;
+    public static final int POOL_SIZE = calculateCorePoolSize();
 
     private static volatile ScheduledThreadPoolExecutor THREAD_POOL;
     private static volatile ScheduledThreadPoolExecutor DAEMON_THREAD_POOL;
@@ -85,8 +102,6 @@ public class SharedObjects {
             setRemoveOnCancelPolicy(true);
             setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
             setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
-            setKeepAliveTime(1, TimeUnit.MINUTES);
-            allowCoreThreadTimeOut(true);
         }
 
         @Override
