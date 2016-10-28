@@ -14,6 +14,10 @@ public class Serializer {
     private final NodeManager nodeManager;
     private final SerializationManager serializationManager;
 
+    public Serializer(NodeManager nodeManager) {
+        this(nodeManager.getSuperRoot().getLink().getSerialManager(),nodeManager);
+    }
+
     public Serializer(SerializationManager serializationManager,
                       NodeManager nodeManager) {
         this.serializationManager = serializationManager;
