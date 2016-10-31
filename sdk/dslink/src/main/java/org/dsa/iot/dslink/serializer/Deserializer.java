@@ -1,9 +1,9 @@
 package org.dsa.iot.dslink.serializer;
 
+import java.util.*;
 import org.dsa.iot.dslink.node.*;
 import org.dsa.iot.dslink.node.value.*;
 import org.dsa.iot.dslink.util.json.*;
-import java.util.*;
 
 /**
  * Deserializes a JSON file into a node manager
@@ -16,7 +16,7 @@ public class Deserializer {
     private final NodeManager nodeManager;
 
     public Deserializer(NodeManager nodeManager) {
-        this(nodeManager.getSuperRoot().getLink().getSerialManager(),nodeManager);
+        this(nodeManager.getSuperRoot().getLink().getSerialManager(), nodeManager);
     }
 
     public Deserializer(SerializationManager serializationManager,
@@ -65,22 +65,22 @@ public class Deserializer {
             } else if ("$hidden".equals(name)) {
                 node.setHidden((Boolean) value);
             } else if ("$$password".equals(name)) {
-                String pass = decrypt((String)value);
+                String pass = decrypt((String) value);
                 node.setPassword(pass.toCharArray());
             } else if ("?value".equals(name)) {
                 ValueType t = node.getValueType();
                 Value val = ValueUtils.toValue(value);
                 if (t != null && val != null
-                        && val.getType().compare(ValueType.STRING)
-                        && t.compare(ValueType.NUMBER)
-                        && "NaN".equals(val.getString())) {
+                    && val.getType().compare(ValueType.STRING)
+                    && t.compare(ValueType.NUMBER)
+                    && "NaN".equals(val.getString())) {
                     node.setValue(new Value(Float.NaN));
                 } else {
                     node.setValue(val);
                 }
             } else if (name.startsWith("$$")) {
                 if (name.endsWith(SerializationManager.PASSWORD_TOKEN)) {
-                    value = decrypt((String)value);
+                    value = decrypt((String) value);
                 }
                 node.setRoConfig(name.substring(2), ValueUtils.toValue(value));
             } else if (name.startsWith("$")) {
