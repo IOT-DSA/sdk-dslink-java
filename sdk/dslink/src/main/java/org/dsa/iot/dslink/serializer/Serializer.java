@@ -1,10 +1,10 @@
 package org.dsa.iot.dslink.serializer;
 
+import java.util.*;
 import org.dsa.iot.dslink.node.*;
 import org.dsa.iot.dslink.node.value.*;
 import org.dsa.iot.dslink.util.*;
 import org.dsa.iot.dslink.util.json.*;
-import java.util.*;
 
 /**
  * @author Samuel Grenier
@@ -15,7 +15,7 @@ public class Serializer {
     private final SerializationManager serializationManager;
 
     public Serializer(NodeManager nodeManager) {
-        this(nodeManager.getSuperRoot().getLink().getSerialManager(),nodeManager);
+        this(nodeManager.getSuperRoot().getLink().getSerialManager(), nodeManager);
     }
 
     public Serializer(SerializationManager serializationManager,
