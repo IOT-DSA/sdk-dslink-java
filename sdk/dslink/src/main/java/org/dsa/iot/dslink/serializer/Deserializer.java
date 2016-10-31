@@ -71,9 +71,9 @@ public class Deserializer {
                 ValueType t = node.getValueType();
                 Value val = ValueUtils.toValue(value);
                 if (t != null && val != null
-                    && val.getType().compare(ValueType.STRING)
-                    && t.compare(ValueType.NUMBER)
-                    && "NaN".equals(val.getString())) {
+                        && val.getType().compare(ValueType.STRING)
+                        && t.compare(ValueType.NUMBER)
+                        && "NaN".equals(val.getString())) {
                     node.setValue(new Value(Float.NaN));
                 } else {
                     node.setValue(val);
