@@ -15,6 +15,10 @@ public class Deserializer {
     private final SerializationManager serializationManager;
     private final NodeManager nodeManager;
 
+    public Deserializer(NodeManager nodeManager) {
+        this(nodeManager.getSuperRoot().getLink().getSerialManager(),nodeManager);
+    }
+
     public Deserializer(SerializationManager serializationManager,
                         NodeManager nodeManager) {
         this.serializationManager = serializationManager;
