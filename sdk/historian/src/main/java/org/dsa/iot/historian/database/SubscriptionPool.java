@@ -94,7 +94,9 @@ public class SubscriptionPool {
                 if (val == null) {
                     return;
                 }
-                val.setTime(System.currentTimeMillis());
+                if (val.getTime() < 0) {
+                    val.setTime(System.currentTimeMillis());
+                }
                 for (Watch w : watches) {
                     w.onData(event);
                 }
