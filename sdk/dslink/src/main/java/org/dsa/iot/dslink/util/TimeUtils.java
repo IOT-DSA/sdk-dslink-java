@@ -1,8 +1,6 @@
 package org.dsa.iot.dslink.util;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.text.*;
 import java.util.*;
 
 /**
@@ -10,8 +8,10 @@ import java.util.*;
  */
 public class TimeUtils {
 
+    private static Calendar calendarCache;
     public static final int MILLIS_MINUTE = 60 * 1000;
     public static final int MILLIS_HOUR = 60 * MILLIS_MINUTE;
+    private static final Map<String, TimeZone> timezones = new HashMap<String, TimeZone>();
 
     private static final ThreadLocal<DateFormat> FORMAT_TIME_ZONE;
     private static final ThreadLocal<DateFormat> FORMAT;
@@ -19,8 +19,6 @@ public class TimeUtils {
     private static final String TIME_PATTERN;
     private static final String TIME_ZONE_COLON;
     private static final String TIME_ZONE;
-
-    private static final Map<String,TimeZone> timezones = new HashMap<String,TimeZone>();
 
     static {
         long currentTime = new Date().getTime();
@@ -52,52 +50,45 @@ public class TimeUtils {
     }
 
     /**
-     *  Do not allow instantiation.
+     * Do not allow instantiation.
      */
-    private TimeUtils() { }
+    private TimeUtils() {
+    }
 
+    /** @deprecated */
     public static String getTimePatternTz() {
         return TIME_PATTERN_TZ;
     }
 
+    /** @deprecated */
     public static String getTimePattern() {
         return TIME_PATTERN;
     }
 
     public static String format(long time) {
-        return format(new Date(time));
+        return encode(time,true).toString();
     }
 
     public static String format(Date time) {
-        return FORMAT.get().format(time) + TIME_ZONE_COLON;
+        return encode(time.getTime(),true).toString();
     }
 
     public static Date parseTz(String time) {
-        try {
-            time = fixTime(time);
-            return FORMAT_TIME_ZONE.get().parse(time);
-        } catch (ParseException e) {
-            throw new RuntimeException(e);
-        }
+        return new Date(decode(time));
     }
 
+    /**
+     * @deprecated
+     */
     public static String fixTime(String time) {
-        if (time.endsWith("Z")) {
-            time = time.substring(0, time.length() - 1) + "-0000";
-        } else if (time.matches(".+[+|-]\\d+:\\d+")) {
-            StringBuilder b = new StringBuilder(time);
-            b.deleteCharAt(time.lastIndexOf(":"));
-            time = b.toString();
-        } else {
-            time += TIME_ZONE;
-        }
         return time;
     }
 
     /**
      * Adds or subtracts the corresponding time field, does not
      * perform any alignment.
-     * @param count The quantity to change, can be negative.
+     *
+     * @param count     The quantity to change, can be negative.
      * @param timestamp The calendar to modify.
      * @return The timestamp parameter.
      */
@@ -109,7 +100,8 @@ public class TimeUtils {
     /**
      * Adds or subtracts the corresponding time field, does not
      * perform any alignment.
-     * @param count The quantity to change, can be negative.
+     *
+     * @param count     The quantity to change, can be negative.
      * @param timestamp The calendar to modify.
      * @return The timestamp parameter.
      */
@@ -121,7 +113,8 @@ public class TimeUtils {
     /**
      * Adds or subtracts the corresponding time field, does not
      * perform any alignment.
-     * @param count The quantity to change, can be negative.
+     *
+     * @param count     The quantity to change, can be negative.
      * @param timestamp The calendar to modify.
      * @return The timestamp parameter.
      */
@@ -133,7 +126,8 @@ public class TimeUtils {
     /**
      * Adds or subtracts the corresponding time field, does not
      * perform any alignment.
-     * @param count The quantity to change, can be negative.
+     *
+     * @param count     The quantity to change, can be negative.
      * @param timestamp The calendar to modify.
      * @return The timestamp parameter.
      */
@@ -145,7 +139,8 @@ public class TimeUtils {
     /**
      * Adds or subtracts the corresponding time field, does not
      * perform any alignment.
-     * @param count The quantity to change, can be negative.
+     *
+     * @param count     The quantity to change, can be negative.
      * @param timestamp The calendar to modify.
      * @return The timestamp parameter.
      */
@@ -157,7 +152,8 @@ public class TimeUtils {
     /**
      * Adds or subtracts the corresponding time field, does not
      * perform any alignment.
-     * @param count The quantity to change, can be negative.
+     *
+     * @param count     The quantity to change, can be negative.
      * @param timestamp The calendar to modify.
      * @return The timestamp parameter.
      */
@@ -168,7 +164,8 @@ public class TimeUtils {
     /**
      * Adds or subtracts the corresponding time field, does not
      * perform any alignment.
-     * @param count The quantity to change, can be negative.
+     *
+     * @param count     The quantity to change, can be negative.
      * @param timestamp The calendar to modify.
      * @return The timestamp parameter.
      */
@@ -179,6 +176,7 @@ public class TimeUtils {
 
     /**
      * Aligns the time fields to the start of the day.
+     *
      * @param timestamp The calendar to align.
      * @return The parameter.
      */
@@ -192,7 +190,8 @@ public class TimeUtils {
 
     /**
      * Aligns the time fields to the start of given interval.
-     * @param interval The number of days in the interval to align to.
+     *
+     * @param interval  The number of days in the interval to align to.
      * @param timestamp The calendar to align.
      * @return The calendar parameter, aligned.
      */
@@ -205,6 +204,7 @@ public class TimeUtils {
 
     /**
      * Aligns the time fields to the start of the hour.
+     *
      * @param timestamp The calendar to align.
      * @return The parameter.
      */
@@ -217,7 +217,8 @@ public class TimeUtils {
 
     /**
      * Aligns the time fields to the start of given interval.
-     * @param interval The number of hours in the interval to align to.
+     *
+     * @param interval  The number of hours in the interval to align to.
      * @param timestamp The calendar to align.
      * @return The calendar parameter, aligned.
      */
@@ -230,6 +231,7 @@ public class TimeUtils {
 
     /**
      * Aligns the time fields to the start of the minute.
+     *
      * @param timestamp The calendar to align.
      * @return The parameter.
      */
@@ -241,7 +243,8 @@ public class TimeUtils {
 
     /**
      * Aligns the time fields to the start of given interval.
-     * @param interval The number of minutes in the interval to align to.
+     *
+     * @param interval  The number of minutes in the interval to align to.
      * @param timestamp The calendar to align.
      * @return The calendar parameter, aligned.
      */
@@ -254,6 +257,7 @@ public class TimeUtils {
 
     /**
      * Aligns the time fields to the start of the month.
+     *
      * @param timestamp The calendar to align.
      * @return The parameter.
      */
@@ -264,6 +268,7 @@ public class TimeUtils {
 
     /**
      * Aligns the time fields to the start of the second.
+     *
      * @param timestamp The calendar to align.
      * @return The parameter.
      */
@@ -274,7 +279,8 @@ public class TimeUtils {
 
     /**
      * Aligns the time fields to the start of given interval.
-     * @param interval The number of seconds in the interval to align to.
+     *
+     * @param interval  The number of seconds in the interval to align to.
      * @param timestamp The calendar to align.
      * @return The calendar parameter, aligned.
      */
@@ -287,6 +293,7 @@ public class TimeUtils {
 
     /**
      * Aligns the time fields to the start of the week.
+     *
      * @param timestamp The calendar to align.
      * @return The parameter.
      */
@@ -302,6 +309,7 @@ public class TimeUtils {
 
     /**
      * Aligns the time fields to the start of the year.
+     *
      * @param timestamp The calendar to align.
      * @return The parameter.
      */
@@ -322,21 +330,35 @@ public class TimeUtils {
      */
     private static int convertDigits(char thousands, char hundreds, char tens, char ones) {
         return toDigit(thousands) * 1000 +
-               toDigit(hundreds) * 100 +
-               toDigit(tens) * 10 +
-               toDigit(ones);
+                toDigit(hundreds) * 100 +
+                toDigit(tens) * 10 +
+                toDigit(ones);
+    }
+
+    /**
+     * This is a convenience that uses reuses and recycles a calendar instance to
+     * get the time in millis.
+     */
+    public static long decode(String timestamp) {
+        Calendar cal = reuseCalendar();
+        decode(timestamp,cal);
+        long millis = cal.getTimeInMillis();
+        recycleCalendar(cal);
+        return millis;
     }
 
     /**
      * Converts a DSA encoded timestamp into a Java Calendar.  DSA encoding is based
      * on ISO 8601 but allows for an unspecified timezone.
+     *
      * @param timestamp The encoded timestamp.
-     * @param calendar The instance to decode into and returnt, may be null.  If the timestamp does
-     *                 not specify a timezone, the zone in this instance will be used.
+     * @param calendar  The instance to decode into and returnt, may be null.  If the
+     *                  timestamp does not specify a timezone, the zone in this
+     *                  instance will be used.
      */
     public static Calendar decode(String timestamp, Calendar calendar) {
         if (calendar == null) {
-            calendar = Calendar.getInstance();
+            calendar = reuseCalendar();
         }
         try {
             char[] chars = timestamp.toCharArray();
@@ -355,7 +377,14 @@ public class TimeUtils {
             int millis = 0;
             if ((chars.length > idx) && (chars[idx] == '.')) {
                 idx++;
-                millis = convertDigits('0',chars[idx++],chars[idx++],chars[idx++]);
+                millis = convertDigits('0', chars[idx++], chars[idx++], chars[idx++]);
+            }
+            //more than 3 millis digits is possible
+            while ((chars.length > idx) 
+                && (chars[idx] != 'Z') 
+                && (chars[idx] != '+') 
+                && (chars[idx] != '-')) {
+              idx++;
             }
             // timezone offset sign
             if (idx < chars.length) {
@@ -366,7 +395,7 @@ public class TimeUtils {
                     int tzOff;
                     if (sign != '+' && sign != '-')
                         throw new Exception();
-                    int hrOff = convertDigits(chars[idx++],chars[idx++]);
+                    int hrOff = convertDigits(chars[idx++], chars[idx++]);
                     int minOff = 0;
                     //minutes are optional in 8601
                     if (idx < chars.length) { //minutes optional
@@ -403,9 +432,25 @@ public class TimeUtils {
     /**
      * Converts a Java Calendar into a DSA encoded timestamp.  DSA encoding is based
      * on ISO 8601 but allows the timezone offset to not be specified.
-     * @param calendar The calendar representing the timestamp to encode.
+     *
+     * @param timestamp      What to encode.
      * @param encodeTzOffset Whether or not to encode the timezone offset.
-     * @param buf The buffer to append the encoded timestamp and return, can be null.
+     * @return The buffer containing the encoding.
+     */
+    public static StringBuilder encode(long timestamp, boolean encodeTzOffset) {
+        Calendar cal = reuseCalendar(timestamp);
+        StringBuilder buf = encode(cal, encodeTzOffset, new StringBuilder());
+        recycleCalendar(cal);
+        return buf;
+    }
+
+    /**
+     * Converts a Java Calendar into a DSA encoded timestamp.  DSA encoding is based
+     * on ISO 8601 but allows the timezone offset to not be specified.
+     *
+     * @param calendar       The calendar representing the timestamp to encode.
+     * @param encodeTzOffset Whether or not to encode the timezone offset.
+     * @param buf            The buffer to append the encoded timestamp and return, can be null.
      * @return The buf argument, or if that was null, a new StringBuilder.
      */
     public static StringBuilder encode(
@@ -415,38 +460,37 @@ public class TimeUtils {
         }
         long millis = calendar.getTimeInMillis();
         int tmp = calendar.get(Calendar.YEAR);
-        buf.append( tmp ).append('-');
+        buf.append(tmp).append('-');
         //month
         tmp = calendar.get(Calendar.MONTH) + 1;
         if (tmp < 10) buf.append('0');
-        buf.append( tmp ).append( '-' );
+        buf.append(tmp).append('-');
         //date
         tmp = calendar.get(Calendar.DAY_OF_MONTH);
         if (tmp < 10) buf.append('0');
-        buf.append( tmp ).append( 'T' );
+        buf.append(tmp).append('T');
         //hour
         tmp = calendar.get(Calendar.HOUR_OF_DAY);
         if (tmp < 10) buf.append('0');
-        buf.append( tmp ).append( ':' );
+        buf.append(tmp).append(':');
         //minute
         tmp = calendar.get(Calendar.MINUTE);
         if (tmp < 10) buf.append('0');
-        buf.append( tmp ).append( ':' );
+        buf.append(tmp).append(':');
         //second
         tmp = calendar.get(Calendar.SECOND);
         if (tmp < 10) buf.append('0');
-        buf.append( tmp ).append( '.' );
+        buf.append(tmp).append('.');
         //millis
         tmp = calendar.get(Calendar.MILLISECOND);
         if (tmp < 10) buf.append('0');
         if (tmp < 100) buf.append('0');
-        buf.append( tmp );
+        buf.append(tmp);
         if (encodeTzOffset) {
             int offset = calendar.getTimeZone().getOffset(millis);
             if (offset == 0) {
                 buf.append('Z');
-            }
-            else {
+            } else {
                 int hrOff = Math.abs(offset / MILLIS_HOUR);
                 int minOff = Math.abs((offset % MILLIS_HOUR) / MILLIS_MINUTE);
                 if (offset < 0) buf.append('-');
@@ -462,11 +506,57 @@ public class TimeUtils {
     }
 
     /**
+     * Return a calendar instance for reuse.
+     */
+    public static void recycleCalendar(Calendar cal) {
+        synchronized (TimeUtils.class) {
+            calendarCache = cal;
+        }
+    }
+
+    /**
+     * Attempts to reuse a calendar instance, the timezone will be set to
+     * TimeZone.getDefault().
+     */
+    public static Calendar reuseCalendar() {
+        Calendar cal = null;
+        synchronized (TimeUtils.class) {
+            cal = calendarCache;
+            calendarCache = null;
+        }
+        if (cal == null) {
+            cal = Calendar.getInstance();
+        } else {
+            cal.setTimeZone(TimeZone.getDefault());
+        }
+        return cal;
+    }
+
+    /**
+     * Attempts to reuse a calendar instance, set the time in millis to the argument
+     * the timezone to TimeZone.getDefault().
+     */
+    public static Calendar reuseCalendar(long timestamp) {
+        Calendar cal = null;
+        synchronized (TimeUtils.class) {
+            cal = calendarCache;
+            calendarCache = null;
+        }
+        if (cal == null) {
+            cal = Calendar.getInstance();
+        } else {
+            cal.setTimeZone(TimeZone.getDefault());
+        }
+        cal.setTimeInMillis(timestamp);
+        return cal;
+    }
+
+    /**
      * Converts the character to a digit, throws an IllegalStateException if it isn't a
      * valid digit.
      */
     private static int toDigit(char ch) {
-       if (('0' <= ch) && (ch <= '9')) {
+        if (('0' <= ch) && (ch <= '9')) {
             return ch - '0';
         }
         throw new IllegalStateException();
