@@ -1,11 +1,6 @@
 package org.dsa.iot.historian.utils;
 
-import org.dsa.iot.dslink.util.TimeUtils;
-
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import org.dsa.iot.dslink.util.*;
 
 /**
  * Use TimeUtils instead.
@@ -20,7 +15,7 @@ public class TimeParser {
     }
 
     public static String parse(long time) {
-        return TimeUtils.encode(time,true).toString();
+        return TimeUtils.encode(time, true).toString();
     }
 
 }
