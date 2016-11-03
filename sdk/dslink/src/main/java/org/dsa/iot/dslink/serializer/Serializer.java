@@ -1,31 +1,33 @@
 package org.dsa.iot.dslink.serializer;
 
-import org.dsa.iot.dslink.node.Node;
-import org.dsa.iot.dslink.node.NodeManager;
-import org.dsa.iot.dslink.node.Writable;
-import org.dsa.iot.dslink.node.value.Value;
-import org.dsa.iot.dslink.node.value.ValueType;
-import org.dsa.iot.dslink.util.StringUtils;
-import org.dsa.iot.dslink.util.json.JsonObject;
-
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import org.dsa.iot.dslink.node.*;
+import org.dsa.iot.dslink.node.value.*;
+import org.dsa.iot.dslink.util.*;
+import org.dsa.iot.dslink.util.json.*;
 
 /**
  * @author Samuel Grenier
  */
 public class Serializer {
 
-    private final NodeManager manager;
+    private final NodeManager nodeManager;
+    private final SerializationManager serializationManager;
 
-    public Serializer(NodeManager manager) {
-        this.manager = manager;
+    public Serializer(NodeManager nodeManager) {
+        this(nodeManager.getSuperRoot().getLink().getSerialManager(), nodeManager);
+    }
+
+    public Serializer(SerializationManager serializationManager,
+                      NodeManager nodeManager) {
+        this.serializationManager = serializationManager;
+        this.nodeManager = nodeManager;
     }
 
     public JsonObject serialize() {
         JsonObject top = new JsonObject();
 
-        Map<String, Node> rootChildren = manager.getChildren("/");
+        Map<String, Node> rootChildren = nodeManager.getChildren("/");
         if (rootChildren != null) {
             for (Node child : rootChildren.values()) {
                 if (child.isSerializable()) {
@@ -65,7 +67,7 @@ public class Serializer {
 
         char[] password = parent.getPassword();
         if (password != null) {
-            out.put("$$password", new String(password));
+            out.put("$$password", encrypt(new String(password)));
         }
 
         Writable writable = parent.getWritable();
@@ -97,13 +99,23 @@ public class Serializer {
         if (vals == null || vals.size() == 0) {
             return;
         }
-
+        boolean testPassword = prefix.equals("$$");
         for (Map.Entry<String, Value> entry : vals.entrySet()) {
             Value value = entry.getValue();
             if (value.isSerializable()) {
                 String name = prefix + entry.getKey();
+                if (testPassword && (value.getType() == ValueType.STRING)) {
+                    if (name.endsWith(SerializationManager.PASSWORD_TOKEN)) {
+                        value = new Value(encrypt(value.getString()));
+                    }
+                }
                 out.put(name, value);
             }
         }
     }
+
+    private String encrypt(String pass) {
+        return serializationManager.encrypt(nodeManager.getSuperRoot(), pass);
+    }
+
 }
