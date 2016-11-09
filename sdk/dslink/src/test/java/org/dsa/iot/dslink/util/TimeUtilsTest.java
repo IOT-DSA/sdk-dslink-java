@@ -1,6 +1,6 @@
 package org.dsa.iot.dslink.util;
 
-import org.junit.Test;
+import org.junit.*;
 
 import java.util.*;
 
@@ -292,6 +292,9 @@ public class TimeUtilsTest {
         encoded = "2016-01-01T00:00:00.000-08:00";
         cal = TimeUtils.decode(encoded,cal);
         validateEqual(cal,correctTime);
+        encoded = "2016-01-01T00:00:00.987654-08:00";
+        long millis = TimeUtils.decode(encoded);
+        Assert.assertTrue(millis % 1000 == 987);
         try {
             TimeUtils.decode("2016_01-01T00:00:00.000-08:00",null);
             throw new IllegalStateException();

@@ -94,7 +94,15 @@ public class SubscriptionPool {
                 if (val == null) {
                     return;
                 }
-                val.setTime(System.currentTimeMillis());
+                try {
+                    if ((val.getTime() < 0) && !val.isImmutable()) {
+                        val.setTime(System.currentTimeMillis());
+                    }
+                } catch (Exception x) {
+                    //Just in case there are parsing errors because of wacky
+                    //timestamp formatting.
+                    val.setTime(System.currentTimeMillis());
+                }
                 for (Watch w : watches) {
                     w.onData(event);
                 }
