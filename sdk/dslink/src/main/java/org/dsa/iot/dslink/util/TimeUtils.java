@@ -55,22 +55,26 @@ public class TimeUtils {
     private TimeUtils() {
     }
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public static String getTimePatternTz() {
         return TIME_PATTERN_TZ;
     }
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public static String getTimePattern() {
         return TIME_PATTERN;
     }
 
     public static String format(long time) {
-        return encode(time,true).toString();
+        return encode(time, true).toString();
     }
 
     public static String format(Date time) {
-        return encode(time.getTime(),true).toString();
+        return encode(time.getTime(), true).toString();
     }
 
     public static Date parseTz(String time) {
@@ -341,7 +345,7 @@ public class TimeUtils {
      */
     public static long decode(String timestamp) {
         Calendar cal = reuseCalendar();
-        decode(timestamp,cal);
+        decode(timestamp, cal);
         long millis = cal.getTimeInMillis();
         recycleCalendar(cal);
         return millis;
@@ -380,11 +384,11 @@ public class TimeUtils {
                 millis = convertDigits('0', chars[idx++], chars[idx++], chars[idx++]);
             }
             //more than 3 millis digits is possible
-            while ((chars.length > idx) 
-                && (chars[idx] != 'Z') 
-                && (chars[idx] != '+') 
-                && (chars[idx] != '-')) {
-              idx++;
+            while ((chars.length > idx)
+                    && (chars[idx] != 'Z')
+                    && (chars[idx] != '+')
+                    && (chars[idx] != '-')) {
+                idx++;
             }
             // timezone offset sign
             if (idx < chars.length) {
@@ -533,7 +537,7 @@ public class TimeUtils {
     }
 
     /**
-     * Attempts to reuse a calendar instance, set the time in millis to the argument
+     * Attempts to reuse a calendar instance and sets the time in millis to the argument
      * the timezone to TimeZone.getDefault().
      */
     public static Calendar reuseCalendar(long timestamp) {
