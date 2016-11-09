@@ -13,8 +13,6 @@ import org.dsa.iot.dslink.provider.LoopProvider;
 import org.dsa.iot.dslink.util.handler.Handler;
 import org.dsa.iot.historian.utils.QueryData;
 import org.dsa.iot.historian.utils.WatchUpdate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -356,13 +354,7 @@ public class WatchGroup {
     }
 
     private void handleQueue() {
-        Logger logger = LoggerFactory.getLogger("BUFFER FLUSH");
-        logger.info("FLUSHING BUFFER");
         int size = queue.size();
-
-        for (WatchUpdate watchUpdate : queue) {
-            logger.info("BUFFER CONTAINS: " + watchUpdate.getIntervalTimestamp());
-        }
 
         WatchUpdate update = null;
         for (int i = 0; i < size; ++i) {
@@ -387,8 +379,6 @@ public class WatchGroup {
             }
             Watch watch = update.getWatch();
 
-            Logger logger = LoggerFactory.getLogger("DB WRITE LOGGER");
-            logger.info("WRITING: " + update.getWatch().getPath() + " value :" + update.getWatch().getNode().getValue().getString() + " @ " + time);
             db.write(watch.getPath(), value, time);
             watch.notifyHandlers(new QueryData(value, time));
         }
@@ -399,12 +389,9 @@ public class WatchGroup {
     }
 
     public synchronized void addWatchUpdateToBuffer(WatchUpdate watchUpdate) {
-        queue.add(watchUpdate);
-
         long nowTimestamp = new Date().getTime();
         watchUpdate.updateTimestamp(nowTimestamp);
-        Logger logger = LoggerFactory.getLogger("WRITING TO BUFFER");
-        logger.info("WRITING WATCH TO BUFFER: " + watchUpdate.getWatch().getPath() + " " + " value: " + watchUpdate.getWatch().getLastWatchUpdate().getUpdate().getValue().getString() + " " + watchUpdate.getWatch().getLastWatchUpdate().getIntervalTimestamp());
+        queue.add(watchUpdate);
     }
 
     private void cancelBufferWrite() {
@@ -490,8 +477,6 @@ public class WatchGroup {
             params.add(intervalInSecondsParameter);
             action.setParams(params);
 
-            Logger logger = LoggerFactory.getLogger("EDIT WATCHGROUP SETTINGS");
-            logger.info("EDITING SETTINGS");
             scheduleBufferFlush();
             scheduleWriteToBuffer();
         }

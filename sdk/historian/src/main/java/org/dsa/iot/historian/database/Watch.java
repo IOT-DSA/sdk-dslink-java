@@ -1,18 +1,29 @@
 package org.dsa.iot.historian.database;
 
-import org.dsa.iot.dslink.*;
-import org.dsa.iot.dslink.link.*;
-import org.dsa.iot.dslink.methods.requests.*;
-import org.dsa.iot.dslink.node.*;
-import org.dsa.iot.dslink.node.actions.*;
+import org.dsa.iot.dslink.DSLink;
+import org.dsa.iot.dslink.DSLinkHandler;
+import org.dsa.iot.dslink.DSLinkProvider;
+import org.dsa.iot.dslink.link.Requester;
+import org.dsa.iot.dslink.methods.requests.SetRequest;
+import org.dsa.iot.dslink.node.Node;
+import org.dsa.iot.dslink.node.NodeBuilder;
+import org.dsa.iot.dslink.node.Permission;
+import org.dsa.iot.dslink.node.Writable;
+import org.dsa.iot.dslink.node.actions.Action;
+import org.dsa.iot.dslink.node.actions.ActionResult;
 import org.dsa.iot.dslink.node.value.*;
-import org.dsa.iot.dslink.util.handler.*;
-import org.dsa.iot.dslink.util.json.*;
-import org.dsa.iot.historian.stats.*;
-import org.dsa.iot.historian.utils.*;
-import org.slf4j.*;
-import java.util.*;
-import java.util.concurrent.locks.*;
+import org.dsa.iot.dslink.util.handler.Handler;
+import org.dsa.iot.dslink.util.json.JsonArray;
+import org.dsa.iot.dslink.util.json.JsonObject;
+import org.dsa.iot.historian.stats.GetHistory;
+import org.dsa.iot.historian.utils.QueryData;
+import org.dsa.iot.historian.utils.WatchUpdate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * @author Samuel Grenier
@@ -28,25 +39,27 @@ public class Watch {
     private Node realTimeValue;
     private String watchedPath;
 
-    private Node lastWrittenValue;
     private Node startDate;
     private Node endDate;
     private boolean enabled;
 
     // Values that must be handled before the buffer queue
     private long lastWrittenTime;
+
+    // Used to represent last value to the database
+    private Node lastWrittenValue;
+
+    // Used for POINT_CHANGE
     private Value lastValue;
 
     public WatchUpdate getLastWatchUpdate() {
-        if (lastWatchUpdate == null) {
-            Value value = node.getValue();
-            if (value != null) {
-                SubscriptionValue subscriptionValue = new SubscriptionValue(watchedPath,
-                                                                            value, null,
-                                                                            null, null,
-                                                                            null);
-                lastWatchUpdate = new WatchUpdate(this, subscriptionValue);
-            }
+        Value value = node.getValue();
+        if (value != null) {
+            SubscriptionValue subscriptionValue = new SubscriptionValue(watchedPath,
+                    value, null,
+                    null, null,
+                    null);
+            lastWatchUpdate = new WatchUpdate(this, subscriptionValue);
         }
         return lastWatchUpdate;
     }
@@ -80,14 +93,15 @@ public class Watch {
         }
 
         lastWrittenValue.setValue(value);
-        value = new Value(value.getTimeStamp());
+
+        Value timestampOfValue = new Value(value.getTimeStamp());
         if (startDate != null) {
-            startDate.setValue(value);
+            startDate.setValue(timestampOfValue);
             startDate = null;
         }
 
-        endDate.setValue(value);
-        lastWrittenTime = value.getTime();
+        endDate.setValue(timestampOfValue);
+        lastWrittenTime = timestampOfValue.getTime();
     }
 
     public void setLastWrittenTime(long time) {
@@ -152,7 +166,7 @@ public class Watch {
 
         String linkPath = node.getLink().getDSLink().getPath();
         String getHistoryPath = String.format("%s%s/getHistory", linkPath,
-                                              node.getPath());
+                node.getPath());
         JsonArray array = new JsonArray();
         array.add(getHistoryPath);
         mergePathsObject.put("val", array);
@@ -294,7 +308,7 @@ public class Watch {
         if (value.isImmutable()) {
             value = ValueUtils.mutableCopy(value);
             arg = new SubscriptionValue(arg.getPath(), value, arg.getCount(),
-                                        arg.getSum(), arg.getMin(), arg.getMax());
+                    arg.getSum(), arg.getMin(), arg.getMax());
         }
         if (toType == ValueType.BOOL) {
             toBoolean(value);
