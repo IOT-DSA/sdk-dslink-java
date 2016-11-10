@@ -13,6 +13,9 @@ fi
 BRANCH_NAME = $TRAVIS_PULL_REQUEST_BRANCH
 
 git clone https://github.com/IOT-DSA/dslink-dart-test
+
+echo "$(ls -laR)"
+
 cd dslink-dart-test/
 $CURRENT_DIR/dart-sdk/bin/pub get
 
