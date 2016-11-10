@@ -21,8 +21,7 @@ import java.util.Set;
  * @author Samuel Grenier
  */
 public class Main extends DSLinkHandler {
-
-    private static final Logger LOGER = LoggerFactory.getLogger(Main.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
 
     private DSLink link;
 
