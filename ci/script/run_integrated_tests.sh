@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 wget https://storage.googleapis.com/dart-archive/channels/stable/release/latest/sdk/dartsdk-linux-x64-release.zip
-unzip dartsdk-linux-x64.zip
+unzip dartsdk-linux-x64-release.zip
 CURRENT_DIR="$(pwd)"
 
 # Deploy to maven
@@ -13,8 +13,6 @@ fi
 BRANCH_NAME = $TRAVIS_PULL_REQUEST_BRANCH
 
 git clone https://github.com/IOT-DSA/dslink-dart-test
-
-ls -laR
 
 cd dslink-dart-test/
 $CURRENT_DIR/dart-sdk/bin/pub get
