@@ -1,4 +1,7 @@
-#!/usr/bin/env bash
+!/usr/bin/env bash
+
+# Exits on errors
+-set ev
 
 # Deploy to maven
 if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
