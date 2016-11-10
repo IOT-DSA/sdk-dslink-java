@@ -2,8 +2,9 @@
 
 wget https://storage.googleapis.com/dart-archive/channels/stable/release/latest/sdk/dartsdk-linux-x64-release.zip
 unzip dartsdk-linux-x64.zip
-alias pub="./dart-sdk/bin/pub"
-alias dart="./dart-sdk/bin/dart"
+CURRENT_DIR="$(pwd)"
+alias pub="$CURRENT_DIR/dart-sdk/bin/pub"
+alias dart="$CURRENT_DIR/dart-sdk/bin/dart"
 
 # Deploy to maven
 if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
