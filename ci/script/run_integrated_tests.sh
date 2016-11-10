@@ -10,11 +10,9 @@ if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
     exit
 fi
 
-BRANCH_NAME = $TRAVIS_PULL_REQUEST_BRANCH
-
-git clone https://github.com/IOT-DSA/dslink-dart-test
+git clone https://github.com/IOT-DSA/dslink-dart-test -b repacking-tested-links
 
 cd dslink-dart-test/
-$CURRENT_DIR/dart-sdk/bin/pub get
+${CURRENT_DIR}/dart-sdk/bin/pub get
 
-$CURRENT_DIR/dart-sdk/bin/dart tool/grind.dart run-tests-for-sdk-pull-request
+${CURRENT_DIR}/dart-sdk/bin/dart tool/grind.dart run-tests-for-sdk-pull-request

@@ -11,6 +11,8 @@ env:
   - secure: g+rMdXQTBwVb5S58Mj2uKbhwLE1N+Rc/3qGIEzfLY8V5Jj2beak8uNH+m/7dmRPBYLaL6QP5ndt6cY47w3lcXWGa00xeve12BHk9i5dvzx4hDZ18PoWGA5iB/U1Aj4I8USrASliyb2dqHtQg0V2nixgHuNdlJiwDgRNROHAdsQg=
 install: /bin/true
 script:
+  - export BRANCH_NAME=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
+  - echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, PR=$PR, BRANCH_NAME=$BRANCH_NAME"
 #  - ./ci/script/build.sh
   - ./ci/script/run_integrated_tests.sh
 after_script:
