@@ -4,12 +4,6 @@ wget https://storage.googleapis.com/dart-archive/channels/stable/release/latest/
 unzip dartsdk-linux-x64-release.zip
 CURRENT_DIR="$(pwd)"
 
-# Deploy to maven
-if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
-    echo 'Not in a pull request, therefore not running integrated tests.'
-    exit
-fi
-
 git clone https://github.com/IOT-DSA/dslink-dart-test -b repacking-tested-links
 
 cd dslink-dart-test/
