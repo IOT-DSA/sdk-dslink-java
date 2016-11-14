@@ -117,7 +117,6 @@ public class WatchGroup {
             }
 
             WatchUpdate update = watch.getLastWatchUpdate();
-
             if (update != null) {
                 addWatchUpdateToBuffer(update);
             }
@@ -383,6 +382,7 @@ public class WatchGroup {
                 time = value.getTime();
             }
             Watch watch = update.getWatch();
+
             db.write(watch.getPath(), value, time);
             watch.notifyHandlers(new QueryData(value, time));
         }
@@ -393,10 +393,9 @@ public class WatchGroup {
     }
 
     public synchronized void addWatchUpdateToBuffer(WatchUpdate watchUpdate) {
-        queue.add(watchUpdate);
-
         long nowTimestamp = new Date().getTime();
         watchUpdate.updateTimestamp(nowTimestamp);
+        queue.add(watchUpdate);
     }
 
     private void cancelBufferWrite() {
