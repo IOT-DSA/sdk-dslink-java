@@ -4,7 +4,9 @@ import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.DSLinkHandler;
 import org.dsa.iot.dslink.DSLinkProvider;
 import org.dsa.iot.dslink.link.Requester;
+import org.dsa.iot.dslink.methods.requests.ListRequest;
 import org.dsa.iot.dslink.methods.requests.SetRequest;
+import org.dsa.iot.dslink.methods.responses.ListResponse;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeBuilder;
 import org.dsa.iot.dslink.node.Permission;
@@ -137,6 +139,8 @@ public class Watch {
         watchedPath = node.getName().replaceAll("%2F", "/").replaceAll("%2E", ".");
         initData(node);
 
+        initializeWatchDataType();
+
         createUnsubscribeAction(perm);
 
         new OverwriteHistoryAction(this, node, perm, db);
@@ -144,6 +148,16 @@ public class Watch {
 
         addGetHistoryActionAlias();
         group.addWatch(this);
+    }
+
+    private void initializeWatchDataType() {
+        getRequester().list(new ListRequest(watchedPath), new Handler<ListResponse>() {
+            @Override
+            public void handle(ListResponse event) {
+                ValueType valueType = event.getNode().getValueType();
+                node.setValueType(valueType);
+            }
+        });
     }
 
     private void createUnsubscribeAction(Permission perm) {
