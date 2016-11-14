@@ -13,7 +13,7 @@ install: /bin/true
 script:
   - export BRANCH_NAME=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
   - ./ci/script/build.sh
-  - ./ci/script/run_integrated_tests.sh
+    #  - ./ci/script/run_integrated_tests.sh
 after_success:
   - ./ci/script/deploy.sh
 cache:
