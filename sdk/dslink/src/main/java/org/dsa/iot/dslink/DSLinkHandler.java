@@ -13,6 +13,7 @@ import org.dsa.iot.dslink.node.exceptions.NoSuchPathException;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.util.Objects;
 import org.dsa.iot.dslink.util.json.JsonObject;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * Top level API for handling the configuration of nodes and responses to
@@ -101,30 +102,37 @@ public abstract class DSLinkHandler {
      * @param name Name or path of the desired icon.
      * @return The bytes representing the icon image.
      */
+    @SuppressFBWarnings("DE_MIGHT_IGNORE")
     public byte[] getIcon(String name) {
-        StringBuilder builder = new StringBuilder("/icons");
-        if (name.charAt(0) != '/') {
-            builder.append('/');
-        }
-        builder.append(name);
-        InputStream in = getClass().getResourceAsStream(builder.toString());
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        InputStream in = null;
+        ByteArrayOutputStream out = null;
         try {
-            byte[] buf = new byte[512];
-            int len = in.read(buf);
-            while (len > 0) {
-                out.write(buf, 0, len);
-                len = in.read(buf);
+            StringBuilder builder = new StringBuilder("/icons");
+            if (name.charAt(0) != '/') {
+                builder.append('/');
             }
-        } catch (IOException x) {
-            throw new RuntimeException(x);
+            builder.append(name);
+            in = getClass().getResourceAsStream(builder.toString());
+            out = new ByteArrayOutputStream();
+            try {
+                byte[] buf = new byte[512];
+                int len = in.read(buf);
+                while (len > 0) {
+                    out.write(buf, 0, len);
+                    len = in.read(buf);
+                }
+                out.flush();
+            } catch (IOException x) {
+                throw new RuntimeException(x);
+            }
+            return out.toByteArray();
+        } finally {
+            try {
+                in.close();
+                out.close();
+            } catch (Exception ignore) {
+            }
         }
-        try {
-            out.close();
-            in.close();
-        } catch (Exception ignore) {
-        }
-        return out.toByteArray();
     }
 
     /**
@@ -132,6 +140,7 @@ public abstract class DSLinkHandler {
      *
      * @param provider DSLink provider.
      */
+
     public void setProvider(DSLinkProvider provider) {
         this.provider = provider;
     }
