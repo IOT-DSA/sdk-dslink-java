@@ -2,6 +2,7 @@ package org.dsa.iot.dslink;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import org.dsa.iot.dslink.config.Configuration;
 import org.dsa.iot.dslink.link.Requester;
@@ -93,12 +94,12 @@ public abstract class DSLinkHandler {
 
     /**
      * Nodes in links can specify an icon with the @icon attribute.  The default
-     * implementation of this method looks for the attribute value in the icons
-     * directory in the root of the jar containing the DSLinkHandler subclass
-     * getClass().getResourceAsStream("/icons/" + attributeValue).
+     * implementation of this method looks for the icon in the icons
+     * directory in the root of the jar containing the DSLinkHandler subclass:
+     * getClass().getResourceAsStream("/icons/" + name).
      *
      * @param name Name or path of the desired icon.
-     * @return The bytes representing the icon image, or null if there are any issues.
+     * @return The bytes representing the icon image.
      */
     public byte[] getIcon(String name) {
         StringBuilder builder = new StringBuilder("/icons");
@@ -115,9 +116,8 @@ public abstract class DSLinkHandler {
                 out.write(buf, 0, len);
                 len = in.read(buf);
             }
-        } catch (Exception x) {
-            //The lack of an icon will be enough notification
-            return null;
+        } catch (IOException x) {
+            throw new RuntimeException(x);
         }
         try {
             out.close();
@@ -126,7 +126,6 @@ public abstract class DSLinkHandler {
         }
         return out.toByteArray();
     }
-
 
     /**
      * Sets the provider that is attached to this handler.
