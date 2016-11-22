@@ -129,10 +129,6 @@ public class WatchGroup {
      * @param path Watch path.
      */
     protected void initWatch(String path) {
-        if (node.hasChild(path)) { // Handles the case that a watch path already is initialized.
-            return;
-        }
-
         NodeBuilder b = node.createChild(path);
         b.setValueType(ValueType.DYNAMIC);
         b.setValue(null);
@@ -143,6 +139,7 @@ public class WatchGroup {
         db.getProvider().onWatchAdded(watch);
 
         scheduleWriteToBuffer();
+        scheduleBufferFlush();
     }
 
     private void scheduleWriteToBuffer() {
@@ -167,12 +164,10 @@ public class WatchGroup {
         Map<String, Node> children = node.getChildren();
         for (Node n : children.values()) {
             if (n.getAction() == null) {
-                initWatch(n.getName().replaceAll("%2F", "/").replaceAll("%2E", "."));
+                String path = n.getName().replaceAll("%2F", "/").replaceAll("%2E", ".");
+                initWatch(path);
             }
         }
-
-        scheduleWriteToBuffer();
-        scheduleBufferFlush();
     }
 
     /**
@@ -338,6 +333,10 @@ public class WatchGroup {
     }
 
     private void scheduleBufferFlush() {
+        if (!LoggingType.INTERVAL.equals(loggingType)) {
+            return;
+        }
+
         synchronized (writeLoopLock) {
             if (bufferFut != null) {
                 bufferFut.cancel(false);
