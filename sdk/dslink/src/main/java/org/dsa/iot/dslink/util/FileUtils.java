@@ -1,9 +1,9 @@
 package org.dsa.iot.dslink.util;
 
+import java.io.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.*;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * @author Samuel Grenier
@@ -37,7 +37,7 @@ public class FileUtils {
      * If the file already exists, it will be overwritten with the new
      * bytes designated here.
      *
-     * @param path Path to write to.
+     * @param path  Path to write to.
      * @param bytes Bytes to write into the new file.
      * @throws IOException An error occurred during the write.
      */
@@ -58,10 +58,11 @@ public class FileUtils {
     /**
      * Copying files will delete the destination file if it already exists.
      *
-     * @param src Source file to copy
+     * @param src  Source file to copy
      * @param dest Destination file to copy to
      * @throws IOException IO Exception occurred
      */
+    @SuppressFBWarnings("OBL_UNSATISFIED_OBLIGATION_EXCEPTION_EDGE")
     public static void copy(File src, File dest) throws IOException {
         if (dest.delete()) {
             LOGGER.debug("Removed " + dest.getPath() + " during copying");
@@ -95,7 +96,6 @@ public class FileUtils {
                     LOGGER.debug(writer.toString());
                 }
             }
-
             try {
                 if (output != null) {
                     output.close();
