@@ -1,5 +1,9 @@
 package org.dsa.iot.dslink;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import org.dsa.iot.dslink.config.Configuration;
 import org.dsa.iot.dslink.link.Requester;
 import org.dsa.iot.dslink.link.Responder;
@@ -9,8 +13,7 @@ import org.dsa.iot.dslink.node.exceptions.NoSuchPathException;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.util.Objects;
 import org.dsa.iot.dslink.util.json.JsonObject;
-
-import java.io.File;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * Top level API for handling the configuration of nodes and responses to
@@ -91,10 +94,53 @@ public abstract class DSLinkHandler {
     }
 
     /**
+     * Nodes in links can specify an icon with the @icon attribute.  The default
+     * implementation of this method looks for the icon in the icons
+     * directory in the root of the jar containing the DSLinkHandler subclass:
+     * getClass().getResourceAsStream("/icons/" + name).
+     *
+     * @param name Name or path of the desired icon.
+     * @return The bytes representing the icon image.
+     */
+    @SuppressFBWarnings("DE_MIGHT_IGNORE")
+    public byte[] getIcon(String name) {
+        InputStream in = null;
+        ByteArrayOutputStream out = null;
+        try {
+            StringBuilder builder = new StringBuilder("/icons");
+            if (name.charAt(0) != '/') {
+                builder.append('/');
+            }
+            builder.append(name);
+            in = getClass().getResourceAsStream(builder.toString());
+            out = new ByteArrayOutputStream();
+            try {
+                byte[] buf = new byte[512];
+                int len = in.read(buf);
+                while (len > 0) {
+                    out.write(buf, 0, len);
+                    len = in.read(buf);
+                }
+                out.flush();
+            } catch (IOException x) {
+                throw new RuntimeException(x);
+            }
+            return out.toByteArray();
+        } finally {
+            try {
+                in.close();
+                out.close();
+            } catch (Exception ignore) {
+            }
+        }
+    }
+
+    /**
      * Sets the provider that is attached to this handler.
      *
      * @param provider DSLink provider.
      */
+
     public void setProvider(DSLinkProvider provider) {
         this.provider = provider;
     }
@@ -190,7 +236,7 @@ public abstract class DSLinkHandler {
      * @param path Path the requester wants to subscribe to. The path is
      *             normalized without a leading forward-slash.
      * @return A created node to force a subscription to succeed or
-     *         {@code null} to let the subscription fail.
+     * {@code null} to let the subscription fail.
      */
     public Node onSubscriptionFail(String path) {
         return null;
@@ -203,7 +249,7 @@ public abstract class DSLinkHandler {
      * @param path Path the requester is trying to invoke. The path is
      *             normalized without a leading forward-flash.
      * @return A created node with an action set on it to force an
-     *         invocation.
+     * invocation.
      */
     public Node onInvocationFail(String path) {
         return null;
@@ -213,7 +259,7 @@ public abstract class DSLinkHandler {
      * Callback when a set fails as a result of trying to set
      * on a non-existent node. If the node
      *
-     * @param path Path the requester wants to set.
+     * @param path  Path the requester wants to set.
      * @param value Value the requester wants the path to have.
      */
     public void onSetFail(String path, Value value) {
@@ -244,7 +290,7 @@ public abstract class DSLinkHandler {
      * Called to create a node manager instance for a requester.
      *
      * @param requester Requester instance.
-     * @param profile Default profile name.
+     * @param profile   Default profile name.
      * @return Node manager.
      */
     public NodeManager createRequesterNodeManager(Requester requester, String profile) {
@@ -255,7 +301,7 @@ public abstract class DSLinkHandler {
      * Called to create a node manager instance for a responder.
      *
      * @param responder Responder instance.
-     * @param profile Default profile name.
+     * @param profile   Default profile name.
      * @return Node manager.
      */
     public NodeManager createResponderNodeManager(Responder responder, String profile) {

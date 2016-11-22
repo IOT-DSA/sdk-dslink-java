@@ -1,10 +1,23 @@
 package org.dsa.iot.dslink.node;
 
-import org.dsa.iot.dslink.link.Linkable;
-import org.dsa.iot.dslink.node.exceptions.NoSuchPathException;
-import org.dsa.iot.dslink.util.StringUtils;
-
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Map;
+import org.dsa.iot.dslink.DSLinkHandler;
+import org.dsa.iot.dslink.link.Linkable;
+import org.dsa.iot.dslink.methods.StreamState;
+import org.dsa.iot.dslink.node.actions.Action;
+import org.dsa.iot.dslink.node.actions.ActionResult;
+import org.dsa.iot.dslink.node.actions.Parameter;
+import org.dsa.iot.dslink.node.actions.table.Row;
+import org.dsa.iot.dslink.node.actions.table.Table;
+import org.dsa.iot.dslink.node.exceptions.NoSuchPathException;
+import org.dsa.iot.dslink.node.value.Value;
+import org.dsa.iot.dslink.node.value.ValueType;
+import org.dsa.iot.dslink.util.StringUtils;
+import org.dsa.iot.dslink.util.handler.Handler;
 
 /**
  * Handles nodes based on paths.
@@ -116,10 +129,42 @@ public class NodeManager {
     }
 
     public static class SuperRoot extends Node {
+        private static final String ICON = "Icon";
 
         private SuperRoot(Linkable link, String profile) {
             super("", null, link);
             super.setProfile(profile);
+            //sys is needed for the getIcon action
+            Node sysNode = createChild("sys")
+                    .setSerializable(false)
+                    .setHidden(true)
+                    .build();
+            Action action = new Action(Permission.READ, new Handler<ActionResult>() {
+                // Sends the file bytes in response to the invocation.
+                @Override
+                public void handle(ActionResult event) {
+                    Value icon = event.getParameter(ICON);
+                    if (icon == null) {
+                        throw new NullPointerException("Missing Icon");
+                    }
+                    String iconString = icon.getString();
+                    if ((iconString == null) || iconString.isEmpty()) {
+                        throw new NullPointerException("Missing Icon");
+                    }
+                    DSLinkHandler handler = getLink().getHandler();
+                    Table table = event.getTable();
+                    table.addRow(Row.make(new Value(handler.getIcon(iconString))));
+                    event.setStreamState(StreamState.CLOSED);
+                    table.sendReady();
+                }
+            });
+            action.addParameter(new Parameter(ICON, ValueType.STRING));
+            action.addResult(new Parameter("Data", ValueType.BINARY));
+            sysNode.createChild("getIcon")
+                   .setAction(action)
+                   .setSerializable(false)
+                   .build();
         }
     }
+
 }
