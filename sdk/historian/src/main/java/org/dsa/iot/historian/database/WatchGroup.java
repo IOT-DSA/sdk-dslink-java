@@ -6,10 +6,14 @@ import org.dsa.iot.dslink.node.Permission;
 import org.dsa.iot.dslink.node.actions.Action;
 import org.dsa.iot.dslink.node.actions.ActionResult;
 import org.dsa.iot.dslink.node.actions.Parameter;
+import org.dsa.iot.dslink.node.actions.ResultType;
+import org.dsa.iot.dslink.node.actions.table.Row;
+import org.dsa.iot.dslink.node.actions.table.Table;
 import org.dsa.iot.dslink.node.value.SubscriptionValue;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.provider.LoopProvider;
+import org.dsa.iot.dslink.util.StringUtils;
 import org.dsa.iot.dslink.util.handler.Handler;
 import org.dsa.iot.historian.utils.QueryData;
 import org.dsa.iot.historian.utils.WatchUpdate;
@@ -242,9 +246,23 @@ public class WatchGroup {
                 ValueType valueType = ValueType.STRING;
                 Value pathValue = event.getParameter("Path", valueType);
                 String path = pathValue.getString();
-                initWatch(path);
+                String encodedPath = StringUtils.encodeName(path);
+
+                event.getTable().addColumn(new Parameter("Success", ValueType.BOOL));
+                if (node.hasChild(encodedPath)) {
+                    event.getTable().addColumn(new Parameter("Message", ValueType.STRING));
+                    Row make = Row.make(new Value(false),
+                            new Value("Couldn't watch the path " +
+                                    path + " because it is already watched in this Watch Group."));
+                    event.getTable().addRow(make);
+                } else {
+                    initWatch(path);
+                    event.getTable().addRow(Row.make(new Value(true)));
+                }
             }
         });
+
+        addWatchPathAction.setResultType(ResultType.TABLE);
 
         Parameter pathParameter = new Parameter("Path", ValueType.STRING);
         pathParameter.setDescription("Path to start watching for value changes");
@@ -271,9 +289,9 @@ public class WatchGroup {
     private Parameter createIntervalParameter() {
         final Parameter intervalParameter = new Parameter("Interval", ValueType.NUMBER);
         String description = "Interval controls how long to wait before buffering the next value update.\n"
-                        + "This setting has no effect when logging type is not interval.";
-                intervalParameter.setDescription(description);
-            intervalParameter.setDefaultValue(new Value(interval));
+                + "This setting has no effect when logging type is not interval.";
+        intervalParameter.setDescription(description);
+        intervalParameter.setDefaultValue(new Value(interval));
         return intervalParameter;
     }
 
