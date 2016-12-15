@@ -411,7 +411,9 @@ public class WatchGroup {
 
     public synchronized void addWatchUpdateToBuffer(WatchUpdate watchUpdate) {
         long nowTimestamp = new Date().getTime();
-        watchUpdate.updateTimestamp(nowTimestamp);
+        long secondsAlignedTs = ((nowTimestamp + 500) / 1000) * 1000;
+
+        watchUpdate.updateTimestamp(secondsAlignedTs);
         queue.add(watchUpdate);
     }
 
