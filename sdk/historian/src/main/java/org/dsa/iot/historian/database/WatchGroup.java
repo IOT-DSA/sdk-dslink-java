@@ -6,10 +6,14 @@ import org.dsa.iot.dslink.node.Permission;
 import org.dsa.iot.dslink.node.actions.Action;
 import org.dsa.iot.dslink.node.actions.ActionResult;
 import org.dsa.iot.dslink.node.actions.Parameter;
+import org.dsa.iot.dslink.node.actions.ResultType;
+import org.dsa.iot.dslink.node.actions.table.Row;
+import org.dsa.iot.dslink.node.actions.table.Table;
 import org.dsa.iot.dslink.node.value.SubscriptionValue;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.provider.LoopProvider;
+import org.dsa.iot.dslink.util.StringUtils;
 import org.dsa.iot.dslink.util.handler.Handler;
 import org.dsa.iot.historian.utils.QueryData;
 import org.dsa.iot.historian.utils.WatchUpdate;
@@ -110,7 +114,7 @@ public class WatchGroup {
         }
     }
 
-    private void writeWatchesToBuffer() {
+    private void writeWatchesToBuffer(Date nowTimestamp) {
         for (Watch watch : watches) {
             if (!watch.isEnabled()) {
                 continue;
@@ -118,7 +122,7 @@ public class WatchGroup {
 
             WatchUpdate update = watch.getLastWatchUpdate();
             if (update != null) {
-                addWatchUpdateToBuffer(update);
+                addWatchUpdateToBuffer(update, nowTimestamp);
             }
         }
     }
@@ -129,10 +133,6 @@ public class WatchGroup {
      * @param path Watch path.
      */
     protected void initWatch(String path) {
-        if (node.hasChild(path)) { // Handles the case that a watch path already is initialized.
-            return;
-        }
-
         NodeBuilder b = node.createChild(path);
         b.setValueType(ValueType.DYNAMIC);
         b.setValue(null);
@@ -143,6 +143,7 @@ public class WatchGroup {
         db.getProvider().onWatchAdded(watch);
 
         scheduleWriteToBuffer();
+        scheduleBufferFlush();
     }
 
     private void scheduleWriteToBuffer() {
@@ -151,13 +152,19 @@ public class WatchGroup {
         }
 
         if (scheduledIntervalWriter == null || scheduledIntervalWriter.isDone()) {
+            long now = new Date().getTime();
+            long initialDelayBeforeLogging = findInitialDelayOfLogging(now);
             scheduledIntervalWriter = intervalScheduler.scheduleAtFixedRate(new Runnable() {
                 @Override
                 public void run() {
-                    writeWatchesToBuffer();
+                    writeWatchesToBuffer(new Date());
                 }
-            }, 0, interval, TimeUnit.SECONDS);
+            }, initialDelayBeforeLogging, interval * 1000, TimeUnit.MILLISECONDS);
         }
+    }
+
+    private long findInitialDelayOfLogging(long now) {
+        return interval * 1000 - now % (interval * 1000);
     }
 
     /**
@@ -167,12 +174,10 @@ public class WatchGroup {
         Map<String, Node> children = node.getChildren();
         for (Node n : children.values()) {
             if (n.getAction() == null) {
-                initWatch(n.getName().replaceAll("%2F", "/").replaceAll("%2E", "."));
+                String path = n.getName().replaceAll("%2F", "/").replaceAll("%2E", ".");
+                initWatch(path);
             }
         }
-
-        scheduleWriteToBuffer();
-        scheduleBufferFlush();
     }
 
     /**
@@ -247,9 +252,23 @@ public class WatchGroup {
                 ValueType valueType = ValueType.STRING;
                 Value pathValue = event.getParameter("Path", valueType);
                 String path = pathValue.getString();
-                initWatch(path);
+                String encodedPath = StringUtils.encodeName(path);
+
+                event.getTable().addColumn(new Parameter("Success", ValueType.BOOL));
+                if (node.hasChild(encodedPath)) {
+                    event.getTable().addColumn(new Parameter("Message", ValueType.STRING));
+                    Row make = Row.make(new Value(false),
+                            new Value("Couldn't watch the path " +
+                                    path + " because it is already watched in this Watch Group."));
+                    event.getTable().addRow(make);
+                } else {
+                    initWatch(path);
+                    event.getTable().addRow(Row.make(new Value(true)));
+                }
             }
         });
+
+        addWatchPathAction.setResultType(ResultType.TABLE);
 
         Parameter pathParameter = new Parameter("Path", ValueType.STRING);
         pathParameter.setDescription("Path to start watching for value changes");
@@ -276,9 +295,9 @@ public class WatchGroup {
     private Parameter createIntervalParameter() {
         final Parameter intervalParameter = new Parameter("Interval", ValueType.NUMBER);
         String description = "Interval controls how long to wait before buffering the next value update.\n"
-                        + "This setting has no effect when logging type is not interval.";
-                intervalParameter.setDescription(description);
-            intervalParameter.setDefaultValue(new Value(interval));
+                + "This setting has no effect when logging type is not interval.";
+        intervalParameter.setDescription(description);
+        intervalParameter.setDefaultValue(new Value(interval));
         return intervalParameter;
     }
 
@@ -338,6 +357,10 @@ public class WatchGroup {
     }
 
     private void scheduleBufferFlush() {
+        if (!LoggingType.INTERVAL.equals(loggingType)) {
+            return;
+        }
+
         synchronized (writeLoopLock) {
             if (bufferFut != null) {
                 bufferFut.cancel(false);
@@ -392,9 +415,9 @@ public class WatchGroup {
         return !LoggingType.INTERVAL.equals(loggingType);
     }
 
-    public synchronized void addWatchUpdateToBuffer(WatchUpdate watchUpdate) {
-        long nowTimestamp = new Date().getTime();
-        watchUpdate.updateTimestamp(nowTimestamp);
+    public synchronized void addWatchUpdateToBuffer(WatchUpdate watchUpdate, Date date) {
+        long withoutMs = ((date.getTime() + 500) / 1000) * 1000;
+        watchUpdate.updateTimestamp(withoutMs);
         queue.add(watchUpdate);
     }
 
