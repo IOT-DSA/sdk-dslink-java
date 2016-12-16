@@ -164,9 +164,7 @@ public class WatchGroup {
     }
 
     private long findInitialDelayOfLogging(long now) {
-        long previousBound = now - (now % (interval * 1000));
-        long nextStartOfInterval = previousBound + interval * 1000;
-        return nextStartOfInterval - now;
+        return interval * 1000 - now % (interval * 1000);
     }
 
     /**
