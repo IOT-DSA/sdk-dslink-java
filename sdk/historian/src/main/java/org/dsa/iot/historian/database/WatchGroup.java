@@ -114,7 +114,7 @@ public class WatchGroup {
         }
     }
 
-    private void writeWatchesToBuffer() {
+    private void writeWatchesToBuffer(Date nowTimestamp) {
         for (Watch watch : watches) {
             if (!watch.isEnabled()) {
                 continue;
@@ -122,7 +122,7 @@ public class WatchGroup {
 
             WatchUpdate update = watch.getLastWatchUpdate();
             if (update != null) {
-                addWatchUpdateToBuffer(update);
+                addWatchUpdateToBuffer(update, nowTimestamp);
             }
         }
     }
@@ -152,13 +152,21 @@ public class WatchGroup {
         }
 
         if (scheduledIntervalWriter == null || scheduledIntervalWriter.isDone()) {
+            long now = new Date().getTime();
+            long initialDelayBeforeLogging = findInitialDelayOfLogging(now);
             scheduledIntervalWriter = intervalScheduler.scheduleAtFixedRate(new Runnable() {
                 @Override
                 public void run() {
-                    writeWatchesToBuffer();
+                    writeWatchesToBuffer(new Date());
                 }
-            }, 0, interval, TimeUnit.SECONDS);
+            }, initialDelayBeforeLogging, interval * 1000, TimeUnit.MILLISECONDS);
         }
+    }
+
+    private long findInitialDelayOfLogging(long now) {
+        long previousBound = now - (now % (interval * 1000));
+        long nextStartOfInterval = previousBound + interval * 1000;
+        return nextStartOfInterval - now;
     }
 
     /**
@@ -409,11 +417,9 @@ public class WatchGroup {
         return !LoggingType.INTERVAL.equals(loggingType);
     }
 
-    public synchronized void addWatchUpdateToBuffer(WatchUpdate watchUpdate) {
-        long nowTimestamp = new Date().getTime();
-        long secondsAlignedTs = ((nowTimestamp + 500) / 1000) * 1000;
-
-        watchUpdate.updateTimestamp(secondsAlignedTs);
+    public synchronized void addWatchUpdateToBuffer(WatchUpdate watchUpdate, Date date) {
+        long withoutMs = ((date.getTime() + 500) / 1000) * 1000;
+        watchUpdate.updateTimestamp(withoutMs);
         queue.add(watchUpdate);
     }
 
