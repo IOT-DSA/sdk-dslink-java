@@ -29,6 +29,8 @@ public class Configuration {
     private File serializationPath;
     private JsonObject linkData;
     private String token;
+    private boolean qosPersistenceEnabled;
+    private Boolean valuePersistenceEnabled;
 
     /**
      * Example endpoint: http://localhost:8080/conn
@@ -273,9 +275,9 @@ public class Configuration {
     }
 
     public static Configuration autoConfigure(String[] origArgs,
-                                                boolean requester,
-                                                boolean responder,
-                                                JsonObject linkData) {
+                                              boolean requester,
+                                              boolean responder,
+                                              JsonObject linkData) {
         Configuration defaults = new Configuration();
         defaults.setConnectionType(ConnectionType.WEB_SOCKET);
         defaults.setRequester(requester);
@@ -294,6 +296,20 @@ public class Configuration {
         String keyPath = getFieldValue(json, "key", pArgs.getKeyPath());
         String nodePath = getFieldValue(json, "nodes", pArgs.getNodesPath());
         String handlerClass = getFieldValue(json, "handler_class", null);
+
+        JsonObject valuePersistenceEnabledJsonNode = json.get("valuePersistenceEnabled");
+        boolean valuePersistenceEnabled = true;
+        if (valuePersistenceEnabledJsonNode != null) {
+            valuePersistenceEnabled = getFieldValue(valuePersistenceEnabledJsonNode, "value", true);
+        }
+        defaults.setValuePersistenceEnabled(valuePersistenceEnabled);
+
+        JsonObject qosPersistenceEnabledJsonNode = json.get("qosPersistenceEnabled");
+        boolean persistQosEnabled = false;
+        if (qosPersistenceEnabledJsonNode != null) {
+            persistQosEnabled = getFieldValue(qosPersistenceEnabledJsonNode, "value", false);
+        }
+        defaults.setQosPersistenceEnabled(persistQosEnabled);
 
         {
             String logPath = pArgs.getLogPath();
@@ -403,5 +419,27 @@ public class Configuration {
         } else if (conf.get("default") == null) {
             throw new RuntimeException("Missing default value in config of " + param);
         }
+    }
+
+    public void setValuePersistenceEnabled(boolean valuePersistenceEnabled) {
+        this.valuePersistenceEnabled = valuePersistenceEnabled;
+    }
+
+    public void setQosPersistenceEnabled(boolean qosPersistenceEnabled) {
+        this.qosPersistenceEnabled = qosPersistenceEnabled;
+    }
+
+    /**
+     * Persist qos2 and qos3 subscription to disk, default to false;
+     */
+    public boolean isQosPersistenceEnabled() {
+        return qosPersistenceEnabled;
+    }
+
+    /**
+     * Persist value setting to disk, default to true;
+     **/
+    public Boolean isValuePersistenceEnabled() {
+        return valuePersistenceEnabled;
     }
 }
