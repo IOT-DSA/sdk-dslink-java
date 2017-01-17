@@ -18,7 +18,6 @@ import java.io.IOException;
  * @author Samuel Grenier
  */
 public class Configuration {
-
     private URLInfo authEndpoint;
     private String dsId;
     private String zone;
@@ -29,6 +28,8 @@ public class Configuration {
     private File serializationPath;
     private JsonObject linkData;
     private String token;
+    private boolean valuePersistenceEnabled;
+    private boolean qosPersistenceEnabled;
 
     /**
      * Example endpoint: http://localhost:8080/conn
@@ -273,9 +274,9 @@ public class Configuration {
     }
 
     public static Configuration autoConfigure(String[] origArgs,
-                                                boolean requester,
-                                                boolean responder,
-                                                JsonObject linkData) {
+                                              boolean requester,
+                                              boolean responder,
+                                              JsonObject linkData) {
         Configuration defaults = new Configuration();
         defaults.setConnectionType(ConnectionType.WEB_SOCKET);
         defaults.setRequester(requester);
@@ -294,6 +295,12 @@ public class Configuration {
         String keyPath = getFieldValue(json, "key", pArgs.getKeyPath());
         String nodePath = getFieldValue(json, "nodes", pArgs.getNodesPath());
         String handlerClass = getFieldValue(json, "handler_class", null);
+
+        boolean valuePersistenceEnabled = getBooleanJsonValue(json, "valuePersistenceEnabled", true);
+        defaults.setValuePersistenceEnabled(valuePersistenceEnabled);
+
+        boolean qosPersistenceEnabled = getBooleanJsonValue(json, "qosPersistenceEnabled", false);
+        defaults.setQosPersistenceEnabled(qosPersistenceEnabled);
 
         {
             String logPath = pArgs.getLogPath();
@@ -340,6 +347,20 @@ public class Configuration {
         return defaults;
     }
 
+    private static boolean getBooleanJsonValue(JsonObject configNode, String configNodeName, boolean defaultValue) {
+        JsonObject configKeyNode = configNode.get(configNodeName);
+        if (configKeyNode == null) {
+            return defaultValue;
+        } else {
+            Boolean value = configKeyNode.get("value");
+            if (value == null) {
+                return defaultValue;
+            } else {
+                return value;
+            }
+        }
+    }
+
     public static JsonObject getConfigs(String jsonPath) {
         File file = new File(jsonPath);
         try {
@@ -377,6 +398,9 @@ public class Configuration {
         return json;
     }
 
+    /**
+     * If @defaultVal is provided, it'll have precedence on the value in the Json object.
+     */
     private static <T> T getFieldValue(JsonObject json,
                                        String field,
                                        T defaultVal) {
@@ -403,5 +427,27 @@ public class Configuration {
         } else if (conf.get("default") == null) {
             throw new RuntimeException("Missing default value in config of " + param);
         }
+    }
+
+    public void setValuePersistenceEnabled(boolean valuePersistenceEnabled) {
+        this.valuePersistenceEnabled = valuePersistenceEnabled;
+    }
+
+    /**
+     * Persist value setting to disk, default to true;
+     **/
+    public boolean isValuePersistenceEnabled() {
+        return valuePersistenceEnabled;
+    }
+
+    public void setQosPersistenceEnabled(boolean qosPersistenceEnabled) {
+        this.qosPersistenceEnabled = qosPersistenceEnabled;
+    }
+
+    /**
+     * Persist qos2 and qos3 subscription to disk, default to false;
+     */
+    public boolean isQosPersistenceEnabled() {
+        return qosPersistenceEnabled;
     }
 }

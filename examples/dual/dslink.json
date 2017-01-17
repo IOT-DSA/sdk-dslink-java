@@ -41,6 +41,14 @@
     "handler_class": {
       "type": "string",
       "default": "org.dsa.iot.dual.Main"
+    },
+    "valuePersistenceEnabled": {
+      "type": "bool",
+      "value": true
+    },
+    "qosPersistenceEnabled": {
+      "type": "bool",
+      "value": false
     }
   }
 }
