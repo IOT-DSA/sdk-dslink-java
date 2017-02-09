@@ -8,7 +8,6 @@ import org.dsa.iot.dslink.node.actions.ActionResult;
 import org.dsa.iot.dslink.node.actions.Parameter;
 import org.dsa.iot.dslink.node.actions.ResultType;
 import org.dsa.iot.dslink.node.actions.table.Row;
-import org.dsa.iot.dslink.node.actions.table.Table;
 import org.dsa.iot.dslink.node.value.SubscriptionValue;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
@@ -131,11 +130,13 @@ public class WatchGroup {
      * Initializes the watch for the group.
      *
      * @param path Watch path.
+     * @param useNewEncodingMethod
      */
-    protected void initWatch(String path) {
+    protected void initWatch(String path, boolean useNewEncodingMethod) {
         NodeBuilder b = node.createChild(path);
         b.setValueType(ValueType.DYNAMIC);
         b.setValue(null);
+        b.setConfig("useNewEncodingMethod", new Value(useNewEncodingMethod));
         Node n = b.build();
         Watch watch = new Watch(this, n);
         watch.init(permission, db);
@@ -174,8 +175,14 @@ public class WatchGroup {
         Map<String, Node> children = node.getChildren();
         for (Node n : children.values()) {
             if (n.getAction() == null) {
-                String path = n.getName().replaceAll("%2F", "/").replaceAll("%2E", ".");
-                initWatch(path);
+                Value useNewEncodingMethod = n.getConfig("useNewEncodingMethod");
+                if (useNewEncodingMethod == null || !useNewEncodingMethod.getBool()) {
+                    String path = n.getName().replaceAll("%2F", "/").replaceAll("%2E", ".");
+                    initWatch(path, false);
+                } else {
+                    String path = StringUtils.decodeName(n.getName());
+                    initWatch(path, true);
+                }
             }
         }
     }
@@ -252,17 +259,16 @@ public class WatchGroup {
                 ValueType valueType = ValueType.STRING;
                 Value pathValue = event.getParameter("Path", valueType);
                 String path = pathValue.getString();
-                String encodedPath = StringUtils.encodeName(path);
 
                 event.getTable().addColumn(new Parameter("Success", ValueType.BOOL));
-                if (node.hasChild(encodedPath)) {
+                if (node.hasChild(path)) {
                     event.getTable().addColumn(new Parameter("Message", ValueType.STRING));
                     Row make = Row.make(new Value(false),
                             new Value("Couldn't watch the path " +
                                     path + " because it is already watched in this Watch Group."));
                     event.getTable().addRow(make);
                 } else {
-                    initWatch(path);
+                    initWatch(path, true);
                     event.getTable().addRow(Row.make(new Value(true)));
                 }
             }
