@@ -21,7 +21,7 @@ public class NodeUtils {
      * @return Value of the configuration.
      */
     public static Value getRoConfig(NodeBuilder b, String name) {
-        Node n = b.getParent().getChild(b.getChild().getName());
+        Node n = b.getParent().getChild(b.getChild().getName(), true);
         if (n != null) {
             return n.getRoConfig(name);
         }

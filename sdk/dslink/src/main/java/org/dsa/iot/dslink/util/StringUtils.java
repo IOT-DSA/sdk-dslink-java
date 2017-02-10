@@ -41,12 +41,18 @@ public class StringUtils {
      * @return Encoded name.
      */
     public static String encodeName(String string, char[] encode) {
+        String tmp = string.replaceAll("%", "%25");
+        return encodeNameOld(tmp, Node.getBannedCharacters());
+    }
+
+    public static String encodeNameOld(String string, char[] encode) {
         if (string == null) {
             return null;
         }
         StringBuilder builder = new StringBuilder();
         char[] nameChars = string.toCharArray();
-        nameLoop: for (int i = 0; i < nameChars.length; ++i) {
+        nameLoop:
+        for (int i = 0; i < nameChars.length; ++i) {
             char nameChar = nameChars[i];
             // Skip over already encoded characters
             if (nameChar == '%' && i + 1 < nameChars.length) {
@@ -94,6 +100,15 @@ public class StringUtils {
      * @return Decoded name.
      */
     public static String decodeName(String string) {
+        if (string == null) {
+            return null;
+        }
+
+        String tmp = decodeNameOld(string);
+        return tmp.replaceAll("%25", "%");
+    }
+
+    public static String decodeNameOld(String string) {
         if (string == null) {
             return null;
         }

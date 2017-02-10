@@ -14,6 +14,7 @@ import org.dsa.iot.dslink.node.Writable;
 import org.dsa.iot.dslink.node.actions.Action;
 import org.dsa.iot.dslink.node.actions.ActionResult;
 import org.dsa.iot.dslink.node.value.*;
+import org.dsa.iot.dslink.util.StringUtils;
 import org.dsa.iot.dslink.util.handler.Handler;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
@@ -136,7 +137,13 @@ public class Watch {
     }
 
     public void init(Permission perm, Database db) {
-        watchedPath = node.getName().replaceAll("%2F", "/").replaceAll("%2E", ".");
+        Value useNewEncodingMethod = node.getConfig("useNewEncodingMethod");
+        if (useNewEncodingMethod == null || !useNewEncodingMethod.getBool()) {
+            watchedPath = node.getName().replaceAll("%2F", "/").replaceAll("%2E", ".");
+        } else {
+            watchedPath = StringUtils.decodeName(node.getName());
+        }
+
         initData(node);
 
         initializeWatchDataType();

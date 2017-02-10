@@ -67,10 +67,16 @@ public class Node {
      * @param link Linkable class the node is handled on
      */
     public Node(String name, Node parent, Linkable link) {
+        this(name, parent, link, true);
+    }
+
+    public Node(String name, Node parent, Linkable link, boolean shouldEncodeName) {
         this.parent = new WeakReference<>(parent);
         this.listener = new NodeListener(this);
         this.link = link;
-        name = StringUtils.encodeName(name);
+        if (shouldEncodeName) {
+            name = StringUtils.encodeName(name);
+        }
         if (name == null) {
             throw new IllegalArgumentException("name");
         }
@@ -378,10 +384,22 @@ public class Node {
      * @param name Child name
      * @return Child, or null if non-existent
      */
+    @Deprecated
     public Node getChild(String name) {
         Map<String, Node> children = this.children;
         if (children != null) {
             name = StringUtils.encodeName(name);
+            return children.get(name);
+        }
+        return null;
+    }
+
+    public Node getChild(String name, boolean encodeName) {
+        Map<String, Node> children = this.children;
+        if (children != null) {
+            if (encodeName) {
+                name = StringUtils.encodeName(name);
+            }
             return children.get(name);
         }
         return null;
@@ -394,10 +412,14 @@ public class Node {
      * @param name Name of the child
      * @return builder
      */
+    @Deprecated
     public NodeBuilder createChild(String name) {
         return createChild(name, profile);
     }
 
+    public NodeBuilder createChild(String name, boolean encodeName) {
+        return createChild(name, profile, encodeName);
+    }
     /**
      * Creates a node builder to allow setting up the node data before
      * any list subscriptions can be notified.
@@ -412,6 +434,16 @@ public class Node {
         if (profile != null) {
             b.setProfile(profile);
         }
+        return b;
+    }
+
+    public NodeBuilder createChild(String name, String profile, boolean encodeName) {
+        NodeBuilder b = new NodeBuilder(this, new Node(name, this, link, encodeName));
+
+        if (profile != null) {
+            b.setProfile(profile);
+        }
+
         return b;
     }
 

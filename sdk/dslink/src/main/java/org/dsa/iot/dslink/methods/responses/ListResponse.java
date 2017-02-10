@@ -177,7 +177,7 @@ public class ListResponse extends Response {
         } else {
             // Child node
             JsonObject childData = (JsonObject) v;
-            Node child = node.getChild(name);
+            Node child = node.getChild(name, false);
 
             String change = childData.get("change");
             if (change != null && "remove".equals(change)) {
