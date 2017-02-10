@@ -41,8 +41,8 @@ public class StringUtils {
      * @return Encoded name.
      */
     public static String encodeName(String string, char[] encode) {
-        return encodeNameOld(string, encode)
-                .replaceAll("%", "%25");
+        String tmp = string.replaceAll("%", "%25");
+        return encodeNameOld(tmp, Node.getBannedCharacters());
     }
 
     public static String encodeNameOld(String string, char[] encode) {
@@ -104,8 +104,8 @@ public class StringUtils {
             return null;
         }
 
-        String withDecodedPercent = string.replaceAll("%25", "%");
-        return decodeNameOld(withDecodedPercent);
+        String tmp = decodeNameOld(string);
+        return tmp.replaceAll("%25", "%");
     }
 
     public static String decodeNameOld(String string) {

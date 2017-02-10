@@ -7,6 +7,8 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import static org.junit.Assert.assertEquals;
+
 /**
  * @author Samuel Grenier
  */
@@ -16,14 +18,14 @@ public class StringUtilsTest {
     public void encode() {
         String s = "% . / \\ ? * : | < > $ @";
         s = StringUtils.encodeName(s);
-        Assert.assertEquals("%25 %2E %2F %5C %3F %2A %3A %7C %3C %3E %24 %40", s);
+        assertEquals("%25 %2E %2F %5C %3F %2A %3A %7C %3C %3E %24 %40", s);
     }
 
     @Test
     public void decode() {
         String s = "% %25 %2E %2F %5C %3F %2A %3A %7C %3C %3E %24 %40 %25";
         s = StringUtils.decodeName(s);
-        Assert.assertEquals("% % . / \\ ? * : | < > $ @ %", s);
+        assertEquals("% % . / \\ ? * : | < > $ @ %", s);
     }
 
     @Test
@@ -35,8 +37,28 @@ public class StringUtilsTest {
         try {
             StringUtils.isReference(null);
         } catch (NullPointerException e) {
-            Assert.assertEquals("name", e.getMessage());
+            assertEquals("name", e.getMessage());
         }
+    }
+
+    @Test
+    public void new_encodeName_withDot() {
+        String toEncode = "/data/a%2Eb";
+        String expected = "%2Fdata%2Fa%252Eb";
+
+        String actual = StringUtils.encodeName(toEncode);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void new_decodeName_withDot() {
+        String toDecode = "%2Fdata%2Fa%252Eb";
+        String expected = "/data/a%2Eb";
+
+        String actual = StringUtils.decodeName(toDecode);
+
+        assertEquals(expected, actual);
     }
 
     @Test
@@ -44,29 +66,29 @@ public class StringUtilsTest {
         try {
             StringUtils.join((Set<String>) null, null);
         } catch (NullPointerException e) {
-            Assert.assertEquals("strings", e.getMessage());
+            assertEquals("strings", e.getMessage());
         }
 
         try {
             StringUtils.join((String[]) null, null);
         } catch (NullPointerException e) {
-            Assert.assertEquals("strings", e.getMessage());
+            assertEquals("strings", e.getMessage());
         }
 
         try {
             StringUtils.join(new HashSet<String>(), null);
         } catch (NullPointerException e) {
-            Assert.assertEquals("delimiter", e.getMessage());
+            assertEquals("delimiter", e.getMessage());
         }
 
         {
             String s = StringUtils.join(new String[0], "|");
-            Assert.assertEquals("", s);
+            assertEquals("", s);
         }
 
         {
             String s = StringUtils.join(new LinkedHashSet<String>(), "|");
-            Assert.assertEquals("", s);
+            assertEquals("", s);
         }
 
         {
@@ -74,7 +96,7 @@ public class StringUtilsTest {
             strings.add("1");
             strings.add("2");
             strings.add("3");
-            Assert.assertEquals("1|2|3", StringUtils.join(strings, "|"));
+            assertEquals("1|2|3", StringUtils.join(strings, "|"));
         }
     }
 }

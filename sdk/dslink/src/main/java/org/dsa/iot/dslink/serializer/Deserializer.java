@@ -88,7 +88,7 @@ public class Deserializer {
             } else if (name.startsWith("@")) {
                 node.setAttribute(name.substring(1), ValueUtils.toValue(value));
             } else {
-                Node child = node.createChild(name).build();
+                Node child = node.createChild(name, false).build();
                 JsonObject children = (JsonObject) value;
                 deserializeNode(child, children);
             }

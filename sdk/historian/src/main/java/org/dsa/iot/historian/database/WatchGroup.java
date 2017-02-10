@@ -340,7 +340,7 @@ public class WatchGroup {
     }
 
     private void useExistingValuesForEditAction() {
-        Node existingEditNode = node.getChild("edit");
+        Node existingEditNode = node.getChild("edit", false);
 
         if (existingEditNode == null) {
             return;

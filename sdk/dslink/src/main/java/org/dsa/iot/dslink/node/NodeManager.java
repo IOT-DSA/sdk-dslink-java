@@ -73,7 +73,7 @@ public class NodeManager {
         if (parts.length == 1 && StringUtils.isReference(parts[0])) {
             return new NodePair(superRoot, parts[0]);
         }
-        Node current = superRoot.getChild(parts[0]);
+        Node current = superRoot.getChild(parts[0], false);
         if (create && current == null) {
             NodeBuilder b = superRoot.createChild(parts[0]);
             b.setProfile(defaultProfile);
@@ -85,7 +85,7 @@ public class NodeManager {
             } else if (i + 1 == parts.length && StringUtils.isReference(parts[i])) {
                 return new NodePair(current, parts[i]);
             } else {
-                Node temp = current.getChild(parts[i]);
+                Node temp = current.getChild(parts[i], false);
                 if (create && temp == null) {
                     NodeBuilder b = current.createChild(parts[i]);
                     b.setProfile(defaultProfile);
