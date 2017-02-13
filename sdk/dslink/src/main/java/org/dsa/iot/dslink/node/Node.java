@@ -534,6 +534,7 @@ public class Node {
     /**
      * Deletes this node from its parent.
      */
+    @Deprecated
     public void delete() {
         Node parent = getParent();
         if (parent != null) {
@@ -541,13 +542,29 @@ public class Node {
         }
     }
 
+    public void delete(boolean encodeName) {
+        Node parent = getParent();
+        if (parent != null) {
+            parent.removeChild(this, encodeName);
+        }
+    }
+
     /**
      * @param node Node to remove.
      * @return The node if it existed.
      */
+    @Deprecated
     public Node removeChild(Node node) {
         if (node != null) {
             return removeChild(node.getName());
+        } else {
+            return null;
+        }
+    }
+
+    public Node removeChild(Node node, boolean encodeName) {
+        if (node != null) {
+            return removeChild(node.getName(), encodeName);
         } else {
             return null;
         }
@@ -557,9 +574,16 @@ public class Node {
      * @param name Node to remove.
      * @return The node if it existed.
      */
+    @Deprecated
     public Node removeChild(String name) {
+        return removeChild(name, true);
+    }
+
+    public Node removeChild(String name, boolean encodeName) {
         synchronized (childrenLock) {
-            name = StringUtils.encodeName(name);
+            if (encodeName) {
+                name = StringUtils.encodeName(name);
+            }
             Node child = children != null ? children.remove(name) : null;
             SubscriptionManager manager = null;
             if (link != null) {
