@@ -155,7 +155,7 @@ public abstract class DatabaseProvider {
             }
         }
 
-        node.delete();
+        node.delete(false);
     }
 
     private void createAndInitWatchGroup(Node node, Database db) {

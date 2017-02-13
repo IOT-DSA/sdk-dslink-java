@@ -35,7 +35,13 @@ public class GetHistory implements Handler<ActionResult> {
     private final String path;
 
     public GetHistory(Node node, Database db) {
-        this.path = node.getName().replaceAll("%2F", "/").replaceAll("%2E", ".");
+        Value useNewEncodingMethod = node.getConfig("useNewEncodingMethod");
+        if (useNewEncodingMethod == null || !useNewEncodingMethod.getBool()) {
+            this.path = node.getName().replaceAll("%2F", "/").replaceAll("%2E", ".");
+        } else {
+            this.path = StringUtils.decodeName(node.getName());
+        }
+
         this.db = db;
     }
 
