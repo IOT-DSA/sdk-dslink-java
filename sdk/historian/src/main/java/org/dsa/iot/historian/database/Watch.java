@@ -127,12 +127,7 @@ public class Watch {
         group.removeFromWatches(this);
         removeFromSubscriptionPool();
 
-        Value useNewEncodingMethod = node.getConfig("useNewEncodingMethod");
-        if(useNewEncodingMethod == null || !useNewEncodingMethod.getBool()) {
-            node.delete();
-        } else {
-            node.delete(false);
-        }
+        node.delete(false);
     }
 
     private void removeFromSubscriptionPool() {
