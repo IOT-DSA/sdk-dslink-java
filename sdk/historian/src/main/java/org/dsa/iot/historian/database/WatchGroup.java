@@ -175,7 +175,7 @@ public class WatchGroup {
         Map<String, Node> children = node.getChildren();
         for (Node n : children.values()) {
             if (n.getAction() == null) {
-                Value useNewEncodingMethod = n.getConfig("useNewEncodingMethod");
+                Value useNewEncodingMethod = n.getConfig(Watch.USE_NEW_ENCODING_METHOD_CONFIG_NAME);
                 if (useNewEncodingMethod == null || !useNewEncodingMethod.getBool()) {
                     String path = n.getName().replaceAll("%2F", "/").replaceAll("%2E", ".");
                     initWatch(path, false);
