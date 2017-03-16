@@ -334,13 +334,7 @@ public class Requester extends Linkable {
         }
         int rid = in.get("rid");
         if (rid == 0) {
-            final SubscriptionUpdate update = new SubscriptionUpdate(this);
-            LoopProvider.getProvider().schedule(new Runnable() {
-                @Override
-                public void run() {
-                    update.populate(in);
-                }
-            });
+            new SubscriptionUpdate(this).populate(in);
             return;
         }
         RequestWrapper wrapper = reqs.get(rid);
