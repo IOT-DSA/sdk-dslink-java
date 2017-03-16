@@ -1,2 +1,3 @@
+apply plugin: 'application'
 apply from: '../build.gradle'
 mainClassName = 'org.dsa.iot.dual.Main'
