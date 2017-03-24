@@ -220,14 +220,12 @@ public class Watch {
                 @Override
                 public synchronized void handle(ValuePair event) {
                     enabled = event.getCurrent().getBool();
-                    String path = node.getName()
-                            .replaceAll("%2F", "/")
-                            .replaceAll("%2E", ".");
                     SubscriptionPool pool = group.getDb().getProvider().getPool();
+                    String watchedPath = Watch.this.watchedPath;
                     if (enabled) {
-                        pool.subscribe(path, Watch.this);
+                        pool.subscribe(watchedPath, Watch.this);
                     } else {
-                        pool.unsubscribe(path, Watch.this);
+                        pool.unsubscribe(watchedPath, Watch.this);
                     }
                 }
             });
