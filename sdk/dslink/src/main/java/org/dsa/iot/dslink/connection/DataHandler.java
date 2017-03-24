@@ -77,12 +77,7 @@ public class DataHandler implements MessageTracker {
 
         final JsonArray responses = obj.get("responses");
         if (!(respHandler == null || responses == null)) {
-            LoopProvider.getProvider().schedule(new Runnable() {
-                @Override
-                public void run() {
-                    respHandler.handle(new DataReceived(msgId, responses));
-                }
-            });
+            respHandler.handle(new DataReceived(msgId, responses));
         }
 
         final Integer ackId = obj.get("ack");
