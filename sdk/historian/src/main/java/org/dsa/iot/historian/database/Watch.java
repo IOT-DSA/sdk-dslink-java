@@ -33,6 +33,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public class Watch {
     private static final Logger LOGGER = LoggerFactory.getLogger(Watch.class);
+    public static final String USE_NEW_ENCODING_METHOD_CONFIG_NAME = "useNewEncodingMethod";
 
     private final ReentrantReadWriteLock rtLock = new ReentrantReadWriteLock();
     private final List<Handler<QueryData>> rtHandlers = new ArrayList<>();
@@ -127,12 +128,7 @@ public class Watch {
         group.removeFromWatches(this);
         removeFromSubscriptionPool();
 
-        Value useNewEncodingMethod = node.getConfig("useNewEncodingMethod");
-        if(useNewEncodingMethod == null || !useNewEncodingMethod.getBool()) {
-            node.delete();
-        } else {
-            node.delete(false);
-        }
+        node.delete(false);
     }
 
     private void removeFromSubscriptionPool() {
@@ -142,7 +138,7 @@ public class Watch {
     }
 
     public void init(Permission perm, Database db) {
-        Value useNewEncodingMethod = node.getConfig("useNewEncodingMethod");
+        Value useNewEncodingMethod = node.getConfig(USE_NEW_ENCODING_METHOD_CONFIG_NAME);
         if (useNewEncodingMethod == null || !useNewEncodingMethod.getBool()) {
             watchedPath = node.getName().replaceAll("%2F", "/").replaceAll("%2E", ".");
         } else {
