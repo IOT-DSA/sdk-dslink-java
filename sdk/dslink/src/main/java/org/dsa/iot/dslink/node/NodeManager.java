@@ -40,7 +40,7 @@ public class NodeManager {
     }
 
     public NodeBuilder createRootNode(String name, String profile) {
-        NodeBuilder builder = superRoot.createChild(name);
+        NodeBuilder builder = superRoot.createChild(name, false);
         builder.setProfile(profile);
         return builder;
     }
@@ -75,7 +75,7 @@ public class NodeManager {
         }
         Node current = superRoot.getChild(parts[0], false);
         if (create && current == null) {
-            NodeBuilder b = superRoot.createChild(parts[0]);
+            NodeBuilder b = superRoot.createChild(parts[0], false);
             b.setProfile(defaultProfile);
             current = b.build();
         }
@@ -87,7 +87,7 @@ public class NodeManager {
             } else {
                 Node temp = current.getChild(parts[i], false);
                 if (create && temp == null) {
-                    NodeBuilder b = current.createChild(parts[i]);
+                    NodeBuilder b = current.createChild(parts[i], false);
                     b.setProfile(defaultProfile);
                     temp = b.build();
                 }

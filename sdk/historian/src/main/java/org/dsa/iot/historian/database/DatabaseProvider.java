@@ -71,10 +71,10 @@ public abstract class DatabaseProvider {
     @SuppressWarnings("unused")
     public NodeBuilder createDbNode(String name, ActionResult res) {
         Node parent = res.getNode().getParent();
-        if (parent.hasChild(name)) {
+        if (parent.hasChild(name, false)) {
             throw new RuntimeException("Database already exists: " + name);
         }
-        return parent.createChild(name);
+        return parent.createChild(name, false);
     }
 
     /**
@@ -165,7 +165,7 @@ public abstract class DatabaseProvider {
     }
 
     private void initCreateWatchGroupAct(final Node node) {
-        NodeBuilder b = node.createChild("createWatchGroup");
+        NodeBuilder b = node.createChild("createWatchGroup", false);
         b.setDisplayName("Create Watch Group");
         b.setSerializable(false);
 
@@ -176,7 +176,7 @@ public abstract class DatabaseProvider {
                 String name = vName.getString();
 
                 Node node = event.getNode().getParent();
-                NodeBuilder b = node.createChild(name);
+                NodeBuilder b = node.createChild(name, false);
                 b.setRoConfig("wg", new Value(true));
 
                 Database db = node.getMetaData();
@@ -194,7 +194,7 @@ public abstract class DatabaseProvider {
     }
 
     private void initDeleteAct(final Node node) {
-        NodeBuilder b = node.createChild("deleteDb");
+        NodeBuilder b = node.createChild("deleteDb", false);
         b.setDisplayName("Delete");
         b.setSerializable(false);
         b.setAction(new Action(dbPermission(), new Handler<ActionResult>() {
