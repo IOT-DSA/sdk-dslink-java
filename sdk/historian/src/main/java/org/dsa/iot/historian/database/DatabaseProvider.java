@@ -137,6 +137,8 @@ public abstract class DatabaseProvider {
         }
     }
 
+    public abstract void deleteRange(Watch watch, long fromTs, long toTs);
+
     public void deleteDb(Node node) {
         Database db = node.getMetaData();
         try {
