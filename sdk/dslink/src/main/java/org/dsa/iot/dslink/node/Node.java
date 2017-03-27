@@ -52,6 +52,7 @@ public class Node {
 
     private ValueType valueType;
     private Value value;
+    private boolean valueIsValid;
 
     private String displayName;
     private String profile;
@@ -74,6 +75,7 @@ public class Node {
         this.parent = new WeakReference<>(parent);
         this.listener = new NodeListener(this);
         this.link = link;
+        markValueInvalid();
         if (shouldEncodeName) {
             name = StringUtils.encodeName(name);
         }
@@ -232,6 +234,18 @@ public class Node {
         return i != null ? Collections.unmodifiableSet(i) : null;
     }
 
+    public boolean isValueValid() {
+    	return valueIsValid;
+    }
+    
+    public void markValueInvalid() {
+    	valueIsValid = false;
+    }
+    
+    public void markValueValid() {
+    	valueIsValid = true;
+    }
+    
     public void setValue(Value value) {
         setValue(value, false);
     }
@@ -301,6 +315,7 @@ public class Node {
         synchronized (valueLock) {
             Value prev = this.value;
             this.value = value;
+            markValueValid();
             if ((prev != null && prev.isSerializable())
                     || (value != null && value.isSerializable())
                     || (prev == null && value == null)) {
@@ -332,6 +347,7 @@ public class Node {
                 String t = type.toJsonString();
                 man.postMetaUpdate(this, "$type", new Value(t));
             } else {
+            	markValueInvalid();
                 man.postMetaUpdate(this, "$type", null);
             }
         }
