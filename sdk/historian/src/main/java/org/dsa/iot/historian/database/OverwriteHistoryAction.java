@@ -58,8 +58,8 @@ class OverwriteHistoryAction implements Handler<ActionResult> {
         final Value newValue = event.getParameter(NEW_VALUE_PARAMETER_NAME);
 
         final String path = watch.getPath();
-        long from = timeRange.from.getTimeInMillis();
-        long to = timeRange.to.getTimeInMillis();
+        final long from = timeRange.from.getTimeInMillis();
+        final long to = timeRange.to.getTimeInMillis();
         db.query(path, from, to, new CompleteHandler<QueryData>() {
             private final List<Long> timestampsOfValuesToOverwrite = new ArrayList<>();
 
@@ -70,6 +70,8 @@ class OverwriteHistoryAction implements Handler<ActionResult> {
 
             @Override
             public void complete() {
+                db.getProvider().deleteRange(watch, from, to);
+
                 for (Long timestamp : timestampsOfValuesToOverwrite) {
                     db.write(path, newValue, timestamp);
                 }

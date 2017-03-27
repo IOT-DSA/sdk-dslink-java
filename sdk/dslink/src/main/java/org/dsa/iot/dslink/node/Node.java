@@ -611,10 +611,22 @@ public class Node {
      * @param name Name of the child.
      * @return Whether this node has the child or not.
      */
+    @Deprecated
     public boolean hasChild(String name) {
         Map<String, Node> children = this.children;
         if (children != null) {
             name = StringUtils.encodeName(name);
+            return children.containsKey(name);
+        }
+        return false;
+    }
+
+    public boolean hasChild(String name, boolean encodeName) {
+        Map<String, Node> children = this.children;
+        if (children != null) {
+            if (encodeName) {
+                name = StringUtils.encodeName(name);
+            }
             return children.containsKey(name);
         }
         return false;
