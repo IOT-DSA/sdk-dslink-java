@@ -225,7 +225,7 @@ public class WatchGroup {
             public void handle(ActionResult event) {
                 Node node = event.getNode().getParent();
                 unsubscribe();
-                node.delete();
+                node.delete(false);
             }
         }));
         deleteBuilder.build();
