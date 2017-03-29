@@ -82,7 +82,7 @@ public class Requester extends Linkable {
      * subscriber helper.
      */
     @SuppressWarnings("unused")
-    public SubscriptionHelper getSubscriptionHelper() {
+    public synchronized SubscriptionHelper getSubscriptionHelper() {
         if (subscriptionHelper == null) {
             subscriptionHelper = new SubscriptionHelper(this);
         }

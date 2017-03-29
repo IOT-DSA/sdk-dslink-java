@@ -8,6 +8,7 @@ import java.util.logging.Logger;
 import org.dsa.iot.dslink.node.value.SubscriptionValue;
 import org.dsa.iot.dslink.util.SubData;
 import org.dsa.iot.dslink.util.handler.Handler;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * The requester api is written in such a way that multiple subscriptions to the same
@@ -75,6 +76,7 @@ public class SubscriptionHelper {
      *
      * @param path The first scription
      */
+    @SuppressFBWarnings("AT_OPERATION_SEQUENCE_ON_CONCURRENT_ABSTRACTION")
     public SubscriptionHelper subscribe(SubData path,
                                         Handler<SubscriptionValue> handler) {
         Adapter a = subscriptions.get(path.getPath());
@@ -92,6 +94,7 @@ public class SubscriptionHelper {
     /**
      * Only unsubscribes the given handler.
      */
+    @SuppressFBWarnings("AT_OPERATION_SEQUENCE_ON_CONCURRENT_ABSTRACTION")
     public SubscriptionHelper unsubscribe(String path,
                                           Handler<SubscriptionValue> handler) {
         Adapter a = subscriptions.get(path);
@@ -131,6 +134,7 @@ public class SubscriptionHelper {
     /**
      * Only identical instances are equal (==).
      */
+    @SuppressFBWarnings("SE_COMPARATOR_SHOULD_BE_SERIALIZABLE")
     private static class HandlerComparator
             implements Comparator<Handler<SubscriptionValue>> {
 
