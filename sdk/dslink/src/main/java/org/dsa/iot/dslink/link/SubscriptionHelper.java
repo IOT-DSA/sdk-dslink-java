@@ -5,6 +5,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.dsa.iot.dslink.methods.responses.UnsubscribeResponse;
 import org.dsa.iot.dslink.node.value.SubscriptionValue;
 import org.dsa.iot.dslink.util.SubData;
 import org.dsa.iot.dslink.util.handler.Handler;
@@ -53,9 +54,8 @@ public class SubscriptionHelper {
      * Clears a single subscription without calling unsubscribe on the requester.
      */
     public SubscriptionHelper clear(String path) {
-        Adapter a = subscriptions.remove(path);
-        if (a != null) {
-            requester.unsubscribe(path, null);
+        if (subscriptions != null) {
+            subscriptions.remove(path);
         }
         return this;
     }
@@ -93,15 +93,18 @@ public class SubscriptionHelper {
 
     /**
      * Only unsubscribes the given handler.
+     *
+     * @param response Can be null.
      */
     @SuppressFBWarnings("AT_OPERATION_SEQUENCE_ON_CONCURRENT_ABSTRACTION")
     public SubscriptionHelper unsubscribe(String path,
-                                          Handler<SubscriptionValue> handler) {
+                                          Handler<SubscriptionValue> handler,
+                                          Handler<UnsubscribeResponse> response) {
         Adapter a = subscriptions.get(path);
         if (a != null) {
             a.remove(handler);
             if (a.size() == 0) {
-                requester.unsubscribe(path, null);
+                requester.unsubscribe(path, response);
                 subscriptions.remove(path);
             }
         }
@@ -110,19 +113,25 @@ public class SubscriptionHelper {
 
     /**
      * Only unsubscribes the given handler.
+     *
+     * @param response Can be null.
      */
     public SubscriptionHelper unsubscribe(SubData path,
-                                          Handler<SubscriptionValue> handler) {
-        return unsubscribe(path.getPath(),handler);
+                                          Handler<SubscriptionValue> handler,
+                                          Handler<UnsubscribeResponse> response) {
+        return unsubscribe(path.getPath(), handler, response);
     }
 
     /**
      * Unsubscribe all handlers for the given path.
+     *
+     * @param response Can be null.
      */
-    public SubscriptionHelper unsubscribeAll(String path) {
+    public SubscriptionHelper unsubscribeAll(
+            String path, Handler<UnsubscribeResponse> response) {
         Adapter a = subscriptions.remove(path);
         if (a != null) {
-            requester.unsubscribe(path, null);
+            requester.unsubscribe(path, response);
         }
         return this;
     }
