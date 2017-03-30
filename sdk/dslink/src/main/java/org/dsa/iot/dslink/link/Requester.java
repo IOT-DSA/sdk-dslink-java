@@ -1,5 +1,10 @@
 package org.dsa.iot.dslink.link;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.DSLinkHandler;
 import org.dsa.iot.dslink.methods.Request;
@@ -12,16 +17,9 @@ import org.dsa.iot.dslink.node.NodePair;
 import org.dsa.iot.dslink.node.SubscriptionManager;
 import org.dsa.iot.dslink.node.value.SubscriptionValue;
 import org.dsa.iot.dslink.node.value.Value;
-import org.dsa.iot.dslink.provider.LoopProvider;
 import org.dsa.iot.dslink.util.SubData;
 import org.dsa.iot.dslink.util.handler.Handler;
 import org.dsa.iot.dslink.util.json.JsonObject;
-
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Handles incoming responses and outgoing requests.
@@ -62,6 +60,8 @@ public class Requester extends Linkable {
      */
     private final Map<Integer, InvokeResponse> invokeResponses = new HashMap<>();
 
+    private SubscriptionHelper subscriptionHelper;
+
     /**
      * Constructs a requester
      *
@@ -75,6 +75,18 @@ public class Requester extends Linkable {
     @Override
     public void batchSet(Map<Node, Value> updates) {
         throw new UnsupportedOperationException();
+    }
+
+    /**
+     * If you need to have multiple subscriptions to the same path, use the
+     * subscriber helper.
+     */
+    @SuppressWarnings("unused")
+    public synchronized SubscriptionHelper getSubscriptionHelper() {
+        if (subscriptionHelper == null) {
+            subscriptionHelper = new SubscriptionHelper(this);
+        }
+        return subscriptionHelper;
     }
 
     @SuppressWarnings("unused")
@@ -171,6 +183,10 @@ public class Requester extends Linkable {
         }
         List<Integer> subs = new ArrayList<>();
         for (String path : paths) {
+            //just in case...
+            if (subscriptionHelper != null) {
+                subscriptionHelper.clear(path);
+            }
             path = NodeManager.normalizePath(path, true);
             Integer sid = subPaths.remove(path);
             if (sid != null) {
@@ -188,7 +204,7 @@ public class Requester extends Linkable {
     /**
      * Sends a request to the responder to close the given stream.
      *
-     * @param rid Stream to close.
+     * @param rid        Stream to close.
      * @param onResponse Response.
      */
     @SuppressWarnings("unused")
@@ -206,7 +222,7 @@ public class Requester extends Linkable {
     /**
      * Sends an invocation request.
      *
-     * @param request Invocation request.
+     * @param request    Invocation request.
      * @param onResponse Response.
      * @return Request ID that can be used to close the stream.
      * @see InvokeResponse#getState To determine if the stream is open. If the
@@ -222,7 +238,7 @@ public class Requester extends Linkable {
      * Invokes a previously open invocation stream. The stream must not be
      * closed.
      *
-     * @param rid Previous invocation request ID
+     * @param rid    Previous invocation request ID
      * @param params Parameters of the invocation, can be {@code null}
      * @see #invoke
      */
@@ -235,7 +251,7 @@ public class Requester extends Linkable {
     /**
      * Sends a list request.
      *
-     * @param request List request.
+     * @param request    List request.
      * @param onResponse Response.
      * @return Request ID that can be used to close the stream.
      */
@@ -248,7 +264,7 @@ public class Requester extends Linkable {
     /**
      * Sends a set request.
      *
-     * @param request Set request.
+     * @param request    Set request.
      * @param onResponse Response.
      */
     public void set(SetRequest request, Handler<SetResponse> onResponse) {
@@ -260,7 +276,7 @@ public class Requester extends Linkable {
     /**
      * Sends a remove request.
      *
-     * @param request Remove request.
+     * @param request    Remove request.
      * @param onResponse Called when a response is received.
      */
     public void remove(RemoveRequest request, Handler<RemoveResponse> onResponse) {
@@ -284,7 +300,7 @@ public class Requester extends Linkable {
      * Sends a request to the client with a given request ID.
      *
      * @param wrapper Request to send to the client.
-     * @param rid Request ID to use.
+     * @param rid     Request ID to use.
      */
     private void sendRequest(RequestWrapper wrapper, int rid) {
         sendRequest(wrapper, rid, true);
@@ -294,8 +310,8 @@ public class Requester extends Linkable {
      * Sends a request to the client with a given request ID.
      *
      * @param wrapper Request to send to the client.
-     * @param rid Request ID to use.
-     * @param merge Whether the request should merge.
+     * @param rid     Request ID to use.
+     * @param merge   Whether the request should merge.
      */
     private void sendRequest(RequestWrapper wrapper,
                              int rid,
@@ -471,6 +487,9 @@ public class Requester extends Linkable {
         subSids.clear();
         subUpdates.clear();
         invokeResponses.clear();
+        if (subscriptionHelper != null) {
+            subscriptionHelper.clear();
+        }
     }
 
     private static class RequestWrapper {
