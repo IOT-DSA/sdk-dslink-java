@@ -44,19 +44,16 @@ public class SubscriptionHelper {
     /**
      * Clears all subscriptions, but does not call unsubscribe on the requester.
      */
-    public void clear() {
-        if (subscriptions != null) {
-            subscriptions.clear();
-        }
+    public SubscriptionHelper clear() {
+        subscriptions.clear();
+        return this;
     }
 
     /**
      * Clears a single subscription without calling unsubscribe on the requester.
      */
     public SubscriptionHelper clear(String path) {
-        if (subscriptions != null) {
-            subscriptions.remove(path);
-        }
+        subscriptions.remove(path);
         return this;
     }
 
