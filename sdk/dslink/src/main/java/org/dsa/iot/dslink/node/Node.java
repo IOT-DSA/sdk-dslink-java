@@ -58,6 +58,8 @@ public class Node {
     private Set<String> interfaces;
     private Action action;
     private char[] pass;
+    
+    private boolean shouldPostCachedValue = true;
 
     /**
      * Constructs a node object.
@@ -355,6 +357,16 @@ public class Node {
     public Writable getWritable() {
         return writable;
     }
+    
+    
+    public boolean shouldPostCachedValue() {
+    	return shouldPostCachedValue;
+    }
+
+    public void setShouldPostCachedValue(boolean should) {
+    	shouldPostCachedValue = should;
+    }
+    
 
     /**
      * @return Children of the node, can be null

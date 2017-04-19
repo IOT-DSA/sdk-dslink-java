@@ -152,7 +152,9 @@ public class SubscriptionManager {
         NodeManager man = link.getNodeManager();
         Node node = man.getNode(path, false, false).getNode();
         if (node != null) {
-            postValueUpdate(node);
+        	if (node.shouldPostCachedValue()) {
+        		postValueUpdate(node);
+        	}
             node.getListener().postOnSubscription();
         }
     }
