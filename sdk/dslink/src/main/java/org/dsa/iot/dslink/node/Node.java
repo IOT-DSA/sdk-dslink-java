@@ -58,6 +58,8 @@ public class Node {
     private Set<String> interfaces;
     private Action action;
     private char[] pass;
+    
+    private boolean shouldPostCachedValue = true;
 
     /**
      * Constructs a node object.
@@ -355,6 +357,24 @@ public class Node {
     public Writable getWritable() {
         return writable;
     }
+    
+    /**
+     * @return Whether the node's value should automatically 
+     *         be posted in response to a subscription request.
+     */
+    public boolean shouldPostCachedValue() {
+    	return shouldPostCachedValue;
+    }
+
+    /**
+     * @param should Whether the node's value should 
+     *               automatically be posted in response to a 
+     *               subscription request. Defaults to true.
+     */
+    public void setShouldPostCachedValue(boolean should) {
+    	shouldPostCachedValue = should;
+    }
+    
 
     /**
      * @return Children of the node, can be null
