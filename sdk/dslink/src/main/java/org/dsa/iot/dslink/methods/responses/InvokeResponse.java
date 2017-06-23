@@ -12,8 +12,10 @@ import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.actions.Action;
 import org.dsa.iot.dslink.node.actions.ActionResult;
 import org.dsa.iot.dslink.node.actions.Parameter;
+import org.dsa.iot.dslink.node.actions.table.Modify;
 import org.dsa.iot.dslink.node.actions.table.Row;
 import org.dsa.iot.dslink.node.actions.table.Table;
+import org.dsa.iot.dslink.node.actions.table.Table.Mode;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.node.value.ValueUtils;
@@ -83,6 +85,23 @@ public class InvokeResponse extends Response {
     public void populate(JsonObject in) {
         if (results == null) {
             results = new Table();
+        }
+        {
+        	JsonObject metaData = in.get("meta");
+        	if (metaData != null) {
+        		String mode = metaData.get("mode");
+        		if (mode != null) {
+        			results.setMode(Mode.valueOf(mode.toUpperCase()));
+        		}
+        		String modify = metaData.get("modify");
+        		if (modify != null) {
+        			results.setModify(Modify.fromString(modify));
+        		}
+        		JsonObject tableMeta = metaData.get("meta");
+        		if (tableMeta != null) {
+        			results.setTableMeta(tableMeta);
+        		}
+        	}
         }
         {
             JsonArray cols = in.get("columns");
@@ -167,6 +186,11 @@ public class InvokeResponse extends Response {
                         meta.put("meta", obj);
                     }
                     table.setTableMeta(null);
+                    
+                    Modify modify = table.getModify();
+                    if (modify != null) {
+                    	meta.put("modify", modify.toString());
+                    }
                 }
                 out.put("meta", meta);
             }

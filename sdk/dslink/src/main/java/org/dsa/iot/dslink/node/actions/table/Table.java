@@ -25,6 +25,7 @@ public class Table {
     private List<Parameter> columns;
     private List<Row> rows;
     private Mode mode;
+    private Modify modify;
     private JsonObject meta;
     private boolean ready;
 
@@ -170,6 +171,7 @@ public class Table {
         rows = null;
         columns = null;
         mode = null;
+        modify = null;
         //Wake up anyone waiting for a stream
         if (streamMutex != null) {
             synchronized (streamMutex) {
@@ -266,6 +268,7 @@ public class Table {
         this.columns = null;
         this.rows = null;
         this.mode = null;
+        this.modify = null;
         this.closeHandler = null;
         this.meta = null;
         this.responder = null;
@@ -285,6 +288,22 @@ public class Table {
      */
     public synchronized void setTableMeta(JsonObject meta) {
         this.meta = meta;
+    }
+    
+    /**
+     * @return "modify" metadata field 
+     */
+    public synchronized Modify getModify() {
+    	return modify;
+    }
+    
+    /**
+     * Sets the modify field of the table.
+     *
+     * @param modify Modify type to set.
+     */
+    public synchronized void setModify(Modify modify) {
+        this.modify = modify;
     }
 
     /**
