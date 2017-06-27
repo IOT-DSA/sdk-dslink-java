@@ -3,7 +3,7 @@ subprojects {
     apply plugin: 'java'
     apply plugin: 'idea'
 
-    version = '0.17.4-SNAPSHOT'
+    version = '0.17.5-SNAPSHOT'
     sourceCompatibility = 1.7
     targetCompatibility = 1.7
 
