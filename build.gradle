@@ -3,7 +3,7 @@ subprojects {
     apply plugin: 'java'
     apply plugin: 'idea'
 
-    version = '0.17.5-SNAPSHOT'
+    version = '0.17.6-SNAPSHOT'
     sourceCompatibility = 1.7
     targetCompatibility = 1.7
 
@@ -13,6 +13,10 @@ subprojects {
 
     configurations {
         provided
+    }
+
+    wrapper {
+        gradleVersion = '4.0'
     }
 
     idea {
