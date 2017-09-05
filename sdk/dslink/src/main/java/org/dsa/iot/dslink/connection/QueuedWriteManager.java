@@ -1,6 +1,13 @@
 package org.dsa.iot.dslink.connection;
 
 import io.netty.util.internal.SystemPropertyUtil;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import org.dsa.iot.dslink.provider.LoopProvider;
 import org.dsa.iot.dslink.util.PropertyReference;
 import org.dsa.iot.dslink.util.json.EncodingFormat;
@@ -9,11 +16,7 @@ import org.dsa.iot.dslink.util.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
-
-public class QueuedWriteManager {
+public class QueuedWriteManager implements Runnable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(QueuedWriteManager.class);
     private static final int DISPATCH_DELAY;
@@ -26,6 +29,7 @@ public class QueuedWriteManager {
     private final NetworkClient client;
     private final String topName;
     private ScheduledFuture<?> fut;
+    private final Object writeMutex = new Object();
 
     public QueuedWriteManager(NetworkClient client,
                               MessageTracker tracker,
@@ -50,14 +54,12 @@ public class QueuedWriteManager {
         synchronized (this) {
             if (shouldQueue()) {
                 addTask(content, merge);
-                schedule();
+                schedule(DISPATCH_DELAY);
                 return false;
             }
         }
-
         JsonArray updates = new JsonArray();
         updates.add(content);
-
         JsonObject top = new JsonObject();
         top.put(topName, updates);
         forceWrite(top);
@@ -96,61 +98,64 @@ public class QueuedWriteManager {
         }
     }
 
-    private synchronized void schedule() {
+    public void run() {
+        boolean schedule = false;
+        JsonArray updates = null;
+        synchronized (this) {
+            fut = null;
+            if (shouldQueue()) {
+                schedule = true;
+            } else {
+                if (rawTasks.isEmpty() && mergedTasks.isEmpty()) {
+                    return;
+                }
+                updates = new JsonArray();
+                Iterator<JsonObject> it = mergedTasks.values().iterator();
+                int count = MAX_TASKS / 2;
+                while (it.hasNext() && (--count >= 0)) {
+                    updates.add(it.next());
+                    it.remove();
+                }
+                it = rawTasks.iterator();
+                count += (MAX_TASKS / 2);
+                while (it.hasNext() && (--count >= 0)) {
+                    updates.add(it.next());
+                    it.remove();
+                }
+                schedule = (mergedTasks.size() > 0) || (rawTasks.size() > 0);
+            }
+        }
+        if (updates != null) {
+            JsonObject top = new JsonObject();
+            top.put(topName, updates);
+            forceWrite(top);
+        }
+        if (schedule) {
+            schedule(5);
+        }
+    }
+
+    private synchronized void schedule(long millis) {
         if (fut != null) {
             return;
         }
-        fut = LoopProvider.getProvider().schedule(new Runnable() {
-            @Override
-            public void run() {
-                boolean schedule = false;
-                synchronized (QueuedWriteManager.this) {
-                    fut = null;
-                    if (shouldQueue()) {
-                        schedule = true;
-                    } else {
-                        if (rawTasks.isEmpty() && mergedTasks.isEmpty()) {
-                            return;
-                        }
-                        JsonArray updates = new JsonArray();
-                        Iterator<JsonObject> it = mergedTasks.values().iterator();
-                        int count = MAX_TASKS / 2;
-                        while (it.hasNext() && (--count >= 0)) {
-                            updates.add(it.next());
-                            it.remove();
-                        }
-                        it = rawTasks.iterator();
-                        count += (MAX_TASKS / 2);
-                        while (it.hasNext() && (--count >= 0)) {
-                            updates.add(it.next());
-                            it.remove();
-                        }
-                        schedule = (mergedTasks.size() > 0) || (rawTasks.size() > 0);
-                        JsonObject top = new JsonObject();
-                        top.put(topName, updates);
-                        forceWrite(top);
-                    }
-                    if (schedule) {
-                        schedule();
-                    }
-                }
-            }
-        }, DISPATCH_DELAY, TimeUnit.MILLISECONDS);
+        fut = LoopProvider.getProvider().schedule(this, millis, TimeUnit.MILLISECONDS);
     }
 
     private synchronized boolean shouldQueue() {
-        return !client.writable()
-                || tracker.missingAckCount() > 8 || fut != null;
+        return (fut != null) || (tracker.missingAckCount() > 8) || !client.writable();
     }
 
-    private synchronized void forceWrite(JsonObject obj) {
-        obj.put("msg", tracker.incrementMessageId());
-        client.write(format, obj);
+    private void forceWrite(JsonObject obj) {
+        synchronized (writeMutex) {
+            obj.put("msg", tracker.incrementMessageId());
+            client.write(format, obj);
+        }
     }
 
     static {
         String s = PropertyReference.DISPATCH_DELAY;
-        DISPATCH_DELAY = SystemPropertyUtil.getInt(s, 75);
+        DISPATCH_DELAY = SystemPropertyUtil.getInt(s, 10);
         LOGGER.debug("-D{}: {}", s, DISPATCH_DELAY);
     }
 }

@@ -253,6 +253,20 @@ public class Node {
                             boolean externalSource,
                             boolean publish) {
         ValueType type = valueType;
+        if (type == null) {
+            if (this.value != null) {
+                type = this.value.getType();
+                if (type != null) {
+                    setValueType(type);
+                }
+            }
+            if ((type == null) && (value != null)) {
+                type = value.getType();
+                if (type != null) {
+                    setValueType(type);
+                }
+            }
+        }
         if (type == null && value != null) {
             String err = "Value type not set on node (" + getPath() + ")";
             throw new RuntimeException(err);
