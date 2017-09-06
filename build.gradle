@@ -2,12 +2,14 @@ subprojects {
     apply plugin: 'findbugs'
     apply plugin: 'java'
     apply plugin: 'idea'
+    apply plugin: 'maven'
 
-    version = '0.18.0'
+    version = '0.18.1'
     sourceCompatibility = 1.7
     targetCompatibility = 1.7
 
     repositories {
+        mavenLocal()
         mavenCentral()
     }
 

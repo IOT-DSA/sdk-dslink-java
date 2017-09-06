@@ -4,6 +4,16 @@ dependencies {
     compile project(':sdk/dslink')
 }
 
+install {
+    repositories.mavenInstaller {
+        pom.project {
+            name = 'Historian SDK'
+            artifactId = 'historian'
+            description = 'SDK for creating Historian DSLinks'
+        }
+    }
+}
+
 uploadArchives {
     repositories {
         mavenDeployer {

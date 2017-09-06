@@ -4,6 +4,16 @@ dependencies {
     compile project(':sdk/dslink')
 }
 
+install {
+    repositories.mavenInstaller {
+        pom.project {
+            name = 'DSLink Commons'
+            artifactId = 'commons'
+            description = 'Commons API to assist with developing DSLinks'
+        }
+    }
+}
+
 uploadArchives {
     repositories {
         mavenDeployer {
