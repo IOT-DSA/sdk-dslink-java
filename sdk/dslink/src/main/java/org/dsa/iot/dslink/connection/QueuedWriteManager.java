@@ -100,7 +100,6 @@ public class QueuedWriteManager implements Runnable {
 
     public void run() {
         boolean schedule = false;
-        JsonArray updates = null;
         synchronized (this) {
             fut = null;
             if (shouldQueue()) {
@@ -109,7 +108,7 @@ public class QueuedWriteManager implements Runnable {
                 if (rawTasks.isEmpty() && mergedTasks.isEmpty()) {
                     return;
                 }
-                updates = new JsonArray();
+                JsonArray updates = new JsonArray();
                 Iterator<JsonObject> it = mergedTasks.values().iterator();
                 int count = MAX_TASKS / 2;
                 while (it.hasNext() && (--count >= 0)) {
@@ -123,12 +122,10 @@ public class QueuedWriteManager implements Runnable {
                     it.remove();
                 }
                 schedule = (mergedTasks.size() > 0) || (rawTasks.size() > 0);
+                JsonObject top = new JsonObject();
+                top.put(topName, updates);
+                forceWrite(top);
             }
-        }
-        if (updates != null) {
-            JsonObject top = new JsonObject();
-            top.put(topName, updates);
-            forceWrite(top);
         }
         if (schedule) {
             schedule(5);
