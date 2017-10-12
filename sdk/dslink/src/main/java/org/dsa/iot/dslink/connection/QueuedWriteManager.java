@@ -60,9 +60,7 @@ public class QueuedWriteManager implements Runnable {
         }
         JsonArray updates = new JsonArray();
         updates.add(content);
-        JsonObject top = new JsonObject();
-        top.put(topName, updates);
-        forceWrite(top);
+        forceWriteUpdates(updates);
         return true;
     }
 
@@ -98,37 +96,45 @@ public class QueuedWriteManager implements Runnable {
         }
     }
 
+    private synchronized boolean hasTasks() {
+        return !(rawTasks.isEmpty() && mergedTasks.isEmpty());
+    }
+
+    private synchronized JsonArray fetchUpdates() {
+        if (!hasTasks()) {
+            return null;
+        }
+        JsonArray updates = new JsonArray();
+        Iterator<JsonObject> it = mergedTasks.values().iterator();
+        int count = MAX_TASKS / 2;
+        while (it.hasNext() && (--count >= 0)) {
+            updates.add(it.next());
+            it.remove();
+        }
+        it = rawTasks.iterator();
+        count += (MAX_TASKS / 2);
+        while (it.hasNext() && (--count >= 0)) {
+            updates.add(it.next());
+            it.remove();
+        }
+        return updates;
+    }
+
     public void run() {
-        boolean schedule = false;
         synchronized (this) {
             fut = null;
             if (shouldQueue()) {
-                schedule = true;
+                schedule(5);
             } else {
-                if (rawTasks.isEmpty() && mergedTasks.isEmpty()) {
+                JsonArray updates = fetchUpdates();
+                if (updates == null) {
                     return;
                 }
-                JsonArray updates = new JsonArray();
-                Iterator<JsonObject> it = mergedTasks.values().iterator();
-                int count = MAX_TASKS / 2;
-                while (it.hasNext() && (--count >= 0)) {
-                    updates.add(it.next());
-                    it.remove();
+                forceWriteUpdates(updates);
+                if (hasTasks()) {
+                    schedule(5);
                 }
-                it = rawTasks.iterator();
-                count += (MAX_TASKS / 2);
-                while (it.hasNext() && (--count >= 0)) {
-                    updates.add(it.next());
-                    it.remove();
-                }
-                schedule = (mergedTasks.size() > 0) || (rawTasks.size() > 0);
-                JsonObject top = new JsonObject();
-                top.put(topName, updates);
-                forceWrite(top);
             }
-        }
-        if (schedule) {
-            schedule(5);
         }
     }
 
@@ -148,6 +154,12 @@ public class QueuedWriteManager implements Runnable {
             obj.put("msg", tracker.incrementMessageId());
             client.write(format, obj);
         }
+    }
+
+    private void forceWriteUpdates(JsonArray updates) {
+        JsonObject top = new JsonObject();
+        top.put(topName, updates);
+        forceWrite(top);
     }
 
     static {
