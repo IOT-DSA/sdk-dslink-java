@@ -121,21 +121,25 @@ public class QueuedWriteManager implements Runnable {
     }
 
     public void run() {
-        synchronized (this) {
-            fut = null;
-            if (shouldQueue()) {
-                schedule(5);
-            } else {
-                JsonArray updates = fetchUpdates();
-                if (updates == null) {
-                    return;
+        synchronized (writeMutex) {
+            final JsonArray updates;
+            synchronized (this) {
+                fut = null;
+                if (shouldQueue()) {
+                    updates = null;
+                } else {
+                    updates = fetchUpdates();
                 }
+            }
+            if (updates != null) {
                 forceWriteUpdates(updates);
+            }
+            synchronized (this) {
                 if (hasTasks()) {
                     schedule(5);
                 }
             }
-        }
+       }
     }
 
     private synchronized void schedule(long millis) {
