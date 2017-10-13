@@ -4,7 +4,7 @@ subprojects {
     apply plugin: 'idea'
     apply plugin: 'maven'
 
-    version = '0.18.1'
+    version = '0.18.2'
     sourceCompatibility = 1.7
     targetCompatibility = 1.7
 
