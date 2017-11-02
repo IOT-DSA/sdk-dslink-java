@@ -123,6 +123,9 @@ public class ConnectionManager {
                             }
                         });
 
+                        if (client != null) {
+                            client.close();
+                        }
                         client = connector;
                         handler.setClient(connector, remoteHandshake.getFormat());
                         connector.start();

@@ -1,5 +1,6 @@
 package org.dsa.iot.dslink.connection;
 
+import java.util.Collection;
 import org.dsa.iot.dslink.provider.LoopProvider;
 import org.dsa.iot.dslink.util.handler.Handler;
 import org.dsa.iot.dslink.util.json.EncodingFormat;
@@ -7,9 +8,6 @@ import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Collection;
-import java.util.Collections;
 
 /**
  * Handles all incoming and outgoing data in a network endpoint.
@@ -37,8 +35,16 @@ public class DataHandler implements MessageTracker {
                           EncodingFormat format) {
         this.client = client;
         this.format = format;
+        QueuedWriteManager lastReq = this.reqsManager;
+        QueuedWriteManager lastRes = this.respsManager;
         this.reqsManager = new QueuedWriteManager(client, this, format, "requests");
         this.respsManager = new QueuedWriteManager(client, this, format, "responses");
+        if (lastReq != null) {
+            lastReq.close();
+        }
+        if (lastRes != null) {
+            lastRes.close();
+        }
     }
 
     public void setReqHandler(Handler<DataReceived> handler) {
@@ -103,21 +109,22 @@ public class DataHandler implements MessageTracker {
     }
 
     /**
-     * Writes a response that is not tied to any message. These responses can
-     * be throttled to prevent flooding.
+     * Writes a response that is not tied to any message. These responses can be throttled to
+     * prevent flooding.
      *
      * @param object Data to write.
      */
     public void writeResponse(JsonObject object) {
-        writeResponse(object,true);
+        writeResponse(object, true);
     }
 
     /**
-     * Writes a response that is not tied to any message. These responses can
-     * be throttled to prevent flooding.
+     * Writes a response that is not tied to any message. These responses can be throttled to
+     * prevent flooding.
      *
      * @param object Data to write.
-     * @param merge Whether or not the response can be merged with other messages for the same request.
+     * @param merge  Whether or not the response can be merged with other messages for the same
+     *               request.
      */
     public void writeResponse(JsonObject object, boolean merge) {
         if (object == null) {
@@ -129,7 +136,7 @@ public class DataHandler implements MessageTracker {
     /**
      * Writes all the responses back out that the requester requested.
      *
-     * @param ackId Acknowledgement ID.
+     * @param ackId   Acknowledgement ID.
      * @param objects Responses to write.
      */
     public void writeRequestResponses(Integer ackId,

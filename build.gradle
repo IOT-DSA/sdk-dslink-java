@@ -4,7 +4,7 @@ subprojects {
     apply plugin: 'idea'
     apply plugin: 'maven'
 
-    version = '0.18.2'
+    version = '0.18.3'
     sourceCompatibility = 1.7
     targetCompatibility = 1.7
 
@@ -28,8 +28,8 @@ subprojects {
     }
 
     dependencies {
-        provided 'com.google.code.findbugs:annotations:3.0.1'
-        testCompile 'junit:junit:4.12'
+        provided 'com.google.code.findbugs:annotations:+'
+        testCompile 'junit:junit:+'
     }
 
     compileJava {
