@@ -28,6 +28,7 @@ public class QueuedWriteManager implements Runnable {
     private final MessageTracker tracker;
     private final NetworkClient client;
     private final String topName;
+    private boolean open = true;
     private ScheduledFuture<?> fut;
     private final Object writeMutex = new Object();
 
@@ -50,8 +51,17 @@ public class QueuedWriteManager implements Runnable {
         this.client = client;
     }
 
+    public synchronized void close() {
+        open = false;
+        rawTasks.clear();
+        mergedTasks.clear();
+    }
+
     public boolean post(JsonObject content, boolean merge) {
         synchronized (this) {
+            if (!open) {
+                return false;
+            }
             if (shouldQueue()) {
                 addTask(content, merge);
                 schedule(DISPATCH_DELAY);
@@ -76,8 +86,7 @@ public class QueuedWriteManager implements Runnable {
                     JsonArray newUpdates = content.remove("updates");
                     if (newUpdates != null) {
                         for (Object update : newUpdates) {
-                            if (update instanceof JsonArray
-                                    || update instanceof JsonObject) {
+                            if (update instanceof JsonArray || update instanceof JsonObject) {
                                 oldUpdates.add(update);
                             } else {
                                 String clazz = update.getClass().getName();
@@ -121,6 +130,9 @@ public class QueuedWriteManager implements Runnable {
     }
 
     public void run() {
+        if (!open) {
+            return;
+        }
         synchronized (writeMutex) {
             final JsonArray updates;
             synchronized (this) {
@@ -139,7 +151,7 @@ public class QueuedWriteManager implements Runnable {
                     schedule(5);
                 }
             }
-       }
+        }
     }
 
     private synchronized void schedule(long millis) {
@@ -154,6 +166,9 @@ public class QueuedWriteManager implements Runnable {
     }
 
     private void forceWrite(JsonObject obj) {
+        if (!open) {
+            return;
+        }
         synchronized (writeMutex) {
             obj.put("msg", tracker.incrementMessageId());
             client.write(format, obj);
@@ -161,6 +176,9 @@ public class QueuedWriteManager implements Runnable {
     }
 
     private void forceWriteUpdates(JsonArray updates) {
+        if (!open) {
+            return;
+        }
         JsonObject top = new JsonObject();
         top.put(topName, updates);
         forceWrite(top);
