@@ -241,6 +241,9 @@ public class SubscriptionManager {
         if (parent == null) {
             return;
         }
+        if (!link.isConnected()) {
+            return;
+        }
         ListResponse resp = pathSubsMap.get(parent.getPath());
         if (resp != null) {
             resp.childUpdate(child, removed);
@@ -255,6 +258,9 @@ public class SubscriptionManager {
      */
     public void postMultiChildUpdate(Node parent, List<Node> children) {
         if (parent == null) {
+            return;
+        }
+        if (!link.isConnected()) {
             return;
         }
         ListResponse resp = pathSubsMap.get(parent.getPath());
@@ -324,6 +330,9 @@ public class SubscriptionManager {
      * @param value The new value of the update.
      */
     public void postMetaUpdate(Node node, String name, Value value) {
+        if (!link.isConnected()) {
+            return;
+        }
         ListResponse resp = pathSubsMap.get(node.getPath());
         if (resp != null) {
             resp.metaUpdate(name, value);
