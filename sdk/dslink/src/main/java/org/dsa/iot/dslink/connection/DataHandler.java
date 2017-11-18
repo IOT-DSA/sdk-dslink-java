@@ -33,18 +33,11 @@ public class DataHandler implements MessageTracker {
 
     public void setClient(NetworkClient client,
                           EncodingFormat format) {
+        onDisconnected();
         this.client = client;
         this.format = format;
-        QueuedWriteManager lastReq = this.reqsManager;
-        QueuedWriteManager lastRes = this.respsManager;
         this.reqsManager = new QueuedWriteManager(client, this, format, "requests");
         this.respsManager = new QueuedWriteManager(client, this, format, "responses");
-        if (lastReq != null) {
-            lastReq.close();
-        }
-        if (lastRes != null) {
-            lastRes.close();
-        }
     }
 
     public void setReqHandler(Handler<DataReceived> handler) {
@@ -53,6 +46,16 @@ public class DataHandler implements MessageTracker {
 
     public void setRespHandler(Handler<DataReceived> handler) {
         this.respHandler = handler;
+    }
+
+    public void onDisconnected() {
+        client = null;
+        if (reqsManager != null) {
+            reqsManager.close();
+        }
+        if (respsManager != null) {
+            respsManager.close();
+        }
     }
 
     public boolean isConnected() {
@@ -103,9 +106,11 @@ public class DataHandler implements MessageTracker {
         if (ack == null) {
             return;
         }
-        JsonObject obj = new JsonObject();
-        obj.put("ack", ack);
-        client.write(format, obj);
+        if (isConnected()) {
+            JsonObject obj = new JsonObject();
+            obj.put("ack", ack);
+            client.write(format, obj);
+        }
     }
 
     /**
@@ -148,7 +153,7 @@ public class DataHandler implements MessageTracker {
         for (JsonObject o : objects) {
             respsManager.post(o, true);
         }
-        if (ackId != null) {
+        if ((ackId != null) && isConnected()) {
             JsonObject ack = new JsonObject();
             ack.put("ack", ackId);
             client.write(format, ack);

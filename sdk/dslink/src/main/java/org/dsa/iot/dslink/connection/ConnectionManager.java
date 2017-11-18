@@ -111,6 +111,13 @@ public class ConnectionManager {
                                 cc.disconnected();
                                 if (running) {
                                     LOGGER.warn("WebSocket connection failed");
+                                    if (client != null) {
+                                        client.close();
+                                        client = null;
+                                    }
+                                    if (handler != null) {
+                                        handler.onDisconnected();
+                                    }
                                     reconnect();
                                 }
                             }
@@ -123,9 +130,6 @@ public class ConnectionManager {
                             }
                         });
 
-                        if (client != null) {
-                            client.close();
-                        }
                         client = connector;
                         handler.setClient(connector, remoteHandshake.getFormat());
                         connector.start();
@@ -139,12 +143,10 @@ public class ConnectionManager {
 
     public synchronized void stop() {
         running = false;
-
         if (future != null) {
             future.cancel(false);
             future = null;
         }
-
         if (client != null) {
             client.close();
             client = null;
@@ -172,7 +174,6 @@ public class ConnectionManager {
         if (!running) {
             return;
         }
-
         LOGGER.info("Reconnecting in {} seconds", delay);
         future = Objects.getDaemonThreadPool().schedule(new Runnable() {
             @Override
@@ -181,7 +182,7 @@ public class ConnectionManager {
                     @Override
                     public void handle(Client event) {
                         LOGGER.info("Connection established");
-                        delay = 1;
+                        delay = 2;
                     }
                 });
                 delay *= 2;
