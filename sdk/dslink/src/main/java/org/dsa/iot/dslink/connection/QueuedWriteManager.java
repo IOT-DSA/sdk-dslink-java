@@ -62,7 +62,7 @@ public class QueuedWriteManager implements Runnable {
             if (!open) {
                 return false;
             }
-            if (shouldQueue()) {
+            if (hasTasks() || shouldQueue()) {
                 addTask(content, merge);
                 schedule(DISPATCH_DELAY);
                 return false;
@@ -74,7 +74,7 @@ public class QueuedWriteManager implements Runnable {
         return true;
     }
 
-    private synchronized void addTask(JsonObject content, boolean merge) {
+    private void addTask(JsonObject content, boolean merge) {
         if (merge) {
             int rid = content.get("rid");
             JsonObject obj = mergedTasks.get(rid);
@@ -105,11 +105,11 @@ public class QueuedWriteManager implements Runnable {
         }
     }
 
-    private synchronized boolean hasTasks() {
-        return !(rawTasks.isEmpty() && mergedTasks.isEmpty());
+    private boolean hasTasks() {
+        return !mergedTasks.isEmpty() || !rawTasks.isEmpty();
     }
 
-    private synchronized JsonArray fetchUpdates() {
+    private JsonArray fetchUpdates() {
         if (!hasTasks()) {
             return null;
         }
@@ -154,14 +154,14 @@ public class QueuedWriteManager implements Runnable {
         }
     }
 
-    private synchronized void schedule(long millis) {
+    private void schedule(long millis) {
         if (fut != null) {
             return;
         }
         fut = LoopProvider.getProvider().schedule(this, millis, TimeUnit.MILLISECONDS);
     }
 
-    private synchronized boolean shouldQueue() {
+    private boolean shouldQueue() {
         return (fut != null) || (tracker.missingAckCount() > 8) || !client.writable();
     }
 
