@@ -28,13 +28,14 @@ public class WatchGroup {
     private static final long DEFAULT_INTERVAL_IN_SECONDS = 5;
     private static final int DEFAULT_BUFFER_FLUSH_TIME_IN_SECONDS = 5;
     private static final LoggingType DEFAULT_LOGGING_TYPE = LoggingType.ALL_DATA;
+    private static int AVAILABLE_PROCESSORS = Runtime.getRuntime().availableProcessors();
+    private static final ScheduledExecutorService INTERVAL_SCHEDULER = Executors.newScheduledThreadPool(Math.min(MINIMUM_AMOUNT_OF_THREADS, AVAILABLE_PROCESSORS));
 
     private final Permission permission;
     private final Database db;
     private final Node node;
     private final Queue<WatchUpdate> queue = new ConcurrentLinkedDeque<>();
     private final Object writeLoopLock = new Object();
-    private final ScheduledExecutorService intervalScheduler;
     private final List<Watch> watches = new ArrayList<>();
 
     private ScheduledFuture<?> bufferFut;
@@ -52,15 +53,11 @@ public class WatchGroup {
         this.permission = perm;
         this.node = node;
         this.db = db;
-
-        int availableProcessors = Runtime.getRuntime().availableProcessors();
-        intervalScheduler = Executors.newScheduledThreadPool(Math.min(MINIMUM_AMOUNT_OF_THREADS, availableProcessors));
     }
 
     public void close() {
-        if (bufferFut != null) {
-            bufferFut.cancel(true);
-        }
+        System.out.println("Cancelling threads");
+        cancelIntervalScheduler();
     }
 
     /**
@@ -129,7 +126,7 @@ public class WatchGroup {
     /**
      * Initializes the watch for the group.
      *
-     * @param path Watch path.
+     * @param path                 Watch path.
      * @param useNewEncodingMethod
      */
     protected void initWatch(String path, boolean useNewEncodingMethod) {
@@ -155,7 +152,7 @@ public class WatchGroup {
         if (scheduledIntervalWriter == null || scheduledIntervalWriter.isDone()) {
             long now = new Date().getTime();
             long initialDelayBeforeLogging = findInitialDelayOfLogging(now);
-            scheduledIntervalWriter = intervalScheduler.scheduleAtFixedRate(new Runnable() {
+            scheduledIntervalWriter = INTERVAL_SCHEDULER.scheduleAtFixedRate(new Runnable() {
                 @Override
                 public void run() {
                     writeWatchesToBuffer(new Date());
@@ -178,13 +175,32 @@ public class WatchGroup {
                 Value useNewEncodingMethod = n.getConfig(Watch.USE_NEW_ENCODING_METHOD_CONFIG_NAME);
                 if (useNewEncodingMethod == null || !useNewEncodingMethod.getBool()) {
                     String path = n.getName().replaceAll("%2F", "/").replaceAll("%2E", ".");
+                    // JTH: This was added to prevent watches to be re-added
+                    // disconnection/reconnection.
+                    if (containsWatch(path)) {
+                        continue;
+                    }
+
                     initWatch(path, false);
                 } else {
                     String path = StringUtils.decodeName(n.getName());
+                    if (containsWatch(path)) {
+                        continue;
+                    }
                     initWatch(path, true);
                 }
             }
         }
+    }
+
+    private boolean containsWatch(String path) {
+        for (Watch watch : watches) {
+            if (watch.getPath().equals(path)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
