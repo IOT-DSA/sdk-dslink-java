@@ -140,14 +140,16 @@ public class Watch {
     public void init(Permission perm, Database db) {
         Value useNewEncodingMethod = node.getConfig(USE_NEW_ENCODING_METHOD_CONFIG_NAME);
         if (useNewEncodingMethod == null || !useNewEncodingMethod.getBool()) {
-            watchedPath = node.getName().replaceAll("%2F", "/").replaceAll("%2E", ".");
+            watchedPath = node.getName()
+                    .replaceAll("%2F", "/")
+                    .replaceAll("%2E", ".");
         } else {
             watchedPath = StringUtils.decodeName(node.getName());
         }
 
         initData(node);
 
-        initializeWatchDataType();
+        initializeWatchValueAndType();
 
         createUnsubscribeAction(perm);
 
@@ -158,12 +160,14 @@ public class Watch {
         group.addWatch(this);
     }
 
-    private void initializeWatchDataType() {
+    private void initializeWatchValueAndType() {
         getRequester().list(new ListRequest(watchedPath), new Handler<ListResponse>() {
             @Override
             public void handle(ListResponse event) {
-                ValueType valueType = event.getNode().getValueType();
-                node.setValueType(valueType);
+                Node node = event.getNode();
+                ValueType valueType = node.getValueType();
+                Watch.this.node.setValueType(valueType);
+                Watch.this.node.setValue(node.getValue());
             }
         });
     }
