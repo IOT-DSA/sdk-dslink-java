@@ -131,7 +131,7 @@ public class Watch {
         node.delete(false);
     }
 
-    public void removeFromSubscriptionPool() {
+    private void removeFromSubscriptionPool() {
         DatabaseProvider provider = group.getDb().getProvider();
         SubscriptionPool pool = provider.getPool();
         pool.unsubscribe(watchedPath, this);
