@@ -187,6 +187,7 @@ public class WatchGroup {
                     if (containsWatch(path)) {
                         continue;
                     }
+
                     initWatch(path, true);
                 }
             }
