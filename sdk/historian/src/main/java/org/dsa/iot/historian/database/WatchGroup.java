@@ -56,7 +56,6 @@ public class WatchGroup {
     }
 
     public void close() {
-        System.out.println("Cancelling threads");
         cancelIntervalScheduler();
     }
 
@@ -126,8 +125,8 @@ public class WatchGroup {
     /**
      * Initializes the watch for the group.
      *
-     * @param path                 Watch path.
-     * @param useNewEncodingMethod
+     * @param path Watch path.
+     * @param useNewEncodingMethod Tells if the link uses the old way of encoding paths.
      */
     protected void initWatch(String path, boolean useNewEncodingMethod) {
         NodeBuilder b = node.createChild(path);
