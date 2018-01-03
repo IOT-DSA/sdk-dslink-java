@@ -167,10 +167,19 @@ public class DataHandler implements MessageTracker {
         }
     }
 
+    //TODO Debug logging
+    private int maxMissedAck = 0;
+
     @Override
     public int missingAckCount() {
         synchronized (msgLock) {
-            return messageId - lastReceivedAck;
+            int ret = messageId - lastReceivedAck;
+            //TODO Debug logging
+            if (ret > maxMissedAck) {
+                LOGGER.warn("New max missed ack count: " + ret);
+                maxMissedAck = ret;
+            }
+            return ret;
         }
     }
 

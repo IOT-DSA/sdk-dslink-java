@@ -1,6 +1,7 @@
 package org.dsa.iot.dslink.node;
 
 import org.dsa.iot.dslink.DSLink;
+import org.dsa.iot.dslink.link.Responder;
 import org.dsa.iot.dslink.methods.responses.ListResponse;
 import org.dsa.iot.dslink.node.storage.FileDriver;
 import org.dsa.iot.dslink.node.storage.StorageDriver;
@@ -72,10 +73,15 @@ public class SubscriptionManager {
         }
 
         {
-            Iterator<String> it = pathSubsMap.keySet().iterator();
+            Responder responder = link.getResponder();
+            Iterator<Map.Entry<String, ListResponse>> it = pathSubsMap.entrySet().iterator();
             while (it.hasNext()) {
-                String path = it.next();
+                Map.Entry<String, ListResponse> entry = it.next();
                 it.remove();
+                if (entry.getValue() != null) {
+                    responder.removeResponse(entry.getValue().getRid());
+                }
+                String path = entry.getKey();
                 Node node = manager.getNode(path, false, false).getNode();
                 if (node == null) {
                     continue;
