@@ -5,7 +5,6 @@ package org.dsa.iot.dslink.util.json;
  */
 public enum EncodingFormat {
 
-    //MESSAGE_PACK("msgpack"),
     JSON("json");
 
     private final String name;
