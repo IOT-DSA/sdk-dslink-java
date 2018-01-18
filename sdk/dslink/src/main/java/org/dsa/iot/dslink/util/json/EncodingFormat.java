@@ -5,7 +5,7 @@ package org.dsa.iot.dslink.util.json;
  */
 public enum EncodingFormat {
 
-    MESSAGE_PACK("msgpack"),
+    //MESSAGE_PACK("msgpack"),
     JSON("json");
 
     private final String name;
@@ -31,9 +31,7 @@ public enum EncodingFormat {
             return JSON;
         }
         format = format.toLowerCase();
-        if (MESSAGE_PACK.name.equals(format)) {
-            return MESSAGE_PACK;
-        } else if (JSON.name.equals(format)) {
+        if (JSON.name.equals(format)) {
             return JSON;
         }
         return JSON;

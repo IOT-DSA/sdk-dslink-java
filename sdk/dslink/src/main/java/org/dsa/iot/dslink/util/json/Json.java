@@ -11,7 +11,6 @@ import org.dsa.iot.dslink.util.json.decoders.ListDecoder;
 import org.dsa.iot.dslink.util.json.decoders.MapDecoder;
 import org.dsa.iot.dslink.util.json.encoders.ListEncoder;
 import org.dsa.iot.dslink.util.json.encoders.MapEncoder;
-import org.msgpack.jackson.dataformat.MessagePackFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -27,7 +26,6 @@ import java.util.Map;
  */
 public class Json {
 
-    private static final MessagePackFactory MSG_FACTORY;
     private static final JsonFactory JSON_FACTORY;
 
     private Json() {
@@ -52,8 +50,6 @@ public class Json {
         try {
             if (format == EncodingFormat.JSON) {
                 gen = JSON_FACTORY.createGenerator(baos, enc);
-            } else if (format == EncodingFormat.MESSAGE_PACK) {
-                gen = MSG_FACTORY.createGenerator(baos, enc);
             } else {
                 throw new UnsupportedOperationException(format.toJson());
             }
@@ -80,8 +76,6 @@ public class Json {
                                                 int length) {
         if (format == EncodingFormat.JSON) {
             return MapDecoder.decode(JSON_FACTORY, content, offset, length);
-        } else if (format == EncodingFormat.MESSAGE_PACK) {
-            return MapDecoder.decode(MSG_FACTORY, content, offset, length);
         }
         throw new UnsupportedOperationException(format.toJson());
     }
@@ -92,8 +86,6 @@ public class Json {
                                           int length) {
         if (format == EncodingFormat.JSON) {
             return ListDecoder.decode(JSON_FACTORY, content, offset, length);
-        } else if (format == EncodingFormat.MESSAGE_PACK) {
-            return ListDecoder.decode(MSG_FACTORY, content, offset, length);
         }
         throw new UnsupportedOperationException(format.toJson());
     }
@@ -139,7 +131,6 @@ public class Json {
     }
 
     static {
-        MSG_FACTORY = new MessagePackFactory();
         JSON_FACTORY = new JsonFactory() {
             @Override
             protected JsonGenerator _createGenerator(Writer out,
