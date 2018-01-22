@@ -132,9 +132,7 @@ public class DefaultWsProvider extends WsProvider {
                         byte[] bytes = data.encode(format);
                         ByteBuf buf = Unpooled.wrappedBuffer(bytes);
                         WebSocketFrame frame = null;
-                        if (format == EncodingFormat.MESSAGE_PACK) {
-                            frame = new BinaryWebSocketFrame(buf);
-                        } else if (format == EncodingFormat.JSON) {
+                        if (format == EncodingFormat.JSON) {
                             frame = new TextWebSocketFrame(buf);
                         } else {
                             String err = "Unsupported encoding format: {}";
