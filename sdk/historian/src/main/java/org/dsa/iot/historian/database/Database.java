@@ -31,7 +31,6 @@ public abstract class Database {
     public Database(String name, DatabaseProvider provider) {
         this.provider = provider;
 
-        name = getClass().getName() + "::" + name;
         logger = LoggerFactory.getLogger(name);
     }
 
