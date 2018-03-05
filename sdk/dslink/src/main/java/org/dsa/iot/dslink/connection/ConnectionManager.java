@@ -1,5 +1,7 @@
 package org.dsa.iot.dslink.connection;
 
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import org.dsa.iot.dslink.config.Configuration;
 import org.dsa.iot.dslink.connection.connector.WebSocketConnector;
 import org.dsa.iot.dslink.handshake.LocalHandshake;
@@ -11,9 +13,6 @@ import org.dsa.iot.dslink.util.handler.Handler;
 import org.dsa.iot.dslink.util.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author Samuel Grenier
@@ -182,7 +181,7 @@ public class ConnectionManager {
                     @Override
                     public void handle(Client event) {
                         LOGGER.info("Connection established");
-                        delay = 2;
+                        delay = 1;
                     }
                 });
                 delay *= 2;

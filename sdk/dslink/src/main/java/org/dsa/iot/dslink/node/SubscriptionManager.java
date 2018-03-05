@@ -1,5 +1,12 @@
 package org.dsa.iot.dslink.node;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.link.Responder;
 import org.dsa.iot.dslink.methods.responses.ListResponse;
@@ -11,12 +18,9 @@ import org.dsa.iot.dslink.util.StringUtils;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-
 /**
  * Handles subscriptions for values and paths.
+ *
  * @author Samuel Grenier
  */
 public class SubscriptionManager {
@@ -129,8 +133,8 @@ public class SubscriptionManager {
      * it is subscribed.
      *
      * @param path Path to subscribe to.
-     * @param sid Subscription ID to send back to the client.
-     * @param qos The QoS level of the designated subscription.
+     * @param sid  Subscription ID to send back to the client.
+     * @param qos  The QoS level of the designated subscription.
      */
     public void addValueSub(String path, int sid, int qos) {
         path = NodeManager.normalizePath(path, true);
@@ -158,9 +162,9 @@ public class SubscriptionManager {
         NodeManager man = link.getNodeManager();
         Node node = man.getNode(path, false, false).getNode();
         if (node != null) {
-        	if (node.shouldPostCachedValue()) {
-        		postValueUpdate(node);
-        	}
+            if (node.shouldPostCachedValue()) {
+                postValueUpdate(node);
+            }
             node.getListener().postOnSubscription();
         }
     }
@@ -239,7 +243,7 @@ public class SubscriptionManager {
     /**
      * Posts a child update to notify all remote endpoints of an update.
      *
-     * @param child Updated child.
+     * @param child   Updated child.
      * @param removed Whether the child was removed or not.
      */
     public void postChildUpdate(Node child, boolean removed) {
@@ -259,7 +263,7 @@ public class SubscriptionManager {
     /**
      * Posts multiple children updates to notify all remote endpoints of updates.
      *
-     * @param parent Common parent.
+     * @param parent   Common parent.
      * @param children Children.
      */
     public void postMultiChildUpdate(Node parent, List<Node> children) {
@@ -331,8 +335,8 @@ public class SubscriptionManager {
      * Updates the internal data of a node such as a configuration or an
      * attribute.
      *
-     * @param node Updated node.
-     * @param name The name of what is being updated.
+     * @param node  Updated node.
+     * @param name  The name of what is being updated.
      * @param value The new value of the update.
      */
     public void postMetaUpdate(Node node, String name, Value value) {
