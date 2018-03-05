@@ -20,9 +20,10 @@ import org.slf4j.LoggerFactory;
 public class QueuedWriteManager implements Runnable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(QueuedWriteManager.class);
+    private static final long MAX_QUEUE_DURATION = 60000;
+    private static final int MAX_RID_BACKLOG = 50000;
+    private static final int MAX_SID_BACKLOG = 1000;
     private static final int DISPATCH_DELAY;
-    //private static final int MAX_RID_BACKLOG = 1000;
-    //private static final int MAX_SID_BACKLOG = 50000;
     private static final int RID_CHUNK = 1000;
     private static final int SID_CHUNK = 1000;
 
@@ -35,16 +36,6 @@ public class QueuedWriteManager implements Runnable {
     private boolean open = true;
     private ScheduledFuture<?> fut;
     private final Object writeMutex = new Object();
-
-    //TODO Debug Logging
-    private int maxMergedSize = 0;
-    private int maxMergedSizeAdder = 1;
-    private int maxRawSize = 0;
-    private int maxRawSizeAdder = 1;
-    private int maxSidUpdates = 0;
-    private int maxSidUpdatesAdder = 1;
-    private long maxQueueDuration = 0;
-    private long maxQueueDurationAdder = 1000;
     private long queueStarted = -1;
 
     public QueuedWriteManager(NetworkClient client,
@@ -120,7 +111,6 @@ public class QueuedWriteManager implements Runnable {
                                 throw new RuntimeException(err);
                             }
                         }
-                        /* TODO trim backlog to prevent oom
                         synchronized (fromMerged) {
                             if (rid == 0) {
                                 while (oldUpdates.size() > MAX_SID_BACKLOG) {
@@ -132,28 +122,16 @@ public class QueuedWriteManager implements Runnable {
                                 }
                             }
                         }
-                        */
                     }
                     fromMerged.mergeIn(content);
                 } else {
                     fromMerged.mergeIn(content);
                 }
             }
-            // TODO Debug logging
-            int size = mergedTasks.size();
-            if (size > (maxMergedSize + maxMergedSizeAdder)) {
-                LOGGER.warn("New max merged tasks: " + size);
-                maxMergedSize = size;
-                maxMergedSizeAdder = Math.min((maxMergedSizeAdder * 2), 100000);
-            }
         } else {
             rawTasks.add(content);
-            // TODO Debug logging
-            int size = rawTasks.size();
-            if (size > (maxRawSize + maxRawSizeAdder)) {
-                LOGGER.warn("New max raw tasks: " + size);
-                maxRawSize = size;
-                maxRawSizeAdder = Math.min((maxRawSizeAdder * 2), 100000);
+            while (rawTasks.size() > MAX_RID_BACKLOG) {
+                rawTasks.remove(0);
             }
         }
     }
@@ -204,15 +182,14 @@ public class QueuedWriteManager implements Runnable {
         synchronized (this) {
             fut = null;
             if (shouldQueue()) {
-                //TODO Debug logging
                 if (queueStarted < 0) {
                     queueStarted = System.currentTimeMillis();
                 } else {
                     long duration = System.currentTimeMillis() - queueStarted;
-                    if (duration > (maxQueueDuration + maxQueueDurationAdder)) {
-                        LOGGER.warn("New max queueing duration: " + duration);
-                        maxQueueDuration = duration;
-                        maxQueueDurationAdder = Math.min((maxQueueDurationAdder * 2), 300000);
+                    if (duration > MAX_QUEUE_DURATION) {
+                        //Broker is lost, we've been queuing too long.
+                        LOGGER.error("Outgoing queue duration exceeded: " + duration);
+                        client.close();
                     }
                 }
             } else {
@@ -289,12 +266,6 @@ public class QueuedWriteManager implements Runnable {
                     updates.add(orig.remove(0));
                 }
             }
-        }
-        //TODO Debug logging
-        if (size > (maxSidUpdates + maxSidUpdatesAdder)) {
-            LOGGER.warn("New max sid updates: " + size);
-            maxSidUpdates = size;
-            maxSidUpdatesAdder = Math.min((maxSidUpdatesAdder * 2), 500000);
         }
         return chunked;
     }
