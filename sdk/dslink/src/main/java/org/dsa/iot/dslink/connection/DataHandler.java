@@ -1,5 +1,6 @@
 package org.dsa.iot.dslink.connection;
 
+import java.util.Collection;
 import org.dsa.iot.dslink.provider.LoopProvider;
 import org.dsa.iot.dslink.util.handler.Handler;
 import org.dsa.iot.dslink.util.json.EncodingFormat;
@@ -7,9 +8,6 @@ import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Collection;
-import java.util.Collections;
 
 /**
  * Handles all incoming and outgoing data in a network endpoint.
@@ -35,6 +33,7 @@ public class DataHandler implements MessageTracker {
 
     public void setClient(NetworkClient client,
                           EncodingFormat format) {
+        onDisconnected();
         this.client = client;
         this.format = format;
         this.reqsManager = new QueuedWriteManager(client, this, format, "requests");
@@ -47,6 +46,16 @@ public class DataHandler implements MessageTracker {
 
     public void setRespHandler(Handler<DataReceived> handler) {
         this.respHandler = handler;
+    }
+
+    public void onDisconnected() {
+        client = null;
+        if (reqsManager != null) {
+            reqsManager.close();
+        }
+        if (respsManager != null) {
+            respsManager.close();
+        }
     }
 
     public boolean isConnected() {
@@ -97,27 +106,30 @@ public class DataHandler implements MessageTracker {
         if (ack == null) {
             return;
         }
-        JsonObject obj = new JsonObject();
-        obj.put("ack", ack);
-        client.write(format, obj);
+        if (isConnected()) {
+            JsonObject obj = new JsonObject();
+            obj.put("ack", ack);
+            client.write(format, obj);
+        }
     }
 
     /**
-     * Writes a response that is not tied to any message. These responses can
-     * be throttled to prevent flooding.
+     * Writes a response that is not tied to any message. These responses can be throttled to
+     * prevent flooding.
      *
      * @param object Data to write.
      */
     public void writeResponse(JsonObject object) {
-        writeResponse(object,true);
+        writeResponse(object, true);
     }
 
     /**
-     * Writes a response that is not tied to any message. These responses can
-     * be throttled to prevent flooding.
+     * Writes a response that is not tied to any message. These responses can be throttled to
+     * prevent flooding.
      *
      * @param object Data to write.
-     * @param merge Whether or not the response can be merged with other messages for the same request.
+     * @param merge  Whether or not the response can be merged with other messages for the same
+     *               request.
      */
     public void writeResponse(JsonObject object, boolean merge) {
         if (object == null) {
@@ -129,7 +141,7 @@ public class DataHandler implements MessageTracker {
     /**
      * Writes all the responses back out that the requester requested.
      *
-     * @param ackId Acknowledgement ID.
+     * @param ackId   Acknowledgement ID.
      * @param objects Responses to write.
      */
     public void writeRequestResponses(Integer ackId,
@@ -141,7 +153,7 @@ public class DataHandler implements MessageTracker {
         for (JsonObject o : objects) {
             respsManager.post(o, true);
         }
-        if (ackId != null) {
+        if ((ackId != null) && isConnected()) {
             JsonObject ack = new JsonObject();
             ack.put("ack", ackId);
             client.write(format, ack);

@@ -1,5 +1,7 @@
 package org.dsa.iot.dslink.connection;
 
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import org.dsa.iot.dslink.config.Configuration;
 import org.dsa.iot.dslink.connection.connector.WebSocketConnector;
 import org.dsa.iot.dslink.handshake.LocalHandshake;
@@ -11,9 +13,6 @@ import org.dsa.iot.dslink.util.handler.Handler;
 import org.dsa.iot.dslink.util.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author Samuel Grenier
@@ -111,6 +110,13 @@ public class ConnectionManager {
                                 cc.disconnected();
                                 if (running) {
                                     LOGGER.warn("WebSocket connection failed");
+                                    if (client != null) {
+                                        client.close();
+                                        client = null;
+                                    }
+                                    if (handler != null) {
+                                        handler.onDisconnected();
+                                    }
                                     reconnect();
                                 }
                             }
@@ -136,12 +142,10 @@ public class ConnectionManager {
 
     public synchronized void stop() {
         running = false;
-
         if (future != null) {
             future.cancel(false);
             future = null;
         }
-
         if (client != null) {
             client.close();
             client = null;
@@ -169,7 +173,6 @@ public class ConnectionManager {
         if (!running) {
             return;
         }
-
         LOGGER.info("Reconnecting in {} seconds", delay);
         future = Objects.getDaemonThreadPool().schedule(new Runnable() {
             @Override
