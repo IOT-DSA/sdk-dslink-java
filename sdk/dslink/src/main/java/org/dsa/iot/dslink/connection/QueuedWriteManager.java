@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import org.dsa.iot.dslink.connection.connector.WebSocketConnector;
 import org.dsa.iot.dslink.provider.LoopProvider;
 import org.dsa.iot.dslink.util.PropertyReference;
 import org.dsa.iot.dslink.util.json.EncodingFormat;
@@ -20,7 +21,7 @@ import org.slf4j.LoggerFactory;
 public class QueuedWriteManager implements Runnable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(QueuedWriteManager.class);
-    private static final long MAX_QUEUE_DURATION = 60000;
+    private static final int MAX_QUEUE_DURATION = 60000;
     private static final int MAX_RID_BACKLOG = 50000;
     private static final int MAX_SID_BACKLOG = 1000;
     private static final int DISPATCH_DELAY;
@@ -178,7 +179,7 @@ public class QueuedWriteManager implements Runnable {
         if (!open) {
             return;
         }
-        JsonArray updates = null;
+        JsonArray updates;
         synchronized (this) {
             fut = null;
             if (shouldQueue()) {
@@ -187,11 +188,18 @@ public class QueuedWriteManager implements Runnable {
                 } else {
                     long duration = System.currentTimeMillis() - queueStarted;
                     if (duration > MAX_QUEUE_DURATION) {
-                        //Broker is lost, we've been queuing too long.
-                        LOGGER.error("Outgoing queue duration exceeded: " + duration);
-                        client.close();
+                        if (client instanceof NetworkHandlers) { //should always be true
+                            //Broker is lost, we've been queuing too long.
+                            LOGGER.error("Outgoing queue duration exceeded: " + duration);
+                            client.close();
+                            NetworkHandlers con = (NetworkHandlers) client;
+                            //The following trick is the only way I could find to force the
+                            //connection manager to reconnect.
+                            con.getOnDisconnected().handle(null);
+                        }
                     }
                 }
+                updates = null;
             } else {
                 updates = fetchUpdates();
             }
