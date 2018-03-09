@@ -17,6 +17,7 @@ compileJava {
 dependencies {
     provided 'com.google.code.findbugs:annotations:3.0.0'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.9.1'
+    compile 'org.msgpack:jackson-dataformat-msgpack:0.8.14'
     compile project(':internal/runtime_shared')
 }
 
