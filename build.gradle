@@ -29,7 +29,7 @@ subprojects {
 
     dependencies {
         provided 'com.google.code.findbugs:annotations:+'
-        testCompile 'junit:junit:+'
+        testCompile 'junit:junit:[4.12,)'
     }
 
     compileJava {
