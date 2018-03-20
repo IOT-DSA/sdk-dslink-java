@@ -13,7 +13,7 @@ import java.lang.ref.WeakReference;
  */
 public class NodeListener {
 
-    private final WeakReference<Node> node;
+    private WeakReference<Node> node;
 
     private Handler<ValuePair> valueHandler;
     private Handler<ValueUpdate> configHandler;
@@ -28,6 +28,10 @@ public class NodeListener {
 
     public NodeListener(Node node) {
         this.node = new WeakReference<>(node);
+    }
+    
+    public void setNode(Node node) {
+    	this.node = new WeakReference<Node>(node);
     }
 
     /**
