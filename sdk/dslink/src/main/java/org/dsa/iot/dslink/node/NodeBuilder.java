@@ -1,5 +1,9 @@
 package org.dsa.iot.dslink.node;
 
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
 import org.dsa.iot.dslink.node.actions.Action;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
@@ -140,6 +144,38 @@ public class NodeBuilder {
             }
         }
         node.setListener(child.getListener());
+        node.setDisplayName(child.getDisplayName());
+        node.setValueType(child.getValueType());
+        node.setValue(child.getValue());
+        node.setPassword(child.getPassword());
+        node.setWritable(child.getWritable());
+        node.setHasChildren(child.getHasChildren());
+        node.setHidden(child.isHidden());
+        node.setSerializable(child.isSerializable());
+        Map<String, Value> configs = child.getConfigurations();
+        Map<String, Value> roconfigs = child.getRoConfigurations();
+        Map<String, Value> attrs = child.getAttributes();
+        Set<String> interfaces = child.getInterfaces();
+        if (configs != null) {
+	        for (Entry<String, Value> entry: configs.entrySet()) {
+	        	node.setConfig(entry.getKey(), entry.getValue());
+	        }
+        }
+        if (roconfigs != null) {
+	        for (Entry<String, Value> entry: roconfigs.entrySet()) {
+	        	node.setRoConfig(entry.getKey(), entry.getValue());
+	        }
+        }
+        if (attrs != null) {
+	        for (Entry<String, Value> entry: attrs.entrySet()) {
+	        	node.setAttribute(entry.getKey(), entry.getValue());
+	        }
+        }
+        if (interfaces != null) {
+	        for (String _interface: interfaces) {
+	        	node.addInterface(_interface);
+	        }
+        }
         return node;
     }
 }
