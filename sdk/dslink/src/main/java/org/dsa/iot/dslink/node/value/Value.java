@@ -393,9 +393,9 @@ public class Value {
             case ValueType.JSON_STRING:
                 return String.valueOf(string);
             case ValueType.JSON_MAP:
-                return map == null? "null" : map.toString();
+                return String.valueOf(map);
             case ValueType.JSON_ARRAY:
-                return array == null? "null" : array.toString();
+                return String.valueOf(array);
             case ValueType.JSON_BINARY:
                 return Arrays.toString(binary);
             default:
