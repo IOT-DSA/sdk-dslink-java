@@ -1,6 +1,7 @@
 package org.dsa.iot.dslink.node.value;
 
 import org.dsa.iot.dslink.util.json.JsonArray;
+import org.dsa.iot.dslink.util.json.JsonObject;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -96,4 +97,20 @@ public class ValueTest {
         Assert.assertFalse(d.equals(e));
     }
 
+    @Test
+    public void testNullValues() {
+        Value a = new Value((Number) null);
+        Value b = new Value((Boolean) null);
+        Value c = new Value((String) null);
+        Value d = new Value((byte[]) null);
+        Value e = new Value((JsonObject) null);
+        Value f = new Value((JsonArray) null);
+        
+        Assert.assertEquals("null", a.toString());
+        Assert.assertEquals("null", b.toString());
+        Assert.assertEquals("null", c.toString());
+        Assert.assertEquals("null", d.toString());
+        Assert.assertEquals("null", e.toString());
+        Assert.assertEquals("null", f.toString());
+    }
 }
