@@ -189,6 +189,7 @@ public class Node {
             throw new NullPointerException("listener");
         }
         this.listener = listener;
+        listener.setNode(this);
     }
 
     public void addInterface(String _interface) {
