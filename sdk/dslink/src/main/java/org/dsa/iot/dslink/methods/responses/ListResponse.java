@@ -182,8 +182,8 @@ public class ListResponse extends Response {
             String change = childData.get("change");
             if (change != null && "remove".equals(change)) {
                 if (child != null) {
-                    node.removeChild(child.getName());
-                    updates.put(node, true);
+                    Node n = node.removeChild(child.getName());
+                    updates.put(n, true);
                 }
                 return;
             }
