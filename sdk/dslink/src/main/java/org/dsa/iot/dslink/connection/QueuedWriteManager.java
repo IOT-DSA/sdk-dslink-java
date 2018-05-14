@@ -23,7 +23,7 @@ public class QueuedWriteManager implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(QueuedWriteManager.class);
     private static final int MAX_QUEUE_DURATION = 60000;
     private static final int MAX_RID_BACKLOG = 50000;
-    private static final int MAX_SID_BACKLOG = 1000;
+    private static final int MAX_SID_BACKLOG;
     private static final int DISPATCH_DELAY;
     private static final int RID_CHUNK = 1000;
     private static final int SID_CHUNK = 1000;
@@ -114,12 +114,16 @@ public class QueuedWriteManager implements Runnable {
                         }
                         synchronized (fromMerged) {
                             if (rid == 0) {
-                                while (oldUpdates.size() > MAX_SID_BACKLOG) {
-                                    oldUpdates.remove(0);
+                                if (MAX_SID_BACKLOG > 0) {
+                                    while (oldUpdates.size() > MAX_SID_BACKLOG) {
+                                        oldUpdates.remove(0);
+                                    }
                                 }
                             } else {
-                                while (oldUpdates.size() > MAX_RID_BACKLOG) {
-                                    oldUpdates.remove(0);
+                                if (MAX_RID_BACKLOG > 0) {
+                                    while (oldUpdates.size() > MAX_RID_BACKLOG) {
+                                        oldUpdates.remove(0);
+                                    }
                                 }
                             }
                         }
@@ -253,6 +257,8 @@ public class QueuedWriteManager implements Runnable {
         String s = PropertyReference.DISPATCH_DELAY;
         DISPATCH_DELAY = SystemPropertyUtil.getInt(s, 75);
         LOGGER.debug("-D{}: {}", s, DISPATCH_DELAY);
+        s = PropertyReference.MAX_SID_BACKLOG;
+        MAX_SID_BACKLOG = SystemPropertyUtil.getInt(s, 0);
     }
 
     /**
