@@ -71,6 +71,9 @@ public class ListResponse extends Response {
     public void populate(JsonObject in) {
         JsonArray updates = in.get("updates");
         if (updates != null) {
+            // reset $disconnectedTs if been set before
+            Value nullValue = ValueUtils.toEmptyValue(ValueType.NUMBER, null);
+            node.setConfig("disconnectedTs", nullValue);
             for (Object obj : updates) {
                 if (obj instanceof JsonObject) {
                     update((JsonObject) obj);
@@ -187,6 +190,12 @@ public class ListResponse extends Response {
                 }
                 return;
             }
+
+            // If $disconnectedTs was set for the child node before it will be reset to null
+            JsonObject disconnectedResetJson = new JsonObject().put("$disconnectedTs", null);
+            disconnectedResetJson.mergeIn(childData, true);
+            childData = disconnectedResetJson;
+            
 
             String is = childData.get("$is");
             if (child == null) {
