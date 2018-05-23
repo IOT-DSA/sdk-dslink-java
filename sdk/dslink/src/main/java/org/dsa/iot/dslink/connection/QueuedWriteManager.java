@@ -21,12 +21,13 @@ import org.slf4j.LoggerFactory;
 public class QueuedWriteManager implements Runnable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(QueuedWriteManager.class);
-    private static final int MAX_QUEUE_DURATION = 60000;
-    private static final int MAX_RID_BACKLOG = 50000;
+    private static final int MAX_QUEUE_DURATION = 120000;
+    private static final int MAX_RID_BACKLOG;
     private static final int MAX_SID_BACKLOG;
     private static final int DISPATCH_DELAY;
     private static final int RID_CHUNK = 1000;
     private static final int SID_CHUNK = 1000;
+    private static final boolean WRITE_QUEUE_WATCHDOG;
 
     private final Map<Integer, JsonObject> mergedTasks = new HashMap<>();
     private final List<JsonObject> rawTasks = new LinkedList<>();
@@ -192,6 +193,9 @@ public class QueuedWriteManager implements Runnable {
                 } else {
                     long duration = System.currentTimeMillis() - queueStarted;
                     if (duration > MAX_QUEUE_DURATION) {
+                        if (WRITE_QUEUE_WATCHDOG) {
+                            System.exit(1);
+                        }
                         if (client instanceof NetworkHandlers) { //should always be true
                             //Broker is lost, we've been queuing too long.
                             LOGGER.error("Outgoing queue duration exceeded: " + duration);
@@ -257,8 +261,15 @@ public class QueuedWriteManager implements Runnable {
         String s = PropertyReference.DISPATCH_DELAY;
         DISPATCH_DELAY = SystemPropertyUtil.getInt(s, 75);
         LOGGER.debug("-D{}: {}", s, DISPATCH_DELAY);
+        s = PropertyReference.MAX_RID_BACKLOG;
+        MAX_RID_BACKLOG = SystemPropertyUtil.getInt(s, 50000);
+        LOGGER.debug("-D{}: {}", s, MAX_RID_BACKLOG);
         s = PropertyReference.MAX_SID_BACKLOG;
         MAX_SID_BACKLOG = SystemPropertyUtil.getInt(s, 0);
+        LOGGER.debug("-D{}: {}", s, MAX_SID_BACKLOG);
+        s = PropertyReference.WRITE_QUEUE_WATCHDOG;
+        WRITE_QUEUE_WATCHDOG = SystemPropertyUtil.getBoolean(s, false);
+        LOGGER.debug("-D{}: {}", s, WRITE_QUEUE_WATCHDOG);
     }
 
     /**

@@ -28,6 +28,15 @@ public class PropertyReference {
 
     /**
      * An integer property that determines the max outbound queue size for
+     * updates for all requests.  A value less than 1 means an unlimited
+     * queue size.
+     *
+     * Default value is 50000.
+     */
+    public static final String MAX_RID_BACKLOG = NAMESPACE + ".maxRidBacklog";
+
+    /**
+     * An integer property that determines the max outbound queue size for
      * updates to any given Subscription ID.  A value less than 1 means an unlimited
      * queue size.
      *
@@ -58,4 +67,13 @@ public class PropertyReference {
      * Default value is true.
      */
     public static final String VALIDATE_HANDLER = VALIDATE + ".handler_class";
+
+    /**
+     * A boolean property that determines whether or not to terminate the link process
+     * if the outbound message queue has been queueing for too long.
+     *
+     * Default value is false.
+     */
+    public static final String WRITE_QUEUE_WATCHDOG = NAMESPACE + ".writeQueueWatchdog";
+
 }
