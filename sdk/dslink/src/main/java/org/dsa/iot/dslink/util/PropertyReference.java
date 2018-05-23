@@ -68,12 +68,4 @@ public class PropertyReference {
      */
     public static final String VALIDATE_HANDLER = VALIDATE + ".handler_class";
 
-    /**
-     * A boolean property that determines whether or not to terminate the link process
-     * if the outbound message queue has been queueing for too long.
-     *
-     * Default value is false.
-     */
-    public static final String WRITE_QUEUE_WATCHDOG = NAMESPACE + ".writeQueueWatchdog";
-
 }
