@@ -135,8 +135,10 @@ public class QueuedWriteManager implements Runnable {
             }
         } else {
             rawTasks.add(content);
-            while (rawTasks.size() > MAX_RID_BACKLOG) {
-                rawTasks.remove(0);
+            if (MAX_RID_BACKLOG > 0) {
+                while (rawTasks.size() > MAX_RID_BACKLOG) {
+                    rawTasks.remove(0);
+                }
             }
         }
     }
@@ -231,7 +233,7 @@ public class QueuedWriteManager implements Runnable {
     }
 
     private boolean shouldQueue() {
-        return (fut != null) || (tracker.missingAckCount() > 8) || !client.writable();
+        return (fut != null) || (tracker.missingAckCount() > 20) || !client.writable();
     }
 
     private void forceWrite(JsonObject obj) {
