@@ -65,6 +65,7 @@ public class QueuedWriteManager implements Runnable {
     }
 
     public boolean post(JsonObject content, boolean merge) {
+        JsonArray updates = null;
         synchronized (this) {
             if (!open) {
                 return false;
@@ -73,19 +74,22 @@ public class QueuedWriteManager implements Runnable {
                 addTask(content, merge);
                 schedule(DISPATCH_DELAY);
                 return false;
-            } else if (merge && hasTasks()) {
-                //Prevent out of order responses
+            } else if (merge && !mergedTasks.isEmpty()) {
                 int rid = content.get("rid");
                 JsonObject fromMerged = mergedTasks.get(rid);
                 if (fromMerged != null) {
                     addTask(content, merge);
-                    schedule(1);
-                    return false;
+                    updates = fetchUpdates();
                 }
+            } else if (!rawTasks.isEmpty()) {
+                rawTasks.add(content);
+                updates = fetchUpdates();
             }
         }
-        JsonArray updates = new JsonArray();
-        updates.add(content);
+        if (updates == null) {
+            updates = new JsonArray();
+            updates.add(content);
+        }
         forceWriteUpdates(updates);
         return true;
     }
@@ -112,21 +116,6 @@ public class QueuedWriteManager implements Runnable {
                                 throw new RuntimeException(err);
                             }
                         }
-                        synchronized (fromMerged) {
-                            if (rid == 0) {
-                                if (MAX_SID_BACKLOG > 0) {
-                                    while (oldUpdates.size() > MAX_SID_BACKLOG) {
-                                        oldUpdates.remove(0);
-                                    }
-                                }
-                            } else {
-                                if (MAX_RID_BACKLOG > 0) {
-                                    while (oldUpdates.size() > MAX_RID_BACKLOG) {
-                                        oldUpdates.remove(0);
-                                    }
-                                }
-                            }
-                        }
                     }
                     fromMerged.mergeIn(content);
                 } else {
@@ -135,11 +124,6 @@ public class QueuedWriteManager implements Runnable {
             }
         } else {
             rawTasks.add(content);
-            if (MAX_RID_BACKLOG > 0) {
-                while (rawTasks.size() > MAX_RID_BACKLOG) {
-                    rawTasks.remove(0);
-                }
-            }
         }
     }
 
