@@ -25,6 +25,7 @@ public class QueuedWriteManager implements Runnable {
     private final EncodingFormat format;
     private ScheduledFuture<?> fut;
     private final Map<Integer, JsonObject> mergedTasks = new HashMap<>();
+    private boolean open = true;
     private final List<JsonObject> rawTasks = new LinkedList<>();
     private final String topName;
     private final MessageTracker tracker;
@@ -49,7 +50,16 @@ public class QueuedWriteManager implements Runnable {
         this.client = client;
     }
 
+    public synchronized void close() {
+        open = false;
+        rawTasks.clear();
+        mergedTasks.clear();
+    }
+
     public boolean post(JsonObject content, boolean merge) {
+        if (!open) {
+            return false;
+        }
         synchronized (this) {
             if (shouldQueue()) {
                 addTask(content, merge);
@@ -64,6 +74,9 @@ public class QueuedWriteManager implements Runnable {
     }
 
     public void run() {
+        if (!open) {
+            return;
+        }
         final JsonArray updates;
         synchronized (this) {
             fut = null;
@@ -148,7 +161,7 @@ public class QueuedWriteManager implements Runnable {
     }
 
     private boolean hasTasks() {
-        return !(rawTasks.isEmpty() && mergedTasks.isEmpty());
+        return !rawTasks.isEmpty() || !mergedTasks.isEmpty();
     }
 
     private void schedule(long millis) {
