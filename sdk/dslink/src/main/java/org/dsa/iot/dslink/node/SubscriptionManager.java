@@ -283,8 +283,7 @@ public class SubscriptionManager {
         batchValueUpdate(updates, true);
     }
 
-    public void batchValueUpdate(Map<Node, Value> updates,
-                                 boolean set) {
+    public void batchValueUpdate(Map<Node, Value> updates, boolean set) {
         if (updates == null) {
             return;
         }
@@ -315,7 +314,7 @@ public class SubscriptionManager {
             JsonObject resp = new JsonObject();
             resp.put("rid", 0);
             resp.put("updates", jsonUpdates);
-            link.getWriter().writeResponse(resp);
+            link.getWriter().writeResponse(resp, false); //TODO
         }
     }
 
