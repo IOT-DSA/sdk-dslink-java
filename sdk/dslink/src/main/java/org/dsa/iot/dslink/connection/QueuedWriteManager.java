@@ -100,11 +100,11 @@ public class QueuedWriteManager implements Runnable {
     private synchronized void addTask(JsonObject content, boolean merge) {
         if (merge) {
             int rid = content.get("rid");
-            JsonObject obj = mergedTasks.get(rid);
-            if (obj == null) {
+            JsonObject fromMerged = mergedTasks.get(rid);
+            if (fromMerged == null) {
                 mergedTasks.put(rid, content);
             } else {
-                JsonArray oldUpdates = obj.get("updates");
+                JsonArray oldUpdates = fromMerged.get("updates");
                 if (oldUpdates != null) {
                     JsonArray newUpdates = content.remove("updates");
                     if (newUpdates != null) {
@@ -118,9 +118,9 @@ public class QueuedWriteManager implements Runnable {
                             }
                         }
                     }
-                    obj.mergeIn(content);
+                    fromMerged.mergeIn(content);
                 } else {
-                    obj.mergeIn(content);
+                    fromMerged.mergeIn(content);
                 }
             }
         } else {
