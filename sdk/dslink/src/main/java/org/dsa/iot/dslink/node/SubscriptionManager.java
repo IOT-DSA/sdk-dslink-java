@@ -283,8 +283,7 @@ public class SubscriptionManager {
         batchValueUpdate(updates, true);
     }
 
-    public void batchValueUpdate(Map<Node, Value> updates,
-                                 boolean set) {
+    public void batchValueUpdate(Map<Node, Value> updates, boolean set) {
         if (updates == null) {
             return;
         }

@@ -201,7 +201,10 @@ public class GetHistory implements Handler<ActionResult> {
             }
         }
         if (batch != null) {
-            table.waitForStream(5000, true);
+            // If we can't get a stream open to the requester, then there's a chance batch rows
+            // could eventually cause an out of memory situation.  So fail the invocation after a
+            // minute of not getting a response.
+            table.waitForStream(60000, true);
             table.addBatchRows(batch);
         }
     }

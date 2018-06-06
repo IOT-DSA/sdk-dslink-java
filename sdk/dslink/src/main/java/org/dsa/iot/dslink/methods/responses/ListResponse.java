@@ -1,10 +1,23 @@
 package org.dsa.iot.dslink.methods.responses;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.methods.Response;
 import org.dsa.iot.dslink.methods.StreamState;
-import org.dsa.iot.dslink.node.*;
-import org.dsa.iot.dslink.node.actions.*;
+import org.dsa.iot.dslink.node.Node;
+import org.dsa.iot.dslink.node.NodeBuilder;
+import org.dsa.iot.dslink.node.NodeListener;
+import org.dsa.iot.dslink.node.Permission;
+import org.dsa.iot.dslink.node.SubscriptionManager;
+import org.dsa.iot.dslink.node.Writable;
+import org.dsa.iot.dslink.node.actions.Action;
+import org.dsa.iot.dslink.node.actions.ActionResult;
+import org.dsa.iot.dslink.node.actions.EditorType;
+import org.dsa.iot.dslink.node.actions.Parameter;
+import org.dsa.iot.dslink.node.actions.ResultType;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.node.value.ValueUtils;
@@ -12,11 +25,6 @@ import org.dsa.iot.dslink.util.StringUtils;
 import org.dsa.iot.dslink.util.handler.Handler;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * @author Samuel Grenier
@@ -33,12 +41,13 @@ public class ListResponse extends Response {
 
     public ListResponse(DSLink link, SubscriptionManager manager,
                         int rid, Node node, String path) {
-        if (link == null)
+        if (link == null) {
             throw new NullPointerException("link");
-        else if (manager == null)
+        } else if (manager == null) {
             throw new NullPointerException("manager");
-        else if (rid <= 0)
+        } else if (rid <= 0) {
             throw new IllegalArgumentException("rid <= 0");
+        }
         this.link = link;
         this.manager = manager;
         this.rid = rid;
@@ -59,9 +68,8 @@ public class ListResponse extends Response {
     }
 
     /**
-     *
      * @return Children updates. The key is the updated node, the bool is
-     *         {@code true} if the node was removed, otherwise false.
+     * {@code true} if the node was removed, otherwise false.
      */
     public Map<Node, Boolean> getUpdates() {
         return updates;
@@ -129,11 +137,8 @@ public class ListResponse extends Response {
                 if (v == null) {
                     v = "node"; // $is should always have a value. A null value is a bug in the responder that sent it.
                 }
-
-                if (!node.getProfile().equals(v)) {
-                    node.reset();
-                    node.setProfile((String) v);
-                }
+                node.reset();
+                node.setProfile((String) v);
             } else if ("interface".equals(name)) {
                 node.setInterfaces((String) v);
             } else if ("invokable".equals(name)) {
@@ -266,7 +271,7 @@ public class ListResponse extends Response {
                 updates.add(update);
             } else {
                 String err = "Profile not set on node: "
-                            + node.getPath();
+                        + node.getPath();
                 throw new RuntimeException(err);
             }
 
@@ -430,7 +435,7 @@ public class ListResponse extends Response {
 
     /**
      * @param prefix Prefix to use (whether its an attribute or config)
-     * @param out Updates array
+     * @param out    Updates array
      * @param values Values to iterate and add to the updates array
      */
     private void add(String prefix, JsonArray out, Map<String, Value> values) {

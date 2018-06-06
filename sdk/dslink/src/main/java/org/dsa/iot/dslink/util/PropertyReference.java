@@ -49,4 +49,5 @@ public class PropertyReference {
      * Default value is true.
      */
     public static final String VALIDATE_HANDLER = VALIDATE + ".handler_class";
+
 }
