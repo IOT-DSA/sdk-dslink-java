@@ -18,9 +18,10 @@ import org.slf4j.LoggerFactory;
 
 public class QueuedWriteManager implements Runnable {
 
+    private static final int CHUNK = 1000;
     private static final int DISPATCH_DELAY;
     private static final Logger LOGGER = LoggerFactory.getLogger(QueuedWriteManager.class);
-    private static final int MAX_TASKS = 1000;
+
     private final NetworkClient client;
     private final EncodingFormat format;
     private ScheduledFuture<?> fut;
@@ -133,13 +134,13 @@ public class QueuedWriteManager implements Runnable {
         }
         JsonArray updates = new JsonArray();
         Iterator<JsonObject> it = mergedTasks.values().iterator();
-        int count = MAX_TASKS / 2;
+        int count = CHUNK / 2;
         while (it.hasNext() && (--count >= 0)) {
             updates.add(it.next());
             it.remove();
         }
         it = rawTasks.iterator();
-        count += (MAX_TASKS / 2);
+        count += (CHUNK / 2);
         while (it.hasNext() && (--count >= 0)) {
             updates.add(it.next());
             it.remove();
