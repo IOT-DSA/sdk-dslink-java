@@ -27,24 +27,6 @@ public class PropertyReference {
     public static final String DISPATCH_DELAY = NAMESPACE + ".dispatchDelay";
 
     /**
-     * An integer property that determines the max outbound queue size for
-     * updates for all requests.  A value less than 1 means an unlimited
-     * queue size.
-     *
-     * Default value is 50000.
-     */
-    public static final String MAX_RID_BACKLOG = NAMESPACE + ".maxRidBacklog";
-
-    /**
-     * An integer property that determines the max outbound queue size for
-     * updates to any given Subscription ID.  A value less than 1 means an unlimited
-     * queue size.
-     *
-     * Default value is 0.
-     */
-    public static final String MAX_SID_BACKLOG = NAMESPACE + ".maxSidBacklog";
-
-    /**
      * A boolean property that determines the sdk should perform any
      * validations. Currently only the dslink.json is validated.
      *

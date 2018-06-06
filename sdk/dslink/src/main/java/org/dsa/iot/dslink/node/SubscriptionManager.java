@@ -314,7 +314,7 @@ public class SubscriptionManager {
             JsonObject resp = new JsonObject();
             resp.put("rid", 0);
             resp.put("updates", jsonUpdates);
-            link.getWriter().writeResponse(resp, false); //TODO
+            link.getWriter().writeResponse(resp);
         }
     }
 
