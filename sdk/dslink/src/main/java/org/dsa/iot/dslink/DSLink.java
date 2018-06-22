@@ -1,5 +1,11 @@
 package org.dsa.iot.dslink;
 
+import static org.dsa.iot.dslink.connection.DataHandler.DataReceived;
+
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.LinkedList;
+import java.util.List;
 import org.dsa.iot.dslink.connection.DataHandler;
 import org.dsa.iot.dslink.link.Requester;
 import org.dsa.iot.dslink.link.Responder;
@@ -13,28 +19,21 @@ import org.dsa.iot.dslink.util.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.LinkedList;
-import java.util.List;
-
-import static org.dsa.iot.dslink.connection.DataHandler.DataReceived;
-
 /**
  * @author Samuel Grenier
  */
 public class DSLink {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DSLink.class);
-    private final SubscriptionManager manager = new SubscriptionManager(this);
+    private final boolean isResponder;
     private final DSLinkHandler linkHandler;
+    private final SubscriptionManager manager;
     private final NodeManager nodeManager;
     private final Requester requester;
     private final Responder responder;
     private final String path;
-
-    private SerializationManager serialManager;
     private DataHandler dataHandler;
+    private SerializationManager serialManager;
 
     /**
      * @param linkHandler DSLink dataHandler
@@ -51,6 +50,8 @@ public class DSLink {
 
         this.linkHandler = linkHandler;
         this.path = path;
+        isResponder = !isReqOrResp;
+        manager = new SubscriptionManager(this);
         if (isReqOrResp) {
             requester = new Requester(linkHandler);
             requester.setDSLink(this);
@@ -65,25 +66,6 @@ public class DSLink {
     }
 
     /**
-     * Sets the serialization manager on the dslink.
-     *
-     * @param manager Serialization manager
-     */
-    public void setSerialManager(SerializationManager manager) {
-        if (this.serialManager != null) {
-            this.serialManager.stop();
-        }
-        this.serialManager = manager;
-    }
-
-    /**
-     * @return The serialization manager this instance is attached to.
-     */
-    public SerializationManager getSerialManager() {
-        return serialManager;
-    }
-
-    /**
      * @return The link handler this instance is attached to.
      */
     public DSLinkHandler getLinkHandler() {
@@ -91,28 +73,10 @@ public class DSLink {
     }
 
     /**
-     * Sets a new writer for the link to utilize.
-     *
-     * @param handler New data handler to set.
+     * @return Node manager of the link.
      */
-    public void setWriter(DataHandler handler) {
-        this.dataHandler = handler;
-    }
-
-    /**
-     * The writer must never be cached as it can change.
-     *
-     * @return The writer to write responses to a remote endpoint.
-     */
-    public DataHandler getWriter() {
-        return dataHandler;
-    }
-
-    /**
-     * @return Whether the DSLink is connected or not.
-     */
-    public boolean isConnected() {
-        return dataHandler != null && dataHandler.isConnected();
+    public NodeManager getNodeManager() {
+        return nodeManager;
     }
 
     /**
@@ -137,10 +101,10 @@ public class DSLink {
     }
 
     /**
-     * @return Node manager of the link.
+     * @return The serialization manager this instance is attached to.
      */
-    public NodeManager getNodeManager() {
-        return nodeManager;
+    public SerializationManager getSerialManager() {
+        return serialManager;
     }
 
     /**
@@ -151,7 +115,28 @@ public class DSLink {
     }
 
     /**
+     * The writer must never be cached as it can change.
+     *
+     * @return The writer to write responses to a remote endpoint.
+     */
+    public DataHandler getWriter() {
+        return dataHandler;
+    }
+
+    /**
+     * @return Whether the DSLink is connected or not.
+     */
+    public boolean isConnected() {
+        return dataHandler != null && dataHandler.isConnected();
+    }
+
+    public boolean isResponder() {
+        return isResponder;
+    }
+
+    /**
      * Sets the default data handler to the remote endpoint.
+     *
      * @param requester Whether to handle responses.
      * @param responder Whether to handle requests.
      */
@@ -210,6 +195,27 @@ public class DSLink {
                 }
             });
         }
+    }
+
+    /**
+     * Sets the serialization manager on the dslink.
+     *
+     * @param manager Serialization manager
+     */
+    public void setSerialManager(SerializationManager manager) {
+        if (this.serialManager != null) {
+            this.serialManager.stop();
+        }
+        this.serialManager = manager;
+    }
+
+    /**
+     * Sets a new writer for the link to utilize.
+     *
+     * @param handler New data handler to set.
+     */
+    public void setWriter(DataHandler handler) {
+        this.dataHandler = handler;
     }
 
     /**

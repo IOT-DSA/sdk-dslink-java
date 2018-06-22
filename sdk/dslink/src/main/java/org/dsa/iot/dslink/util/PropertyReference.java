@@ -27,6 +27,14 @@ public class PropertyReference {
     public static final String DISPATCH_DELAY = NAMESPACE + ".dispatchDelay";
 
     /**
+     * An integer property that determines the QOS queue size.  A value of 0 or less means an
+     * unlimited queue.
+     *
+     * Default value is 0.
+     */
+    public static final String QOS_QUEUE_SIZE = NAMESPACE + ".qosQueueSize";
+
+    /**
      * A boolean property that determines the sdk should perform any
      * validations. Currently only the dslink.json is validated.
      *

@@ -17,18 +17,23 @@ public interface MessageTracker {
     void ackReceived(int ack);
 
     /**
-     * Retrieves the amount of missing acks. This can be used for network
-     * throttling if their is too many missing acks.
-     *
-     * @return Missing acks from the network.
-     */
-    int missingAckCount();
-
-    /**
      * Increments the message ID. This directly affects the missing ack
      * count.
      *
      * @return Next message ID.
      */
     int incrementMessageId();
+
+    /**
+     * The last ack received from the network.
+     */
+    int lastAckReceived();
+
+    /**
+     * Retrieves the amount of missing acks. This can be used for network
+     * throttling if their is too many missing acks.
+     *
+     * @return Missing acks from the network.
+     */
+    int missingAckCount();
 }

@@ -1,6 +1,7 @@
 package org.dsa.iot.dslink.connection;
 
 import java.util.Collection;
+import org.dsa.iot.dslink.node.MessageGenerator;
 import org.dsa.iot.dslink.provider.LoopProvider;
 import org.dsa.iot.dslink.util.handler.Handler;
 import org.dsa.iot.dslink.util.json.EncodingFormat;
@@ -19,33 +20,43 @@ public class DataHandler implements MessageTracker {
     private static final Logger LOGGER;
 
     private final Object msgLock = new Object();
-    private int messageId = 0;
-    private int lastReceivedAck = 0;
-
-    private EncodingFormat format;
     private NetworkClient client;
-
+    private EncodingFormat format;
+    private int lastReceivedAck = 0;
+    private int messageId = 0;
     private Handler<DataReceived> reqHandler;
-    private Handler<DataReceived> respHandler;
-
     private QueuedWriteManager reqsManager;
+    private Handler<DataReceived> respHandler;
     private QueuedWriteManager respsManager;
 
-    public void setClient(NetworkClient client,
-                          EncodingFormat format) {
-        onDisconnected();
-        this.client = client;
-        this.format = format;
-        this.reqsManager = new QueuedWriteManager(client, this, format, "requests");
-        this.respsManager = new QueuedWriteManager(client, this, format, "responses");
+    @Override
+    public void ackReceived(int ack) {
+        synchronized (msgLock) {
+            lastReceivedAck = Math.max(lastReceivedAck, ack);
+        }
     }
 
-    public void setReqHandler(Handler<DataReceived> handler) {
-        this.reqHandler = handler;
+    @Override
+    public int incrementMessageId() {
+        synchronized (msgLock) {
+            return ++messageId;
+        }
     }
 
-    public void setRespHandler(Handler<DataReceived> handler) {
-        this.respHandler = handler;
+    public boolean isConnected() {
+        return client != null && client.isConnected();
+    }
+
+    @Override
+    public int lastAckReceived() {
+        return lastReceivedAck;
+    }
+
+    @Override
+    public int missingAckCount() {
+        synchronized (msgLock) {
+            return messageId - lastReceivedAck;
+        }
     }
 
     public void onDisconnected() {
@@ -56,10 +67,6 @@ public class DataHandler implements MessageTracker {
         if (respsManager != null) {
             respsManager.close();
         }
-    }
-
-    public boolean isConnected() {
-        return client != null && client.isConnected();
     }
 
     /**
@@ -95,11 +102,20 @@ public class DataHandler implements MessageTracker {
         }
     }
 
-    public void writeRequest(JsonObject object, boolean merge) {
-        if (object == null) {
-            throw new NullPointerException("object");
-        }
-        reqsManager.post(object, merge);
+    public void setClient(NetworkClient client, EncodingFormat format) {
+        onDisconnected();
+        this.client = client;
+        this.format = format;
+        this.reqsManager = new QueuedWriteManager(client, this, format, "requests");
+        this.respsManager = new QueuedWriteManager(client, this, format, "responses");
+    }
+
+    public void setReqHandler(Handler<DataReceived> handler) {
+        this.reqHandler = handler;
+    }
+
+    public void setRespHandler(Handler<DataReceived> handler) {
+        this.respHandler = handler;
     }
 
     public void writeAck(Integer ack) {
@@ -110,6 +126,35 @@ public class DataHandler implements MessageTracker {
             JsonObject obj = new JsonObject();
             obj.put("ack", ack);
             client.write(format, obj);
+        }
+    }
+
+    public void writeRequest(JsonObject object, boolean merge) {
+        if (object == null) {
+            throw new NullPointerException("object");
+        }
+        reqsManager.post(object, merge);
+    }
+
+    /**
+     * Writes all the responses back out that the requester requested.
+     *
+     * @param ackId   Acknowledgement ID.
+     * @param objects Responses to write.
+     */
+    public void writeRequestResponses(Integer ackId,
+                                      Collection<JsonObject> objects) {
+        if (objects == null) {
+            throw new NullPointerException("objects");
+        }
+
+        for (JsonObject o : objects) {
+            respsManager.post(o, true);
+        }
+        if ((ackId != null) && isConnected()) {
+            JsonObject ack = new JsonObject();
+            ack.put("ack", ackId);
+            client.write(format, ack);
         }
     }
 
@@ -139,46 +184,11 @@ public class DataHandler implements MessageTracker {
     }
 
     /**
-     * Writes all the responses back out that the requester requested.
-     *
-     * @param ackId   Acknowledgement ID.
-     * @param objects Responses to write.
+     * For writing messages from a generator.  The generator will only be called upon to
+     * generate the message if there will be no queueing, therefore no merging is needed either.
      */
-    public void writeRequestResponses(Integer ackId,
-                                      Collection<JsonObject> objects) {
-        if (objects == null) {
-            throw new NullPointerException("objects");
-        }
-
-        for (JsonObject o : objects) {
-            respsManager.post(o, true);
-        }
-        if ((ackId != null) && isConnected()) {
-            JsonObject ack = new JsonObject();
-            ack.put("ack", ackId);
-            client.write(format, ack);
-        }
-    }
-
-    @Override
-    public void ackReceived(int ack) {
-        synchronized (msgLock) {
-            lastReceivedAck = Math.max(lastReceivedAck, ack);
-        }
-    }
-
-    @Override
-    public int missingAckCount() {
-        synchronized (msgLock) {
-            return messageId - lastReceivedAck;
-        }
-    }
-
-    @Override
-    public int incrementMessageId() {
-        synchronized (msgLock) {
-            return ++messageId;
-        }
+    public void writeResponse(MessageGenerator generator) {
+        respsManager.write(generator);
     }
 
     public static class DataReceived {
@@ -191,12 +201,12 @@ public class DataHandler implements MessageTracker {
             this.data = data;
         }
 
-        public Integer getMsgId() {
-            return msgId;
-        }
-
         public JsonArray getData() {
             return data;
+        }
+
+        public Integer getMsgId() {
+            return msgId;
         }
     }
 

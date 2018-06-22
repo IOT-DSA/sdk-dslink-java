@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import org.dsa.iot.dslink.node.MessageGenerator;
 import org.dsa.iot.dslink.provider.LoopProvider;
 import org.dsa.iot.dslink.util.PropertyReference;
 import org.dsa.iot.dslink.util.json.EncodingFormat;
@@ -24,13 +25,13 @@ public class QueuedWriteManager implements Runnable {
 
     private final NetworkClient client;
     private final EncodingFormat format;
-    private ScheduledFuture<?> fut;
     private final Map<Integer, JsonObject> mergedTasks = new HashMap<>();
-    private boolean open = true;
     private final List<JsonObject> rawTasks = new LinkedList<>();
     private final String topName;
     private final MessageTracker tracker;
     private final Object writeMutex = new Object();
+    private ScheduledFuture<?> fut;
+    private boolean open = true;
 
     public QueuedWriteManager(NetworkClient client,
                               MessageTracker tracker,
@@ -97,6 +98,27 @@ public class QueuedWriteManager implements Runnable {
         }
     }
 
+    /**
+     * For writing messages from a generator.  The generator will only be called upon to
+     * generate the message if there will be no queueing, therefore no merging is needed.
+     */
+    public void write(MessageGenerator generator) {
+        if (!open) {
+            return;
+        }
+        synchronized (this) {
+            if (shouldQueue()) {
+                return;
+            }
+        }
+        JsonObject obj = generator.getMessage(tracker.lastAckReceived());
+        if (obj != null) {
+            JsonArray updates = new JsonArray();
+            updates.add(obj);
+            generator.setMessageId(forceWriteUpdates(updates));
+        }
+    }
+
     private synchronized void addTask(JsonObject content, boolean merge) {
         if (merge) {
             int rid = content.get("rid");
@@ -148,17 +170,25 @@ public class QueuedWriteManager implements Runnable {
         return updates;
     }
 
-    private void forceWrite(JsonObject obj) {
+    /**
+     * Returns the message ID.
+     */
+    private int forceWrite(JsonObject obj) {
         synchronized (writeMutex) {
-            obj.put("msg", tracker.incrementMessageId());
+            int msgId = tracker.incrementMessageId();
+            obj.put("msg", msgId);
             client.write(format, obj);
+            return msgId;
         }
     }
 
-    private void forceWriteUpdates(JsonArray updates) {
+    /**
+     * Returns the message ID.
+     */
+    private int forceWriteUpdates(JsonArray updates) {
         JsonObject top = new JsonObject();
         top.put(topName, updates);
-        forceWrite(top);
+        return forceWrite(top);
     }
 
     private boolean hasTasks() {
