@@ -3,7 +3,6 @@ package org.dsa.iot.dslink.node;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.netty.util.internal.SystemPropertyUtil;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -384,6 +383,7 @@ public class SubscriptionManager {
 
     class Subscription implements MessageGenerator {
 
+        boolean enqueued = false;
         private int lastMid = -1;
         private Value lastUpdate;
         private Queue<Value> lastUpdates;
@@ -418,15 +418,20 @@ public class SubscriptionManager {
                 return msg;
             }
             if (lastMid > lastAckId) {
+                Thread.yield();
                 enqueue();
                 return null;
             }
             JsonArray ary;
             synchronized (this) {
-                if ((updates == null) || updates.isEmpty()) {
+                if (updates == null) {
                     return null;
                 }
-                if (updates.size() < 1024) {
+                int size = updates.size();
+                if (size == 0) {
+                    return null;
+                }
+                if (size < 1024) { //don't want messages too large
                     lastUpdates = updates;
                     updates = null;
                 } else {
@@ -464,7 +469,7 @@ public class SubscriptionManager {
         }
 
         private void enqueue() {
-            synchronized (this) {
+            synchronized (SubscriptionManager.this) {
                 if (subscriptionWriter == null) {
                     subscriptionWriter = new SubscriptionWriter();
                 }
@@ -568,7 +573,6 @@ public class SubscriptionManager {
 
     private class SubscriptionWriter implements Runnable {
 
-        private HashSet<Subscription> enqueued = new HashSet<Subscription>();
         private Queue<Subscription> queue = new LinkedList<Subscription>();
 
         public SubscriptionWriter() {
@@ -581,7 +585,7 @@ public class SubscriptionManager {
         public synchronized Subscription dequeue() {
             Subscription ret = queue.poll();
             if (ret != null) {
-                enqueued.remove(ret);
+                ret.enqueued = false;
             }
             return ret;
         }
@@ -591,12 +595,13 @@ public class SubscriptionManager {
          */
         public synchronized boolean enqueue(Subscription sub) {
             if (connected) {
-                if (!enqueued.contains(sub)) {
-                    queue.add(sub);
-                    notifyAll();
-                    return true;
+                if (sub.enqueued) {
+                    return false;
                 }
+                sub.enqueued = true;
+                queue.add(sub);
             }
+            notifyAll();
             return false;
         }
 
@@ -632,8 +637,11 @@ public class SubscriptionManager {
         }
 
         synchronized void clearQueue() {
-            queue.clear();
-            enqueued.clear();
+            Subscription sub = queue.poll();
+            while (sub != null) {
+                sub.enqueued = false;
+                sub = queue.poll();
+            }
         }
 
     }
