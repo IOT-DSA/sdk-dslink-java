@@ -37,7 +37,7 @@ public class Responder extends Linkable {
             }
             return;
         }
-        sm.batchValueUpdate(updates);
+        sm.batchValueUpdate(updates, true);
     }
 
     /**

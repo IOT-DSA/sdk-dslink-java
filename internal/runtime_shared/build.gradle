@@ -2,10 +2,10 @@ apply from: '../../sdk/build.gradle'
 
 dependencies {
     compile 'com.fasterxml.jackson.core:jackson-core:2.9.5'
-    compile 'org.msgpack:jackson-dataformat-msgpack:0.8.15'
-    compile 'org.bouncycastle:bcprov-jdk15on:1.51'
-    compile 'io.netty:netty-all:4.1.0.Final'
-    compile 'com.beust:jcommander:1.48'
+    compile 'org.msgpack:jackson-dataformat-msgpack:0.8.16'
+    compile 'org.bouncycastle:bcprov-jdk15on:1.59'
+    compile 'io.netty:netty-all:4.1.25.Final'
+    compile 'com.beust:jcommander:1.72'
     compile 'com.jcraft:jzlib:1.1.3'
 }
 

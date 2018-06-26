@@ -1,5 +1,12 @@
 package org.dsa.iot.dslink;
 
+import static org.dsa.iot.dslink.connection.ConnectionManager.Client;
+
+import java.io.File;
+import java.util.Collections;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 import org.dsa.iot.dslink.connection.ConnectionManager;
 import org.dsa.iot.dslink.connection.DataHandler;
 import org.dsa.iot.dslink.link.Responder;
@@ -10,16 +17,9 @@ import org.dsa.iot.dslink.util.handler.Handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.util.Collections;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
-
-import static org.dsa.iot.dslink.connection.ConnectionManager.Client;
-
 /**
  * Provides DSLinks as soon as a client connects to the server or vice versa.
+ *
  * @author Samuel Grenier
  */
 public class DSLinkProvider {
@@ -34,10 +34,11 @@ public class DSLinkProvider {
     private boolean running;
 
     public DSLinkProvider(ConnectionManager manager, DSLinkHandler handler) {
-        if (manager == null)
+        if (manager == null) {
             throw new NullPointerException("manager");
-        else if (handler == null)
+        } else if (handler == null) {
             throw new NullPointerException("handler");
+        }
         handler.setProvider(this);
         this.linkRequesterCache = new ConcurrentHashMap<>();
         this.linkResponderCache = new ConcurrentHashMap<>();
@@ -45,6 +46,34 @@ public class DSLinkProvider {
         this.manager = manager;
         this.handler = handler;
         handler.preInit();
+    }
+
+    public Map<String, DSLink> getRequesters() {
+        return Collections.unmodifiableMap(linkRequesterCache);
+    }
+
+    @SuppressWarnings("unused")
+    public Map<String, DSLink> getResponders() {
+        return Collections.unmodifiableMap(linkResponderCache);
+    }
+
+    /**
+     * Blocks the thread indefinitely while the endpoint is active or connected
+     * to a host. This will automatically unblock when the endpoint becomes
+     * inactive or disconnects, allowing the thread to proceed execution. Typical
+     * usage is to call {@code sleep} in the main thread to prevent the application
+     * from terminating abnormally.
+     */
+    public void sleep() {
+        try {
+            while (running) {
+                Thread.sleep(500);
+            }
+        } catch (InterruptedException e) {
+            if (running) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     public void start() {
@@ -128,6 +157,8 @@ public class DSLinkProvider {
                             event.setResponderOnConnected(new Handler<Client>() {
                                 @Override
                                 public void handle(Client event) {
+                                    Responder resp = link.getResponder();
+                                    resp.getSubscriptionManager().onConnected();
                                     handler.onResponderConnected(link);
                                 }
                             });
@@ -135,7 +166,7 @@ public class DSLinkProvider {
                                 @Override
                                 public void handle(Void event) {
                                     Responder resp = link.getResponder();
-                                    resp.getSubscriptionManager().disconnected();
+                                    resp.getSubscriptionManager().onDisconnected();
                                     handler.onResponderDisconnected(link);
                                 }
                             });
@@ -165,34 +196,6 @@ public class DSLinkProvider {
         }
         for (DSLink link : linkResponderCache.values()) {
             link.stop();
-        }
-    }
-
-    @SuppressWarnings("unused")
-    public Map<String, DSLink> getResponders() {
-        return Collections.unmodifiableMap(linkResponderCache);
-    }
-
-    public Map<String, DSLink> getRequesters() {
-        return Collections.unmodifiableMap(linkRequesterCache);
-    }
-
-    /**
-     * Blocks the thread indefinitely while the endpoint is active or connected
-     * to a host. This will automatically unblock when the endpoint becomes
-     * inactive or disconnects, allowing the thread to proceed execution. Typical
-     * usage is to call {@code sleep} in the main thread to prevent the application
-     * from terminating abnormally.
-     */
-    public void sleep() {
-        try {
-            while (running) {
-                Thread.sleep(500);
-            }
-        } catch (InterruptedException e) {
-            if (running) {
-                throw new RuntimeException(e);
-            }
         }
     }
 
