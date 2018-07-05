@@ -22,6 +22,7 @@ import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.dsa.iot.dslink.util.StringUtils;
+import org.dsa.iot.dslink.util.TimeUtils;
 import org.dsa.iot.dslink.util.handler.Handler;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
@@ -55,6 +56,169 @@ public class ListResponse extends Response {
         this.path = path;
     }
 
+    public void childUpdate(Node child, boolean removed) {
+        if (removed) {
+            manager.removePathSub(child);
+        }
+
+        JsonArray updates = new JsonArray();
+        updates.add(getChildUpdate(child, removed));
+
+        JsonObject resp = new JsonObject();
+        resp.put("rid", getRid());
+        resp.put("stream", StreamState.OPEN.getJsonName());
+        resp.put("updates", updates);
+        link.getWriter().writeResponse(resp);
+    }
+
+    @Override
+    public JsonObject getCloseResponse() {
+        manager.removePathSub(node);
+        if (node != null) {
+            NodeListener listener = node.getListener();
+            if (listener != null) {
+                node.getListener().postListClosed();
+            }
+        }
+        JsonObject resp = new JsonObject();
+        resp.put("rid", getRid());
+        resp.put("stream", StreamState.CLOSED.getJsonName());
+        return resp;
+    }
+
+    @Override
+    public JsonObject getJsonResponse(JsonObject in) {
+        JsonObject out = new JsonObject();
+        out.put("rid", getRid());
+        out.put("stream", StreamState.OPEN.getJsonName());
+
+        JsonArray updates = new JsonArray();
+        if (node == null) {
+            JsonArray update = new JsonArray();
+            update.add("$is").add("node");
+            updates.add(update);
+            update = new JsonArray();
+            update.add("$disconnectedTs")
+                  .add(TimeUtils.encode(System.currentTimeMillis(), true).toString());
+            updates.add(update);
+        } else {
+            // Special configurations
+            String profile = node.getProfile();
+            if (profile != null) {
+                JsonArray update = new JsonArray();
+                update.add("$is");
+                update.add(profile);
+                updates.add(update);
+            } else {
+                String err = "Profile not set on node: "
+                        + node.getPath();
+                throw new RuntimeException(err);
+            }
+
+            String name = node.getDisplayName();
+            if (name != null) {
+                JsonArray update = new JsonArray();
+                update.add("$name");
+                update.add(name);
+                updates.add(update);
+            }
+
+            Set<String> interfaces = node.getInterfaces();
+            if (interfaces != null && interfaces.size() > 0) {
+                JsonArray update = new JsonArray();
+                update.add("$interface");
+                update.add(StringUtils.join(interfaces, "|"));
+                updates.add(update);
+            }
+
+            ValueType type = node.getValueType();
+            if (type != null) {
+                JsonArray update = new JsonArray();
+                update.add("$type");
+                update.add(type.toJsonString());
+                updates.add(update);
+            }
+
+            char[] password = node.getPassword();
+            if (password != null) {
+                JsonArray update = new JsonArray();
+                update.add("$$password");
+                update.add(null);
+                updates.add(update);
+            }
+
+            Writable writable = node.getWritable();
+            if (!(writable == null || writable == Writable.NEVER)) {
+                JsonArray update = new JsonArray();
+                update.add("$writable");
+                update.add(writable.toJsonName());
+                updates.add(update);
+            }
+
+            // Action
+            Action action = node.getAction();
+            if (action != null
+                    && action.hasPermission()) {
+                JsonArray update = new JsonArray();
+                update.add("$invokable");
+                update.add(action.getPermission().getJsonName());
+                updates.add(update);
+
+                if (!action.isHidden()) {
+                    update = new JsonArray();
+                    update.add("$params");
+                    update.add(action.getParams());
+                    updates.add(update);
+
+                    update = new JsonArray();
+                    update.add("$columns");
+                    update.add(action.getColumns());
+                    updates.add(update);
+
+                    update = new JsonArray();
+                    update.add("$result");
+                    update.add(action.getResultType().getJsonName());
+                    updates.add(update);
+                }
+            }
+
+            // Attributes and configurations
+            add("$$", updates, node.getRoConfigurations());
+            add("$", updates, node.getConfigurations());
+            add("@", updates, node.getAttributes());
+
+            // Whether this node "has children"
+            Boolean hasChildren = node.getHasChildren();
+            if (hasChildren != null) {
+                JsonArray update = new JsonArray();
+                update.add("$hasChildren");
+                update.add(hasChildren);
+                updates.add(update);
+            }
+
+            // Whether this node should be be visible to the UI
+            if (node.isHidden()) {
+                JsonArray update = new JsonArray();
+                update.add("$hidden");
+                update.add(true);
+                updates.add(update);
+            }
+
+            // Children
+            Map<String, Node> children = node.getChildren();
+            if (children != null) {
+                for (Node child : children.values()) {
+                    Object update = getChildUpdate(child, false);
+                    updates.add(update);
+                }
+            }
+        }
+        out.put("updates", updates);
+
+        manager.addPathSub(path, this);
+        return out;
+    }
+
     /**
      * @return Node the response corresponds to.
      */
@@ -75,6 +239,44 @@ public class ListResponse extends Response {
         return updates;
     }
 
+    public void metaUpdate(String name, Value value) {
+        JsonArray updates = new JsonArray();
+        if (value != null) {
+            JsonArray update = new JsonArray();
+            update.add(name);
+
+            update.add(value);
+            update.add(value.getTimeStamp());
+
+            updates.add(update);
+        } else {
+            JsonObject obj = new JsonObject();
+            obj.put("name", name);
+            obj.put("change", "remove");
+            updates.add(obj);
+        }
+
+        JsonObject resp = new JsonObject();
+        resp.put("rid", getRid());
+        resp.put("stream", StreamState.OPEN.getJsonName());
+        resp.put("updates", updates);
+        link.getWriter().writeResponse(resp);
+    }
+
+    public void multiChildrenUpdate(List<Node> children) {
+        JsonArray updates = new JsonArray();
+
+        for (Node child : children) {
+            updates.add(getChildUpdate(child, false));
+        }
+
+        JsonObject resp = new JsonObject();
+        resp.put("rid", getRid());
+        resp.put("stream", StreamState.OPEN.getJsonName());
+        resp.put("updates", updates);
+        link.getWriter().writeResponse(resp);
+    }
+
     @Override
     public void populate(JsonObject in) {
         JsonArray updates = in.get("updates");
@@ -89,26 +291,140 @@ public class ListResponse extends Response {
         }
     }
 
-    private void update(JsonObject in) {
-        String name = in.get("name");
-        String change = in.get("change");
-        if (change != null) {
-            if ("remove".equals(change)) {
-                if (name.startsWith("$$")) {
-                    node.removeRoConfig(name.substring(2));
-                } else if (name.startsWith("$")) {
-                    node.removeConfig(name.substring(1));
-                } else if (name.startsWith("@")) {
-                    node.removeAttribute(name.substring(1));
-                } else {
-                    Node n = node.removeChild(name);
-                    if (n != null) {
-                        updates.put(n, true);
-                    }
-                }
+    /**
+     * @param prefix Prefix to use (whether its an attribute or config)
+     * @param out    Updates array
+     * @param values Values to iterate and add to the updates array
+     */
+    private void add(String prefix, JsonArray out, Map<String, Value> values) {
+        if (values == null) {
+            return;
+        }
+        for (Map.Entry<String, Value> entry : values.entrySet()) {
+            JsonArray update = new JsonArray();
+            update.add(prefix + entry.getKey());
+            update.add(entry.getValue());
+            out.add(update);
+        }
+    }
+
+    private Object getChildUpdate(Node child, boolean removed) {
+        if (removed) {
+            JsonObject obj = new JsonObject();
+            obj.put("name", child.getName());
+            obj.put("change", "remove");
+            return obj;
+        }
+
+        JsonArray update = new JsonArray();
+        update.add(child.getName());
+
+        JsonObject childData = new JsonObject();
+        {
+            String profile = child.getProfile();
+            if (profile == null) {
+                String err = "Profile not set on node: "
+                        + child.getPath();
+                throw new RuntimeException(err);
             }
-        } else {
-            throw new RuntimeException("Unhandled update: " + in);
+            childData.put("$is", profile);
+
+            String displayName = child.getDisplayName();
+            if (displayName != null) {
+                childData.put("$name", displayName);
+            }
+
+            Action action = child.getAction();
+            if (action != null) {
+                String perm = action.getPermission().getJsonName();
+                childData.put("$invokable", perm);
+
+                String jsonName = action.getResultType().getJsonName();
+                childData.put("$result", jsonName);
+            }
+
+            Set<String> interfaces = child.getInterfaces();
+            if (interfaces != null) {
+                String _interface = StringUtils.join(interfaces, "|");
+                childData.put("$interface", _interface);
+            }
+
+            ValueType type = child.getValueType();
+            if (type != null) {
+                childData.put("$type", type.toJsonString());
+            }
+
+            Boolean hasChildren = child.getHasChildren();
+            if (hasChildren != null) {
+                childData.put("$hasChildren", hasChildren);
+            }
+
+            if (child.isHidden()) {
+                childData.put("$hidden", true);
+            }
+        }
+        update.add(childData);
+        return update;
+    }
+
+    private static Action getOrCreateAction(Node node, Permission perm) {
+        Action action = node.getAction();
+        if (action != null) {
+            return action;
+        }
+
+        action = getRawAction(perm);
+        node.setAction(action);
+        return action;
+    }
+
+    private static Action getRawAction(Permission perm) {
+        return new Action(perm, new Handler<ActionResult>() {
+            @Override
+            public void handle(ActionResult event) {
+                throw new UnsupportedOperationException();
+            }
+        });
+    }
+
+    private static void iterateActionMetaData(Action act,
+                                              JsonArray array,
+                                              boolean isCol) {
+        for (Object anArray : array) {
+            JsonObject data = (JsonObject) anArray;
+            String name = data.get("name");
+            String type = data.get("type");
+            ValueType valType = ValueType.toValueType(type);
+            Parameter param = new Parameter(name, valType);
+
+            String editor = data.get("editor");
+
+            if (editor != null) {
+                JsonObject editorMeta = data.get("editorMeta");
+                param.setEditorType(EditorType.make(editor, editorMeta));
+            }
+
+            Object def = data.get("default");
+            if (def != null) {
+                param.setDefaultValue(ValueUtils.toValue(def));
+            }
+
+            String description = data.get("description");
+            String placeholder = data.get("placeholder");
+
+            if (description != null) {
+                param.setDescription(description);
+            }
+
+            if (placeholder != null) {
+                param.setPlaceHolder(placeholder);
+            }
+
+            if (isCol) {
+                act.addResult(param);
+            } else {
+                act.addParameter(param);
+            }
         }
     }
 
@@ -254,333 +570,26 @@ public class ListResponse extends Response {
         }
     }
 
-    @Override
-    public JsonObject getJsonResponse(JsonObject in) {
-        JsonObject out = new JsonObject();
-        out.put("rid", getRid());
-        out.put("stream", StreamState.OPEN.getJsonName());
-
-        JsonArray updates = new JsonArray();
-        if (node != null) {
-            // Special configurations
-            String profile = node.getProfile();
-            if (profile != null) {
-                JsonArray update = new JsonArray();
-                update.add("$is");
-                update.add(profile);
-                updates.add(update);
-            } else {
-                String err = "Profile not set on node: "
-                        + node.getPath();
-                throw new RuntimeException(err);
-            }
-
-            String name = node.getDisplayName();
-            if (name != null) {
-                JsonArray update = new JsonArray();
-                update.add("$name");
-                update.add(name);
-                updates.add(update);
-            }
-
-            Set<String> interfaces = node.getInterfaces();
-            if (interfaces != null && interfaces.size() > 0) {
-                JsonArray update = new JsonArray();
-                update.add("$interface");
-                update.add(StringUtils.join(interfaces, "|"));
-                updates.add(update);
-            }
-
-            ValueType type = node.getValueType();
-            if (type != null) {
-                JsonArray update = new JsonArray();
-                update.add("$type");
-                update.add(type.toJsonString());
-                updates.add(update);
-            }
-
-            char[] password = node.getPassword();
-            if (password != null) {
-                JsonArray update = new JsonArray();
-                update.add("$$password");
-                update.add(null);
-                updates.add(update);
-            }
-
-            Writable writable = node.getWritable();
-            if (!(writable == null || writable == Writable.NEVER)) {
-                JsonArray update = new JsonArray();
-                update.add("$writable");
-                update.add(writable.toJsonName());
-                updates.add(update);
-            }
-
-            // Action
-            Action action = node.getAction();
-            if (action != null
-                    && action.hasPermission()) {
-                JsonArray update = new JsonArray();
-                update.add("$invokable");
-                update.add(action.getPermission().getJsonName());
-                updates.add(update);
-
-                if (!action.isHidden()) {
-                    update = new JsonArray();
-                    update.add("$params");
-                    update.add(action.getParams());
-                    updates.add(update);
-
-                    update = new JsonArray();
-                    update.add("$columns");
-                    update.add(action.getColumns());
-                    updates.add(update);
-
-                    update = new JsonArray();
-                    update.add("$result");
-                    update.add(action.getResultType().getJsonName());
-                    updates.add(update);
+    private void update(JsonObject in) {
+        String name = in.get("name");
+        String change = in.get("change");
+        if (change != null) {
+            if ("remove".equals(change)) {
+                if (name.startsWith("$$")) {
+                    node.removeRoConfig(name.substring(2));
+                } else if (name.startsWith("$")) {
+                    node.removeConfig(name.substring(1));
+                } else if (name.startsWith("@")) {
+                    node.removeAttribute(name.substring(1));
+                } else {
+                    Node n = node.removeChild(name);
+                    if (n != null) {
+                        updates.put(n, true);
+                    }
                 }
             }
-
-            // Attributes and configurations
-            add("$$", updates, node.getRoConfigurations());
-            add("$", updates, node.getConfigurations());
-            add("@", updates, node.getAttributes());
-
-            // Whether this node "has children"
-            Boolean hasChildren = node.getHasChildren();
-            if (hasChildren != null) {
-                JsonArray update = new JsonArray();
-                update.add("$hasChildren");
-                update.add(hasChildren);
-                updates.add(update);
-            }
-
-            // Whether this node should be be visible to the UI
-            if (node.isHidden()) {
-                JsonArray update = new JsonArray();
-                update.add("$hidden");
-                update.add(true);
-                updates.add(update);
-            }
-
-            // Children
-            Map<String, Node> children = node.getChildren();
-            if (children != null) {
-                for (Node child : children.values()) {
-                    Object update = getChildUpdate(child, false);
-                    updates.add(update);
-                }
-            }
-        }
-        out.put("updates", updates);
-
-        manager.addPathSub(path, this);
-        return out;
-    }
-
-    public void childUpdate(Node child, boolean removed) {
-        if (removed) {
-            manager.removePathSub(child);
-        }
-
-        JsonArray updates = new JsonArray();
-        updates.add(getChildUpdate(child, removed));
-
-        JsonObject resp = new JsonObject();
-        resp.put("rid", getRid());
-        resp.put("stream", StreamState.OPEN.getJsonName());
-        resp.put("updates", updates);
-        link.getWriter().writeResponse(resp);
-    }
-
-    public void metaUpdate(String name, Value value) {
-        JsonArray updates = new JsonArray();
-        if (value != null) {
-            JsonArray update = new JsonArray();
-            update.add(name);
-
-            update.add(value);
-            update.add(value.getTimeStamp());
-
-            updates.add(update);
         } else {
-            JsonObject obj = new JsonObject();
-            obj.put("name", name);
-            obj.put("change", "remove");
-            updates.add(obj);
+            throw new RuntimeException("Unhandled update: " + in);
         }
-
-        JsonObject resp = new JsonObject();
-        resp.put("rid", getRid());
-        resp.put("stream", StreamState.OPEN.getJsonName());
-        resp.put("updates", updates);
-        link.getWriter().writeResponse(resp);
-    }
-
-    @Override
-    public JsonObject getCloseResponse() {
-        manager.removePathSub(node);
-        if (node != null) {
-            NodeListener listener = node.getListener();
-            if (listener != null) {
-                node.getListener().postListClosed();
-            }
-        }
-        JsonObject resp = new JsonObject();
-        resp.put("rid", getRid());
-        resp.put("stream", StreamState.CLOSED.getJsonName());
-        return resp;
-    }
-
-    /**
-     * @param prefix Prefix to use (whether its an attribute or config)
-     * @param out    Updates array
-     * @param values Values to iterate and add to the updates array
-     */
-    private void add(String prefix, JsonArray out, Map<String, Value> values) {
-        if (values == null) {
-            return;
-        }
-        for (Map.Entry<String, Value> entry : values.entrySet()) {
-            JsonArray update = new JsonArray();
-            update.add(prefix + entry.getKey());
-            update.add(entry.getValue());
-            out.add(update);
-        }
-    }
-
-    private Object getChildUpdate(Node child, boolean removed) {
-        if (removed) {
-            JsonObject obj = new JsonObject();
-            obj.put("name", child.getName());
-            obj.put("change", "remove");
-            return obj;
-        }
-
-        JsonArray update = new JsonArray();
-        update.add(child.getName());
-
-        JsonObject childData = new JsonObject();
-        {
-            String profile = child.getProfile();
-            if (profile == null) {
-                String err = "Profile not set on node: "
-                        + child.getPath();
-                throw new RuntimeException(err);
-            }
-            childData.put("$is", profile);
-
-            String displayName = child.getDisplayName();
-            if (displayName != null) {
-                childData.put("$name", displayName);
-            }
-
-            Action action = child.getAction();
-            if (action != null) {
-                String perm = action.getPermission().getJsonName();
-                childData.put("$invokable", perm);
-
-                String jsonName = action.getResultType().getJsonName();
-                childData.put("$result", jsonName);
-            }
-
-            Set<String> interfaces = child.getInterfaces();
-            if (interfaces != null) {
-                String _interface = StringUtils.join(interfaces, "|");
-                childData.put("$interface", _interface);
-            }
-
-            ValueType type = child.getValueType();
-            if (type != null) {
-                childData.put("$type", type.toJsonString());
-            }
-
-            Boolean hasChildren = child.getHasChildren();
-            if (hasChildren != null) {
-                childData.put("$hasChildren", hasChildren);
-            }
-
-            if (child.isHidden()) {
-                childData.put("$hidden", true);
-            }
-        }
-        update.add(childData);
-        return update;
-    }
-
-    private static void iterateActionMetaData(Action act,
-                                              JsonArray array,
-                                              boolean isCol) {
-        for (Object anArray : array) {
-            JsonObject data = (JsonObject) anArray;
-            String name = data.get("name");
-            String type = data.get("type");
-            ValueType valType = ValueType.toValueType(type);
-            Parameter param = new Parameter(name, valType);
-
-            String editor = data.get("editor");
-
-            if (editor != null) {
-                JsonObject editorMeta = data.get("editorMeta");
-                param.setEditorType(EditorType.make(editor, editorMeta));
-            }
-
-            Object def = data.get("default");
-            if (def != null) {
-                param.setDefaultValue(ValueUtils.toValue(def));
-            }
-
-            String description = data.get("description");
-            String placeholder = data.get("placeholder");
-
-            if (description != null) {
-                param.setDescription(description);
-            }
-
-            if (placeholder != null) {
-                param.setPlaceHolder(placeholder);
-            }
-
-            if (isCol) {
-                act.addResult(param);
-            } else {
-                act.addParameter(param);
-            }
-        }
-    }
-
-    private static Action getOrCreateAction(Node node, Permission perm) {
-        Action action = node.getAction();
-        if (action != null) {
-            return action;
-        }
-
-        action = getRawAction(perm);
-        node.setAction(action);
-        return action;
-    }
-
-    private static Action getRawAction(Permission perm) {
-        return new Action(perm, new Handler<ActionResult>() {
-            @Override
-            public void handle(ActionResult event) {
-                throw new UnsupportedOperationException();
-            }
-        });
-    }
-
-    public void multiChildrenUpdate(List<Node> children) {
-        JsonArray updates = new JsonArray();
-
-        for (Node child : children) {
-            updates.add(getChildUpdate(child, false));
-        }
-
-        JsonObject resp = new JsonObject();
-        resp.put("rid", getRid());
-        resp.put("stream", StreamState.OPEN.getJsonName());
-        resp.put("updates", updates);
-        link.getWriter().writeResponse(resp);
     }
 }

@@ -387,15 +387,15 @@ public class Value {
     public String toString() {
         switch (type.toJsonString()) {
             case ValueType.JSON_NUMBER:
-                return number.toString();
+                return String.valueOf(number);
             case ValueType.JSON_BOOL:
-                return bool.toString();
+                return String.valueOf(bool);
             case ValueType.JSON_STRING:
-                return string;
+                return String.valueOf(string);
             case ValueType.JSON_MAP:
-                return map.toString();
+                return String.valueOf(map);
             case ValueType.JSON_ARRAY:
-                return array.toString();
+                return String.valueOf(array);
             case ValueType.JSON_BINARY:
                 return Arrays.toString(binary);
             default:
