@@ -464,6 +464,11 @@ public class SubscriptionManager {
         }
 
         @Override
+        public void retry() {
+            enqueue();
+        }
+
+        @Override
         public void setMessageId(int lastMessageId) {
             lastMid = lastMessageId;
         }

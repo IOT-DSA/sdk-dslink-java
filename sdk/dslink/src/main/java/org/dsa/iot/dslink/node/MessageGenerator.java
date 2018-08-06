@@ -17,6 +17,8 @@ public interface MessageGenerator {
      */
     public JsonObject getMessage(int lastAckId);
 
+    public void retry();
+
     /**
      * If a message was returned from getMessage, this will be it's message id.
      */

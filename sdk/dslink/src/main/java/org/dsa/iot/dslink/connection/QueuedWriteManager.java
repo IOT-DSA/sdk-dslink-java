@@ -108,6 +108,7 @@ public class QueuedWriteManager implements Runnable {
         }
         synchronized (this) {
             if (shouldQueue()) {
+                generator.retry();
                 return;
             }
         }
