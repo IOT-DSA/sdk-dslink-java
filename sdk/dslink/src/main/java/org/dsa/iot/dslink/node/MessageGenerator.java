@@ -17,6 +17,9 @@ public interface MessageGenerator {
      */
     public JsonObject getMessage(int lastAckId);
 
+    /**
+     * The message couldn't be sent, so it should requeue and try again.
+     */
     public void retry();
 
     /**

@@ -100,7 +100,8 @@ public class QueuedWriteManager implements Runnable {
 
     /**
      * For writing messages from a generator.  The generator will only be called upon to
-     * generate the message if there will be no queueing, therefore no merging is needed.
+     * generate the message if there will be no queueing, otherwise it will be told to
+     * retry again.
      */
     public void write(MessageGenerator generator) {
         if (!open) {
