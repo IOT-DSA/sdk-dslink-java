@@ -4,7 +4,7 @@ subprojects {
     apply plugin: 'idea'
     apply plugin: 'maven'
 
-    version = '0.19.4-SNAPSHOT'
+    version = '0.19.5-SNAPSHOT'
     sourceCompatibility = 1.7
     targetCompatibility = 1.7
 
@@ -18,7 +18,7 @@ subprojects {
     }
 
     wrapper {
-        gradleVersion = '4.8.1'
+        gradleVersion = '4.9'
     }
 
     idea {
