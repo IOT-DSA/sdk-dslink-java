@@ -1,17 +1,3 @@
-//apply from: '../build.gradle'
-
 dependencies {
-    compile project(':sdk/dslink')
+    implementation project(':sdk/dslink')
 }
-
-/*uploadArchives {
-    repositories {
-        mavenDeployer {
-            pom.project {
-                name = 'Broker SDK'
-                artifactId = 'broker'
-                description = 'Embeddable DSA broker'
-            }
-        }
-    }
-}*/
