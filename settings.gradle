@@ -1,21 +1,21 @@
 // APIs for developers to use
-include 'sdk/historian'
-include 'sdk/commons'
-include 'sdk/dslink'
-include 'sdk/broker'
+include 'sdk:historian'
+include 'sdk:commons'
+include 'sdk:dslink'
+include 'sdk:broker'
 
 // Internal APIs the SDK depends on
-include 'internal/runtime_shared'
-include 'internal/logging'
+include 'internal:runtime_shared'
+include 'internal:logging'
 
 // Software that is meant to be ran as a standalone
-include 'runtimes/container'
-include 'runtimes/broker'
+include 'runtimes:container'
+include 'runtimes:broker'
 
 // Examples for developers to reference
-include 'examples/requester'
-include 'examples/responder'
-include 'examples/dual'
+include 'examples:requester'
+include 'examples:responder'
+include 'examples:dual'
 
 rootProject.name = 'sdk-dslink-java'
 rootProject.children.each { it ->

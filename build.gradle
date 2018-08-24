@@ -1,10 +1,10 @@
 subprojects {
     apply plugin: 'findbugs'
-    apply plugin: 'java'
+    apply plugin: 'java-library'
     apply plugin: 'idea'
     apply plugin: 'maven'
 
-    version = '0.19.5-SNAPSHOT'
+    version = '0.19.5'
     sourceCompatibility = 1.7
     targetCompatibility = 1.7
 
@@ -17,10 +17,6 @@ subprojects {
         provided
     }
 
-    wrapper {
-        gradleVersion = '4.9'
-    }
-
     idea {
         module {
             scopes.PROVIDED.plus += [ configurations.provided ]
@@ -29,7 +25,7 @@ subprojects {
 
     dependencies {
         provided 'com.google.code.findbugs:annotations:+'
-        testCompile 'junit:junit:[4.12,)'
+        testImplementation 'junit:junit:[4.12,)'
     }
 
     compileJava {
@@ -47,3 +43,8 @@ subprojects {
         }
     }
 }
+
+wrapper {
+    gradleVersion = '4.9'
+}
+

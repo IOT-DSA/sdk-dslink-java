@@ -16,8 +16,8 @@ compileJava {
 
 dependencies {
     provided 'com.google.code.findbugs:annotations:3.0.0'
-    compile 'com.fasterxml.jackson.core:jackson-databind:2.9.5'
-    compile project(':internal/runtime_shared')
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.5'
+    implementation project(':internal:runtime_shared')
 }
 
 jar {

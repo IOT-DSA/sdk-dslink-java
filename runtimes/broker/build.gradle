@@ -4,8 +4,8 @@ mainClassName = 'org.dsa.iot.broker.Main'
 applicationDefaultJvmArgs = [ "-XX:+UseG1GC" ]
 
 dependencies {
-    compile 'org.javassist:javassist:3.20.0-GA'
-    compile project(':sdk/broker')
+    implementation 'org.javassist:javassist:3.20.0-GA'
+    implementation project(':sdk:broker')
 }
 
 run {
