@@ -5,7 +5,7 @@ applicationDefaultJvmArgs = [ "-XX:+UseG1GC" ]
 
 dependencies {
     implementation 'org.javassist:javassist:3.20.0-GA'
-    implementation project(':sdk/broker')
+    implementation project(':sdk:broker')
 }
 
 run {

@@ -1,6 +1,6 @@
 subprojects {
     apply plugin: 'findbugs'
-    apply plugin: 'java'
+    apply plugin: 'java-library'
     apply plugin: 'idea'
     apply plugin: 'maven'
 
@@ -15,10 +15,6 @@ subprojects {
 
     configurations {
         provided
-    }
-
-    wrapper {
-        gradleVersion = '4.9'
     }
 
     idea {
@@ -47,3 +43,8 @@ subprojects {
         }
     }
 }
+
+wrapper {
+    gradleVersion = '4.9'
+}
+
