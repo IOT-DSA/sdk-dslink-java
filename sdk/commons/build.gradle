@@ -1,7 +1,7 @@
 apply from: '../build.gradle'
 
 dependencies {
-    api project(':sdk:dslink')
+    api project(':dslink')
 }
 
 install {
