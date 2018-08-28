@@ -1,3 +1,5 @@
+apply from: '../build.gradle'
+
 dependencies {
-    implementation project(':sdk:dslink')
+    implementation project(':dslink')
 }

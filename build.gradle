@@ -1,7 +1,6 @@
 subprojects {
     apply plugin: 'findbugs'
     apply plugin: 'java-library'
-    apply plugin: 'idea'
     apply plugin: 'maven'
 
     version = '0.19.5'
@@ -13,27 +12,9 @@ subprojects {
         mavenCentral()
     }
 
-    configurations {
-        provided
-    }
-
-    idea {
-        module {
-            scopes.PROVIDED.plus += [ configurations.provided ]
-        }
-    }
-
     dependencies {
-        provided 'com.google.code.findbugs:annotations:+'
+        compileOnly 'com.google.code.findbugs:annotations:[3.0.1,)'
         testImplementation 'junit:junit:[4.12,)'
-    }
-
-    compileJava {
-        sourceSets.main.compileClasspath += configurations.provided
-    }
-
-    tasks.withType(Javadoc) {
-        classpath += configurations.provided
     }
 
     tasks.withType(FindBugs) {
@@ -45,6 +26,6 @@ subprojects {
 }
 
 wrapper {
-    gradleVersion = '4.9'
+    gradleVersion = '4.10'
 }
 

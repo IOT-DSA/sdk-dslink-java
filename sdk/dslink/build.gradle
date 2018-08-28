@@ -1,8 +1,8 @@
 apply from: '../build.gradle'
 
 dependencies {
-    api project(':internal:logging')
-    api project(':internal:runtime_shared')
+    api project(':logging')
+    api project(':runtime_shared')
 }
 
 uploadArchives {
