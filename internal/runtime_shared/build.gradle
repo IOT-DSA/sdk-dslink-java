@@ -1,11 +1,9 @@
-apply from: '../../sdk/build.gradle'
-
 dependencies {
-    api 'com.fasterxml.jackson.core:jackson-core:2.9.6'
-    api 'org.msgpack:jackson-dataformat-msgpack:0.8.16'
-    api 'org.bouncycastle:bcprov-jdk15on:1.60'
+    api 'com.fasterxml.jackson.core:jackson-core:[2.9.6,)'
+    api 'org.msgpack:jackson-dataformat-msgpack:[0.8.16,)'
+    api 'org.bouncycastle:bcprov-jdk15on:[1.60,)'
     api 'io.netty:netty-all:4.1.28.Final'
-    api 'com.beust:jcommander:1.72'
+    api 'com.beust:jcommander:[1.72,)'
 }
 
 install {
