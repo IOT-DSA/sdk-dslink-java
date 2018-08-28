@@ -1,7 +1,6 @@
 subprojects {
     apply plugin: 'findbugs'
     apply plugin: 'java-library'
-    apply plugin: 'idea'
     apply plugin: 'maven'
 
     version = '0.19.5'
