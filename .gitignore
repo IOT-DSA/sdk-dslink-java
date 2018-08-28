@@ -1,8 +1,3 @@
-# Runtime
-subprojects/requester/run
-subprojects/responder/run
-subprojects/dual/run
-
 # Gradle
 .gradle
 build
@@ -10,6 +5,13 @@ build
 # Project files
 *.iml
 .idea
+.classpath
+.metadata
+.project
+.settings
+eclipseBin
+target
+out
 
 # Misc
 .DS_Store
