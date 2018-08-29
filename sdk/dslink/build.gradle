@@ -5,6 +5,16 @@ dependencies {
     api project(':runtime_shared')
 }
 
+install {
+    repositories.mavenInstaller {
+        pom.project {
+            name = 'DSLink SDK'
+            artifactId = 'dslink'
+            description = 'SDK for the IoT DSA protocol'
+        }
+    }
+}
+
 uploadArchives {
     repositories {
         mavenDeployer {

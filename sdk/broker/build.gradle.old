@@ -1,4 +1,4 @@
-apply from: '../build.gradle'
+//apply from: '../build.gradle'
 
 dependencies {
     implementation project(':dslink')

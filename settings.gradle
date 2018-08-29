@@ -1,12 +1,12 @@
-//rootProject.name = 'sdk-dslink-java'
+rootProject.name = 'sdk-dslink-java'
 
 // APIs for developers to use
 include 'dslink'
 project(':dslink').projectDir = file('sdk/dslink')
 include 'commons'
 project(':commons').projectDir = file('sdk/commons')
-include 'broker'
-project(':broker').projectDir = file('sdk/broker')
+//include 'broker'
+//project(':broker').projectDir = file('sdk/broker')
 include 'historian'
 project(':historian').projectDir = file('sdk/historian')
 
@@ -18,10 +18,10 @@ project(':runtime_shared').projectDir = file('internal/runtime_shared')
 
 // Software that is meant to be ran as a standalone
 //include 'broker'
-include 'container'
-project(':container').projectDir = file('runtimes/container')
 //project(':broker').name = 'broker_runtime'
 //project(':broker').projectDir = file('runtimes/broker')
+include 'container'
+project(':container').projectDir = file('runtimes/container')
 
 // Examples for developers to reference
 include 'requester'

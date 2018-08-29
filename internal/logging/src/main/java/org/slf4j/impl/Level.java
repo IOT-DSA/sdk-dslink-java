@@ -4,7 +4,6 @@ package org.slf4j.impl;
  * @author Samuel Grenier
  */
 public class Level {
-
     public static final Level OFF = new Level(0, "OFF");
     public static final Level ERROR = new Level(100, "ERROR");
     public static final Level WARN = new Level(200, "WARN");
