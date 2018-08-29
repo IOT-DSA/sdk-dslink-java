@@ -136,7 +136,7 @@ public final class ValueType {
                 } else if (type.startsWith(JSON_ENUM + "[") && type.endsWith("]")) {
                     type = type.substring(JSON_ENUM.length() + 1);
                     type = type.substring(0, type.length() - 1);
-                    String[] split = type.split(",");
+                    String[] split = StringUtils.split(type, true, ",");
                     return new ValueType(Arrays.asList(split));
                 }
                 return DYNAMIC;

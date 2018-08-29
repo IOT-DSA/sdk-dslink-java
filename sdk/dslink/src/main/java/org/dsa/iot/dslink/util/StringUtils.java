@@ -229,4 +229,20 @@ public class StringUtils {
 
         return builder.toString();
     }
+    
+    public static String[] split(String string, boolean decode, String delimiter) {
+    	if (string == null) {
+            throw new NullPointerException("string");
+        } else if (delimiter == null) {
+            throw new NullPointerException("delimiter");
+        }
+    	
+    	String[] arr = string.split(delimiter);
+    	if (decode) {
+    		for (int i = 0; i < arr.length; i++) {
+    			arr[i] = decodeName(arr[i]);
+    		}
+    	}
+    	return arr;
+    }
 }
