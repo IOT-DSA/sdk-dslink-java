@@ -13,61 +13,56 @@ import com.beust.jcommander.Parameters;
 @Parameters(separators = "= ")
 public class Arguments {
 
-    @Parameter(names = { "--broker", "-b" },
-                description = "Sets the broker host to perform a handshake connection to",
-                arity = 1,
-                required = true)
+    @Parameter(names = {"--broker", "-b"},
+            description = "Sets the broker host to perform a handshake connection to",
+            arity = 1,
+            required = true)
     private String broker;
 
-    @Parameter(names = { "--token", "-t" },
-                description = "Sets the token used when connecting to the broker",
-                arity = 1)
-    private String token;
-
-    @Parameter(names = { "--nodes", "-n" },
-                description = "Sets the path for the serialized nodes",
-                arity = 1)
-    private String nodes;
-
-    @Parameter(names = { "--key", "-k" },
-                description = "Sets the path for the stored key",
-                arity = 1)
-    private String key;
-
-    @Parameter(names = { "--log", "-l"},
-                description = "Sets the log level",
-                arity = 1)
-    private String log;
-
-    @Parameter(names = { "--log-file", "-f" },
-                description = "Sets the output log file",
-                arity = 1)
-    private String logFile;
-
-    @Parameter(names = { "--dslink-json", "-d" },
-                description = "Sets the location of the dslink.json file",
-                arity = 1)
+    @Parameter(names = {"--dslink-json", "-d"},
+            description = "Sets the location of the dslink.json file",
+            arity = 1)
     private String dslinkJson = "dslink.json";
 
-    @Parameter(names = { "--name" },
-                description = "Sets the name of the dslink",
-                arity = 1)
-    private String name;
-
-    @Parameter(names = { "--help", "-h" },
-                description = "Displays the help menu",
-                help = true)
+    @Parameter(names = {"--help", "-h"},
+            description = "Displays the help menu",
+            help = true)
     private boolean help = false;
 
-    /**
-     * Gets the Dslink JSON file location used to initialize
-     * the configurations of the link.
-     *
-     * @return Dslink JSON location.
-     */
-    public String getDslinkJson() {
-        return dslinkJson;
-    }
+    @Parameter(names = {"--key", "-k"},
+            description = "Sets the path for the stored key",
+            arity = 1)
+    private String key;
+
+    @Parameter(names = {"--log", "-l"},
+            description = "Sets the log level",
+            arity = 1)
+    private String log;
+
+    @Parameter(names = {"--log-file", "-f"},
+            description = "Sets the output log file",
+            arity = 1)
+    private String logFile;
+
+    @Parameter(names = {"--maxOpenStreams"},
+            description = "Max concurrent list and actions streams",
+            arity = 1)
+    private int maxOpenStreams;
+
+    @Parameter(names = {"--name"},
+            description = "Sets the name of the dslink",
+            arity = 1)
+    private String name;
+
+    @Parameter(names = {"--nodes", "-n"},
+            description = "Sets the path for the serialized nodes",
+            arity = 1)
+    private String nodes;
+
+    @Parameter(names = {"--token", "-t"},
+            description = "Sets the token used when connecting to the broker",
+            arity = 1)
+    private String token;
 
     /**
      * Overrides the broker host configured in the dslink.json file.
@@ -79,21 +74,13 @@ public class Arguments {
     }
 
     /**
-     * The token used when connecting to the broker.
+     * Gets the Dslink JSON file location used to initialize
+     * the configurations of the link.
      *
-     * @return Token
+     * @return Dslink JSON location.
      */
-    public String getToken() {
-        return token;
-    }
-
-    /**
-     * Overrides the nodes path configured in the dslink.json file.
-     *
-     * @return Nodes path.
-     */
-    public String getNodesPath() {
-        return nodes;
+    public String getDslinkJson() {
+        return dslinkJson;
     }
 
     /**
@@ -124,6 +111,15 @@ public class Arguments {
     }
 
     /**
+     * Overrides the maxOpenStreams configured in the dslink.json file.
+     *
+     * @return Name of the DSLink.
+     */
+    public int getMaxOpenStreams() {
+        return maxOpenStreams;
+    }
+
+    /**
      * Overrides the name configured in the dslink.json file.
      *
      * @return Name of the DSLink.
@@ -133,7 +129,26 @@ public class Arguments {
     }
 
     /**
+     * Overrides the nodes path configured in the dslink.json file.
+     *
+     * @return Nodes path.
+     */
+    public String getNodesPath() {
+        return nodes;
+    }
+
+    /**
+     * The token used when connecting to the broker.
+     *
+     * @return Token
+     */
+    public String getToken() {
+        return token;
+    }
+
+    /**
      * Parses the arguments.
+     *
      * @param args Arguments to parse
      * @return Populated arguments array
      */

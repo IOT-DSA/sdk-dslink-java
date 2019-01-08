@@ -1,19 +1,24 @@
 package org.dsa.iot.dslink.link;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.DSLinkHandler;
 import org.dsa.iot.dslink.methods.Response;
 import org.dsa.iot.dslink.methods.StreamState;
-import org.dsa.iot.dslink.methods.responses.*;
+import org.dsa.iot.dslink.methods.responses.CloseResponse;
+import org.dsa.iot.dslink.methods.responses.InvokeResponse;
+import org.dsa.iot.dslink.methods.responses.ListResponse;
+import org.dsa.iot.dslink.methods.responses.RemoveResponse;
+import org.dsa.iot.dslink.methods.responses.SetResponse;
+import org.dsa.iot.dslink.methods.responses.SubscribeResponse;
+import org.dsa.iot.dslink.methods.responses.UnsubscribeResponse;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeManager;
 import org.dsa.iot.dslink.node.NodePair;
 import org.dsa.iot.dslink.node.SubscriptionManager;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.util.json.JsonObject;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Handles incoming requests and outgoing responses.
@@ -23,9 +28,11 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Responder extends Linkable {
 
     private final Map<Integer, Response> resps = new ConcurrentHashMap<>();
+    private int maxStreams = 0;
 
     public Responder(DSLinkHandler handler) {
         super(handler);
+        maxStreams = handler.getConfig().getMaxOpenStreams();
     }
 
     @Override
@@ -38,15 +45,6 @@ public class Responder extends Linkable {
             return;
         }
         sm.batchValueUpdate(updates, true);
-    }
-
-    /**
-     * Forcibly removes a response from the cache.
-     *
-     * @param rid ID to remove.
-     */
-    public void removeResponse(int rid) {
-        resps.remove(rid);
     }
 
     /**
@@ -66,12 +64,15 @@ public class Responder extends Linkable {
 
         DSLink link = getDSLink();
         NodeManager nodeManager = link.getNodeManager();
-        Response response;
+        Response response = null;
         switch (method) {
             case "list": {
                 String path = in.get("path");
                 if (path == null) {
                     throw new NullPointerException("path");
+                }
+                if ((maxStreams > 0) && (resps.size() >= maxStreams)) {
+                    throw new IllegalStateException("Too many open streams");
                 }
                 Node node = nodeManager.getNode(path, false, false).getNode();
                 if (node != null) {
@@ -102,6 +103,9 @@ public class Responder extends Linkable {
                 if (path == null) {
                     throw new NullPointerException("path");
                 }
+                if ((maxStreams > 0) && (resps.size() >= maxStreams)) {
+                    throw new IllegalStateException("Too many open streams");
+                }
                 response = new InvokeResponse(link, rid, path);
                 break;
             }
@@ -128,5 +132,14 @@ public class Responder extends Linkable {
             resps.put(rid, response);
         }
         return resp;
+    }
+
+    /**
+     * Forcibly removes a response from the cache.
+     *
+     * @param rid ID to remove.
+     */
+    public void removeResponse(int rid) {
+        resps.remove(rid);
     }
 }

@@ -3,7 +3,7 @@ subprojects {
     apply plugin: 'java-library'
     apply plugin: 'maven'
 
-    version = '0.20.2'
+    version = '0.21.0a1'
     sourceCompatibility = 1.7
     targetCompatibility = 1.7
 
