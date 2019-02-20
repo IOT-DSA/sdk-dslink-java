@@ -20,6 +20,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public class SubscriptionPool {
 
+    private static final int QOS = 1;
     private final Map<String, SubHandler> subscriptions = new HashMap<>();
     private final Requester requester;
 
@@ -33,7 +34,7 @@ public class SubscriptionPool {
             handler = new SubHandler();
             subscriptions.put(path, handler);
             handler.addWatch(watch);
-            requester.subscribe(new SubData(path, 1), handler);
+            requester.subscribe(new SubData(path, QOS), handler);
         } else {
             handler.addWatch(watch);
         }
@@ -46,7 +47,7 @@ public class SubscriptionPool {
             if (handler.isEmpty()) {
                 String getHistoryActionAliasPath = path + "/@@getHistory";
 
-                requester.unsubscribe(path, null);
+                requester.unsubscribe(path, handler, null);
                 requester.remove(new RemoveRequest(getHistoryActionAliasPath), null);
                 subscriptions.remove(path);
             }
