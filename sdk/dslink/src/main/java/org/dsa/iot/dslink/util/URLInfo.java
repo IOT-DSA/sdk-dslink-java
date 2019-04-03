@@ -90,6 +90,9 @@ public class URLInfo {
      * @return An information object about a URL.
      */
     public static URLInfo parse(String url, Boolean secureOverride) {
+        if (!url.contains("://")) {
+            throw new RuntimeException("Invalid URL");
+        }
         URI uri;
         try {
             uri = new URI(url);
@@ -101,6 +104,9 @@ public class URLInfo {
         int port = uri.getPort();
         String path = uri.getPath();
         String query = uri.getQuery();
+        if ((path == null) || path.isEmpty()) {
+            path = "/";
+        }
         if ((query != null) && !query.isEmpty()) {
             path = path + '?' + query;
         }

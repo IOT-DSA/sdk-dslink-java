@@ -1,5 +1,6 @@
 package org.dsa.iot.dslink.link;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -11,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.DSLinkHandler;
@@ -50,38 +52,31 @@ import org.dsa.iot.dslink.util.json.JsonObject;
  */
 public class Requester extends Linkable {
 
-    private final Map<Integer, RequestWrapper> reqs;
-
     /**
      * Current request ID to send to the client
      */
     private final AtomicInteger currentReqID = new AtomicInteger();
-
     /**
      * Current subscription ID to send to the client
      */
     private final AtomicInteger currentSubID = new AtomicInteger();
-
-    /**
-     * Mapping of path->sid
-     */
-    private final Map<String, Integer> subPaths = new ConcurrentHashMap<>();
-
-    /**
-     * Mapping of sid->path
-     */
-    private final Map<Integer, String> subSids = new ConcurrentHashMap<>();
-
-    /**
-     * Mapping of sid->handler
-     */
-    private final Map<Integer, Handler<SubscriptionValue>> subUpdates = new ConcurrentHashMap<>();
-
     /**
      * Mapping of rid->response
      */
     private final Map<Integer, InvokeResponse> invokeResponses = new HashMap<>();
-
+    private final Map<Integer, RequestWrapper> reqs;
+    /**
+     * Mapping of path->sid
+     */
+    private final Map<String, Integer> subPaths = new ConcurrentHashMap<>();
+    /**
+     * Mapping of sid->path
+     */
+    private final Map<Integer, String> subSids = new ConcurrentHashMap<>();
+    /**
+     * Mapping of sid->handler
+     */
+    private final Map<Integer, Handler<SubscriptionValue>> subUpdates = new ConcurrentHashMap<>();
     private SubscriptionHelper subscriptionHelper;
 
     /**
@@ -156,7 +151,7 @@ public class Requester extends Linkable {
      * @deprecated - Requester now supports multiple subscriptions to the same path.
      */
     @SuppressWarnings("unused")
-    public synchronized SubscriptionHelper getSubscriptionHelper() {
+    public SubscriptionHelper getSubscriptionHelper() {
         if (subscriptionHelper == null) {
             subscriptionHelper = new SubscriptionHelper(this);
         }
@@ -403,7 +398,7 @@ public class Requester extends Linkable {
         while (it.hasNext()) {
             try {
                 SubData data = it.next();
-                synchronized (subUpdates) {
+                synchronized (this) {
                     String path = data.getPath();
                     subId = subPaths.get(path);
                     if (subId != null) {
@@ -487,7 +482,7 @@ public class Requester extends Linkable {
             path = NodeManager.normalizePath(path, true);
             Integer sid = subPaths.get(path);
             if (sid != null) {
-                synchronized (subUpdates) {
+                synchronized (this) {
                     HandlerAdapter adapter = (HandlerAdapter) subUpdates.get(sid);
                     adapter.remove(onUpdate);
                     if (adapter.size() <= 0) {
@@ -564,7 +559,7 @@ public class Requester extends Linkable {
     private static class HandlerAdapter implements Handler<SubscriptionValue> {
 
         Sub first;
-        ArrayList<Sub> list = null;
+        ConcurrentLinkedQueue<Sub> list = null;
         int qos = 0;
         int size;
 
@@ -573,10 +568,11 @@ public class Requester extends Linkable {
             if (q != null) {
                 qos = q;
             }
-            first = new Sub(this, handler, qos);
+            first = new Sub(handler, qos);
             size = 1;
         }
 
+        @SuppressFBWarnings
         @Override
         public void handle(SubscriptionValue event) {
             Sub sub = first;
@@ -584,16 +580,11 @@ public class Requester extends Linkable {
                 sub.handle(event);
                 return;
             }
-            synchronized (this) {
-                for (Sub s : list) {
-                    s.handle(event);
-                }
+            for (Sub s : list) {
+                s.handle(event);
             }
         }
 
-        /**
-         * Returns true if the addition requires a subscribe message to be resent.
-         */
         synchronized void add(SubData data, Handler<SubscriptionValue> handler) {
             Integer q = data.getQos();
             if (q == null) {
@@ -611,10 +602,10 @@ public class Requester extends Linkable {
                 }
             }
             if (list == null) {
-                list = new ArrayList<>();
+                list = new ConcurrentLinkedQueue<>();
                 list.add(first);
                 first = null;
-                list.add(new Sub(this, handler, q));
+                list.add(new Sub(handler, q));
                 size++;
                 return;
             }
@@ -627,7 +618,7 @@ public class Requester extends Linkable {
                 }
             }
             size++;
-            list.add(new Sub(this, handler, q));
+            list.add(new Sub(handler, q));
         }
 
         int qos() {
@@ -640,11 +631,10 @@ public class Requester extends Linkable {
                     first = null;
                 }
             } else {
-                Sub tmp;
-                for (int i = 0, len = list.size(); i < len; i++) {
-                    tmp = list.get(i);
-                    if (tmp.isSameHandler(handler)) {
-                        list.remove(i);
+                for (Iterator<Sub> it = list.iterator(); it.hasNext(); ) {
+                    Sub s = it.next();
+                    if (s.isSameHandler(handler)) {
+                        it.remove();
                         updateQos();
                         break;
                     }
@@ -679,11 +669,10 @@ public class Requester extends Linkable {
 
     private static class RequestWrapper {
 
-        private final Request request;
-
         private Handler<InvokeResponse> invokeHandler;
         private Handler<ListResponse> listHandler;
         private Handler<RemoveResponse> removeHandler;
+        private final Request request;
         private Handler<SetResponse> setHandler;
         private Handler<UnsubscribeResponse> unsubHandler;
 
@@ -702,12 +691,10 @@ public class Requester extends Linkable {
 
     private static class Sub {
 
-        HandlerAdapter adapter;
         Handler<SubscriptionValue> handler;
         int qos;
 
-        Sub(HandlerAdapter adapter, Handler<SubscriptionValue> handler, int qos) {
-            this.adapter = adapter;
+        Sub(Handler<SubscriptionValue> handler, int qos) {
             this.handler = handler;
             this.qos = qos;
         }
