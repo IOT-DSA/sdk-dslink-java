@@ -1,5 +1,7 @@
 package org.dsa.iot.dslink.util;
 
+import java.net.URI;
+
 /**
  * URL information parsed from a string.
  *
@@ -24,7 +26,7 @@ public class URLInfo {
      * @param secure   Whether the URL connects over a secure channel or not
      */
     public URLInfo(String protocol, String host,
-                    int port, String path, boolean secure) {
+                   int port, String path, boolean secure) {
         this.protocol = protocol;
         this.host = host;
         this.port = port;
@@ -33,13 +35,33 @@ public class URLInfo {
     }
 
     /**
-     * This is effective only if {@link #secure} is {@code true}. When
-     * an outgoing connection is being made, it must obey this property.
+     * Gets the default port of a specified protocol URI scheme.
      *
-     * @param trust Whether to trust all certificates or not.
+     * @param scheme Scheme to get the default port of.
+     * @return Default port of the scheme, or -1 if unsupported.
      */
-    public void setTrustAllCertificates(boolean trust) {
-        this.trustAllCertificates = trust;
+    public static int getDefaultPort(String scheme) {
+        if (scheme == null) {
+            throw new NullPointerException("scheme");
+        }
+        if ("ws".equals(scheme) || "http".equals(scheme)) {
+            return 80;
+        } else if ("wss".equals(scheme) || "https".equals(scheme)) {
+            return 443;
+        }
+        return -1;
+    }
+
+    /**
+     * @param scheme Scheme to test
+     * @return Whether the scheme/protocol is supposed to be over SSL or not by
+     * default.
+     */
+    public static boolean getDefaultProtocolSecurity(String scheme) {
+        if (scheme == null) {
+            throw new NullPointerException("scheme");
+        }
+        return "wss".equals(scheme) || "https".equals(scheme);
     }
 
     /**
@@ -68,72 +90,49 @@ public class URLInfo {
      * @return An information object about a URL.
      */
     public static URLInfo parse(String url, Boolean secureOverride) {
-        String[] parts = url.split("://");
-        if (!url.contains("://") || parts.length > 2)
+        if (!url.contains("://")) {
             throw new RuntimeException("Invalid URL");
-
-        String protocol = parts[0];
-        boolean secure;
-        if (secureOverride != null)
-            secure = secureOverride;
-        else
-            secure = getDefaultProtocolSecurity(protocol);
-
-        String host = parts[1];
-        String path = "/";
-        int port = -1;
-
-        if (host.contains(":")) {
-            int index = host.indexOf(':');
-            host = host.substring(0, index);
-
-            // Secondary can contain port and path
-            String secondary = parts[1].substring(index + 1);
-            if (secondary.contains("/")) {
-                index = secondary.indexOf('/');
-                port = Integer.parseInt(secondary.substring(0, index));
-                path = secondary.substring(index);
-            } else {
-                port = Integer.parseInt(secondary);
-            }
-        } else if (host.contains("/")) {
-            int index = host.indexOf('/');
-            String tmp = host.substring(0, index);
-            path = host.substring(index);
-            host = tmp;
-            if (path.isEmpty())
-                path = "/";
         }
-
-        if (port == -1)
+        URI uri;
+        try {
+            uri = new URI(url);
+        } catch (Exception x) {
+            throw new RuntimeException(x);
+        }
+        String protocol = uri.getScheme();
+        String host = uri.getHost();
+        int port = uri.getPort();
+        String path = uri.getPath();
+        String query = uri.getQuery();
+        if ((path == null) || path.isEmpty()) {
+            path = "/";
+        }
+        if ((query != null) && !query.isEmpty()) {
+            path = path + '?' + query;
+        }
+        String frag = uri.getQuery();
+        if ((frag != null) && !frag.isEmpty()) {
+            path = path + '#' + frag;
+        }
+        boolean secure;
+        if (secureOverride != null) {
+            secure = secureOverride;
+        } else {
+            secure = getDefaultProtocolSecurity(protocol);
+        }
+        if (port == -1) {
             port = getDefaultPort(protocol);
+        }
         return new URLInfo(protocol, host, port, path, secure);
     }
 
     /**
-     * @param scheme Scheme to test
-     * @return Whether the scheme/protocol is supposed to be over SSL or not by
-     * default.
-     */
-    public static boolean getDefaultProtocolSecurity(String scheme) {
-        if (scheme == null)
-            throw new NullPointerException("scheme");
-        return "wss".equals(scheme) || "https".equals(scheme);
-    }
-
-    /**
-     * Gets the default port of a specified protocol URI scheme.
+     * This is effective only if {@link #secure} is {@code true}. When
+     * an outgoing connection is being made, it must obey this property.
      *
-     * @param scheme Scheme to get the default port of.
-     * @return Default port of the scheme, or -1 if unsupported.
+     * @param trust Whether to trust all certificates or not.
      */
-    public static int getDefaultPort(String scheme) {
-        if (scheme == null)
-            throw new NullPointerException("scheme");
-        if ("ws".equals(scheme) || "http".equals(scheme))
-            return 80;
-        else if ("wss".equals(scheme) || "https".equals(scheme))
-            return 443;
-        return -1;
+    public void setTrustAllCertificates(boolean trust) {
+        this.trustAllCertificates = trust;
     }
 }
