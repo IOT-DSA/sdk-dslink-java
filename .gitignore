@@ -20,3 +20,4 @@ out
 .key
 nodes.json
 nodes.json.bak
+/gradle.properties
