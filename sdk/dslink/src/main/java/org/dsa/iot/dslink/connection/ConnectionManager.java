@@ -91,6 +91,7 @@ public class ConnectionManager {
                 switch (type) {
                     case WEB_SOCKET:
                         WebSocketConnector connector = new WebSocketConnector();
+                        connector.setUseCompression(configuration.getConfig("ws_compression", true));
                         connector.setEndpoint(configuration.getAuthEndpoint());
                         connector.setRemoteHandshake(remoteHandshake);
                         connector.setLocalHandshake(localHandshake);

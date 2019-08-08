@@ -27,13 +27,16 @@ public class WebSocketConnector extends RemoteEndpoint {
     private ScheduledFuture<?> pingHandler;
     private NetworkClient writer;
     private long lastSentMessage;
+    private boolean useCompression = true;
 
     @Override
     public void start() {
         URLInfo endpoint = getEndpoint();
         endpoint = new URLInfo(endpoint.protocol, endpoint.host,
                             endpoint.port, getUri(), endpoint.secure);
-        WsProvider.getProvider().connect(new WsHandler(endpoint));
+        WsProvider provider = WsProvider.getProvider();
+        provider.setUseCompression(useCompression);
+        provider.connect(new WsHandler(endpoint));
     }
 
     @Override
@@ -101,6 +104,10 @@ public class WebSocketConnector extends RemoteEndpoint {
                 }
             }
         }, 0, 30, TimeUnit.SECONDS);
+    }
+
+    public void setUseCompression(boolean use) {
+        this.useCompression = use;
     }
 
     private void checkConnected() {
