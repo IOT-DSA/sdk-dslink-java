@@ -99,4 +99,11 @@ public class StringUtilsTest {
             assertEquals("1|2|3", StringUtils.join(strings, "|"));
         }
     }
+
+    @Test
+    public void camelCaseToDisplay() {
+        assertEquals("Hello World", StringUtils.camelCaseToDisplay("helloWorld"));
+        assertEquals("Hello World", StringUtils.camelCaseToDisplay("HelloWorld"));
+        assertEquals("Hello WWorld", StringUtils.camelCaseToDisplay("HelloWWorld"));
+    }
 }

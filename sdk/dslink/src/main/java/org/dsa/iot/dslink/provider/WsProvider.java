@@ -9,12 +9,19 @@ import org.dsa.iot.dslink.util.http.WsClient;
 public abstract class WsProvider {
 
     private static WsProvider PROVIDER;
+    private boolean useCompression = true;
+
+    public abstract void connect(WsClient client);
 
     public static WsProvider getProvider() {
         if (PROVIDER == null) {
             setProvider(new DefaultWsProvider());
         }
         return PROVIDER;
+    }
+
+    public boolean getUseCompression() {
+        return useCompression;
     }
 
     public static void setProvider(WsProvider provider) {
@@ -24,6 +31,8 @@ public abstract class WsProvider {
         PROVIDER = provider;
     }
 
-    public abstract void connect(WsClient client);
+    public void setUseCompression(boolean useCompression) {
+        this.useCompression = useCompression;
+    }
 
 }

@@ -75,7 +75,9 @@ public class DefaultWsProvider extends WsProvider {
                 p.addLast(new HttpObjectAggregator(8192));
                 WebSocketClientExtensionHandshaker com
                         = new PerMessageDeflateClientExtensionHandshaker();
-                p.addLast(new WebSocketClientExtensionHandler(com));
+                if (getUseCompression()) {
+                    p.addLast(new WebSocketClientExtensionHandler(com));
+                }
                 p.addLast(handler);
             }
         });
