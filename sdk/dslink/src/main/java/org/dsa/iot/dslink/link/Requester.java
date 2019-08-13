@@ -41,6 +41,7 @@ import org.dsa.iot.dslink.node.NodePair;
 import org.dsa.iot.dslink.node.SubscriptionManager;
 import org.dsa.iot.dslink.node.value.SubscriptionValue;
 import org.dsa.iot.dslink.node.value.Value;
+import org.dsa.iot.dslink.util.StringUtils;
 import org.dsa.iot.dslink.util.SubData;
 import org.dsa.iot.dslink.util.handler.Handler;
 import org.dsa.iot.dslink.util.json.JsonObject;
@@ -233,6 +234,18 @@ public class Requester extends Linkable {
             if (e != null) {
                 String msg = e.get("msg");
                 String detail = e.get("detail");
+                String type = e.get("type");
+                if (msg == null) {
+                    if (type != null) {
+                        msg = StringUtils.camelCaseToDisplay(type);
+                    }
+                } else if (detail == null) {
+                    if (type != null) {
+                        detail = type;
+                    } else {
+                        detail = e.toString();
+                    }
+                }
                 error = new ErrorResponse(msg, detail);
             } else {
                 error = null;

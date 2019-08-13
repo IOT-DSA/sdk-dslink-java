@@ -245,4 +245,27 @@ public class StringUtils {
     	}
     	return arr;
     }
+
+    public static String camelCaseToDisplay(String camelCase) {
+        StringBuilder buf = new StringBuilder();
+        char ch;
+        boolean lastUpper = false;
+        for (int i = 0, len = camelCase.length(); i < len; i++) {
+            ch = camelCase.charAt(i);
+            if (i == 0) {
+                ch = Character.toUpperCase(ch);
+                lastUpper = true;
+            } else if (Character.isUpperCase(ch)) {
+                if (!lastUpper) {
+                    lastUpper = true;
+                    buf.append(' ');
+                }
+            } else {
+                lastUpper = false;
+            }
+            buf.append(ch);
+        }
+        return buf.toString();
+    }
+
 }
