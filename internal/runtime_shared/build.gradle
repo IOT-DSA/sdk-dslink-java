@@ -1,30 +1,10 @@
-apply from: '../build.gradle'
+apply from: '../../bintray.gradle'
+
+description = 'Shared Runtime for the SDK'
 
 dependencies {
     api 'org.bouncycastle:bcprov-jdk15on:1.62'
     api 'io.netty:netty-all:4.1.38.Final'
     api 'com.beust:jcommander:1.72'
     api 'org.msgpack:jackson-dataformat-msgpack:0.8.17'
-}
-
-install {
-    repositories.mavenInstaller {
-        pom.project {
-            name = 'DSLink Shared Runtime'
-            artifactId = 'runtime_shared'
-            description = 'Shared Runtime for the SDK'
-        }
-    }
-}
-
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            pom.project {
-                name = 'DSLink Shared Runtime'
-                artifactId = 'runtime_shared'
-                description = 'Shared Runtime for the SDK'
-            }
-        }
-    }
 }

@@ -1,27 +1,7 @@
-apply from: '../build.gradle'
+apply from: '../../bintray.gradle'
+
+description = 'SDK for creating Historian DSLinks'
 
 dependencies {
     api project(':dslink')
-}
-
-install {
-    repositories.mavenInstaller {
-        pom.project {
-            name = 'Historian SDK'
-            artifactId = 'historian'
-            description = 'SDK for creating Historian DSLinks'
-        }
-    }
-}
-
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            pom.project {
-                name = 'Historian SDK'
-                artifactId = 'historian'
-                description = 'SDK for creating Historian DSLinks'
-            }
-        }
-    }
 }

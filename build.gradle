@@ -1,3 +1,7 @@
+plugins {
+    id 'com.jfrog.bintray' version '1.8.4' apply false
+}
+
 subprojects {
     apply plugin: 'findbugs'
     apply plugin: 'java-library'
@@ -9,7 +13,7 @@ subprojects {
 
     repositories {
         mavenLocal()
-        mavenCentral()
+        jcenter()
     }
 
     dependencies {
