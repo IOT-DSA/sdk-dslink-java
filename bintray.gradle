@@ -1,6 +1,8 @@
 apply plugin: 'com.jfrog.bintray'
 apply plugin: 'maven-publish'
 
+group = 'org.iot-dsa'
+
 ext {
     if (!project.hasProperty("bintrayApiKey"))
         bintrayApiKey = ""
