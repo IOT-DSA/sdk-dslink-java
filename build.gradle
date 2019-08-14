@@ -1,15 +1,19 @@
+plugins {
+    id 'com.jfrog.bintray' version '1.8.4' apply false
+}
+
 subprojects {
     apply plugin: 'findbugs'
     apply plugin: 'java-library'
     apply plugin: 'maven'
 
-    version = '0.22.0'
+    version = '0.22.1-SNAPSHOT'
     sourceCompatibility = 1.7
     targetCompatibility = 1.7
 
     repositories {
         mavenLocal()
-        mavenCentral()
+        jcenter()
     }
 
     dependencies {

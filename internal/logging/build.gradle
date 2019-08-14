@@ -1,27 +1,7 @@
-apply from: '../build.gradle'
+apply from: '../../bintray.gradle'
+
+description = 'Lightweight SL4J binding'
 
 dependencies {
     api 'org.slf4j:slf4j-api:1.7.25'
-}
-
-install {
-    repositories.mavenInstaller {
-        pom.project {
-            name = 'DSLink Logging'
-            artifactId = 'logging'
-            description = 'Lightweight SLF4J binding'
-        }
-    }
-}
-
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            pom.project {
-                name = 'DSLink Logging'
-                artifactId = 'logging'
-                description = 'Lightweight SLF4J binding'
-            }
-        }
-    }
 }

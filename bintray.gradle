@@ -1,0 +1,122 @@
+apply plugin: 'com.jfrog.bintray'
+apply plugin: 'maven-publish'
+
+group = 'org.iot-dsa'
+
+ext {
+    if (!project.hasProperty("bintrayApiKey"))
+        bintrayApiKey = ""
+    if (!project.hasProperty("bintrayUser"))
+        bintrayUser = ""
+    if (!project.hasProperty("ossrhUser"))
+        ossrhUser = ""
+    if (!project.hasProperty("ossrhPass"))
+        ossrhPass = ""
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allJava
+}
+
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+// Jcenter
+// -------
+
+def myOrg = 'iot-dsa'
+def myRepo = 'sdk-dslink-java'
+def myPackage = 'sdk-dslink-java'
+def developerId = 'samrg472'
+def developerName = 'Samuel Grenier'
+def developerOrgUrl = 'http://www.iot-dsa.org'
+def developerEmail = 'support@atrius-iot.com'
+def licenseName = 'Apache-2.0'
+def licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+
+def myGithubRepo = myOrg + '/' + myRepo
+def myProjectUrl = 'https://github.com/' + myGithubRepo
+def myVcsUrl = myProjectUrl
+def myScmUrl = 'scm:' + myProjectUrl + '.git'
+def myIssuesUrl = myProjectUrl + '/issues'
+
+bintray {
+    user = bintrayUser
+    key = bintrayApiKey
+    publications = ['MyPublication']
+    dryRun = false
+    publish = true
+    override = true
+    pkg {
+        repo = myRepo
+        name = myPackage
+        userOrg = myOrg
+        licenses = [licenseName]
+        desc = project.description
+        vcsUrl = myVcsUrl
+        websiteUrl = myProjectUrl
+        issueTrackerUrl = myIssuesUrl
+        githubRepo = myGithubRepo
+        githubReleaseNotesFile = 'README.md'
+        version {
+            name = project.version
+            desc = project.description
+            released = new Date()
+            vcsTag = project.version
+            gpg {
+                sign = true
+            }
+            mavenCentralSync {
+                sync = true
+                user = ossrhUser
+                password = ossrhPass
+            }
+        }
+    }
+    publications = ['MyPublication']
+}
+
+// Create the pom configuration:
+def pomConfig = {
+    licenses {
+        license {
+            name licenseName
+            url licenseUrl
+            distribution 'repo'
+        }
+    }
+    developers {
+        developer {
+            id developerId
+            name developerName
+            email developerEmail
+            organization myOrg
+            organizationUrl developerOrgUrl
+        }
+    }
+    scm {
+        url myScmUrl
+    }
+}
+
+// Create the publication with the pom configuration:
+publishing.publications {
+    MyPublication(MavenPublication) {
+        from components.java
+        artifact sourcesJar
+        artifact javadocJar
+        groupId project.group
+        artifactId project.name
+        version project.version
+        pom.withXml {
+            def root = asNode()
+            root.appendNode('description', project.description)
+            root.appendNode('name', project.name)
+            root.appendNode('url', myProjectUrl)
+            root.children().last() + pomConfig
+        }
+    }
+}

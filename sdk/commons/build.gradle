@@ -1,27 +1,7 @@
-apply from: '../build.gradle'
+apply from: '../../bintray.gradle'
+
+description = 'Commons API to assist with developing DSLinks'
 
 dependencies {
     api project(':dslink')
-}
-
-install {
-    repositories.mavenInstaller {
-        pom.project {
-            name = 'DSLink Commons'
-            artifactId = 'commons'
-            description = 'Commons API to assist with developing DSLinks'
-        }
-    }
-}
-
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            pom.project {
-                name = 'DSLink Commons'
-                artifactId = 'commons'
-                description = 'Commons API to assist with developing DSLinks'
-            }
-        }
-    }
 }
