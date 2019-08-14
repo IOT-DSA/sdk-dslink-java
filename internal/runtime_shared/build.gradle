@@ -7,4 +7,7 @@ dependencies {
     api 'io.netty:netty-all:4.1.38.Final'
     api 'com.beust:jcommander:1.72'
     api 'org.msgpack:jackson-dataformat-msgpack:0.8.17'
+    //the following overrides the dependency in jackson-dataformat-msgpack
+    //and can be removed once msgpack catches up to 2.9.9.3
+    api 'com.fasterxml.jackson.core:jackson-databind:2.9.9.3'
 }
