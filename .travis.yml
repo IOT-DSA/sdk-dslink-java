@@ -3,12 +3,10 @@ jdk: openjdk8
 sudo: false
 env:
   global:
-  - LOC=secring.gpg
-  - secure: uMTg2AkQPDdP9ysoQqggMb54+TxHllJso6/xT9ns1GF55py4c5EwC9Vt4cmHKav3CDQmqztqQP9Baa8uJrHDjTH0KtsTTe8Hzv7YM7Ai+KzKR+eS40LTH/LB5Q7lj2pPwBqjhRfE2Zcnch5D3/qvbg39d6AELHgwczicfYyoZvc=
-  - secure: GASJrZV9yjUScysqTm+W3XK5hUOtX1fW7caXqh5Xjwl/bCJYnOdGkKRpQkql7VOEfmG7zFkg3qN/PvUUt6GkmnS5BOmb4fin4AXJQHtMAF9Lel4Tmp3NGIUMtFcIEKMm6UKRv7+LMI2dVMscWaL9YKpaMmp6F+yAjlmuPA93jlk=
-  - secure: IcJhZIgMgF/0SNZgE56xMVocntA57RTRiH9YrReu/9FeEyIlHk2si1/bLPgV6ns/oQi7pal34TCjY6Yrs9VqKC6j93rRIouIvTg0/mxV0QHytWXicxbaB8kAmTBjHmePFNlqAl0FpkcHJQ7O5cjy4gvVxxzin2jZP7Gvtw0PbeY=
-  - secure: HedklAPTdQAEhwsLhCwGco62/1Hq00nYgB+0MZYaVEb9KVdKxgZUswNidtzXVLha9TTOe3ewTmVjsd+Hs0wyyq6TZh8TUKlVPrJc1wd4wkurCK8JZjqUxBV2EydYmGM7j/CHpci1rcGv3QNQRwf2ZwfAoW5YPObJqqZvwk3GYgg=
-  - secure: g+rMdXQTBwVb5S58Mj2uKbhwLE1N+Rc/3qGIEzfLY8V5Jj2beak8uNH+m/7dmRPBYLaL6QP5ndt6cY47w3lcXWGa00xeve12BHk9i5dvzx4hDZ18PoWGA5iB/U1Aj4I8USrASliyb2dqHtQg0V2nixgHuNdlJiwDgRNROHAdsQg=
+  - secure: "broqXw5X7BrQ86HTpPNi119PYyG7PaHNnpjcUJsemcsaYFkJc1Tt7s9KF/hIq+AQqV300V2mDnXiIXnQEO+gU7Iexs88ZFPXESOfx8wFC0IFz+Lfp73PQrhKWZMXf27KPVatF5IXhswaZo/k1LYeVpnk0nikQW2FU6yBaYO1TM0="
+  - secure: "KjrmAJP5fc5RUUY9ntz8VxrfzmUwBOJFbkj+UM/aGJ+Rqkvlbm4/97j9Ujgzxl7QZXxnjDqd79WLgrJnCiZJfJosCyVtUDOrD0L9iy/C5NDiDciOdKD7180d5rxFCKCoXNUKKD0OusOxmcfAggZkdMsuGjAzS7LiEWPtZGHEu+k="
+  - secure: "T9cF53iyzWcdxTaDrqbGdYCKcx220CefsgpvuTzpCHKeirrCeIqhi1gBecJdtmyY5Si+odRRXOcnVwogenBLCuglfQPOlWSlu1tnLgGu5GwuNlHjQYBfLQfwi+CVnKPWYGK6N/Cgo4op2GJyISDkLhQB3ik0F1x99H2NWR8OM9w="
+  - secure: "KcysTDLW6AYfwJBVj/bnr5s/52aP3e6veU8UZG7C6zUoJTQ/SFoVKpzL8hYAbDmj92ueRXq8WwZ0/LgpyJiCJgaR/JiT+C9Pv0JDAQuDk653oaHygqKk7B5XyakzwSszeYKiI+T1RRaupVzgFqvcocfPNX9KHv3q95r64sDP+48="
 install: /bin/true
 script:
   - export BRANCH_NAME=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)

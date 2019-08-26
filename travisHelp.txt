@@ -1,0 +1,10 @@
+https://medium.com/@JoshuaTheMiller/retrieving-your-travis-ci-api-access-token-bc706b2b625a
+https://github.com/travis-ci/travis.rb#installation
+
+Replace the secure entries is .travis.yml with the results of the following.  Be sure to add the
+variable values for each key.
+
+travis encrypt -r iot-dsa/sdk-dslink-java BINTRAY_USER=
+travis encrypt -r iot-dsa/sdk-dslink-java BINTRAY_KEY=
+travis encrypt -r iot-dsa/sdk-dslink-java OSSRH_USER=
+travis encrypt -r iot-dsa/sdk-dslink-java OSSRH_PASS=

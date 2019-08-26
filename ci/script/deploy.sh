@@ -6,19 +6,23 @@ if [ "$TRAVIS_BRANCH" != "master" ]; then
 elif [ "$TRAVIS_PULL_REQUEST" == "true" ]; then
     echo 'Ignoring artifact upload (pull request)'
 else
-    if [ -z "$USER" ]; then
-        echo "User is empty"
+    if [ -z "$BINTRAY_USER" ]; then
+        echo "Bintray User is empty"
     fi
-    if [ -z "$PASS" ]; then
-        echo "Password is empty"
+    if [ -z "$BINTRAY_KEY" ]; then
+        echo "Bintray Key is empty"
     fi
-    echo 'Deploying to maven'
-    openssl aes-256-cbc -k "$SECRING_PASS" -in 'ci/secring.gpg.enc' -out secring.gpg -d
-    ./gradlew "-Psigning.secretKeyRingFile=$PWD/$LOC" \
-                "-Psigning.keyId=$ID" \
-                "-Psigning.password=$KEY_PASS" \
-                "-PossrhUsername=$USER" \
-                "-PossrhPassword=$PASS" \
+    if [ -z "$OSSRH_USER" ]; then
+        echo "OSSRH User is empty"
+    fi
+    if [ -z "$OSSRH_PASS" ]; then
+        echo "OSSRH Password is empty"
+    fi
+    echo 'Deploying to jcenter and maven'
+    ./gradlew "-PbintrayUser=$BINTRAY_USER" \
+                "-PbintrayApiKey=$BINTRAY_KEY" \
+                "-PossrhUser=$OSSRH_USER" \
+                "-PossrhPass=$OSSRH_PASS" \
                 build \
-                uploadArchives
+                bintrayUpload
 fi
