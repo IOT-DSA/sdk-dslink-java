@@ -259,6 +259,12 @@ public class SubscriptionManager {
         if (resp != null) {
             resp.childUpdate(child, removed);
         }
+        if (!removed) {
+            resp = pathSubsMap.get(child.getPath());
+            if (resp != null) {
+                resp.nodeCreated(child);
+            }
+        }
     }
 
     /**

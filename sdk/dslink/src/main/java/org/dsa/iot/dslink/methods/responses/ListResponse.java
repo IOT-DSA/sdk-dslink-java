@@ -34,10 +34,9 @@ public class ListResponse extends Response {
 
     private final DSLink link;
     private final SubscriptionManager manager;
-    private final int rid;
-    private final Node node;
+    private Node node;
     private final String path;
-
+    private final int rid;
     private final Map<Node, Boolean> updates = new HashMap<>();
 
     public ListResponse(DSLink link, SubscriptionManager manager,
@@ -275,6 +274,11 @@ public class ListResponse extends Response {
         resp.put("stream", StreamState.OPEN.getJsonName());
         resp.put("updates", updates);
         link.getWriter().writeResponse(resp);
+    }
+
+    public void nodeCreated(Node node) {
+        this.node = node;
+        link.getWriter().writeResponse(getJsonResponse(null));
     }
 
     @Override
