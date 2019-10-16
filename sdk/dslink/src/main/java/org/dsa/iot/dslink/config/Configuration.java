@@ -122,6 +122,9 @@ public class Configuration {
      * Get a config from the dslink.json file.
      */
     public <T> T getConfig(String field, T defaultVal) {
+        if (configs == null) {
+            return defaultVal;
+        }
         JsonObject param = configs.get(field);
         if (param == null) {
             return defaultVal;

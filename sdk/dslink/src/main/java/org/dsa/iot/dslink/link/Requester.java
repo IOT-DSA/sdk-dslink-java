@@ -572,6 +572,7 @@ public class Requester extends Linkable {
     private static class HandlerAdapter implements Handler<SubscriptionValue> {
 
         Sub first;
+        SubscriptionValue lastEvent;
         ConcurrentLinkedQueue<Sub> list = null;
         int qos = 0;
         int size;
@@ -596,42 +597,48 @@ public class Requester extends Linkable {
             for (Sub s : list) {
                 s.handle(event);
             }
+            lastEvent = event;
         }
 
-        synchronized void add(SubData data, Handler<SubscriptionValue> handler) {
-            Integer q = data.getQos();
-            if (q == null) {
-                q = 0;
-            }
-            if (q > qos) {
-                this.qos = q;
-            }
-            if (first != null) {
-                if (first.isSameHandler(handler)) {
-                    if (first.isQosChange(q)) {
-                        qos = q;
-                    }
-                    return;
+        void add(SubData data, Handler<SubscriptionValue> handler) {
+            Sub sub = null;
+            synchronized (this) {
+                Integer q = data.getQos();
+                if (q == null) {
+                    q = 0;
                 }
-            }
-            if (list == null) {
-                list = new ConcurrentLinkedQueue<>();
-                list.add(first);
-                first = null;
-                list.add(new Sub(handler, q));
+                if (q > qos) {
+                    this.qos = q;
+                }
+                if (first != null) {
+                    if (first.isSameHandler(handler)) {
+                        if (first.isQosChange(q)) {
+                            qos = q;
+                        }
+                        return;
+                    }
+                }
+                if (list == null) {
+                    list = new ConcurrentLinkedQueue<>();
+                    list.add(first);
+                    first = null;
+                } else {
+                    for (Sub tmp : list) {
+                        if (tmp.isSameHandler(handler)) {
+                            if (tmp.isQosChange(q)) {
+                                updateQos();
+                            }
+                            return;
+                        }
+                    }
+                }
                 size++;
-                return;
+                sub = new Sub(handler, q);
+                list.add(sub);
             }
-            for (Sub sub : list) {
-                if (sub.isSameHandler(handler)) {
-                    if (sub.isQosChange(q)) {
-                        updateQos();
-                    }
-                    return;
-                }
+            if (lastEvent != null) {
+                sub.handle(lastEvent);
             }
-            size++;
-            list.add(new Sub(handler, q));
         }
 
         int qos() {
