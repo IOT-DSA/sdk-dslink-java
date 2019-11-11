@@ -33,6 +33,7 @@ public class Table {
     private Responder responder;
     private Handler<Void> closeHandler;
     private Object streamMutex;
+    private boolean closed = false;
 
     /**
      * Adds a column to the table.
@@ -192,7 +193,7 @@ public class Table {
     public boolean waitForStream(long millis) {
         return waitForStream(millis, false);
     }
-
+    
     /**
      * Returns as soon as stream is established or the wait has expired.
      *
@@ -202,12 +203,29 @@ public class Table {
      *                       throw an IllegalStateException.
      * @return True if the stream is established.
      */
-    @SuppressFBWarnings("WA_NOT_IN_LOOP")
     public boolean waitForStream(long millis, boolean throwException) {
+    	return waitForStream(millis, throwException, false);
+    }
+
+    /**
+     * Returns as soon as stream is established or the wait has expired.
+     *
+     * @param millis         How long to wait for a stream, &lt;= 0 means wait forever
+     *                       and is discouraged.
+     * @param throwException If true, and a stream is not acquired, this will
+     *                       throw an IllegalStateException.
+     * @param checkIfClosed  If true,and stream has already been closed, this will return false
+     * @return True if the stream is established.
+     */
+    @SuppressFBWarnings("WA_NOT_IN_LOOP")
+    public boolean waitForStream(long millis, boolean throwException, boolean checkIfClosed) {
         Object mutex = null;
         synchronized (this) {
             if (writer != null) {
                 return true;
+            }
+            if (checkIfClosed && closed) {
+            	return false;
             }
             if (streamMutex == null) {
                 streamMutex = new Object();
@@ -273,6 +291,7 @@ public class Table {
         this.closeHandler = null;
         this.meta = null;
         this.responder = null;
+        this.closed = true;
     }
 
     /**

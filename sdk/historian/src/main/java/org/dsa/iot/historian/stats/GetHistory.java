@@ -12,7 +12,6 @@ import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.provider.LoopProvider;
 import org.dsa.iot.dslink.util.*;
-import org.dsa.iot.dslink.util.Objects;
 import org.dsa.iot.dslink.util.handler.CompleteHandler;
 import org.dsa.iot.dslink.util.handler.Handler;
 import org.dsa.iot.historian.database.Database;
@@ -21,10 +20,7 @@ import org.dsa.iot.historian.stats.interval.IntervalParser;
 import org.dsa.iot.historian.stats.interval.IntervalProcessor;
 import org.dsa.iot.historian.stats.rollup.Rollup;
 import org.dsa.iot.historian.utils.QueryData;
-import org.dsa.iot.historian.utils.TimeParser;
-
 import java.util.*;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 /**
  * @author Samuel Grenier
@@ -109,6 +105,8 @@ public class GetHistory implements Handler<ActionResult> {
                         }
                     }
                 });
+                
+                
 
                 query(from.getTimeInMillis(), to.getTimeInMillis(), rollup, parser,
                         new CompleteHandler<QueryData>() {
@@ -158,7 +156,6 @@ public class GetHistory implements Handler<ActionResult> {
         });
     }
 
-    @SuppressWarnings("UnusedParameters")
     protected void query(long from,
                          long to,
                          Rollup.Type type,
@@ -204,8 +201,9 @@ public class GetHistory implements Handler<ActionResult> {
             // If we can't get a stream open to the requester, then there's a chance batch rows
             // could eventually cause an out of memory situation.  So fail the invocation after a
             // minute of not getting a response.
-            table.waitForStream(60000, true);
-            table.addBatchRows(batch);
+            if (table.waitForStream(60000, true, true)) {
+	            table.addBatchRows(batch);
+            }
         }
     }
 
