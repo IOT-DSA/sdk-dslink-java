@@ -1,5 +1,14 @@
 package org.dsa.iot.dslink.node;
 
+import java.lang.ref.WeakReference;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import org.dsa.iot.dslink.link.Linkable;
 import org.dsa.iot.dslink.node.NodeListener.ValueUpdate;
 import org.dsa.iot.dslink.node.actions.Action;
@@ -9,10 +18,6 @@ import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.serializer.SerializationManager;
 import org.dsa.iot.dslink.util.StringUtils;
 
-import java.lang.ref.WeakReference;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-
 /**
  * Contains information about a node and its data.
  *
@@ -20,8 +25,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class Node {
 
-    private static final char[] BANNED_CHARS = new char[] {
-        '%', '.', '/', '\\', '?', '*', ':', '|', '<', '>', '$', '@', ','
+    private static final char[] BANNED_CHARS = new char[]{
+            '%', '.', '/', '\\', '?', '*', ':', '|', '<', '>', '$', '@', ','
     };
 
     private final Object roConfigLock = new Object();
@@ -58,7 +63,8 @@ public class Node {
     private Set<String> interfaces;
     private Action action;
     private char[] pass;
-    
+    boolean building = false;
+
     private boolean shouldPostCachedValue = true;
 
     /**
@@ -66,7 +72,7 @@ public class Node {
      *
      * @param name   Name of the node
      * @param parent Parent of this node
-     * @param link Linkable class the node is handled on
+     * @param link   Linkable class the node is handled on
      */
     public Node(String name, Node parent, Linkable link) {
         this(name, parent, link, true);
@@ -100,7 +106,7 @@ public class Node {
 
     /**
      * @return Parent of this node, can be null if the parent was garbage
-     *         collected or there is no parent.
+     * collected or there is no parent.
      */
     public Node getParent() {
         return parent.get();
@@ -244,15 +250,15 @@ public class Node {
     }
 
     /**
-     * @param value Value to set.
+     * @param value          Value to set.
      * @param externalSource Whether the value was set from an external source
      *                       like an action that got invoked.
-     * @param publish Whether to allow a publish to the network.
+     * @param publish        Whether to allow a publish to the network.
      * @return Whether a value was actually set.
      */
     protected boolean setValue(Value value,
-                            boolean externalSource,
-                            boolean publish) {
+                               boolean externalSource,
+                               boolean publish) {
         ValueType type = valueType;
         if (type == null) {
             if (this.value != null) {
@@ -372,24 +378,24 @@ public class Node {
     public Writable getWritable() {
         return writable;
     }
-    
+
     /**
-     * @return Whether the node's value should automatically 
-     *         be posted in response to a subscription request.
+     * @return Whether the node's value should automatically
+     * be posted in response to a subscription request.
      */
     public boolean shouldPostCachedValue() {
-    	return shouldPostCachedValue;
+        return shouldPostCachedValue;
     }
 
     /**
-     * @param should Whether the node's value should 
-     *               automatically be posted in response to a 
+     * @param should Whether the node's value should
+     *               automatically be posted in response to a
      *               subscription request. Defaults to true.
      */
     public void setShouldPostCachedValue(boolean should) {
-    	shouldPostCachedValue = should;
+        shouldPostCachedValue = should;
     }
-    
+
 
     /**
      * @return Children of the node, can be null
@@ -397,6 +403,13 @@ public class Node {
     public Map<String, Node> getChildren() {
         Map<String, Node> children = this.children;
         return children != null ? Collections.unmodifiableMap(children) : null;
+    }
+
+    public Iterator<Node> childIterator() {
+        if (children == null) {
+            return Collections.emptyIterator();
+        }
+        return Collections.unmodifiableCollection(children.values()).iterator();
     }
 
     /**
@@ -455,11 +468,12 @@ public class Node {
     public NodeBuilder createChild(String name, boolean encodeName) {
         return createChild(name, profile, encodeName);
     }
+
     /**
      * Creates a node builder to allow setting up the node data before
      * any list subscriptions can be notified.
      *
-     * @param name Name of the child.
+     * @param name    Name of the child.
      * @param profile Profile to set on the child
      * @return builder
      * @see NodeBuilder#build
@@ -498,18 +512,11 @@ public class Node {
                 return children.get(name);
             }
 
-            SubscriptionManager manager = null;
-            if (link != null) {
-                manager = link.getSubscriptionManager();
-            }
-
             if (node.getProfile() == null) {
                 node.setProfile(profile);
             }
             children.put(name, node);
-            if (manager != null) {
-                manager.postChildUpdate(node, false);
-            }
+            childAdded(node);
             if (node.isSerializable()) {
                 markChanged();
             }
@@ -517,8 +524,21 @@ public class Node {
         }
     }
 
+    void childAdded(Node node) {
+        if (!building) {
+            SubscriptionManager manager = null;
+            if (link != null) {
+                manager = link.getSubscriptionManager();
+            }
+            if (manager != null) {
+                manager.postChildUpdate(node, false);
+            }
+        }
+    }
+
     /**
      * Add multiple children at once.
+     *
      * @param nodes Nodes to add.
      */
     public void addChildren(List<Node> nodes) {
@@ -631,8 +651,6 @@ public class Node {
 
                 if (manager != null) {
                     manager.postChildUpdate(child, true);
-                    manager.removeValueSub(child);
-                    manager.removePathSub(child);
                 }
                 if (isSerializable()) {
                     markChanged();
@@ -836,7 +854,7 @@ public class Node {
     /**
      * Sets a read-only configuration.
      *
-     * @param name Name of the configuration.
+     * @param name  Name of the configuration.
      * @param value Value to set.
      * @return The previous value, if any.
      */

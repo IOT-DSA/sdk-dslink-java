@@ -56,10 +56,6 @@ public class ListResponse extends Response {
     }
 
     public void childUpdate(Node child, boolean removed) {
-        if (removed) {
-            manager.removePathSub(child);
-        }
-
         JsonArray updates = new JsonArray();
         updates.add(getChildUpdate(child, removed));
 
@@ -276,8 +272,13 @@ public class ListResponse extends Response {
         link.getWriter().writeResponse(resp);
     }
 
-    public void nodeCreated(Node node) {
+    public void nodeAdded(Node node) {
         this.node = node;
+        link.getWriter().writeResponse(getJsonResponse(null));
+    }
+
+    public void nodeRemoved() {
+        this.node = null;
         link.getWriter().writeResponse(getJsonResponse(null));
     }
 

@@ -3,7 +3,6 @@ package org.dsa.iot.dslink.node;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-
 import org.dsa.iot.dslink.node.actions.Action;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
@@ -118,63 +117,72 @@ public class NodeBuilder {
      * The child will then be added to the parent with the set data. Any
      * subscriptions will then be notified. Note that the parent must not
      * have the child already added or it will just act as a getter.
+     *
      * @return Child node
      */
     public Node build() {
-        Node node = parent.addChild(child);
-        // addChild can be used as a getter, which is useful in scenarios
-        // where serialization takes place. However, setting the action
-        // before building the node may remove the action override, so in
-        // order to ensure that the action is preserved after serialization,
-        // the action must be reset on the child node.
+        child.building = true;
+        Node node = null;
+        try {
+            node = parent.addChild(child);
+            // addChild can be used as a getter, which is useful in scenarios
+            // where serialization takes place. However, setting the action
+            // before building the node may remove the action override, so in
+            // order to ensure that the action is preserved after serialization,
+            // the action must be reset on the child node.
 
-        node.setSerializable(child.isSerializable());
-        node.setProfile(child.getProfile());
-        node.setMetaData(child.getMetaData());
-        {
-            // addChild can return a pre-existing node. This results in the
-            // action being removed. The action is preserved to ensure that
-            // deserialized nodes can keep their actions without constantly
-            // being set. The actions are compared to their previous action
-            // to prevent unnecessary updates to the network.
-            Action parentAct = node.getAction();
-            Action childAct = child.getAction();
-            if (parentAct != childAct) {
-                node.setAction(child.getAction());
+            node.setSerializable(child.isSerializable());
+            node.setProfile(child.getProfile());
+            node.setMetaData(child.getMetaData());
+            {
+                // addChild can return a pre-existing node. This results in the
+                // action being removed. The action is preserved to ensure that
+                // deserialized nodes can keep their actions without constantly
+                // being set. The actions are compared to their previous action
+                // to prevent unnecessary updates to the network.
+                Action parentAct = node.getAction();
+                Action childAct = child.getAction();
+                if (parentAct != childAct) {
+                    node.setAction(child.getAction());
+                }
             }
-        }
-        node.setListener(child.getListener());
-        node.setDisplayName(child.getDisplayName());
-        node.setValueType(child.getValueType());
-        node.setValue(child.getValue());
-        node.setPassword(child.getPassword());
-        node.setWritable(child.getWritable());
-        node.setHasChildren(child.getHasChildren());
-        node.setHidden(child.isHidden());
-        node.setSerializable(child.isSerializable());
-        Map<String, Value> configs = child.getConfigurations();
-        Map<String, Value> roconfigs = child.getRoConfigurations();
-        Map<String, Value> attrs = child.getAttributes();
-        Set<String> interfaces = child.getInterfaces();
-        if (configs != null) {
-	        for (Entry<String, Value> entry: configs.entrySet()) {
-	        	node.setConfig(entry.getKey(), entry.getValue());
-	        }
-        }
-        if (roconfigs != null) {
-	        for (Entry<String, Value> entry: roconfigs.entrySet()) {
-	        	node.setRoConfig(entry.getKey(), entry.getValue());
-	        }
-        }
-        if (attrs != null) {
-	        for (Entry<String, Value> entry: attrs.entrySet()) {
-	        	node.setAttribute(entry.getKey(), entry.getValue());
-	        }
-        }
-        if (interfaces != null) {
-	        for (String _interface: interfaces) {
-	        	node.addInterface(_interface);
-	        }
+            node.setListener(child.getListener());
+            node.setDisplayName(child.getDisplayName());
+            node.setValueType(child.getValueType());
+            node.setValue(child.getValue());
+            node.setPassword(child.getPassword());
+            node.setWritable(child.getWritable());
+            node.setHasChildren(child.getHasChildren());
+            node.setHidden(child.isHidden());
+            node.setSerializable(child.isSerializable());
+            Map<String, Value> configs = child.getConfigurations();
+            Map<String, Value> roconfigs = child.getRoConfigurations();
+            Map<String, Value> attrs = child.getAttributes();
+            Set<String> interfaces = child.getInterfaces();
+            if (configs != null) {
+                for (Entry<String, Value> entry : configs.entrySet()) {
+                    node.setConfig(entry.getKey(), entry.getValue());
+                }
+            }
+            if (roconfigs != null) {
+                for (Entry<String, Value> entry : roconfigs.entrySet()) {
+                    node.setRoConfig(entry.getKey(), entry.getValue());
+                }
+            }
+            if (attrs != null) {
+                for (Entry<String, Value> entry : attrs.entrySet()) {
+                    node.setAttribute(entry.getKey(), entry.getValue());
+                }
+            }
+            if (interfaces != null) {
+                for (String _interface : interfaces) {
+                    node.addInterface(_interface);
+                }
+            }
+            child.building = false;
+            parent.childAdded(node);
+        } finally {
+            child.building = false;
         }
         return node;
     }

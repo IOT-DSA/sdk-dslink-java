@@ -259,11 +259,10 @@ public class SubscriptionManager {
         if (resp != null) {
             resp.childUpdate(child, removed);
         }
-        if (!removed) {
-            resp = pathSubsMap.get(child.getPath());
-            if (resp != null) {
-                resp.nodeCreated(child);
-            }
+        if (removed) {
+            nodeRemoved(child);
+        } else {
+            nodeAdded(child);
         }
     }
 
@@ -384,6 +383,33 @@ public class SubscriptionManager {
         sub.updates = updates;
         synchronized (valueLock) {
             valueSubsPaths.put(path, sub);
+        }
+    }
+
+    private void nodeAdded(Node node) {
+        ListResponse list = pathSubsMap.get(node.getPath());
+        if (list != null) {
+            list.nodeAdded(node);
+        }
+        if ((node.getHasChildren() != null) && node.getHasChildren()) {
+            Iterator<Node> it = node.childIterator();
+            while (it.hasNext()) {
+                nodeAdded(it.next());
+            }
+        }
+        if (node.getValue() != null) {
+            postValueUpdate(node);
+        }
+    }
+
+    private void nodeRemoved(Node node) {
+        ListResponse list = pathSubsMap.get(node.getPath());
+        if (list != null) {
+            list.nodeRemoved();
+        }
+        Iterator<Node> it = node.childIterator();
+        while (it.hasNext()) {
+            nodeRemoved(it.next());
         }
     }
 
