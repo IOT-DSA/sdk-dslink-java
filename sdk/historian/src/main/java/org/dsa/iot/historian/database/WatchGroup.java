@@ -169,38 +169,38 @@ public class WatchGroup {
      */
     public void subscribe() {
         Map<String, Node> children = node.getChildren();
+        Watch watch;
         for (Node n : children.values()) {
             if (n.getAction() == null) {
                 Value useNewEncodingMethod = n.getConfig(Watch.USE_NEW_ENCODING_METHOD_CONFIG_NAME);
                 if (useNewEncodingMethod == null || !useNewEncodingMethod.getBool()) {
                     String path = n.getName().replaceAll("%2F", "/").replaceAll("%2E", ".");
-                    // JTH: This was added to prevent watches to be re-added
-                    // disconnection/reconnection.
-                    if (containsWatch(path)) {
-                        continue;
+                    watch = getWatch(path);
+                    if (watch == null) {
+                        initWatch(path, false);
+                    } else {
+                        db.getProvider().getPool().subscribe(path, watch);
                     }
-
-                    initWatch(path, false);
                 } else {
                     String path = StringUtils.decodeName(n.getName());
-                    if (containsWatch(path)) {
-                        continue;
+                    watch = getWatch(path);
+                    if (watch == null) {
+                        initWatch(path, true);
+                    } else {
+                        db.getProvider().getPool().subscribe(path, watch);
                     }
-
-                    initWatch(path, true);
                 }
             }
         }
     }
 
-    private boolean containsWatch(String path) {
+    private Watch getWatch(String path) {
         for (Watch watch : watches) {
             if (watch.getPath().equals(path)) {
-                return true;
+                return watch;
             }
         }
-
-        return false;
+        return null;
     }
 
     /**
