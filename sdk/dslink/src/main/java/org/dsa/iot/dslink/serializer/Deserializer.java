@@ -1,9 +1,14 @@
 package org.dsa.iot.dslink.serializer;
 
-import java.util.*;
-import org.dsa.iot.dslink.node.*;
-import org.dsa.iot.dslink.node.value.*;
-import org.dsa.iot.dslink.util.json.*;
+import org.dsa.iot.dslink.node.Node;
+import org.dsa.iot.dslink.node.NodeManager;
+import org.dsa.iot.dslink.node.Writable;
+import org.dsa.iot.dslink.node.value.Value;
+import org.dsa.iot.dslink.node.value.ValueType;
+import org.dsa.iot.dslink.node.value.ValueUtils;
+import org.dsa.iot.dslink.util.json.JsonObject;
+
+import java.util.Map;
 
 /**
  * Deserializes a JSON file into a node manager
@@ -20,7 +25,7 @@ public class Deserializer {
     }
 
     public Deserializer(SerializationManager serializationManager,
-                        NodeManager nodeManager) {
+            NodeManager nodeManager) {
         this.serializationManager = serializationManager;
         this.nodeManager = nodeManager;
     }
@@ -72,9 +77,25 @@ public class Deserializer {
                 Value val = ValueUtils.toValue(value);
                 if (t != null && val != null
                         && val.getType().compare(ValueType.STRING)
-                        && t.compare(ValueType.NUMBER)
-                        && "NaN".equals(val.getString())) {
-                    node.setValue(new Value(Float.NaN));
+                        && t.compare(ValueType.NUMBER)) {
+                    String str = val.getString();
+                    if ((str == null) || str.isEmpty()) {
+                        node.setValue(null);
+                    } else {
+                        switch (str) {
+                            case "NaN":
+                                node.setValue(new Value(Float.NaN));
+                                break;
+                            case "Infinity":
+                                node.setValue(new Value(Float.POSITIVE_INFINITY));
+                                break;
+                            case "-Infinity":
+                                node.setValue(new Value(Float.NEGATIVE_INFINITY));
+                                break;
+                            default:
+                                node.setValue(null);
+                        }
+                    }
                 } else {
                     node.setValue(val);
                 }
