@@ -3,5 +3,5 @@ apply from: '../../bintray.gradle'
 description = 'Lightweight SL4J binding'
 
 dependencies {
-    api 'org.slf4j:slf4j-api:1.7.25'
+    api 'org.slf4j:slf4j-api:1.7.32'
 }
