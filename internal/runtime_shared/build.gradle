@@ -1,14 +1,19 @@
-apply from: '../../bintray.gradle'
-
 description = 'Shared Runtime for the SDK'
 
 dependencies {
-    api 'org.bouncycastle:bcprov-jdk15on:1.64'
-    api 'io.netty:netty-all:4.1.47.Final'
+    api 'org.bouncycastle:bcprov-jdk15on:1.69'
+    api 'io.netty:netty-all:4.1.66.Final'
     //jzlib is an optional dependency of netty, it is possible to trigger usage
     implementation 'com.jcraft:jzlib:1.1.3'
-    api 'com.beust:jcommander:1.78'
-    api 'org.msgpack:jackson-dataformat-msgpack:0.8.20'
+    api 'com.beust:jcommander:1.81'
+    api 'org.msgpack:jackson-dataformat-msgpack:0.9.0'
     //the following overrides the dependency in jackson-dataformat-msgpack
-    api 'com.fasterxml.jackson.core:jackson-databind:2.10.3'
+    //api 'com.fasterxml.jackson.core:jackson-databind:2.10.3'
+}
+
+repositories {
+    maven {
+        url 'https://repo.maven.apache.org/maven2'
+        name 'Maven Central'
+    }
 }

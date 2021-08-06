@@ -1,13 +1,13 @@
 # sdk-dslink-java
 
-[![Build Status](https://travis-ci.org/IOT-DSA/sdk-dslink-java.svg?branch=master)](https://travis-ci.org/IOT-DSA/sdk-dslink-java)
+[![](https://jitpack.io/v/iot-dsa/sdk-dslink-java.svg)](https://jitpack.io/#iot-dsa/sdk-dslink-java)
 
 Java binding for the DSA API.
 
 ## Project Structure
 
-There are four categories that each Gradle subproject fall under. Those categories
-are:
+There are four categories that each Gradle subproject fall under. Those categories are:
+
 - sdk
 - examples
 - runtimes
@@ -17,8 +17,8 @@ Each categorized directory has its own README describing its category in more de
 
 ## Running the examples
 
-In order to run any examples a broker must be running. All the examples can
-quickly be ran through Gradle.
+In order to run any examples a broker must be running. All the examples can quickly be ran through
+Gradle.
 
 Running the requester: <br />
 `./gradlew :examples/requester:run -Dexec.args="-b http://localhost:8080/conn"`
@@ -26,8 +26,36 @@ Running the requester: <br />
 Running the responder: <br />
 `./gradlew :examples/responder:run -Dexec.args="-b http://localhost:8080/conn"`
 
-## Acknowledgements
+## Dependency Management
 
-A special thanks to JProfiler for supporting this project!
+Maven
 
-[![](https://www.ej-technologies.com/images/product_banners/jprofiler_small.png)](http://www.ej-technologies.com/products/jprofiler/overview.html)
+```
+<repositories>
+    <repository>
+        <id>jitpack.io</id>
+	    <url>https://jitpack.io</url>
+	</repository>
+</repositories>
+
+<dependency>
+    <groupId>com.github.iot-dsa</groupId>
+    <artifactId>sdk-dslink-java</artifactId>
+    <version>Tag</version>
+</dependency>
+```
+
+Gradle
+
+```
+allprojects {
+    repositories {
+	    ...
+	    maven { url 'https://jitpack.io' }
+	}
+}
+
+dependencies {
+    implementation 'com.github.iot-dsa:sdk-dslink-java:Tag'
+}
+```

@@ -1,19 +1,32 @@
-plugins {
-    id 'com.jfrog.bintray' version '1.8.4' apply false
-}
-
 subprojects {
-    apply plugin: 'findbugs'
     apply plugin: 'java-library'
-    apply plugin: 'maven'
+    apply plugin: 'maven-publish'
 
-    version = '0.24.2'
-    sourceCompatibility = 1.7
-    targetCompatibility = 1.7
+    group = 'org.iot-dsa'
+    version = '1.0.0'
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 
     repositories {
         mavenLocal()
-        jcenter()
+        mavenCentral()
+    }
+
+    java {
+        withSourcesJar()
+        withJavadocJar()
+    }
+
+    publishing {
+        publications {
+            mavenJava(MavenPublication) {
+                from components.java
+            }
+        }
+    }
+
+    tasks.withType(Javadoc) {
+        options.addStringOption('Xdoclint:none', '-quiet')
     }
 
     dependencies {
@@ -21,15 +34,9 @@ subprojects {
         testImplementation 'junit:junit:[4.12,)'
     }
 
-    tasks.withType(FindBugs) {
-        reports {
-            xml.enabled = false
-            html.enabled = true
-        }
-    }
 }
 
 wrapper {
-    gradleVersion = '5.6.4'
+    gradleVersion = '6.8.3'
 }
 
