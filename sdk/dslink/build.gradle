@@ -1,5 +1,3 @@
-apply from: '../../bintray.gradle'
-
 description = 'SDK for the IoT DSA protocol'
 
 dependencies {

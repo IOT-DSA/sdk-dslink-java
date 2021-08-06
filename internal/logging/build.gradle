@@ -1,5 +1,3 @@
-apply from: '../../bintray.gradle'
-
 description = 'Lightweight SL4J binding'
 
 dependencies {
