@@ -13,7 +13,11 @@ import org.dsa.iot.dslink.node.Permission;
 import org.dsa.iot.dslink.node.Writable;
 import org.dsa.iot.dslink.node.actions.Action;
 import org.dsa.iot.dslink.node.actions.ActionResult;
-import org.dsa.iot.dslink.node.value.*;
+import org.dsa.iot.dslink.node.value.SubscriptionValue;
+import org.dsa.iot.dslink.node.value.Value;
+import org.dsa.iot.dslink.node.value.ValuePair;
+import org.dsa.iot.dslink.node.value.ValueType;
+import org.dsa.iot.dslink.node.value.ValueUtils;
 import org.dsa.iot.dslink.util.StringUtils;
 import org.dsa.iot.dslink.util.handler.Handler;
 import org.dsa.iot.dslink.util.json.JsonArray;
@@ -32,6 +36,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @author Samuel Grenier
  */
 public class Watch {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(Watch.class);
     public static final String USE_NEW_ENCODING_METHOD_CONFIG_NAME = "useNewEncodingMethod";
 
@@ -55,6 +60,12 @@ public class Watch {
 
     // Used for POINT_CHANGE
     private Value lastValue;
+    private WatchUpdate lastWatchUpdate;
+
+    public Watch(final WatchGroup group, Node node) {
+        this.group = group;
+        this.node = node;
+    }
 
     public WatchUpdate getLastWatchUpdate() {
         Value value = node.getValue();
@@ -66,13 +77,6 @@ public class Watch {
             lastWatchUpdate = new WatchUpdate(this, subscriptionValue);
         }
         return lastWatchUpdate;
-    }
-
-    private WatchUpdate lastWatchUpdate;
-
-    public Watch(final WatchGroup group, Node node) {
-        this.group = group;
-        this.node = node;
     }
 
     public Node getNode() {
@@ -108,20 +112,20 @@ public class Watch {
         lastWrittenTime = timestampOfValue.getTime();
     }
 
-    public void setLastWrittenTime(long time) {
-        lastWrittenTime = time;
-    }
-
     public long getLastWrittenTime() {
         return lastWrittenTime;
     }
 
-    public void setLastValue(Value value) {
-        lastValue = value;
+    public void setLastWrittenTime(long time) {
+        lastWrittenTime = time;
     }
 
     public Value getLastValue() {
         return lastValue;
+    }
+
+    public void setLastValue(Value value) {
+        lastValue = value;
     }
 
     public void unsubscribe() {
@@ -167,7 +171,11 @@ public class Watch {
                 Node node = event.getNode();
                 ValueType valueType = node.getValueType();
                 Watch.this.node.setValueType(valueType);
-                Watch.this.node.setValue(node.getValue());
+                try {
+                    Watch.this.node.setValue(node.getValue());
+                } catch (Exception x) {
+                    LOGGER.debug(watchedPath, x);
+                }
             }
         });
     }
@@ -271,7 +279,17 @@ public class Watch {
      */
     public void onData(SubscriptionValue sv) {
         sv = tryConvert(sv);
-        realTimeValue.setValue(sv.getValue());
+        if (sv.getValue().getType() != realTimeValue.getValueType()) {
+            LOGGER.debug("{} cannot convert {} to {}", sv.getPath(), sv.getValue(),
+                    realTimeValue.getValueType());
+            return;
+        }
+        try {
+            realTimeValue.setValue(tryConvert(sv).getValue());
+        } catch (Exception x) {
+            LOGGER.debug(sv.getPath(), x);
+            return;
+        }
         if (group.canWriteOnNewData()) {
             group.write(this, sv);
             //The following is for when switching the logging type of the group from
@@ -317,8 +335,7 @@ public class Watch {
     }
 
     /**
-     * Attempts to convert the value of the argument to the value type of the
-     * realTimeValue node.
+     * Attempts to convert the value of the argument to the value type of the realTimeValue node.
      *
      * @param arg The candidate for conversion.
      * @return A new SubscriptionValue if the value in the argument was immutable.
@@ -326,7 +343,10 @@ public class Watch {
     private SubscriptionValue tryConvert(SubscriptionValue arg) {
         Value value = arg.getValue();
         ValueType toType = realTimeValue.getValueType();
-        if (value.getType() == toType) {
+        if (toType == ValueType.DYNAMIC) {
+            return arg;
+        }
+        if (toType == value.getType()) {
             return arg;
         }
         if (value.isImmutable()) {
