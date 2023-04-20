@@ -73,7 +73,7 @@ class OverwriteHistoryAction implements Handler<ActionResult> {
                 db.getProvider().deleteRange(watch, from, to);
 
                 for (Long timestamp : timestampsOfValuesToOverwrite) {
-                    db.write(path, newValue, timestamp);
+                    db.write(watch, newValue, timestamp);
                 }
             }
         });
