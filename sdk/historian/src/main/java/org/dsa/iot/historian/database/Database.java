@@ -96,6 +96,13 @@ public abstract class Database {
     public abstract void write(String path, Value value, long ts);
 
     /**
+     * Calls {@link #write(String, Value, long)}. Override point for access to the watch.
+     */
+    public void write(Watch watch, Value value, long ts) {
+        write(watch.getPath(), value, ts);
+    }
+
+    /**
      * Times must be in UTC. At the end of the query, the {@code handler} must
      * receive a {@code null} event in order to close the table stream.
      *

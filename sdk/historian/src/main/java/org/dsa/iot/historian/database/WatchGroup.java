@@ -17,8 +17,18 @@ import org.dsa.iot.dslink.util.handler.Handler;
 import org.dsa.iot.historian.utils.QueryData;
 import org.dsa.iot.historian.utils.WatchUpdate;
 
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Samuel Grenier
@@ -67,6 +77,13 @@ public class WatchGroup {
      */
     public Database getDb() {
         return db;
+    }
+
+    /**
+     * Returns a new collection of currently known watches.
+     */
+    public List<Watch> getWatches() {
+        return new ArrayList<>(watches);
     }
 
     /**
@@ -428,7 +445,7 @@ public class WatchGroup {
             }
             Watch watch = update.getWatch();
 
-            db.write(watch.getPath(), value, time);
+            db.write(watch, value, time);
             watch.notifyHandlers(new QueryData(value, time));
         }
     }
