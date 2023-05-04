@@ -6,6 +6,7 @@ import org.dsa.iot.dslink.node.Permission;
 import org.dsa.iot.dslink.node.actions.Action;
 import org.dsa.iot.dslink.node.actions.ActionResult;
 import org.dsa.iot.dslink.node.actions.Parameter;
+import org.dsa.iot.dslink.node.value.SubscriptionValue;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.util.handler.Handler;
@@ -48,6 +49,12 @@ public abstract class DatabaseProvider {
      * @return Required permission level.
      */
     public abstract Permission dbPermission();
+
+    /**
+     * Override point for dealing with watches subscribed to dynamic data types.
+     */
+    protected void onDynamicWatchDetected(Watch watch, SubscriptionValue sv) {
+    }
 
     /**
      * Override to handle newly created watches. Can be used to add custom
