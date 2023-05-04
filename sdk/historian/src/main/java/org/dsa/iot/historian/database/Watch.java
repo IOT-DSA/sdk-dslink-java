@@ -170,9 +170,13 @@ public class Watch {
             public void handle(ListResponse event) {
                 Node node = event.getNode();
                 ValueType valueType = node.getValueType();
-                Watch.this.node.setValueType(valueType);
                 try {
-                    Watch.this.node.setValue(node.getValue());
+                    Value value = node.getValue();
+                    if ((valueType == ValueType.DYNAMIC) && (value != null)) {
+                        valueType = value.getType();
+                    }
+                    Watch.this.node.setValueType(valueType);
+                    Watch.this.node.setValue(value);
                 } catch (Exception x) {
                     LOGGER.debug(watchedPath, x);
                 }
@@ -278,6 +282,9 @@ public class Watch {
      * @param sv Received data.
      */
     public void onData(SubscriptionValue sv) {
+        if (getNode().getValueType() == ValueType.DYNAMIC) {
+            group.getDb().getProvider().onDynamicWatchDetected(this, sv);
+        }
         sv = tryConvert(sv);
         if (sv.getValue().getType() != realTimeValue.getValueType()) {
             LOGGER.debug("{} cannot convert {} to {}", sv.getPath(), sv.getValue(),
@@ -285,7 +292,7 @@ public class Watch {
             return;
         }
         try {
-            realTimeValue.setValue(tryConvert(sv).getValue());
+            realTimeValue.setValue(sv.getValue());
         } catch (Exception x) {
             LOGGER.debug(sv.getPath(), x);
             return;
